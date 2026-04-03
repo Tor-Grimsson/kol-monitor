@@ -39,6 +39,7 @@ import OutputModule from './modules/display/OutputModule.jsx'
 import ConsoleModule from './modules/display/ConsoleModule.jsx'
 
 import PatchModule from './modules/utility/PatchModule.jsx'
+import PowerModule from './modules/utility/PowerModule.jsx'
 
 export const MODULE_DEFS = {
   // Control
@@ -48,22 +49,22 @@ export const MODULE_DEFS = {
   envelope:  { component: EnvelopeModule,     hp: 6,  u: 3, category: 'control',    label: 'Envelope' },
   sequencer: { component: SequencerModule,    hp: 12, u: 3, category: 'control',    label: 'Sequencer' },
   constant:  { component: ConstantModule,     hp: 4,  u: 3, category: 'control',    label: 'Constant' },
-  logic:     { component: LogicModule,        hp: 4,  u: 3, category: 'control',    label: 'Logic' },
-  comparator:{ component: ComparatorModule,   hp: 4,  u: 3, category: 'control',    label: 'Comparator' },
-  sampleHold:{ component: SampleHoldModule,   hp: 6,  u: 3, category: 'control',    label: 'S&H' },
+  logic:     { component: LogicModule,        hp: 4,  u: 1, category: 'control',    label: 'Logic' },
+  comparator:{ component: ComparatorModule,   hp: 4,  u: 1, category: 'control',    label: 'Comparator' },
+  sampleHold:{ component: SampleHoldModule,   hp: 6,  u: 1, category: 'control',    label: 'S&H' },
   pen:       { component: PenModule,          hp: 6,  u: 3, category: 'control',    label: 'Pen' },
 
   // Math
   mult:      { component: MultModule,         hp: 8,  u: 1, category: 'math',       label: 'Mult' },
   attenuator:{ component: AttenuatorModule,   hp: 8,  u: 1, category: 'math',       label: 'Atten' },
   vca:       { component: VCAModule,          hp: 8,  u: 1, category: 'math',       label: 'VCA' },
-  switch:    { component: SwitchModule,       hp: 4,  u: 3, category: 'math',       label: 'Switch' },
+  switch:    { component: SwitchModule,       hp: 4,  u: 1, category: 'math',       label: 'Switch' },
   quantizer: { component: QuantizerModule,    hp: 4,  u: 3, category: 'math',       label: 'Quantizer' },
   scaleOfs:  { component: ScaleOffsetModule,  hp: 4,  u: 3, category: 'math',       label: 'Scale/Ofs' },
-  ringMod:   { component: RingModModule,      hp: 6,  u: 3, category: 'math',       label: 'Ring Mod' },
+  ringMod:   { component: RingModModule,      hp: 6,  u: 1, category: 'math',       label: 'Ring Mod' },
   waveshaper:{ component: WaveshaperModule,   hp: 6,  u: 3, category: 'math',       label: 'Waveshaper' },
   delay:     { component: DelayModule,        hp: 6,  u: 3, category: 'math',       label: 'Delay' },
-  reverb:    { component: ReverbModule,       hp: 6,  u: 3, category: 'math',       label: 'Reverb' },
+  reverb:    { component: ReverbModule,       hp: 6,  u: 1, category: 'math',       label: 'Reverb' },
   mixer:     { component: MixerModule,        hp: 8,  u: 3, category: 'math',       label: 'Mixer' },
   maths:     { component: MathsModule,        hp: 8,  u: 3, category: 'math',       label: 'Maths' },
   transform: { component: TransformModule,   hp: 12, u: 3, category: 'math',       label: 'Xform' },
@@ -73,7 +74,7 @@ export const MODULE_DEFS = {
   waveform:  { component: WaveformModule,     hp: 6,  u: 3, category: 'generators', label: 'Waveform' },
   wireframe: { component: WireframeModule,    hp: 8,  u: 3, category: 'generators', label: 'Wireframe' },
   noise:     { component: NoiseModule,        hp: 8,  u: 1, category: 'generators', label: 'Noise' },
-  ramp:      { component: RampModule,         hp: 6,  u: 3, category: 'generators', label: 'Ramp' },
+  ramp:      { component: RampModule,         hp: 6,  u: 1, category: 'generators', label: 'Ramp' },
   smx3:      { component: SMX3Module,         hp: 12, u: 3, category: 'generators', label: 'SMX3' },
   lineGen:   { component: LineGenModule,      hp: 8,  u: 3, category: 'generators', label: 'LineGen' },
 
@@ -84,6 +85,7 @@ export const MODULE_DEFS = {
 
   // Utility
   patch:     { component: PatchModule,        hp: 6,  u: 3, category: 'utility',    label: 'Patch' },
+  power:     { component: PowerModule,       hp: 6,  u: 1, category: 'utility',    label: 'Power' },
 }
 
 export const CATEGORIES = ['control', 'math', 'generators', 'display', 'utility']

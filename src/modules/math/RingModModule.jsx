@@ -7,10 +7,30 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-export default function RingModModule({ id = 'ring1' }) {
+function RingModPanel({ depth, enabled, onToggle, onDepthChange, id, aConnected, aRef, bConnected, bRef, outRef }) {
+  return (
+    <Module label="Ring" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <Knob value={depth} onChange={onDepthChange} label="depth" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
+          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
+          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function RingModModule({ id = 'ring1', preview }) {
+  if (preview) return <RingModPanel depth={100} enabled={false} onToggle={() => {}} onDepthChange={() => {}} id={id} aConnected={false} aRef={{ current: null }} bConnected={false} bRef={{ current: null }} outRef={{ current: null }} />
+
   const [depth, setDepth] = useState(100)
   const [enabled, setEnabled] = useState(true)
   const routing = usePatchRouting()
@@ -47,21 +67,5 @@ export default function RingModModule({ id = 'ring1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Ring" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <Knob value={depth} onChange={setDepth} label="depth" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
-          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <RingModPanel depth={depth} enabled={enabled} onToggle={() => setEnabled(!enabled)} onDepthChange={setDepth} id={id} aConnected={aConnected} aRef={aRef} bConnected={bConnected} bRef={bRef} outRef={outRef} />
 }

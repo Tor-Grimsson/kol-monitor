@@ -8,7 +8,6 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
 import WaveSelect from '../controls/WaveSelect'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['sin', 'saw', 'tri', 'sqr']
@@ -24,7 +23,29 @@ function waveFn(phase, shape) {
   }
 }
 
-export default function LFOModule({ id = 'lfo1', init }) {
+function LFOPanel({ rate, depth, offset, shape, enabled, onToggle, onRateChange, onDepthChange, onOffsetChange, onShapeChange, id, syncConnected, syncInRef, outRef }) {
+  return (
+    <Module label="LFO" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <WaveSelect value={shape} onChange={onShapeChange} />
+        <Knob value={rate} onChange={onRateChange} label="rate" />
+        <Knob value={depth} onChange={onDepthChange} label="dep" />
+        <Knob value={offset} onChange={onOffsetChange} label="ofs" />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <JackSocket type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncInRef} label="sync" />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function LFOModule({ id = 'lfo1', init, preview }) {
+  if (preview) return <LFOPanel rate={10} depth={100} offset={50} shape="sin" enabled={false} onToggle={() => {}} onRateChange={() => {}} onDepthChange={() => {}} onOffsetChange={() => {}} onShapeChange={() => {}} id={id} syncConnected={false} syncInRef={{ current: null }} outRef={{ current: null }} />
+
   const [rate, setRate] = useState(init?.rate ?? 10)     // maps to 0.1-20 Hz
   const [depth, setDepth] = useState(init?.depth ?? 100)
   const [offset, setOffset] = useState(init?.offset ?? 50)
@@ -77,22 +98,5 @@ export default function LFOModule({ id = 'lfo1', init }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="LFO" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <WaveSelect value={shape} onChange={setShape} />
-        <Knob value={rate} onChange={setRate} label="rate" />
-        <Knob value={depth} onChange={setDepth} label="dep" />
-        <Knob value={offset} onChange={setOffset} label="ofs" />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <JackSocket type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncInRef} label="sync" />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <LFOPanel rate={rate} depth={depth} offset={offset} shape={shape} enabled={enabled} onToggle={() => setEnabled(!enabled)} onRateChange={setRate} onDepthChange={setDepth} onOffsetChange={setOffset} onShapeChange={setShape} id={id} syncConnected={syncConnected} syncInRef={syncInRef} outRef={outRef} />
 }

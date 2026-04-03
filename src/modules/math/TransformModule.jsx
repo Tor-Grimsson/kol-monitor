@@ -8,10 +8,60 @@ import { points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-export default function TransformModule({ id = 'xfm1', init }) {
+function TransformPanel({ posX, posY, scale, rotX, rotY, rotZ, enabled, onToggle, onPosXChange, onPosYChange, onScaleChange, onRotXChange, onRotYChange, onRotZChange, id, inConn, inRef, xConn, xInRef, yConn, yInRef, sConn, sInRef, rxConn, rxInRef, ryConn, ryInRef, rzConn, rzInRef, outRef }) {
+  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
+
+  return (
+    <Module label="Xform" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <div style={{ display: 'flex', gap: 4, width: '100%', padding: '0 2px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
+            <div style={rowStyle}>
+              <JackSocket type="in" port="x" moduleId={id} active={xConn} signalRef={xInRef} label="cv" size="sm" />
+              <Knob value={posX} onChange={onPosXChange} label="x" />
+            </div>
+            <div style={rowStyle}>
+              <JackSocket type="in" port="y" moduleId={id} active={yConn} signalRef={yInRef} label="cv" size="sm" />
+              <Knob value={posY} onChange={onPosYChange} label="y" />
+            </div>
+            <div style={rowStyle}>
+              <JackSocket type="in" port="s" moduleId={id} active={sConn} signalRef={sInRef} label="cv" size="sm" />
+              <Knob value={scale} onChange={onScaleChange} label="scl" />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
+            <div style={rowStyle}>
+              <JackSocket type="in" port="rx" moduleId={id} active={rxConn} signalRef={rxInRef} label="cv" size="sm" />
+              <Knob value={rotX} onChange={onRotXChange} label="rX" />
+            </div>
+            <div style={rowStyle}>
+              <JackSocket type="in" port="ry" moduleId={id} active={ryConn} signalRef={ryInRef} label="cv" size="sm" />
+              <Knob value={rotY} onChange={onRotYChange} label="rY" />
+            </div>
+            <div style={rowStyle}>
+              <JackSocket type="in" port="rz" moduleId={id} active={rzConn} signalRef={rzInRef} label="cv" size="sm" />
+              <Knob value={rotZ} onChange={onRotZChange} label="rZ" />
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="in" moduleId={id} active={inConn} signalRef={inRef} label="in" />
+          <div style={{ width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function TransformModule({ id = 'xfm1', init, preview }) {
+  if (preview) return <TransformPanel posX={50} posY={50} scale={50} rotX={0} rotY={0} rotZ={0} enabled={false} onToggle={() => {}} onPosXChange={() => {}} onPosYChange={() => {}} onScaleChange={() => {}} onRotXChange={() => {}} onRotYChange={() => {}} onRotZChange={() => {}} id={id} inConn={false} inRef={{ current: null }} xConn={false} xInRef={{ current: null }} yConn={false} yInRef={{ current: null }} sConn={false} sInRef={{ current: null }} rxConn={false} rxInRef={{ current: null }} ryConn={false} ryInRef={{ current: null }} rzConn={false} rzInRef={{ current: null }} outRef={{ current: null }} />
+
   const [posX, setPosX] = useState(init?.posX ?? 50)
   const [posY, setPosY] = useState(init?.posY ?? 50)
   const [scale, setScale] = useState(init?.scale ?? 50)
@@ -125,51 +175,5 @@ export default function TransformModule({ id = 'xfm1', init }) {
     },
   })
 
-  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
-
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Xform" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <div style={{ display: 'flex', gap: 4, width: '100%', padding: '0 2px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="x" moduleId={id} active={xConn} signalRef={xInRef} label="cv" size="sm" />
-              <Knob value={posX} onChange={setPosX} label="x" />
-            </div>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="y" moduleId={id} active={yConn} signalRef={yInRef} label="cv" size="sm" />
-              <Knob value={posY} onChange={setPosY} label="y" />
-            </div>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="s" moduleId={id} active={sConn} signalRef={sInRef} label="cv" size="sm" />
-              <Knob value={scale} onChange={setScale} label="scl" />
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="rx" moduleId={id} active={rxConn} signalRef={rxInRef} label="cv" size="sm" />
-              <Knob value={rotX} onChange={setRotX} label="rX" />
-            </div>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="ry" moduleId={id} active={ryConn} signalRef={ryInRef} label="cv" size="sm" />
-              <Knob value={rotY} onChange={setRotY} label="rY" />
-            </div>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="rz" moduleId={id} active={rzConn} signalRef={rzInRef} label="cv" size="sm" />
-              <Knob value={rotZ} onChange={setRotZ} label="rZ" />
-            </div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConn} signalRef={inRef} label="in" />
-          <div style={{ width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <TransformPanel posX={posX} posY={posY} scale={scale} rotX={rotX} rotY={rotY} rotZ={rotZ} enabled={enabled} onToggle={() => setEnabled(!enabled)} onPosXChange={setPosX} onPosYChange={setPosY} onScaleChange={setScale} onRotXChange={setRotX} onRotYChange={setRotY} onRotZChange={setRotZ} id={id} inConn={inConn} inRef={inRef} xConn={xConn} xInRef={xInRef} yConn={yConn} yInRef={yInRef} sConn={sConn} sInRef={sInRef} rxConn={rxConn} rxInRef={rxInRef} ryConn={ryConn} ryInRef={ryInRef} rzConn={rzConn} rzInRef={rzInRef} outRef={outRef} />
 }

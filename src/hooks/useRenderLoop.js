@@ -44,13 +44,16 @@ function topoSort(modulesMap, connections) {
   return { sorted, delayed }
 }
 
-export function useRenderLoop(modulesRef, connectionsRef) {
+export function useRenderLoop(modulesRef, connectionsRef, power = true) {
   const rafRef = useRef(null)
   const outputsRef = useRef(new Map())
   const prevOutputsRef = useRef(new Map())
   const startTimeRef = useRef(0)
   const lastFrameRef = useRef(0)
   const timingRef = useRef({ evalMs: 0, frameCount: 0 })
+
+  const powerRef = useRef(power)
+  powerRef.current = power
 
   // Sort cache
   const sortCacheRef = useRef(null)
@@ -81,32 +84,37 @@ export function useRenderLoop(modulesRef, connectionsRef) {
     // Evaluate modules in sorted order
     const evalStart = performance.now()
 
-    for (const id of sorted) {
-      const mod = modules.get(id)
-      if (!mod) continue
+    if (!powerRef.current) {
+      // Power off — clear all outputs, don't process anything
+      outputsRef.current.clear()
+    } else {
+      for (const id of sorted) {
+        const mod = modules.get(id)
+        if (!mod) continue
 
-      // Gather inputs from connected upstream outputs
-      const inputs = {}
-      for (const portName of Object.keys(mod.inputs)) {
-        inputs[portName] = null
-      }
-
-      for (const conn of connections) {
-        if (conn.toModuleId !== id) continue
-        // Use previous frame's output for delayed (cycled) modules that haven't run yet
-        const source = delayed.has(conn.fromModuleId) && !outputsRef.current.has(conn.fromModuleId)
-          ? prevOutputsRef.current.get(conn.fromModuleId)
-          : outputsRef.current.get(conn.fromModuleId)
-
-        if (source && conn.toPort in inputs) {
-          inputs[conn.toPort] = source[conn.fromPort] || null
+        // Gather inputs from connected upstream outputs
+        const inputs = {}
+        for (const portName of Object.keys(mod.inputs)) {
+          inputs[portName] = null
         }
-      }
 
-      // Call process and store outputs
-      const result = mod.process(inputs, dt, t)
-      if (result) {
-        outputsRef.current.set(id, result)
+        for (const conn of connections) {
+          if (conn.toModuleId !== id) continue
+          // Use previous frame's output for delayed (cycled) modules that haven't run yet
+          const source = delayed.has(conn.fromModuleId) && !outputsRef.current.has(conn.fromModuleId)
+            ? prevOutputsRef.current.get(conn.fromModuleId)
+            : outputsRef.current.get(conn.fromModuleId)
+
+          if (source && conn.toPort in inputs) {
+            inputs[conn.toPort] = source[conn.fromPort] || null
+          }
+        }
+
+        // Call process and store outputs
+        const result = mod.process(inputs, dt, t)
+        if (result) {
+          outputsRef.current.set(id, result)
+        }
       }
     }
 

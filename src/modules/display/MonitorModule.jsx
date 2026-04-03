@@ -11,7 +11,46 @@ import { drawSignal } from './drawSignal'
 
 const BUF_LEN = 128
 
-export default function MonitorModule({ id = 'mon1' }) {
+function MonitorPanel({ canvasRef, enabled, onToggle, id, aConnected, inputARef, bConnected, inputBRef, penConnected, penRef, outARef, outBRef }) {
+  return (
+    <Module>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        gap: 4,
+        padding: '4px 0',
+      }}>
+        <ModuleHeader label="Mon" enabled={enabled} onToggle={onToggle} />
+
+        <canvas
+          ref={canvasRef}
+          width={160}
+          height={100}
+          style={{
+            flex: 1,
+            width: '100%',
+            borderRadius: 2,
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}
+        />
+
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={inputARef} label="a" />
+          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={inputBRef} label="b" />
+          <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
+          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="a" moduleId={id} signalRef={outARef} label="a" />
+          <JackSocket type="out" port="b" moduleId={id} signalRef={outBRef} label="b" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function MonitorModule({ id = 'mon1', preview }) {
+  if (preview) return <MonitorPanel canvasRef={{ current: null }} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={{ current: null }} bConnected={false} inputBRef={{ current: null }} penConnected={false} penRef={{ current: null }} outARef={{ current: null }} outBRef={{ current: null }} />
+
   const canvasRef = useRef(null)
   const inputARef = useRef(null)
   const inputBRef = useRef(null)
@@ -122,38 +161,5 @@ export default function MonitorModule({ id = 'mon1' }) {
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        gap: 4,
-        padding: '4px 0',
-      }}>
-        <ModuleHeader label="Mon" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        <canvas
-          ref={canvasRef}
-          width={160}
-          height={100}
-          style={{
-            flex: 1,
-            width: '100%',
-            borderRadius: 2,
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}
-        />
-
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
-          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={inputARef} label="a" />
-          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={inputBRef} label="b" />
-          <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="a" moduleId={id} signalRef={outARef} label="a" />
-          <JackSocket type="out" port="b" moduleId={id} signalRef={outBRef} label="b" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <MonitorPanel canvasRef={canvasRef} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
 }

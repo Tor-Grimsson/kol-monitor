@@ -7,7 +7,6 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
-import ModuleHeader from '../controls/ModuleHeader'
 import Toggle from '../controls/Toggle'
 import Knob from '../controls/Knob'
 
@@ -75,7 +74,61 @@ function StepGrid({ steps, page, currentStep, length, onChange }) {
   )
 }
 
-export default function SequencerModule({ id = 'seq1' }) {
+function SequencerPanel({ steps, page, currentStep, length, follow, enabled, onToggle, onStepsChange, onPageChange, onLengthChange, onFollowChange, onRandomize, id, clockConnected, clockInRef, resetConnected, resetInRef, gateOutRef, outRef }) {
+  const pageLabel = `${page + 1}/${TOTAL_PAGES}`
+
+  return (
+    <Module label="Seq" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column',
+        height: '100%', padding: '4px 2px', gap: 4,
+      }}>
+
+        {/* Controls row: pagination + length + follow + randomize */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, padding: '0 2px', userSelect: 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <span
+              onClick={() => onPageChange(p => p <= 0 ? TOTAL_PAGES - 1 : p - 1)}
+              className="kol-helper-xxxs"
+              style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: '0 1px' }}
+            >‹</span>
+            <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              {pageLabel}
+            </span>
+            <span
+              onClick={() => onPageChange(p => p >= TOTAL_PAGES - 1 ? 0 : p + 1)}
+              className="kol-helper-xxxs"
+              style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: '0 1px' }}
+            >›</span>
+          </div>
+
+          <Knob value={length} onChange={onLengthChange} min={1} max={32} label="len" />
+          <Toggle size="sm" value={follow} onChange={onFollowChange} label="fol" />
+          <Toggle horizontal size="sm" value={false} onChange={onRandomize} label="rnd" />
+        </div>
+
+        {/* Steps */}
+        <StepGrid steps={steps} page={page} currentStep={currentStep} length={length} onChange={onStepsChange} />
+
+        {/* Jacks: inputs left, outputs right, divider */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+          <JackSocket type="in" port="clock" moduleId={id} active={clockConnected} signalRef={clockInRef} label="clk" />
+          <JackSocket type="in" port="reset" moduleId={id} active={resetConnected} signalRef={resetInRef} label="rst" />
+          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="gate" moduleId={id} signalRef={gateOutRef} label="gate" />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function SequencerModule({ id = 'seq1', preview }) {
+  if (preview) {
+    const defaultSteps = new Array(TOTAL_STEPS).fill(50)
+    return <SequencerPanel steps={defaultSteps} page={0} currentStep={0} length={8} follow={true} enabled={false} onToggle={() => {}} onStepsChange={() => {}} onPageChange={() => {}} onLengthChange={() => {}} onFollowChange={() => {}} onRandomize={() => {}} id={id} clockConnected={false} clockInRef={{ current: null }} resetConnected={false} resetInRef={{ current: null }} gateOutRef={{ current: null }} outRef={{ current: null }} />
+  }
+
   const [steps, setSteps] = useState(initSteps)
   const [currentStep, setCurrentStep] = useState(0)
   const [page, setPage] = useState(0)
@@ -151,54 +204,12 @@ export default function SequencerModule({ id = 'seq1' }) {
     if (stepPage !== page) setPage(stepPage)
   }
 
-  const pageLabel = `${page + 1}/${TOTAL_PAGES}`
+  const handleRandomize = () => {
+    const newSteps = [...steps]
+    const off = page * STEPS_PER_PAGE
+    for (let i = 0; i < STEPS_PER_PAGE; i++) newSteps[off + i] = Math.round(Math.random() * 100)
+    setSteps(newSteps)
+  }
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column',
-        height: '100%', padding: '4px 2px', gap: 4,
-      }}>
-        <ModuleHeader label="Seq" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        {/* Controls row: pagination + length + follow + randomize */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, padding: '0 2px', userSelect: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <span
-              onClick={() => setPage(p => p <= 0 ? TOTAL_PAGES - 1 : p - 1)}
-              style={{ cursor: 'pointer', fontSize: '8px', color: 'rgba(255,255,255,0.4)', padding: '0 1px' }}
-            >‹</span>
-            <span style={{ fontSize: '7px', fontFamily: 'var(--kol-font-mono)', color: 'rgba(255,255,255,0.6)' }}>
-              {pageLabel}
-            </span>
-            <span
-              onClick={() => setPage(p => p >= TOTAL_PAGES - 1 ? 0 : p + 1)}
-              style={{ cursor: 'pointer', fontSize: '8px', color: 'rgba(255,255,255,0.4)', padding: '0 1px' }}
-            >›</span>
-          </div>
-
-          <Knob value={length} onChange={setLength} min={1} max={32} label="len" />
-          <Toggle size="sm" value={follow} onChange={setFollow} label="fol" />
-          <Toggle horizontal size="sm" value={false} onChange={() => {
-            const newSteps = [...steps]
-            const off = page * STEPS_PER_PAGE
-            for (let i = 0; i < STEPS_PER_PAGE; i++) newSteps[off + i] = Math.round(Math.random() * 100)
-            setSteps(newSteps)
-          }} label="rnd" />
-        </div>
-
-        {/* Steps */}
-        <StepGrid steps={steps} page={page} currentStep={currentStep} length={length} onChange={setSteps} />
-
-        {/* Jacks: inputs left, outputs right, divider */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
-          <JackSocket type="in" port="clock" moduleId={id} active={clockConnected} signalRef={clockInRef} label="clk" />
-          <JackSocket type="in" port="reset" moduleId={id} active={resetConnected} signalRef={resetInRef} label="rst" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="gate" moduleId={id} signalRef={gateOutRef} label="gate" />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <SequencerPanel steps={steps} page={page} currentStep={currentStep} length={length} follow={follow} enabled={enabled} onToggle={() => setEnabled(!enabled)} onStepsChange={setSteps} onPageChange={setPage} onLengthChange={setLength} onFollowChange={setFollow} onRandomize={handleRandomize} id={id} clockConnected={clockConnected} clockInRef={clockInRef} resetConnected={resetConnected} resetInRef={resetInRef} gateOutRef={gateOutRef} outRef={outRef} />
 }

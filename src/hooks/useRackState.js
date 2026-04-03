@@ -20,10 +20,18 @@ function packModules(modules) {
 const DEFAULT_ROWS = [
   {
     id: 'row1', height: '1u', modules: packModules([
+      { type: 'power', id: 'power1', hp: 6 },
       { type: 'mult', id: 'mult1', hp: 8 },
       { type: 'noise', id: 'noise1', hp: 8 },
       { type: 'attenuator', id: 'atten1', hp: 8 },
       { type: 'vca', id: 'vca1', hp: 8 },
+      { type: 'sampleHold', id: 'sh1', hp: 6 },
+      { type: 'logic', id: 'logic1', hp: 4 },
+      { type: 'comparator', id: 'comp1', hp: 4 },
+      { type: 'switch', id: 'sw1', hp: 4 },
+      { type: 'ringMod', id: 'ring1', hp: 6 },
+      { type: 'reverb', id: 'verb1', hp: 6 },
+      { type: 'ramp', id: 'ramp1', hp: 6 },
     ]),
   },
   {
@@ -34,12 +42,8 @@ const DEFAULT_ROWS = [
       { type: 'lfo', id: 'lfo1', hp: 6 },
       { type: 'envelope', id: 'env1', hp: 6 },
       { type: 'sequencer', id: 'seq1', hp: 12 },
-      { type: 'sampleHold', id: 'sh1', hp: 6 },
-      { type: 'logic', id: 'logic1', hp: 4 },
-      { type: 'comparator', id: 'comp1', hp: 4 },
       { type: 'constant', id: 'const1', hp: 4 },
       { type: 'pen', id: 'pen1', hp: 6 },
-      { type: 'switch', id: 'sw1', hp: 4 },
       { type: 'quantizer', id: 'quant1', hp: 4 },
       { type: 'scaleOfs', id: 'scl1', hp: 4 },
       { type: 'maths', id: 'maths1', hp: 8 },
@@ -51,13 +55,10 @@ const DEFAULT_ROWS = [
       { type: 'waveform', id: 'wave1', hp: 6 },
       { type: 'rgb', id: 'rgb1', hp: 8 },
       { type: 'wireframe', id: 'wire1', hp: 8 },
-      { type: 'ramp', id: 'ramp1', hp: 6 },
       { type: 'smx3', id: 'smx1', hp: 12 },
       { type: 'lineGen', id: 'line1', hp: 8 },
-      { type: 'ringMod', id: 'ring1', hp: 6 },
       { type: 'waveshaper', id: 'wshp1', hp: 6 },
       { type: 'delay', id: 'delay1', hp: 6 },
-      { type: 'reverb', id: 'verb1', hp: 6 },
       { type: 'monitor', id: 'mon1', hp: 12 },
       { type: 'output', id: 'out1', hp: 16 },
     ]),
@@ -88,7 +89,7 @@ function hasOverlap(modules, offset, hp, excludeId) {
 
 export function useRackState() {
   const [rows, setRows] = useState(DEFAULT_ROWS)
-  const [parked, setParked] = useState([])
+  const [workbench, setWorkbench] = useState([])
   const [editMode, setEditMode] = useState(false)
 
   const addModule = useCallback((type, rowId) => {
@@ -103,62 +104,37 @@ export function useRackState() {
     }))
   }, [])
 
-  // Park a module at specific page coordinates with rendered height
-  const removeModule = useCallback((moduleId, x = 100, y = 100, parkedHeight = 300) => {
-    // Find the module first from current rows
+  // Send a module from rack to workbench
+  const sendToWorkbench = useCallback((moduleId) => {
     let found = null
-    for (const row of rows) {
+    setRows(prev => prev.map(row => {
       const mod = row.modules.find(m => m.id === moduleId)
-      if (mod) { found = mod; break }
-    }
-    if (!found) return
-    setRows(prev => prev.map(row => ({
-      ...row,
-      modules: row.modules.filter(m => m.id !== moduleId),
-    })))
-    setParked(prev => [...prev, { ...found, x, y, parkedHeight }])
-  }, [rows])
+      if (mod) found = mod
+      return { ...row, modules: row.modules.filter(m => m.id !== moduleId) }
+    }))
+    if (found) setWorkbench(prev => [...prev, found])
+  }, [])
 
-  const unparkModule = useCallback((moduleId, rowId, targetOffset) => {
-    setParked(prev => {
+  // Return a module from workbench to first available rack slot
+  const returnFromWorkbench = useCallback((moduleId) => {
+    setWorkbench(prev => {
       const mod = prev.find(m => m.id === moduleId)
       if (!mod) return prev
-      setRows(r => r.map(row => {
-        if (row.id !== rowId) return row
-        const offset = targetOffset != null ? targetOffset : findFreeOffset(row.modules, mod.hp)
-        if (offset === null) return row
-        if (hasOverlap(row.modules, offset, mod.hp, mod.id)) return row
-        return { ...row, modules: [...row.modules, { ...mod, offset, x: undefined, y: undefined }] }
-      }))
+      const def = MODULE_DEFS[mod.type]
+      const targetHeight = (def?.u || 3) === 1 ? '1u' : '3u'
+      setRows(r => {
+        const updated = [...r]
+        for (const row of updated) {
+          if (row.height !== targetHeight) continue
+          const offset = findFreeOffset(row.modules, mod.hp)
+          if (offset !== null) {
+            row.modules = [...row.modules, { ...mod, offset }]
+            return [...updated]
+          }
+        }
+        return updated
+      })
       return prev.filter(m => m.id !== moduleId)
-    })
-  }, [])
-
-  const deleteModule = useCallback((moduleId) => {
-    setParked(prev => prev.filter(m => m.id !== moduleId))
-  }, [])
-
-  const moveParked = useCallback((moduleId, x, y) => {
-    setParked(prev => prev.map(m => m.id === moduleId ? { ...m, x, y } : m))
-  }, [])
-
-  // Move module to a specific HP offset in a target row
-  const moveModule = useCallback((moduleId, targetRowId, targetOffset) => {
-    setRows(prev => {
-      let mod = null
-      const without = prev.map(row => {
-        const m = row.modules.find(m => m.id === moduleId)
-        if (!m) return row
-        mod = m
-        return { ...row, modules: row.modules.filter(m => m.id !== moduleId) }
-      })
-      if (!mod) return prev
-      const clamped = Math.max(0, Math.min(TOTAL_HP - mod.hp, targetOffset))
-      return without.map(row => {
-        if (row.id !== targetRowId) return row
-        if (hasOverlap(row.modules, clamped, mod.hp, mod.id)) return row
-        return { ...row, modules: [...row.modules, { ...mod, offset: clamped }] }
-      })
     })
   }, [])
 
@@ -171,7 +147,7 @@ export function useRackState() {
     setRows(prev => {
       const row = prev.find(r => r.id === rowId)
       if (row && row.modules.length > 0) {
-        setParked(p => [...p, ...row.modules])
+        setWorkbench(p => [...p, ...row.modules])
       }
       return prev.filter(r => r.id !== rowId)
     })
@@ -218,21 +194,18 @@ export function useRackState() {
       }
       return cleared
     })
-    setParked([])
+    setWorkbench([])
   }, [])
 
   return {
     rows,
-    parked,
+    workbench,
     editMode,
     setEditMode,
     loadPreset,
     addModule,
-    removeModule,
-    unparkModule,
-    deleteModule,
-    moveModule,
-    moveParked,
+    sendToWorkbench,
+    returnFromWorkbench,
     addRow,
     removeRow,
     setRowHeight,

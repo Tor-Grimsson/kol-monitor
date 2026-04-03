@@ -8,12 +8,32 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
 import Selector from '../controls/Selector'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['up', 'down', 'tri']
 
-export default function RampModule({ id = 'ramp1' }) {
+function RampPanel({ rate, shape, enabled, onToggle, onRateChange, onShapeChange, id, syncConnected, syncRef, outRef }) {
+  return (
+    <Module label="Ramp" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <Selector value={shape} options={SHAPES} onChange={onShapeChange} />
+        <Knob value={rate} onChange={onRateChange} label="rate" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncRef} label="sync" />
+          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function RampModule({ id = 'ramp1', preview }) {
+  if (preview) return <RampPanel rate={20} shape="up" enabled={false} onToggle={() => {}} onRateChange={() => {}} onShapeChange={() => {}} id={id} syncConnected={false} syncRef={{ current: null }} outRef={{ current: null }} />
+
   const [rate, setRate] = useState(20)
   const [shape, setShape] = useState('up')
   const [enabled, setEnabled] = useState(true)
@@ -66,21 +86,5 @@ export default function RampModule({ id = 'ramp1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Ramp" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <Selector value={shape} options={SHAPES} onChange={setShape} />
-        <Knob value={rate} onChange={setRate} label="rate" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncRef} label="sync" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <RampPanel rate={rate} shape={shape} enabled={enabled} onToggle={() => setEnabled(!enabled)} onRateChange={setRate} onShapeChange={setShape} id={id} syncConnected={syncConnected} syncRef={syncRef} outRef={outRef} />
 }

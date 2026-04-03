@@ -16,7 +16,85 @@ import { drawSignal } from './drawSignal'
 const BUF_LEN = 128
 const CHS = ['a', 'b', 'c', 'd']
 
-export default function ConsoleModule({ id = 'console1', init }) {
+function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s2A, s2B, s2C, s2D, rtn1, rtn2, muteA, muteB, muteC, muteD, bg, masterLvl, enabled, onToggle, setLvlA, setLvlB, setLvlC, setLvlD, setS1A, setS1B, setS1C, setS1D, setS2A, setS2B, setS2C, setS2D, setRtn1, setRtn2, setMuteA, setMuteB, setMuteC, setMuteD, setBg, setMasterLvl, id, chConns, chRefs, rtn1Conn, rtn1InRef, rtn2Conn, rtn2InRef, penConn, penRef, bgConn, bgInRef, send1Ref, send2Ref, masterOutRef }) {
+  const stripStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 'none' }
+  const knobRow = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }
+
+  const lvls = [lvlA, lvlB, lvlC, lvlD]
+  const setLvls = [setLvlA, setLvlB, setLvlC, setLvlD]
+  const s1s = [s1A, s1B, s1C, s1D]
+  const setS1s = [setS1A, setS1B, setS1C, setS1D]
+  const s2s = [s2A, s2B, s2C, s2D]
+  const setS2s = [setS2A, setS2B, setS2C, setS2D]
+  const mutes = [muteA, muteB, muteC, muteD]
+  const setMutes = [setMuteA, setMuteB, setMuteC, setMuteD]
+
+  return (
+    <Module>
+      <div style={{ display: 'flex', height: '100%', gap: 2, padding: '4px 2px' }}>
+
+        {/* 4 Channel strips */}
+        {CHS.map((ch, i) => (
+          <div key={ch} style={stripStyle}>
+            <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{ch}</span>
+            <JackSocket type="in" port={ch} moduleId={id} active={chConns[ch]} signalRef={{ get current() { return chRefs.current[ch] } }} label="in" size="sm" />
+            <Fader value={lvls[i]} onChange={setLvls[i]} label="lvl" />
+            <Knob value={s1s[i]} onChange={setS1s[i]} label="s1" />
+            <Knob value={s2s[i]} onChange={setS2s[i]} label="s2" />
+            <Toggle size="sm" value={!mutes[i]} onChange={() => setMutes[i](!mutes[i])} label="on" />
+          </div>
+        ))}
+
+        {/* Divider */}
+        <div style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'rgba(255,255,255,0.06)', margin: '0 2px' }} />
+
+        {/* Send 1 */}
+        <div style={stripStyle}>
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.5)' }}>S1</span>
+          <JackSocket type="out" port="snd1" moduleId={id} signalRef={send1Ref} label="snd" size="sm" />
+          <JackSocket type="in" port="rtn1" moduleId={id} active={rtn1Conn} signalRef={rtn1InRef} label="rtn" size="sm" />
+          <Knob value={rtn1} onChange={setRtn1} label="rtn" />
+        </div>
+
+        {/* Send 2 */}
+        <div style={stripStyle}>
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.5)' }}>S2</span>
+          <JackSocket type="out" port="snd2" moduleId={id} signalRef={send2Ref} label="snd" size="sm" />
+          <JackSocket type="in" port="rtn2" moduleId={id} active={rtn2Conn} signalRef={rtn2InRef} label="rtn" size="sm" />
+          <Knob value={rtn2} onChange={setRtn2} label="rtn" />
+        </div>
+
+        {/* Divider */}
+        <div style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'rgba(255,255,255,0.06)', margin: '0 2px' }} />
+
+        {/* Master */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 1, minHeight: 0 }}>
+          <ModuleHeader label="Console" enabled={enabled} onToggle={onToggle} />
+          <canvas
+            ref={canvasRef}
+            width={200}
+            height={120}
+            style={{ flex: 1, minHeight: 0, width: '100%', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)' }}
+          />
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <JackSocket type="out" port="out" moduleId={id} signalRef={masterOutRef} label="out" />
+            <JackSocket type="in" port="bgCV" moduleId={id} active={bgConn} signalRef={bgInRef} label="bg" size="sm" />
+            <Knob value={bg} onChange={setBg} label="bg" />
+            <Knob value={masterLvl} onChange={setMasterLvl} label="mst" />
+            <JackSocket type="in" port="pen" moduleId={id} active={penConn} signalRef={penRef} label="pen" size="sm" />
+          </div>
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function ConsoleModule({ id = 'console1', init, preview }) {
+  if (preview) {
+    const dummyChRefs = { current: { a: null, b: null, c: null, d: null } }
+    return <ConsolePanel canvasRef={{ current: null }} lvlA={100} lvlB={100} lvlC={100} lvlD={100} s1A={0} s1B={0} s1C={0} s1D={0} s2A={0} s2B={0} s2C={0} s2D={0} rtn1={80} rtn2={80} muteA={false} muteB={false} muteC={false} muteD={false} bg={0} masterLvl={100} enabled={false} onToggle={() => {}} setLvlA={() => {}} setLvlB={() => {}} setLvlC={() => {}} setLvlD={() => {}} setS1A={() => {}} setS1B={() => {}} setS1C={() => {}} setS1D={() => {}} setS2A={() => {}} setS2B={() => {}} setS2C={() => {}} setS2D={() => {}} setRtn1={() => {}} setRtn2={() => {}} setMuteA={() => {}} setMuteB={() => {}} setMuteC={() => {}} setMuteD={() => {}} setBg={() => {}} setMasterLvl={() => {}} id={id} chConns={{ a: false, b: false, c: false, d: false }} chRefs={dummyChRefs} rtn1Conn={false} rtn1InRef={{ current: null }} rtn2Conn={false} rtn2InRef={{ current: null }} penConn={false} penRef={{ current: null }} bgConn={false} bgInRef={{ current: null }} send1Ref={{ current: null }} send2Ref={{ current: null }} masterOutRef={{ current: null }} />
+  }
+
   const canvasRef = useRef(null)
 
   // Channel levels
@@ -212,74 +290,5 @@ export default function ConsoleModule({ id = 'console1', init }) {
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  const stripStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 'none' }
-  const knobRow = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }
-
-  const lvls = [lvlA, lvlB, lvlC, lvlD]
-  const setLvls = [setLvlA, setLvlB, setLvlC, setLvlD]
-  const s1s = [s1A, s1B, s1C, s1D]
-  const setS1s = [setS1A, setS1B, setS1C, setS1D]
-  const s2s = [s2A, s2B, s2C, s2D]
-  const setS2s = [setS2A, setS2B, setS2C, setS2D]
-  const mutes = [muteA, muteB, muteC, muteD]
-  const setMutes = [setMuteA, setMuteB, setMuteC, setMuteD]
-
-  return (
-    <Module>
-      <div style={{ display: 'flex', height: '100%', gap: 2, padding: '4px 2px' }}>
-
-        {/* 4 Channel strips */}
-        {CHS.map((ch, i) => (
-          <div key={ch} style={stripStyle}>
-            <span style={{ fontSize: '7px', fontFamily: 'var(--kol-font-mono)', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{ch}</span>
-            <JackSocket type="in" port={ch} moduleId={id} active={chConns[ch]} signalRef={{ get current() { return chRefs.current[ch] } }} label="in" size="sm" />
-            <Fader value={lvls[i]} onChange={setLvls[i]} label="lvl" />
-            <Knob value={s1s[i]} onChange={setS1s[i]} label="s1" />
-            <Knob value={s2s[i]} onChange={setS2s[i]} label="s2" />
-            <Toggle size="sm" value={!mutes[i]} onChange={() => setMutes[i](!mutes[i])} label="on" />
-          </div>
-        ))}
-
-        {/* Divider */}
-        <div style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'rgba(255,255,255,0.06)', margin: '0 2px' }} />
-
-        {/* Send 1 */}
-        <div style={stripStyle}>
-          <span style={{ fontSize: '7px', fontFamily: 'var(--kol-font-mono)', color: 'rgba(255,255,255,0.5)' }}>S1</span>
-          <JackSocket type="out" port="snd1" moduleId={id} signalRef={send1Ref} label="snd" size="sm" />
-          <JackSocket type="in" port="rtn1" moduleId={id} active={rtn1Conn} signalRef={rtn1InRef} label="rtn" size="sm" />
-          <Knob value={rtn1} onChange={setRtn1} label="rtn" />
-        </div>
-
-        {/* Send 2 */}
-        <div style={stripStyle}>
-          <span style={{ fontSize: '7px', fontFamily: 'var(--kol-font-mono)', color: 'rgba(255,255,255,0.5)' }}>S2</span>
-          <JackSocket type="out" port="snd2" moduleId={id} signalRef={send2Ref} label="snd" size="sm" />
-          <JackSocket type="in" port="rtn2" moduleId={id} active={rtn2Conn} signalRef={rtn2InRef} label="rtn" size="sm" />
-          <Knob value={rtn2} onChange={setRtn2} label="rtn" />
-        </div>
-
-        {/* Divider */}
-        <div style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'rgba(255,255,255,0.06)', margin: '0 2px' }} />
-
-        {/* Master */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 1, minHeight: 0 }}>
-          <ModuleHeader label="Console" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-          <canvas
-            ref={canvasRef}
-            width={200}
-            height={120}
-            style={{ flex: 1, minHeight: 0, width: '100%', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)' }}
-          />
-          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            <JackSocket type="out" port="out" moduleId={id} signalRef={masterOutRef} label="out" />
-            <JackSocket type="in" port="bgCV" moduleId={id} active={bgConn} signalRef={bgInRef} label="bg" size="sm" />
-            <Knob value={bg} onChange={setBg} label="bg" />
-            <Knob value={masterLvl} onChange={setMasterLvl} label="mst" />
-            <JackSocket type="in" port="pen" moduleId={id} active={penConn} signalRef={penRef} label="pen" size="sm" />
-          </div>
-        </div>
-      </div>
-    </Module>
-  )
+  return <ConsolePanel canvasRef={canvasRef} lvlA={lvlA} lvlB={lvlB} lvlC={lvlC} lvlD={lvlD} s1A={s1A} s1B={s1B} s1C={s1C} s1D={s1D} s2A={s2A} s2B={s2B} s2C={s2C} s2D={s2D} rtn1={rtn1} rtn2={rtn2} muteA={muteA} muteB={muteB} muteC={muteC} muteD={muteD} bg={bg} masterLvl={masterLvl} enabled={enabled} onToggle={() => setEnabled(!enabled)} setLvlA={setLvlA} setLvlB={setLvlB} setLvlC={setLvlC} setLvlD={setLvlD} setS1A={setS1A} setS1B={setS1B} setS1C={setS1C} setS1D={setS1D} setS2A={setS2A} setS2B={setS2B} setS2C={setS2C} setS2D={setS2D} setRtn1={setRtn1} setRtn2={setRtn2} setMuteA={setMuteA} setMuteB={setMuteB} setMuteC={setMuteC} setMuteD={setMuteD} setBg={setBg} setMasterLvl={setMasterLvl} id={id} chConns={chConns} chRefs={chRefs} rtn1Conn={rtn1Conn} rtn1InRef={rtn1InRef} rtn2Conn={rtn2Conn} rtn2InRef={rtn2InRef} penConn={penConn} penRef={penRef} bgConn={bgConn} bgInRef={bgInRef} send1Ref={send1Ref} send2Ref={send2Ref} masterOutRef={masterOutRef} />
 }

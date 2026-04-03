@@ -7,11 +7,28 @@ import { scalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Selector from '../controls/Selector'
-import ModuleHeader from '../controls/ModuleHeader'
 
 const TYPES = ['wht', 'pnk', 's&h']
 
-export default function NoiseModule({ id = 'noise1' }) {
+function NoisePanel({ type, enabled, onToggle, onTypeChange, id, outRef }) {
+  return (
+    <Module label="Noise" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Selector value={type} options={TYPES} onChange={onTypeChange} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function NoiseModule({ id = 'noise1', preview }) {
+  if (preview) return <NoisePanel type="wht" enabled={false} onToggle={() => {}} onTypeChange={() => {}} id={id} outRef={{ current: null }} />
+
   const [type, setType] = useState('wht')
   const [enabled, setEnabled] = useState(true)
 
@@ -59,18 +76,5 @@ export default function NoiseModule({ id = 'noise1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Noise" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Selector value={type} options={TYPES} onChange={setType} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <NoisePanel type={type} enabled={enabled} onToggle={() => setEnabled(!enabled)} onTypeChange={setType} id={id} outRef={outRef} />
 }

@@ -7,9 +7,38 @@ import { scalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 
-export default function ConstantModule({ id = 'const1' }) {
+function ConstantPanel({ value, enabled, onToggle, onValueChange, id, outputRef }) {
+  return (
+    <Module label="Const" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '100%',
+        padding: '4px 0',
+      }}>
+
+        {/* Knob */}
+        <Knob value={value} onChange={onValueChange} />
+
+        {/* Output jack */}
+        <JackSocket
+          type="out"
+          port="value"
+          moduleId={id}
+          signalRef={outputRef}
+          label="out"
+        />
+      </div>
+    </Module>
+  )
+}
+
+export default function ConstantModule({ id = 'const1', preview }) {
+  if (preview) return <ConstantPanel value={50} enabled={false} onToggle={() => {}} onValueChange={() => {}} id={id} outputRef={{ current: null }} />
+
   const [value, setValue] = useState(50)
   const [enabled, setEnabled] = useState(true)
   const valueRef = useRef(50)
@@ -30,30 +59,5 @@ export default function ConstantModule({ id = 'const1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: '100%',
-        padding: '4px 0',
-      }}>
-        <ModuleHeader label="Const" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        {/* Knob */}
-        <Knob value={value} onChange={setValue} />
-
-        {/* Output jack */}
-        <JackSocket
-          type="out"
-          port="value"
-          moduleId={id}
-          signalRef={outputRef}
-          label="out"
-        />
-      </div>
-    </Module>
-  )
+  return <ConstantPanel value={value} enabled={enabled} onToggle={() => setEnabled(!enabled)} onValueChange={setValue} id={id} outputRef={outputRef} />
 }

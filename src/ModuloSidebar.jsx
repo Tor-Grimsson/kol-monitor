@@ -1,10 +1,8 @@
-// ModuloSidebar — tabbed: Case, Presets, Modules
+// ModuloSidebar — sections: Case, Modules, Presets
 
-import { useState } from 'react'
-import { CATEGORIES, getModulesByCategory } from './moduleRegistry'
+import { useState, useRef, useEffect } from 'react'
+import { CATEGORIES, getModulesByCategory, MODULE_DEFS } from './moduleRegistry'
 import { patches } from './patches'
-
-const TABS = ['Presets', 'Case', 'Modules']
 
 const CATEGORY_LABELS = {
   control: 'Control',
@@ -14,19 +12,14 @@ const CATEGORY_LABELS = {
   utility: 'Utility',
 }
 
-const labelStyle = { fontSize: '10px', fontFamily: 'var(--kol-font-mono)', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 8 }
-const rowStyle = {
-  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  height: 22, paddingLeft: 8, fontSize: '10px', fontFamily: 'var(--kol-font-mono)',
-  color: 'rgba(255,255,255,0.6)', cursor: 'pointer', borderRadius: 2,
-}
-
-function hoverBg(e) { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)' }
-function clearBg(e) { e.currentTarget.style.backgroundColor = 'transparent' }
-
-export default function ModuloSidebar({ rack, routing, onClose }) {
-  const [tab, setTab] = useState('Presets')
+export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoomFit }) {
   const [openCats, setOpenCats] = useState(() => new Set(CATEGORIES))
+  const [zoomInput, setZoomInput] = useState(() => String(Math.round((zoom || 1) * 100)))
+  const zoomInputRef = useRef(false) // true while user is editing
+
+  useEffect(() => {
+    if (!zoomInputRef.current) setZoomInput(String(Math.round((zoom || 1) * 100)))
+  }, [zoom])
 
   const toggleCat = (cat) => {
     setOpenCats(prev => {
@@ -48,177 +41,168 @@ export default function ModuloSidebar({ rack, routing, onClose }) {
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden" style={{ userSelect: 'none' }}>
-      {/* Tab bar */}
-      <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-        {TABS.map(t => (
-          <div
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              flex: 1, textAlign: 'center', padding: '8px 0',
-              fontSize: '10px', fontFamily: 'var(--kol-font-mono)', textTransform: 'uppercase',
-              color: tab === t ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)',
-              borderBottom: tab === t ? '1px solid rgba(255,255,255,0.4)' : '1px solid transparent',
-              cursor: 'pointer',
-            }}
+
+      {/* CASE — compact row management */}
+      <div className="p-4 border-b border-fg-08">
+        <div className="kol-helper-xs text-fg-48 mb-3 uppercase">Case</div>
+        <div className="flex flex-col gap-1">
+          {rack.rows.map((row, i) => (
+            <div key={row.id} className="flex items-center justify-between px-3 h-6">
+              <span className="kol-helper-xs text-fg-64">Row {i + 1}</span>
+              <div className="flex items-center gap-2">
+                <span
+                  onClick={() => rack.setRowHeight(row.id, row.height === '1u' ? '3u' : '1u')}
+                  className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+                >
+                  [{row.height.toUpperCase()}]
+                </span>
+                <span className="kol-helper-xs text-fg-32">
+                  {row.modules.reduce((s, m) => s + m.hp, 0)}hp
+                </span>
+                {rack.rows.length > 1 && (
+                  <span
+                    onClick={() => rack.removeRow(row.id)}
+                    className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+                  >x</span>
+                )}
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={() => rack.addRow('3u')}
+            className="text-left px-3 h-6 rounded kol-helper-xs text-fg-32 hover:text-fg-96 hover:bg-fg-04 transition-colors flex items-center"
           >
-            {t}
+            + add row
+          </button>
+
+          {/* Zoom */}
+          <div className="flex items-center justify-between px-3 h-6 mt-2">
+            <span className="kol-helper-xs text-fg-48">Zoom</span>
+            <div className="flex items-center gap-2">
+              <span
+                onClick={() => onZoomChange?.(Math.max(0.5, (zoom || 1) - 0.1))}
+                className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+              >−</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={zoomInput}
+                onFocus={(e) => { zoomInputRef.current = true; e.target.select() }}
+                onChange={(e) => setZoomInput(e.target.value)}
+                onBlur={() => {
+                  zoomInputRef.current = false
+                  const v = parseInt(zoomInput, 10)
+                  if (!isNaN(v)) onZoomChange?.(Math.min(2, Math.max(0.5, v / 100)))
+                  else setZoomInput(String(Math.round((zoom || 1) * 100)))
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.target.blur()
+                }}
+                className="kol-helper-xs text-fg-64 bg-transparent text-right border-none outline-none"
+                style={{ width: 32 }}
+              />
+              <span className="kol-helper-xs text-fg-32">%</span>
+              <span
+                onClick={() => onZoomChange?.(Math.min(2, (zoom || 1) + 0.1))}
+                className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+              >+</span>
+            </div>
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* Tab content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
-
-        {/* CASE TAB */}
-        {tab === 'Case' && (
-          <>
-            <div style={labelStyle}>Rows</div>
-            {rack.rows.map((row, i) => (
-              <div key={row.id} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                height: 24, fontSize: '10px', fontFamily: 'var(--kol-font-mono)', color: 'rgba(255,255,255,0.6)',
-              }}>
-                <span>Row {i + 1}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span
-                    onClick={() => rack.setRowHeight(row.id, row.height === '1u' ? '3u' : '1u')}
-                    style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.5)' }}
-                  >
-                    [{row.height.toUpperCase()}]
-                  </span>
-                  <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}>
-                    {row.modules.reduce((s, m) => s + m.hp, 0)}hp
-                  </span>
-                  {rack.rows.length > 1 && (
-                    <span
-                      onClick={() => rack.removeRow(row.id)}
-                      style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}
-                    >x</span>
-                  )}
-                </div>
+      {/* MODULES — scrollable catalog */}
+      <div className="flex-1 overflow-y-auto p-4 border-b border-fg-08">
+        <div className="kol-helper-xs text-fg-48 mb-3 uppercase">Modules</div>
+        {CATEGORIES.map(cat => {
+          const modules = getModulesByCategory(cat)
+          const isOpen = openCats.has(cat)
+          return (
+            <div key={cat} className="mb-2">
+              <div
+                onClick={() => toggleCat(cat)}
+                className="kol-helper-xs text-fg-48 hover:text-fg-64 cursor-pointer select-none mb-1 px-3"
+              >
+                {isOpen ? '\u25BE' : '\u25B8'} {CATEGORY_LABELS[cat]}
               </div>
-            ))}
-            <div
-              onClick={() => rack.addRow('3u')}
-              style={{ fontSize: '10px', fontFamily: 'var(--kol-font-mono)', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', marginTop: 4 }}
-            >
-              + add row
-            </div>
-
-          </>
-        )}
-
-        {/* PRESETS TAB */}
-        {tab === 'Presets' && (
-          <>
-            <div style={labelStyle}>Patches</div>
-            {Object.keys(patches).map(name => {
-              const p = patches[name]
-              const count = p.connections ? p.connections.length : 0
-              return (
-                <div
-                  key={name}
-                  onClick={() => {
-                    if (p.rows) rack.loadPreset(p)
-                    routing?.loadPatch(p.connections || [])
-                  }}
-                  style={rowStyle}
-                  onMouseEnter={hoverBg}
-                  onMouseLeave={clearBg}
-                >
-                  <span>{name}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.25)' }}>{count}</span>
-                </div>
-              )
-            })}
-          </>
-        )}
-
-        {/* MODULES TAB */}
-        {tab === 'Modules' && (
-          <>
-            {CATEGORIES.map(cat => {
-              const modules = getModulesByCategory(cat)
-              const isOpen = openCats.has(cat)
-              return (
-                <div key={cat} style={{ marginBottom: 8 }}>
-                  <div
-                    onClick={() => toggleCat(cat)}
-                    style={{
-                      ...labelStyle, cursor: 'pointer', marginBottom: 4, userSelect: 'none',
-                    }}
-                  >
-                    {isOpen ? '\u25BE' : '\u25B8'} {CATEGORY_LABELS[cat]}
-                  </div>
-                  {isOpen && modules.map(mod => (
-                    <div
+              {isOpen && (
+                <div className="flex flex-col gap-0.5">
+                  {modules.map(mod => (
+                    <button
                       key={mod.type}
                       onClick={() => {
                         const rowId = findRowWithSpace(mod.hp, mod.u)
                         if (rowId) rack.addModule(mod.type, rowId)
                       }}
-                      style={rowStyle}
-                      onMouseEnter={hoverBg}
-                      onMouseLeave={clearBg}
+                      className="text-left px-3 h-6 rounded kol-helper-xs text-fg-64 hover:text-fg-96 hover:bg-fg-04 transition-colors flex items-center justify-between"
                     >
                       <span>{mod.label}</span>
-                      <span style={{ color: 'rgba(255,255,255,0.25)' }}>{mod.u === 1 ? '1u' : '3u'} {mod.hp}hp</span>
-                    </div>
+                      <span className="text-fg-32">{mod.u === 1 ? '1U' : '3U'} {mod.hp}hp</span>
+                    </button>
                   ))}
                 </div>
-              )
-            })}
+              )}
+            </div>
+          )
+        })}
 
-            {/* Parked */}
-            {rack.parked.length > 0 && (
-              <>
-                <div style={{ ...labelStyle, marginTop: 12 }}>Parked</div>
-                {rack.parked.map(mod => (
-                  <div key={mod.id} style={{ ...rowStyle, color: 'rgba(255,255,255,0.4)' }}>
-                    <span
-                      onClick={() => {
-                        const rowId = rack.rows[rack.rows.length - 1]?.id
-                        if (rowId) rack.unparkModule(mod.id, rowId)
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
-                      onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {mod.type}
-                    </span>
-                    <span
-                      onClick={() => rack.deleteModule(mod.id)}
-                      style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.2)' }}
-                    >x</span>
-                  </div>
-                ))}
-              </>
-            )}
-          </>
+        {/* Workbench modules */}
+        {rack.workbench.length > 0 && (
+          <div className="mt-3">
+            <div className="kol-helper-xs text-fg-48 mb-2 uppercase px-3">Workbench</div>
+            <div className="flex flex-col gap-0.5">
+              {rack.workbench.map(mod => (
+                <button
+                  key={mod.id}
+                  onClick={() => rack.returnFromWorkbench(mod.id)}
+                  className="text-left px-3 h-6 rounded kol-helper-xs text-fg-48 hover:text-fg-64 hover:bg-fg-04 transition-colors flex items-center justify-between"
+                >
+                  <span>{MODULE_DEFS[mod.type]?.label || mod.type}</span>
+                  <span className="text-fg-32">{mod.hp}hp</span>
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Always visible footer — edit mode toggle */}
-      <div style={{
-        flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.08)', padding: '8px 16px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
+      {/* PRESETS */}
+      <div className="p-4 border-b border-fg-08" style={{ maxHeight: '40%', overflowY: 'auto' }}>
+        <div className="kol-helper-xs text-fg-48 mb-3 uppercase">Presets</div>
+        <div className="flex flex-col gap-0.5">
+          {Object.keys(patches).map(name => {
+            const p = patches[name]
+            const count = p.connections ? p.connections.length : 0
+            return (
+              <button
+                key={name}
+                onClick={() => {
+                  if (p.rows) rack.loadPreset(p)
+                  routing?.loadPatch(p.connections || [])
+                }}
+                className="text-left px-3 h-6 rounded kol-helper-xs text-fg-64 hover:text-fg-96 hover:bg-fg-04 transition-colors flex items-center justify-between"
+              >
+                <span>{name}</span>
+                <span className="text-fg-32">{count}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Footer — edit mode toggle */}
+      <div className="mt-auto p-4 border-t border-fg-08 flex items-center justify-between">
         <span
           onClick={() => rack.setEditMode(!rack.editMode)}
-          style={{
-            fontSize: '10px', fontFamily: 'var(--kol-font-mono)', cursor: 'pointer',
-            color: rack.editMode ? '#e74c3c' : 'rgba(255,255,255,0.35)',
-          }}
+          className="kol-helper-xs cursor-pointer select-none"
+          style={{ color: rack.editMode ? '#e74c3c' : undefined }}
         >
           {rack.editMode ? 'Editing' : 'Locked'}
         </span>
         <span
           onClick={() => rack.setEditMode(!rack.editMode)}
-          style={{
-            fontSize: '10px', fontFamily: 'var(--kol-font-mono)', cursor: 'pointer',
-            color: rack.editMode ? '#e74c3c' : 'rgba(255,255,255,0.35)',
-          }}
+          className="kol-helper-xs cursor-pointer select-none"
+          style={{ color: rack.editMode ? '#e74c3c' : undefined }}
         >
           [{rack.editMode ? 'ON' : 'OFF'}]
         </span>

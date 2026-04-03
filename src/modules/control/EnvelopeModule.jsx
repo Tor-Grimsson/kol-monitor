@@ -7,13 +7,40 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import Toggle from '../controls/Toggle'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const STAGES = { IDLE: 0, ATTACK: 1, DECAY: 2, SUSTAIN: 3, RELEASE: 4 }
 
-export default function EnvelopeModule({ id = 'env1', init }) {
+function EnvelopePanel({ attack, decay, sustain, release, cycle, enabled, onToggle, onAttackChange, onDecayChange, onSustainChange, onReleaseChange, onCycleChange, id, clkConnected, clkInRef, gateConnected, gateInRef, outRef }) {
+  return (
+    <Module label="Env" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <Knob value={attack} onChange={onAttackChange} label="A" />
+          <div style={{ position: 'absolute', left: '50%', marginLeft: -28, top: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <Toggle value={cycle} onChange={onCycleChange} label="cyc" />
+            <JackSocket type="in" port="clk" moduleId={id} active={clkConnected} signalRef={clkInRef} label="clk" size="sm" />
+          </div>
+        </div>
+        <Knob value={decay} onChange={onDecayChange} label="D" />
+        <Knob value={sustain} onChange={onSustainChange} label="S" />
+        <Knob value={release} onChange={onReleaseChange} label="R" />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <JackSocket type="in" port="gate" moduleId={id} active={gateConnected} signalRef={gateInRef} label="gate" />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function EnvelopeModule({ id = 'env1', init, preview }) {
+  if (preview) return <EnvelopePanel attack={10} decay={30} sustain={70} release={50} cycle={false} enabled={false} onToggle={() => {}} onAttackChange={() => {}} onDecayChange={() => {}} onSustainChange={() => {}} onReleaseChange={() => {}} onCycleChange={() => {}} id={id} clkConnected={false} clkInRef={{ current: null }} gateConnected={false} gateInRef={{ current: null }} outRef={{ current: null }} />
+
   const [attack, setAttack] = useState(init?.attack ?? 10)    // 0-100 maps to 0-2s
   const [decay, setDecay] = useState(init?.decay ?? 30)
   const [sustain, setSustain] = useState(init?.sustain ?? 70)
@@ -101,28 +128,5 @@ export default function EnvelopeModule({ id = 'env1', init }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Env" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-          <Knob value={attack} onChange={setAttack} label="A" />
-          <div style={{ position: 'absolute', left: '50%', marginLeft: -28, top: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <Toggle value={cycle} onChange={setCycle} label="cyc" />
-            <JackSocket type="in" port="clk" moduleId={id} active={clkConnected} signalRef={clkInRef} label="clk" size="sm" />
-          </div>
-        </div>
-        <Knob value={decay} onChange={setDecay} label="D" />
-        <Knob value={sustain} onChange={setSustain} label="S" />
-        <Knob value={release} onChange={setRelease} label="R" />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <JackSocket type="in" port="gate" moduleId={id} active={gateConnected} signalRef={gateInRef} label="gate" />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <EnvelopePanel attack={attack} decay={decay} sustain={sustain} release={release} cycle={cycle} enabled={enabled} onToggle={() => setEnabled(!enabled)} onAttackChange={setAttack} onDecayChange={setDecay} onSustainChange={setSustain} onReleaseChange={setRelease} onCycleChange={setCycle} id={id} clkConnected={clkConnected} clkInRef={clkInRef} gateConnected={gateConnected} gateInRef={gateInRef} outRef={outRef} />
 }

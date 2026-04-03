@@ -6,10 +6,33 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-export default function SwitchModule({ id = 'sw1' }) {
+function SwitchPanel({ enabled, onToggle, id, aConnected, aInRef, bConnected, bInRef, cvConnected, cvInRef, outputRef }) {
+  return (
+    <Module label="Switch" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aInRef} label="a" />
+            <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bInRef} label="b" />
+          </div>
+          <JackSocket type="in" port="cv" moduleId={id} active={cvConnected} signalRef={cvInRef} label="cv" />
+          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function SwitchModule({ id = 'sw1', preview }) {
+  if (preview) return <SwitchPanel enabled={false} onToggle={() => {}} id={id} aConnected={false} aInRef={{ current: null }} bConnected={false} bInRef={{ current: null }} cvConnected={false} cvInRef={{ current: null }} outputRef={{ current: null }} />
+
   const [enabled, setEnabled] = useState(true)
   const routing = usePatchRouting()
 
@@ -46,24 +69,5 @@ export default function SwitchModule({ id = 'sw1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Switch" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aInRef} label="a" />
-            <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bInRef} label="b" />
-          </div>
-          <JackSocket type="in" port="cv" moduleId={id} active={cvConnected} signalRef={cvInRef} label="cv" />
-          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <SwitchPanel enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} aInRef={aInRef} bConnected={bConnected} bInRef={bInRef} cvConnected={cvConnected} cvInRef={cvInRef} outputRef={outputRef} />
 }

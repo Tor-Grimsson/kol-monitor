@@ -7,11 +7,30 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 
 const GATE_DURATION = 0.03 // 30ms pulse width
 
-export default function ClockModule({ id = 'clk1', init }) {
+function ClockPanel({ bpm, division, enabled, onToggle, onBpmChange, onDivisionChange, id, gateOutRef, divOutRef }) {
+  return (
+    <Module label="Clock" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <Knob value={bpm} onChange={onBpmChange} min={20} max={300} label="BPM" />
+        <Knob value={division} onChange={onDivisionChange} min={1} max={16} label="DIV" />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <JackSocket type="out" port="out" moduleId={id} signalRef={gateOutRef} label="out" />
+          <JackSocket type="out" port="div" moduleId={id} signalRef={divOutRef} label="div" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function ClockModule({ id = 'clk1', init, preview }) {
+  if (preview) return <ClockPanel bpm={120} division={4} enabled={false} onToggle={() => {}} onBpmChange={() => {}} onDivisionChange={() => {}} id={id} gateOutRef={{ current: null }} divOutRef={{ current: null }} />
+
   const [bpm, setBpm] = useState(init?.bpm ?? 120)
   const [division, setDivision] = useState(init?.division ?? 4)
   const [enabled, setEnabled] = useState(true)
@@ -60,20 +79,5 @@ export default function ClockModule({ id = 'clk1', init }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Clock" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <Knob value={bpm} onChange={setBpm} min={20} max={300} label="BPM" />
-        <Knob value={division} onChange={setDivision} min={1} max={16} label="DIV" />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <JackSocket type="out" port="out" moduleId={id} signalRef={gateOutRef} label="out" />
-          <JackSocket type="out" port="div" moduleId={id} signalRef={divOutRef} label="div" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <ClockPanel bpm={bpm} division={division} enabled={enabled} onToggle={() => setEnabled(!enabled)} onBpmChange={setBpm} onDivisionChange={setDivision} id={id} gateOutRef={gateOutRef} divOutRef={divOutRef} />
 }

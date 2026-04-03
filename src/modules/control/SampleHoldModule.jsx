@@ -7,10 +7,30 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-export default function SampleHoldModule({ id = 'sh1' }) {
+function SampleHoldPanel({ smooth, enabled, onToggle, onSmoothChange, id, inConnected, inRef, trigConnected, trigRef, outRef }) {
+  return (
+    <Module label="S&H" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <Knob value={smooth} onChange={onSmoothChange} label="slew" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <JackSocket type="in" port="trig" moduleId={id} active={trigConnected} signalRef={trigRef} label="trig" />
+          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function SampleHoldModule({ id = 'sh1', preview }) {
+  if (preview) return <SampleHoldPanel smooth={0} enabled={false} onToggle={() => {}} onSmoothChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} trigConnected={false} trigRef={{ current: null }} outRef={{ current: null }} />
+
   const [smooth, setSmooth] = useState(0)
   const [enabled, setEnabled] = useState(true)
   const routing = usePatchRouting()
@@ -65,21 +85,5 @@ export default function SampleHoldModule({ id = 'sh1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="S&H" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <Knob value={smooth} onChange={setSmooth} label="slew" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          <JackSocket type="in" port="trig" moduleId={id} active={trigConnected} signalRef={trigRef} label="trig" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <SampleHoldPanel smooth={smooth} enabled={enabled} onToggle={() => setEnabled(!enabled)} onSmoothChange={setSmooth} id={id} inConnected={inConnected} inRef={inRef} trigConnected={trigConnected} trigRef={trigRef} outRef={outRef} />
 }

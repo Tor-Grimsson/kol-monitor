@@ -9,12 +9,46 @@ import { scalar, readScalar, points } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const BUF_SIZE = 256
 
-export default function DelayModule({ id = 'dly1', init }) {
+function DelayPanel({ time, mix, copies, fb, enabled, onToggle, onTimeChange, onMixChange, onCopiesChange, onFbChange, id, inConnected, inRef, timeConn, timeInRef, mixConn, mixInRef, copyConn, copyInRef, fbConn, fbInRef, outRef }) {
+  return (
+    <Module label="Delay" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
+          <JackSocket type="in" port="tCV" moduleId={id} active={timeConn} signalRef={timeInRef} label="cv" size="sm" />
+          <Knob value={time} onChange={onTimeChange} label="time" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
+          <JackSocket type="in" port="mCV" moduleId={id} active={mixConn} signalRef={mixInRef} label="cv" size="sm" />
+          <Knob value={mix} onChange={onMixChange} label="mix" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
+          <JackSocket type="in" port="cCV" moduleId={id} active={copyConn} signalRef={copyInRef} label="cv" size="sm" />
+          <Knob value={copies} onChange={onCopiesChange} label="copy" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
+          <JackSocket type="in" port="fCV" moduleId={id} active={fbConn} signalRef={fbInRef} label="cv" size="sm" />
+          <Knob value={fb} onChange={onFbChange} label="fb" />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function DelayModule({ id = 'dly1', init, preview }) {
+  if (preview) return <DelayPanel time={50} mix={50} copies={30} fb={50} enabled={false} onToggle={() => {}} onTimeChange={() => {}} onMixChange={() => {}} onCopiesChange={() => {}} onFbChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} timeConn={false} timeInRef={{ current: null }} mixConn={false} mixInRef={{ current: null }} copyConn={false} copyInRef={{ current: null }} fbConn={false} fbInRef={{ current: null }} outRef={{ current: null }} />
+
   const [time, setTime] = useState(init?.time ?? 50)
   const [mix, setMix] = useState(init?.mix ?? 50)
   const [copies, setCopies] = useState(init?.copies ?? 30)
@@ -136,35 +170,5 @@ export default function DelayModule({ id = 'dly1', init }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Delay" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
-          <JackSocket type="in" port="tCV" moduleId={id} active={timeConn} signalRef={timeInRef} label="cv" size="sm" />
-          <Knob value={time} onChange={setTime} label="time" />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
-          <JackSocket type="in" port="mCV" moduleId={id} active={mixConn} signalRef={mixInRef} label="cv" size="sm" />
-          <Knob value={mix} onChange={setMix} label="mix" />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
-          <JackSocket type="in" port="cCV" moduleId={id} active={copyConn} signalRef={copyInRef} label="cv" size="sm" />
-          <Knob value={copies} onChange={setCopies} label="copy" />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
-          <JackSocket type="in" port="fCV" moduleId={id} active={fbConn} signalRef={fbInRef} label="cv" size="sm" />
-          <Knob value={fb} onChange={setFb} label="fb" />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <DelayPanel time={time} mix={mix} copies={copies} fb={fb} enabled={enabled} onToggle={() => setEnabled(!enabled)} onTimeChange={setTime} onMixChange={setMix} onCopiesChange={setCopies} onFbChange={setFb} id={id} inConnected={inConnected} inRef={inRef} timeConn={timeConn} timeInRef={timeInRef} mixConn={mixConn} mixInRef={mixInRef} copyConn={copyConn} copyInRef={copyInRef} fbConn={fbConn} fbInRef={fbInRef} outRef={outRef} />
 }

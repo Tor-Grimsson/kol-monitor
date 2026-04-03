@@ -7,10 +7,44 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-export default function MixerModule({ id = 'mix1' }) {
+function MixerPanel({ la, lb, lc, ld, enabled, onToggle, onLaChange, onLbChange, onLcChange, onLdChange, id, aConnected, aRef, bConnected, bRef, cConnected, cRef, dConnected, dRef, outRef }) {
+  return (
+    <Module label="Mixer" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+
+        {/* 4 rows: input jack + level knob */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
+          <Knob value={la} onChange={onLaChange} label="a" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
+          <Knob value={lb} onChange={onLbChange} label="b" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="c" moduleId={id} active={cConnected} signalRef={cRef} label="c" />
+          <Knob value={lc} onChange={onLcChange} label="c" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="d" moduleId={id} active={dConnected} signalRef={dRef} label="d" />
+          <Knob value={ld} onChange={onLdChange} label="d" />
+        </div>
+
+        {/* Output */}
+        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+      </div>
+    </Module>
+  )
+}
+
+export default function MixerModule({ id = 'mix1', preview }) {
+  if (preview) return <MixerPanel la={100} lb={100} lc={100} ld={100} enabled={false} onToggle={() => {}} onLaChange={() => {}} onLbChange={() => {}} onLcChange={() => {}} onLdChange={() => {}} id={id} aConnected={false} aRef={{ current: null }} bConnected={false} bRef={{ current: null }} cConnected={false} cRef={{ current: null }} dConnected={false} dRef={{ current: null }} outRef={{ current: null }} />
+
   const [la, setLa] = useState(100)
   const [lb, setLb] = useState(100)
   const [lc, setLc] = useState(100)
@@ -67,35 +101,5 @@ export default function MixerModule({ id = 'mix1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Mixer" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        {/* 4 rows: input jack + level knob */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
-          <Knob value={la} onChange={setLa} label="a" />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
-          <Knob value={lb} onChange={setLb} label="b" />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="c" moduleId={id} active={cConnected} signalRef={cRef} label="c" />
-          <Knob value={lc} onChange={setLc} label="c" />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="d" moduleId={id} active={dConnected} signalRef={dRef} label="d" />
-          <Knob value={ld} onChange={setLd} label="d" />
-        </div>
-
-        {/* Output */}
-        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-      </div>
-    </Module>
-  )
+  return <MixerPanel la={la} lb={lb} lc={lc} ld={ld} enabled={enabled} onToggle={() => setEnabled(!enabled)} onLaChange={setLa} onLbChange={setLb} onLcChange={setLc} onLdChange={setLd} id={id} aConnected={aConnected} aRef={aRef} bConnected={bConnected} bRef={bRef} cConnected={cConnected} cRef={cRef} dConnected={dConnected} dRef={dRef} outRef={outRef} />
 }

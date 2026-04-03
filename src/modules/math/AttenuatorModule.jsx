@@ -7,10 +7,29 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-export default function AttenuatorModule({ id = 'atten1' }) {
+function AttenuatorPanel({ level, enabled, onToggle, onLevelChange, id, inConnected, inRef, outRef }) {
+  return (
+    <Module label="Atten" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <Knob value={level} onChange={onLevelChange} label="lvl" />
+          <div style={{ width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function AttenuatorModule({ id = 'atten1', preview }) {
+  if (preview) return <AttenuatorPanel level={100} enabled={false} onToggle={() => {}} onLevelChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outRef={{ current: null }} />
+
   const [level, setLevel] = useState(100)
   const [enabled, setEnabled] = useState(true)
   const routing = usePatchRouting()
@@ -38,20 +57,5 @@ export default function AttenuatorModule({ id = 'atten1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Atten" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          <Knob value={level} onChange={setLevel} label="lvl" />
-          <div style={{ width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <AttenuatorPanel level={level} enabled={enabled} onToggle={() => setEnabled(!enabled)} onLevelChange={setLevel} id={id} inConnected={inConnected} inRef={inRef} outRef={outRef} />
 }

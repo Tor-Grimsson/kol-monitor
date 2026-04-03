@@ -6,10 +6,30 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-export default function VCAModule({ id = 'vca1' }) {
+function VCAPanel({ enabled, onToggle, id, inConnected, inRef, cvConnected, cvRef, outRef }) {
+  return (
+    <Module label="VCA" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <JackSocket type="in" port="cv" moduleId={id} active={cvConnected} signalRef={cvRef} label="cv" />
+          <div style={{ width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function VCAModule({ id = 'vca1', preview }) {
+  if (preview) return <VCAPanel enabled={false} onToggle={() => {}} id={id} inConnected={false} inRef={{ current: null }} cvConnected={false} cvRef={{ current: null }} outRef={{ current: null }} />
+
   const [enabled, setEnabled] = useState(true)
   const enabledRef = useRef(true)
   const routing = usePatchRouting()
@@ -37,21 +57,5 @@ export default function VCAModule({ id = 'vca1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="VCA" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          <JackSocket type="in" port="cv" moduleId={id} active={cvConnected} signalRef={cvRef} label="cv" />
-          <div style={{ width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <VCAPanel enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} inConnected={inConnected} inRef={inRef} cvConnected={cvConnected} cvRef={cvRef} outRef={outRef} />
 }

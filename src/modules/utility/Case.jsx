@@ -1,4 +1,4 @@
-import { TOTAL_HP, ASPECT, RAIL_HEIGHT, hpToPercent } from './eurorack'
+import { TOTAL_HP, HP_PX, ROW_WIDTH, ASPECT, RAIL_HEIGHT, hpToPx } from './eurorack'
 
 // HP with grid placement — offset is 0-based HP position
 export function HP(hp, offset = 0) {
@@ -8,7 +8,6 @@ export function HP(hp, offset = 0) {
 const SLOTS = Array.from({ length: TOTAL_HP }, (_, i) => i)
 
 const FRAME_COLOR = 'linear-gradient(180deg, #8a8680 0%, #7a7670 50%, #6a6660 100%)'
-const SIDE_COLOR = 'linear-gradient(90deg, #7a7670 0%, #8a8680 50%, #7a7670 100%)'
 
 function Rail() {
   return (
@@ -21,7 +20,7 @@ function Rail() {
     }}>
       {SLOTS.map(i => (
         <div key={i} style={{
-          width: `${100 / TOTAL_HP}%`,
+          width: HP_PX,
           display: 'flex',
           justifyContent: 'center',
         }}>
@@ -40,7 +39,7 @@ function Rail() {
 
 export function RackRow({ height = '3u', children }) {
   return (
-    <div className="relative" style={{ width: '100%', aspectRatio: ASPECT[height] || ASPECT['3u'] }}>
+    <div className="relative" style={{ width: ROW_WIDTH, aspectRatio: ASPECT[height] || ASPECT['3u'] }}>
       {/* Layer 0: case background */}
       <div style={{ position: 'absolute', inset: 0, backgroundColor: '#141414', zIndex: 0 }} />
       {/* Layer 1: rails — visible in empty HP space */}
@@ -56,10 +55,10 @@ export function RackRow({ height = '3u', children }) {
 
 export default function Case({ children }) {
   return (
-    <div style={{ width: '100%', maxWidth: 1400, padding: '0 24px' }}>
+    <div style={{ padding: '0 24px' }}>
       <div style={{ display: 'flex', flexDirection: 'row', padding: '3px 0' }}>
         <div className="bg-opacity-hex-12" style={{ width: 24, flexShrink: 0, borderRadius: 4, margin: '-3px 0' }} />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 2px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '0 2px' }}>
           {children}
         </div>
         <div className="bg-opacity-hex-12" style={{ width: 24, flexShrink: 0, borderRadius: 4, margin: '-3px 0' }} />

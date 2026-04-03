@@ -8,7 +8,6 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
 import WaveSelect from '../controls/WaveSelect'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['sin', 'saw', 'tri', 'sqr']
@@ -25,7 +24,40 @@ function waveFn(x, shape) {
   }
 }
 
-export default function WaveformModule({ id = 'wave1' }) {
+function WaveformPanel({ freq, amp, speed, shape, enabled, onToggle, onFreqChange, onAmpChange, onSpeedChange, onShapeChange, id, freqConn, freqInRef, ampConn, ampInRef, spdConn, spdInRef, clkConn, clkInRef, outRef }) {
+  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
+
+  return (
+    <Module label="Wave" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <WaveSelect value={shape} onChange={onShapeChange} />
+        <div style={rowStyle}>
+          <JackSocket type="in" port="freq" moduleId={id} active={freqConn} signalRef={freqInRef} label="in" size="sm" />
+          <Knob value={freq} onChange={onFreqChange} label="frq" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="amp" moduleId={id} active={ampConn} signalRef={ampInRef} label="in" size="sm" />
+          <Knob value={amp} onChange={onAmpChange} label="amp" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="spd" moduleId={id} active={spdConn} signalRef={spdInRef} label="in" size="sm" />
+          <Knob value={speed} onChange={onSpeedChange} label="spd" />
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <JackSocket type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkInRef} label="clk" />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function WaveformModule({ id = 'wave1', preview }) {
+  if (preview) return <WaveformPanel freq={20} amp={100} speed={50} shape="sin" enabled={false} onToggle={() => {}} onFreqChange={() => {}} onAmpChange={() => {}} onSpeedChange={() => {}} onShapeChange={() => {}} id={id} freqConn={false} freqInRef={{ current: null }} ampConn={false} ampInRef={{ current: null }} spdConn={false} spdInRef={{ current: null }} clkConn={false} clkInRef={{ current: null }} outRef={{ current: null }} />
+
   const [freq, setFreq] = useState(20)
   const [amp, setAmp] = useState(100)
   const [speed, setSpeed] = useState(50)
@@ -105,33 +137,5 @@ export default function WaveformModule({ id = 'wave1' }) {
     },
   })
 
-  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
-
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Wave" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <WaveSelect value={shape} onChange={setShape} />
-        <div style={rowStyle}>
-          <JackSocket type="in" port="freq" moduleId={id} active={freqConn} signalRef={freqInRef} label="in" size="sm" />
-          <Knob value={freq} onChange={setFreq} label="frq" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="amp" moduleId={id} active={ampConn} signalRef={ampInRef} label="in" size="sm" />
-          <Knob value={amp} onChange={setAmp} label="amp" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="spd" moduleId={id} active={spdConn} signalRef={spdInRef} label="in" size="sm" />
-          <Knob value={speed} onChange={setSpeed} label="spd" />
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <JackSocket type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkInRef} label="clk" />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <WaveformPanel freq={freq} amp={amp} speed={speed} shape={shape} enabled={enabled} onToggle={() => setEnabled(!enabled)} onFreqChange={setFreq} onAmpChange={setAmp} onSpeedChange={setSpeed} onShapeChange={setShape} id={id} freqConn={freqConn} freqInRef={freqInRef} ampConn={ampConn} ampInRef={ampInRef} spdConn={spdConn} spdInRef={spdInRef} clkConn={clkConn} clkInRef={clkInRef} outRef={outRef} />
 }

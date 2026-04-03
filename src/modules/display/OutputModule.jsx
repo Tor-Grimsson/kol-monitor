@@ -13,7 +13,60 @@ import { drawSignal } from './drawSignal'
 const BUF_LEN = 128
 const CHANNELS = ['a', 'b', 'c', 'd']
 
-export default function OutputModule({ id = 'out1' }) {
+function OutputPanel({ canvasRef, bg, enabled, onToggle, onBgChange, id, connected, inputRefs, penConnected, penRef, bgConnected, bgInRef }) {
+  return (
+    <Module>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        gap: 4,
+        padding: '4px 0',
+      }}>
+        <ModuleHeader label="Out" enabled={enabled} onToggle={onToggle} />
+
+        <canvas
+          ref={canvasRef}
+          width={240}
+          height={140}
+          style={{
+            flex: 1,
+            width: '100%',
+            borderRadius: 2,
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}
+        />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+          <JackSocket type="in" port="bg" moduleId={id} active={bgConnected} signalRef={bgInRef} label="cv" size="sm" />
+          <Knob value={bg} onChange={onBgChange} label="bg" />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
+          {CHANNELS.map(ch => (
+            <JackSocket
+              key={ch}
+              type="in"
+              port={ch}
+              moduleId={id}
+              active={connected[ch]}
+              signalRef={{ get current() { return inputRefs.current[ch] } }}
+              label={ch}
+            />
+          ))}
+          <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function OutputModule({ id = 'out1', preview }) {
+  if (preview) {
+    const dummyInputRefs = { current: { a: null, b: null, c: null, d: null } }
+    return <OutputPanel canvasRef={{ current: null }} bg={0} enabled={false} onToggle={() => {}} onBgChange={() => {}} id={id} connected={{ a: false, b: false, c: false, d: false }} inputRefs={dummyInputRefs} penConnected={false} penRef={{ current: null }} bgConnected={false} bgInRef={{ current: null }} />
+  }
+
   const canvasRef = useRef(null)
   const [bg, setBg] = useState(0)
   const [enabled, setEnabled] = useState(true)
@@ -120,49 +173,5 @@ export default function OutputModule({ id = 'out1' }) {
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        gap: 4,
-        padding: '4px 0',
-      }}>
-        <ModuleHeader label="Out" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        <canvas
-          ref={canvasRef}
-          width={240}
-          height={140}
-          style={{
-            flex: 1,
-            width: '100%',
-            borderRadius: 2,
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}
-        />
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-          <JackSocket type="in" port="bg" moduleId={id} active={bgConnected} signalRef={bgInRef} label="cv" size="sm" />
-          <Knob value={bg} onChange={setBg} label="bg" />
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
-          {CHANNELS.map(ch => (
-            <JackSocket
-              key={ch}
-              type="in"
-              port={ch}
-              moduleId={id}
-              active={connected[ch]}
-              signalRef={{ get current() { return inputRefs.current[ch] } }}
-              label={ch}
-            />
-          ))}
-          <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <OutputPanel canvasRef={canvasRef} bg={bg} enabled={enabled} onToggle={() => setEnabled(!enabled)} onBgChange={setBg} id={id} connected={connected} inputRefs={inputRefs} penConnected={penConnected} penRef={penRef} bgConnected={bgConnected} bgInRef={bgInRef} />
 }

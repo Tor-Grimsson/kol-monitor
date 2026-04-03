@@ -7,11 +7,54 @@ import { color, scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import Toggle from '../controls/Toggle'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-export default function RGBOscillatorModule({ id = 'rgb1' }) {
+function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr, bClr, enabled, onToggle, onRRateChange, onGRateChange, onBRateChange, onROscChange, onGOscChange, onBOscChange, onRClrChange, onGClrChange, onBClrChange, id, rConn, rInRef, gConn, gInRef, bConn, bInRef, rOutRef, gOutRef, bOutRef, outRef }) {
+  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 2px' }
+
+  return (
+    <Module label="RGB" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <div style={rowStyle}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+            <Toggle size="sm" value={rOsc} onChange={onROscChange} label="osc" />
+            <Toggle size="sm" value={rClr} onChange={onRClrChange} label="clr" />
+          </div>
+          <JackSocket type="in" port="r" moduleId={id} active={rConn} signalRef={rInRef} label="in" size="sm" />
+          <Knob value={rRate} onChange={onRRateChange} label="R" />
+          <JackSocket type="out" port="r" moduleId={id} signalRef={rOutRef} label="out" size="sm" />
+        </div>
+        <div style={rowStyle}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+            <Toggle size="sm" value={gOsc} onChange={onGOscChange} label="osc" />
+            <Toggle size="sm" value={gClr} onChange={onGClrChange} label="clr" />
+          </div>
+          <JackSocket type="in" port="g" moduleId={id} active={gConn} signalRef={gInRef} label="in" size="sm" />
+          <Knob value={gRate} onChange={onGRateChange} label="G" />
+          <JackSocket type="out" port="g" moduleId={id} signalRef={gOutRef} label="out" size="sm" />
+        </div>
+        <div style={rowStyle}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+            <Toggle size="sm" value={bOsc} onChange={onBOscChange} label="osc" />
+            <Toggle size="sm" value={bClr} onChange={onBClrChange} label="clr" />
+          </div>
+          <JackSocket type="in" port="b" moduleId={id} active={bConn} signalRef={bInRef} label="in" size="sm" />
+          <Knob value={bRate} onChange={onBRateChange} label="B" />
+          <JackSocket type="out" port="b" moduleId={id} signalRef={bOutRef} label="out" size="sm" />
+        </div>
+        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="color" />
+      </div>
+    </Module>
+  )
+}
+
+export default function RGBOscillatorModule({ id = 'rgb1', preview }) {
+  if (preview) return <RGBOscillatorPanel rRate={30} gRate={50} bRate={70} rOsc={false} gOsc={false} bOsc={false} rClr={false} gClr={false} bClr={false} enabled={false} onToggle={() => {}} onRRateChange={() => {}} onGRateChange={() => {}} onBRateChange={() => {}} onROscChange={() => {}} onGOscChange={() => {}} onBOscChange={() => {}} onRClrChange={() => {}} onGClrChange={() => {}} onBClrChange={() => {}} id={id} rConn={false} rInRef={{ current: null }} gConn={false} gInRef={{ current: null }} bConn={false} bInRef={{ current: null }} rOutRef={{ current: null }} gOutRef={{ current: null }} bOutRef={{ current: null }} outRef={{ current: null }} />
+
   const [rRate, setRRate] = useState(30)
   const [gRate, setGRate] = useState(50)
   const [bRate, setBRate] = useState(70)
@@ -100,44 +143,5 @@ export default function RGBOscillatorModule({ id = 'rgb1' }) {
     },
   })
 
-  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 2px' }
-
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="RGB" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <div style={rowStyle}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-            <Toggle size="sm" value={rOsc} onChange={setROsc} label="osc" />
-            <Toggle size="sm" value={rClr} onChange={setRClr} label="clr" />
-          </div>
-          <JackSocket type="in" port="r" moduleId={id} active={rConn} signalRef={rInRef} label="in" size="sm" />
-          <Knob value={rRate} onChange={setRRate} label="R" />
-          <JackSocket type="out" port="r" moduleId={id} signalRef={rOutRef} label="out" size="sm" />
-        </div>
-        <div style={rowStyle}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-            <Toggle size="sm" value={gOsc} onChange={setGOsc} label="osc" />
-            <Toggle size="sm" value={gClr} onChange={setGClr} label="clr" />
-          </div>
-          <JackSocket type="in" port="g" moduleId={id} active={gConn} signalRef={gInRef} label="in" size="sm" />
-          <Knob value={gRate} onChange={setGRate} label="G" />
-          <JackSocket type="out" port="g" moduleId={id} signalRef={gOutRef} label="out" size="sm" />
-        </div>
-        <div style={rowStyle}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-            <Toggle size="sm" value={bOsc} onChange={setBOsc} label="osc" />
-            <Toggle size="sm" value={bClr} onChange={setBClr} label="clr" />
-          </div>
-          <JackSocket type="in" port="b" moduleId={id} active={bConn} signalRef={bInRef} label="in" size="sm" />
-          <Knob value={bRate} onChange={setBRate} label="B" />
-          <JackSocket type="out" port="b" moduleId={id} signalRef={bOutRef} label="out" size="sm" />
-        </div>
-        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="color" />
-      </div>
-    </Module>
-  )
+  return <RGBOscillatorPanel rRate={rRate} gRate={gRate} bRate={bRate} rOsc={rOsc} gOsc={gOsc} bOsc={bOsc} rClr={rClr} gClr={gClr} bClr={bClr} enabled={enabled} onToggle={() => setEnabled(!enabled)} onRRateChange={setRRate} onGRateChange={setGRate} onBRateChange={setBRate} onROscChange={setROsc} onGOscChange={setGOsc} onBOscChange={setBOsc} onRClrChange={setRClr} onGClrChange={setGClr} onBClrChange={setBClr} id={id} rConn={rConn} rInRef={rInRef} gConn={gConn} gInRef={gInRef} bConn={bConn} bInRef={bInRef} rOutRef={rOutRef} gOutRef={gOutRef} bOutRef={bOutRef} outRef={outRef} />
 }

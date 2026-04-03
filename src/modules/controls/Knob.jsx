@@ -42,9 +42,7 @@ export default function Knob({ value, onChange, min = 0, max = 100, label }) {
         />
       </svg>
       {label && (
-        <span style={{
-          fontSize: '6px',
-          fontFamily: 'var(--kol-font-mono)',
+        <span className="kol-helper-xxxs" style={{
           color: 'rgba(255,255,255,0.35)',
           textTransform: 'uppercase',
           lineHeight: 1,
@@ -52,9 +50,7 @@ export default function Knob({ value, onChange, min = 0, max = 100, label }) {
           {label}
         </span>
       )}
-      <span style={{
-        fontSize: '7px',
-        fontFamily: 'var(--kol-font-mono)',
+      <span className="kol-helper-xxxxs" style={{
         color: 'rgba(255,255,255,0.5)',
         lineHeight: 1,
       }}>

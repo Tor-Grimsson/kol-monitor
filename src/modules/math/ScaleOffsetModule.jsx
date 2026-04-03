@@ -7,10 +7,36 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-export default function ScaleOffsetModule({ id = 'sco1' }) {
+function ScaleOffsetPanel({ scale, offset, enabled, onToggle, onScaleChange, onOffsetChange, id, inConnected, inRef, outputRef }) {
+  return (
+    <Module label="S+O" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+
+        <Knob value={scale} onChange={onScaleChange} min={0} max={200} label="scl" />
+        <Knob value={offset} onChange={onOffsetChange} min={0} max={100} label="ofs" />
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          </div>
+          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <div style={{ display: 'flex', gap: 4 }}>
+            <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
+          </div>
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function ScaleOffsetModule({ id = 'sco1', preview }) {
+  if (preview) return <ScaleOffsetPanel scale={100} offset={50} enabled={false} onToggle={() => {}} onScaleChange={() => {}} onOffsetChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outputRef={{ current: null }} />
+
   const [scale, setScale] = useState(100)
   const [offset, setOffset] = useState(50)
   const [enabled, setEnabled] = useState(true)
@@ -44,27 +70,5 @@ export default function ScaleOffsetModule({ id = 'sco1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="S+O" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        <Knob value={scale} onChange={setScale} min={0} max={200} label="scl" />
-        <Knob value={offset} onChange={setOffset} min={0} max={100} label="ofs" />
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          </div>
-          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
-          </div>
-        </div>
-      </div>
-    </Module>
-  )
+  return <ScaleOffsetPanel scale={scale} offset={offset} enabled={enabled} onToggle={() => setEnabled(!enabled)} onScaleChange={setScale} onOffsetChange={setOffset} id={id} inConnected={inConnected} inRef={inRef} outputRef={outputRef} />
 }

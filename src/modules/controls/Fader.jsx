@@ -33,9 +33,8 @@ export default function Fader({ value = 100, onChange, label, min = 0, max = 100
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
       {label && (
         <span style={{
-          fontSize: '6px', fontFamily: 'var(--kol-font-mono)',
           color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1,
-        }}>{label}</span>
+        }} className="kol-helper-xxxs">{label}</span>
       )}
       <div
         ref={trackRef}
@@ -72,9 +71,8 @@ export default function Fader({ value = 100, onChange, label, min = 0, max = 100
         }} />
       </div>
       <span style={{
-        fontSize: '7px', fontFamily: 'var(--kol-font-mono)',
         color: 'rgba(255,255,255,0.4)', lineHeight: 1,
-      }}>{value}</span>
+      }} className="kol-helper-xxxxs">{value}</span>
     </div>
   )
 }

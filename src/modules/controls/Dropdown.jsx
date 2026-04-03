@@ -29,8 +29,6 @@ export default function Dropdown({ value, options, onChange, label }) {
   }, [open])
 
   const triggerStyle = {
-    fontSize: '7px',
-    fontFamily: 'var(--kol-font-mono)',
     color: 'rgba(255,255,255,0.6)',
     backgroundColor: 'rgba(255,255,255,0.04)',
     border: '1px solid rgba(255,255,255,0.08)',
@@ -47,9 +45,7 @@ export default function Dropdown({ value, options, onChange, label }) {
   return (
     <>
       {label && (
-        <span style={{
-          fontSize: '6px',
-          fontFamily: 'var(--kol-font-mono)',
+        <span className="kol-helper-xxxs" style={{
           color: 'rgba(255,255,255,0.35)',
           textTransform: 'uppercase',
           lineHeight: 1,
@@ -59,6 +55,7 @@ export default function Dropdown({ value, options, onChange, label }) {
       )}
       <button
         ref={triggerRef}
+        className="kol-helper-xxxs"
         style={triggerStyle}
         onPointerDown={(e) => { e.stopPropagation(); handleOpen() }}
       >
@@ -86,9 +83,8 @@ export default function Dropdown({ value, options, onChange, label }) {
             <div
               key={opt}
               onClick={() => { onChange(opt); setOpen(false) }}
+              className="kol-helper-xxxs"
               style={{
-                fontSize: '7px',
-                fontFamily: 'var(--kol-font-mono)',
                 color: opt === value ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)',
                 backgroundColor: opt === value ? 'rgba(255,255,255,0.06)' : 'transparent',
                 padding: '3px 8px',

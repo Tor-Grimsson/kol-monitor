@@ -7,13 +7,38 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Selector from '../controls/Selector'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const DIVISIONS = ['2', '4', '8', '16']
 const GATE_DURATION = 0.03 // 30ms pulse
 
-export default function ClockDividerModule({ id = 'cdiv1' }) {
+function ClockDividerPanel({ division, enabled, onToggle, onDivisionChange, id, inConnected, inRef, outputRef }) {
+  return (
+    <Module label="Div" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+
+        <Selector value={division} options={DIVISIONS} onChange={onDivisionChange} />
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          </div>
+          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <div style={{ display: 'flex', gap: 4 }}>
+            <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
+          </div>
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function ClockDividerModule({ id = 'cdiv1', preview }) {
+  if (preview) return <ClockDividerPanel division="4" enabled={false} onToggle={() => {}} onDivisionChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outputRef={{ current: null }} />
+
   const [division, setDivision] = useState('4')
   const [enabled, setEnabled] = useState(true)
   const routing = usePatchRouting()
@@ -60,26 +85,5 @@ export default function ClockDividerModule({ id = 'cdiv1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Div" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        <Selector value={division} options={DIVISIONS} onChange={setDivision} />
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          </div>
-          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
-          </div>
-        </div>
-      </div>
-    </Module>
-  )
+  return <ClockDividerPanel division={division} enabled={enabled} onToggle={() => setEnabled(!enabled)} onDivisionChange={setDivision} id={id} inConnected={inConnected} inRef={inRef} outputRef={outputRef} />
 }

@@ -19,9 +19,7 @@ export default function Toggle({ value, onChange, label, horizontal = false, siz
         border: 'none',
       }} />
       {label && (
-        <span style={{
-          fontSize: '6px',
-          fontFamily: 'var(--kol-font-mono)',
+        <span className="kol-helper-xxxs" style={{
           color: 'rgba(255,255,255,0.35)',
           textTransform: 'uppercase',
           lineHeight: 1,

@@ -8,12 +8,50 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
 import Selector from '../controls/Selector'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const CAPS = ['round', 'square', 'butt']
 
-export default function PenModule({ id = 'pen1', init }) {
+function PenPanel({ thickness, dash, gap, opacity, cap, lofi, enabled, onToggle, onThicknessChange, onDashChange, onGapChange, onOpacityChange, onCapChange, onLofiChange, id, thkConn, thkInRef, dshConn, dshInRef, gapConn, gapInRef, opConn, opInRef, colorConn, colorInRef, outRef }) {
+  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
+
+  return (
+    <Module label="Pen" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+
+        <div style={rowStyle}>
+          <JackSocket type="in" port="tk" moduleId={id} active={thkConn} signalRef={thkInRef} label="in" size="sm" />
+          <Knob value={thickness} onChange={onThicknessChange} label="thk" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="ds" moduleId={id} active={dshConn} signalRef={dshInRef} label="in" size="sm" />
+          <Knob value={dash} onChange={onDashChange} label="dsh" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="gp" moduleId={id} active={gapConn} signalRef={gapInRef} label="in" size="sm" />
+          <Knob value={gap} onChange={onGapChange} label="gap" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="op" moduleId={id} active={opConn} signalRef={opInRef} label="in" size="sm" />
+          <Knob value={opacity} onChange={onOpacityChange} label="op" />
+        </div>
+
+        <Selector value={cap} options={CAPS} onChange={onCapChange} />
+        <Knob value={lofi} onChange={onLofiChange} label="lofi" />
+        <JackSocket type="in" port="clr" moduleId={id} active={colorConn} signalRef={colorInRef} label="color" size="sm" />
+
+        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+      </div>
+    </Module>
+  )
+}
+
+export default function PenModule({ id = 'pen1', init, preview }) {
+  if (preview) return <PenPanel thickness={15} dash={0} gap={0} opacity={100} cap="round" lofi={0} enabled={false} onToggle={() => {}} onThicknessChange={() => {}} onDashChange={() => {}} onGapChange={() => {}} onOpacityChange={() => {}} onCapChange={() => {}} onLofiChange={() => {}} id={id} thkConn={false} thkInRef={{ current: null }} dshConn={false} dshInRef={{ current: null }} gapConn={false} gapInRef={{ current: null }} opConn={false} opInRef={{ current: null }} colorConn={false} colorInRef={{ current: null }} outRef={{ current: null }} />
+
   const [thickness, setThickness] = useState(init?.thickness ?? 15)  // 0-100 maps to 0.5-10
   const [dash, setDash] = useState(init?.dash ?? 0)
   const [gap, setGap] = useState(init?.gap ?? 0)
@@ -89,39 +127,5 @@ export default function PenModule({ id = 'pen1', init }) {
     },
   })
 
-  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
-
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Pen" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-
-        <div style={rowStyle}>
-          <JackSocket type="in" port="tk" moduleId={id} active={thkConn} signalRef={thkInRef} label="in" size="sm" />
-          <Knob value={thickness} onChange={setThickness} label="thk" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="ds" moduleId={id} active={dshConn} signalRef={dshInRef} label="in" size="sm" />
-          <Knob value={dash} onChange={setDash} label="dsh" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="gp" moduleId={id} active={gapConn} signalRef={gapInRef} label="in" size="sm" />
-          <Knob value={gap} onChange={setGap} label="gap" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="op" moduleId={id} active={opConn} signalRef={opInRef} label="in" size="sm" />
-          <Knob value={opacity} onChange={setOpacity} label="op" />
-        </div>
-
-        <Selector value={cap} options={CAPS} onChange={setCap} />
-        <Knob value={lofi} onChange={setLofi} label="lofi" />
-        <JackSocket type="in" port="clr" moduleId={id} active={colorConn} signalRef={colorInRef} label="color" size="sm" />
-
-        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-      </div>
-    </Module>
-  )
+  return <PenPanel thickness={thickness} dash={dash} gap={gap} opacity={opacity} cap={cap} lofi={lofi} enabled={enabled} onToggle={() => setEnabled(!enabled)} onThicknessChange={setThickness} onDashChange={setDash} onGapChange={setGap} onOpacityChange={setOpacity} onCapChange={setCap} onLofiChange={setLofi} id={id} thkConn={thkConn} thkInRef={thkInRef} dshConn={dshConn} dshInRef={dshInRef} gapConn={gapConn} gapInRef={gapInRef} opConn={opConn} opInRef={opInRef} colorConn={colorConn} colorInRef={colorInRef} outRef={outRef} />
 }

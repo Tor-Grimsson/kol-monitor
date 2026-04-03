@@ -8,7 +8,6 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
 import Selector from '../controls/Selector'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const MODES = ['add', 'sub', 'min', 'max', 'avg']
@@ -25,7 +24,37 @@ function applyMode(mode, a, b) {
   }
 }
 
-export default function MathsModule({ id = 'maths1' }) {
+function MathsPanel({ rise, fall, mode, enabled, onToggle, onRiseChange, onFallChange, onModeChange, id, aConnected, aRef, bConnected, bRef, trigConnected, trigRef, outRef, eocRef }) {
+  return (
+    <Module label="Maths" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <Selector value={mode} options={MODES} onChange={onModeChange} />
+        <Knob value={rise} onChange={onRiseChange} label="rise" />
+        <Knob value={fall} onChange={onFallChange} label="fall" />
+
+        {/* Inputs */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
+          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
+          <JackSocket type="in" port="trig" moduleId={id} active={trigConnected} signalRef={trigRef} label="trig" />
+        </div>
+
+        {/* Outputs */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+          <JackSocket type="out" port="eoc" moduleId={id} signalRef={eocRef} label="eoc" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function MathsModule({ id = 'maths1', preview }) {
+  if (preview) return <MathsPanel rise={50} fall={50} mode="add" enabled={false} onToggle={() => {}} onRiseChange={() => {}} onFallChange={() => {}} onModeChange={() => {}} id={id} aConnected={false} aRef={{ current: null }} bConnected={false} bRef={{ current: null }} trigConnected={false} trigRef={{ current: null }} outRef={{ current: null }} eocRef={{ current: null }} />
+
   const [rise, setRise] = useState(50)
   const [fall, setFall] = useState(50)
   const [mode, setMode] = useState('add')
@@ -119,30 +148,5 @@ export default function MathsModule({ id = 'maths1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Maths" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <Selector value={mode} options={MODES} onChange={setMode} />
-        <Knob value={rise} onChange={setRise} label="rise" />
-        <Knob value={fall} onChange={setFall} label="fall" />
-
-        {/* Inputs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
-          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
-          <JackSocket type="in" port="trig" moduleId={id} active={trigConnected} signalRef={trigRef} label="trig" />
-        </div>
-
-        {/* Outputs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-          <JackSocket type="out" port="eoc" moduleId={id} signalRef={eocRef} label="eoc" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <MathsPanel rise={rise} fall={fall} mode={mode} enabled={enabled} onToggle={() => setEnabled(!enabled)} onRiseChange={setRise} onFallChange={setFall} onModeChange={setMode} id={id} aConnected={aConnected} aRef={aRef} bConnected={bConnected} bRef={bRef} trigConnected={trigConnected} trigRef={trigRef} outRef={outRef} eocRef={eocRef} />
 }

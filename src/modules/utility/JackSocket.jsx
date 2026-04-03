@@ -15,6 +15,7 @@ export default function JackSocket({
   size = 'md',
   label,
   category = 'utility',
+  bg,
 }) {
   const routing = usePatchRouting()
   const ref = useRef(null)
@@ -89,37 +90,47 @@ export default function JackSocket({
       title={label || port}
     >
       <div
-        ref={ringRef}
+        className={(bg ?? type === 'out') ? 'bg-fg-04' : ''}
         style={{
-          width: `${s}px`,
-          height: `${s}px`,
-          borderRadius: '50%',
-          backgroundColor: 'rgba(20,20,20,0.9)',
-          border: `1.5px solid ${
-            isPending ? catColor
-            : active ? catColor
-            : hasPending && type === 'in' ? `${catColor}66`
-            : 'rgba(180,175,165,0.25)'
-          }`,
+          width: `${s + 4}px`,
+          height: `${s + 4}px`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
-          transition: 'border-color 0.1s',
+          borderRadius: 3,
         }}
       >
-        <div style={{
-          width: `${hole}px`,
-          height: `${hole}px`,
-          borderRadius: '50%',
-          backgroundColor: active || isPending ? `${catColor}66` : 'rgba(0,0,0,0.6)',
-          border: type === 'in' ? '1px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.3)',
-        }} />
+        <div
+          ref={ringRef}
+          style={{
+            width: `${s}px`,
+            height: `${s}px`,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(20,20,20,0.9)',
+            border: `1.5px solid ${
+              isPending ? catColor
+              : active ? catColor
+              : hasPending && type === 'in' ? `${catColor}66`
+              : 'rgba(180,175,165,0.25)'
+            }`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
+            transition: 'border-color 0.1s',
+          }}
+        >
+          <div style={{
+            width: `${hole}px`,
+            height: `${hole}px`,
+            borderRadius: '50%',
+            backgroundColor: active || isPending ? `${catColor}66` : 'rgba(0,0,0,0.6)',
+            border: type === 'in' ? '1px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.3)',
+          }} />
+        </div>
       </div>
       {label && (
-        <span style={{
-          fontSize: size === 'sm' ? '6px' : '7px',
-          fontFamily: 'var(--kol-font-mono)',
+        <span className="kol-helper-xxs" style={{
           color: 'rgba(255,255,255,0.35)',
           textTransform: 'uppercase',
           lineHeight: 1,

@@ -7,12 +7,32 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const TAP_PRIMES = [23, 37, 53, 71]
 
-export default function ReverbModule({ id = 'verb1' }) {
+function ReverbPanel({ size, decay, enabled, onToggle, onSizeChange, onDecayChange, id, inConnected, inRef, outRef }) {
+  return (
+    <Module label="Reverb" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <Knob value={size} onChange={onSizeChange} label="size" />
+        <Knob value={decay} onChange={onDecayChange} label="decay" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function ReverbModule({ id = 'verb1', preview }) {
+  if (preview) return <ReverbPanel size={50} decay={50} enabled={false} onToggle={() => {}} onSizeChange={() => {}} onDecayChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outRef={{ current: null }} />
+
   const [size, setSize] = useState(50)
   const [decay, setDecay] = useState(50)
   const [enabled, setEnabled] = useState(true)
@@ -68,21 +88,5 @@ export default function ReverbModule({ id = 'verb1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Reverb" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <Knob value={size} onChange={setSize} label="size" />
-        <Knob value={decay} onChange={setDecay} label="decay" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <ReverbPanel size={size} decay={decay} enabled={enabled} onToggle={() => setEnabled(!enabled)} onSizeChange={setSize} onDecayChange={setDecay} id={id} inConnected={inConnected} inRef={inRef} outRef={outRef} />
 }

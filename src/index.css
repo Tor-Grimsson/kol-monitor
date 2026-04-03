@@ -1,2 +1,16 @@
 @import "tailwindcss";
 @import "./styles/theme.css";
+
+:root {
+  --sidebar-width: 18rem;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --sidebar-width: 20rem;
+  }
+}
+
+.sidebar-width {
+  width: var(--sidebar-width);
+}

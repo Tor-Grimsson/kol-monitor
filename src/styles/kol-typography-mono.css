@@ -219,4 +219,11 @@
   font-weight: 500;
 }
 
+.kol-helper-xxxxs {
+  font-family: var(--kol-font-family-mono);
+  font-size: 6px;
+  line-height: 125%;
+  font-weight: 500;
+}
+
 

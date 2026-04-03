@@ -9,7 +9,6 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
 import Selector from '../controls/Selector'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['line', 'grid', 'circle', 'spiral', 'lissa']
@@ -106,7 +105,37 @@ function generate(shape, freq, density, phase, t) {
   return { pts, edges }
 }
 
-export default function LineGenModule({ id = 'line1', init }) {
+function LineGenPanel({ shape, freq, density, speed, enabled, onToggle, onShapeChange, onFreqChange, onDensityChange, onSpeedChange, id, freqConn, freqInRef, densConn, densInRef, spdConn, spdInRef, outRef }) {
+  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
+
+  return (
+    <Module label="LineGen" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <Selector value={shape} options={SHAPES} onChange={onShapeChange} />
+        <div style={rowStyle}>
+          <JackSocket type="in" port="freq" moduleId={id} active={freqConn} signalRef={freqInRef} label="in" size="sm" />
+          <Knob value={freq} onChange={onFreqChange} label="frq" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="dens" moduleId={id} active={densConn} signalRef={densInRef} label="in" size="sm" />
+          <Knob value={density} onChange={onDensityChange} label="den" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="spd" moduleId={id} active={spdConn} signalRef={spdInRef} label="in" size="sm" />
+          <Knob value={speed} onChange={onSpeedChange} label="spd" />
+        </div>
+        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+      </div>
+    </Module>
+  )
+}
+
+export default function LineGenModule({ id = 'line1', init, preview }) {
+  if (preview) return <LineGenPanel shape="circle" freq={20} density={50} speed={50} enabled={false} onToggle={() => {}} onShapeChange={() => {}} onFreqChange={() => {}} onDensityChange={() => {}} onSpeedChange={() => {}} id={id} freqConn={false} freqInRef={{ current: null }} densConn={false} densInRef={{ current: null }} spdConn={false} spdInRef={{ current: null }} outRef={{ current: null }} />
+
   const [shape, setShape] = useState(init?.shape ?? 'circle')
   const [freq, setFreq] = useState(init?.freq ?? 20)
   const [density, setDensity] = useState(init?.density ?? 50)
@@ -160,30 +189,5 @@ export default function LineGenModule({ id = 'line1', init }) {
     },
   })
 
-  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
-
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="LineGen" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <Selector value={shape} options={SHAPES} onChange={setShape} />
-        <div style={rowStyle}>
-          <JackSocket type="in" port="freq" moduleId={id} active={freqConn} signalRef={freqInRef} label="in" size="sm" />
-          <Knob value={freq} onChange={setFreq} label="frq" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="dens" moduleId={id} active={densConn} signalRef={densInRef} label="in" size="sm" />
-          <Knob value={density} onChange={setDensity} label="den" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="spd" moduleId={id} active={spdConn} signalRef={spdInRef} label="in" size="sm" />
-          <Knob value={speed} onChange={setSpeed} label="spd" />
-        </div>
-        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-      </div>
-    </Module>
-  )
+  return <LineGenPanel shape={shape} freq={freq} density={density} speed={speed} enabled={enabled} onToggle={() => setEnabled(!enabled)} onShapeChange={setShape} onFreqChange={setFreq} onDensityChange={setDensity} onSpeedChange={setSpeed} id={id} freqConn={freqConn} freqInRef={freqInRef} densConn={densConn} densInRef={densInRef} spdConn={spdConn} spdInRef={spdInRef} outRef={outRef} />
 }

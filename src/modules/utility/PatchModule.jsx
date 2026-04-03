@@ -8,7 +8,51 @@ import Module from './Module'
 import ModuleHeader from '../controls/ModuleHeader'
 import Dropdown from '../controls/Dropdown'
 
-export default function PatchModule({ id = 'patch1' }) {
+function PatchPanel({ current, names, cableCount, onCurrentChange, onLoad, onSave, onClear }) {
+  const btnStyle = {
+    color: 'rgba(255,255,255,0.5)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 2,
+    padding: '2px 6px',
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    textAlign: 'left',
+  }
+
+  return (
+    <Module>
+      <div style={{
+        display: 'flex', flexDirection: 'column',
+        height: '100%', padding: '4px 2px', gap: 6,
+      }}>
+        <ModuleHeader label="Patch" enabled={true} onToggle={() => {}} />
+
+        <div style={{ padding: '0 2px' }}>
+          <Dropdown value={current} options={names} onChange={onCurrentChange} />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '0 2px' }}>
+          <button className="kol-helper-xxxs" style={btnStyle} onClick={onLoad}>load</button>
+          <button className="kol-helper-xxxs" style={btnStyle} onClick={onSave}>save</button>
+          <button className="kol-helper-xxxs" style={btnStyle} onClick={onClear}>clear</button>
+        </div>
+
+        <span className="kol-helper-xxxxs" style={{
+          color: 'rgba(255,255,255,0.25)',
+          padding: '0 4px',
+        }}>
+          {cableCount} cables
+        </span>
+      </div>
+    </Module>
+  )
+}
+
+export default function PatchModule({ id = 'patch1', preview }) {
+  if (preview) return <PatchPanel current="init" names={['init']} cableCount={0} onCurrentChange={() => {}} onLoad={() => {}} onSave={() => {}} onClear={() => {}} />
+
   const routing = usePatchRouting()
   const [saved, setSaved] = useState(() => ({ ...patches }))
   const [current, setCurrent] = useState('init')
@@ -34,47 +78,5 @@ export default function PatchModule({ id = 'patch1' }) {
     setCurrent('init')
   }
 
-  const btnStyle = {
-    fontSize: '7px',
-    fontFamily: 'var(--kol-font-mono)',
-    color: 'rgba(255,255,255,0.5)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 2,
-    padding: '2px 6px',
-    cursor: 'pointer',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    textAlign: 'left',
-  }
-
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column',
-        height: '100%', padding: '4px 2px', gap: 6,
-      }}>
-        <ModuleHeader label="Patch" enabled={true} onToggle={() => {}} />
-
-        <div style={{ padding: '0 2px' }}>
-          <Dropdown value={current} options={names} onChange={setCurrent} />
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '0 2px' }}>
-          <button style={btnStyle} onClick={handleLoad}>load</button>
-          <button style={btnStyle} onClick={handleSave}>save</button>
-          <button style={btnStyle} onClick={handleClear}>clear</button>
-        </div>
-
-        <span style={{
-          fontSize: '7px',
-          fontFamily: 'var(--kol-font-mono)',
-          color: 'rgba(255,255,255,0.25)',
-          padding: '0 4px',
-        }}>
-          {routing.connections.length} cables
-        </span>
-      </div>
-    </Module>
-  )
+  return <PatchPanel current={current} names={names} cableCount={routing.connections.length} onCurrentChange={setCurrent} onLoad={handleLoad} onSave={handleSave} onClear={handleClear} />
 }

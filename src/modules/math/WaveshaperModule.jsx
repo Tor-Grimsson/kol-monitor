@@ -8,7 +8,6 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
 import Selector from '../controls/Selector'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const MODES = ['clip', 'fold', 'wrap', 'sine']
@@ -37,7 +36,28 @@ function shape(x, mode) {
   }
 }
 
-export default function WaveshaperModule({ id = 'wshp1' }) {
+function WaveshaperPanel({ mode, drive, enabled, onToggle, onModeChange, onDriveChange, id, inConnected, inRef, outRef }) {
+  return (
+    <Module label="Shaper" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <Selector value={mode} options={MODES} onChange={onModeChange} />
+        <Knob value={drive} onChange={onDriveChange} label="drive" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function WaveshaperModule({ id = 'wshp1', preview }) {
+  if (preview) return <WaveshaperPanel mode="clip" drive={50} enabled={false} onToggle={() => {}} onModeChange={() => {}} onDriveChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outRef={{ current: null }} />
+
   const [mode, setMode] = useState('clip')
   const [drive, setDrive] = useState(50)
   const [enabled, setEnabled] = useState(true)
@@ -78,21 +98,5 @@ export default function WaveshaperModule({ id = 'wshp1' }) {
     },
   })
 
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Shaper" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <Selector value={mode} options={MODES} onChange={setMode} />
-        <Knob value={drive} onChange={setDrive} label="drive" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <WaveshaperPanel mode={mode} drive={drive} enabled={enabled} onToggle={() => setEnabled(!enabled)} onModeChange={setMode} onDriveChange={setDrive} id={id} inConnected={inConnected} inRef={inRef} outRef={outRef} />
 }

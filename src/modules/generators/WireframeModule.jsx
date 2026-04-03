@@ -8,7 +8,6 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
 import Selector from '../controls/Selector'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['cube', 'tetra', 'octa', 'sphere']
@@ -71,7 +70,45 @@ function project(v, fov) {
   return { x: 0.5 + v[0] * scale * 0.3, y: 0.5 + v[1] * scale * 0.3 }
 }
 
-export default function WireframeModule({ id = 'wire1' }) {
+function WireframePanel({ shape, speed, scale, resolution, fov, enabled, onToggle, onShapeChange, onSpeedChange, onScaleChange, onResolutionChange, onFovChange, id, rxConn, rxInRef, ryConn, ryInRef, rzConn, rzInRef, scaleConn, scaleInRef, fovConn, fovInRef, clkConn, clkInRef, outRef }) {
+  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
+
+  return (
+    <Module label="Wire" enabled={enabled} onToggle={onToggle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+      }}>
+        <Selector value={shape} options={SHAPES} onChange={onShapeChange} />
+        <div style={rowStyle}>
+          <JackSocket type="in" port="rx" moduleId={id} active={rxConn} signalRef={rxInRef} label="in" size="sm" />
+          <Knob value={speed} onChange={onSpeedChange} label="spd" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="ry" moduleId={id} active={ryConn} signalRef={ryInRef} label="in" size="sm" />
+          <Knob value={scale} onChange={onScaleChange} label="scl" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="rz" moduleId={id} active={rzConn} signalRef={rzInRef} label="in" size="sm" />
+          <Knob value={resolution} onChange={onResolutionChange} label="res" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="fov" moduleId={id} active={fovConn} signalRef={fovInRef} label="in" size="sm" />
+          <Knob value={fov} onChange={onFovChange} label="fov" />
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <JackSocket type="in" port="scale" moduleId={id} active={scaleConn} signalRef={scaleInRef} label="scl" />
+          <JackSocket type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkInRef} label="clk" />
+          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+export default function WireframeModule({ id = 'wire1', preview }) {
+  if (preview) return <WireframePanel shape="cube" speed={50} scale={50} resolution={50} fov={50} enabled={false} onToggle={() => {}} onShapeChange={() => {}} onSpeedChange={() => {}} onScaleChange={() => {}} onResolutionChange={() => {}} onFovChange={() => {}} id={id} rxConn={false} rxInRef={{ current: null }} ryConn={false} ryInRef={{ current: null }} rzConn={false} rzInRef={{ current: null }} scaleConn={false} scaleInRef={{ current: null }} fovConn={false} fovInRef={{ current: null }} clkConn={false} clkInRef={{ current: null }} outRef={{ current: null }} />
+
   const [shape, setShape] = useState('cube')
   const [speed, setSpeed] = useState(50)
   const [scale, setScale] = useState(50)
@@ -164,38 +201,5 @@ export default function WireframeModule({ id = 'wire1' }) {
     },
   })
 
-  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
-
-  return (
-    <Module>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-        <ModuleHeader label="Wire" enabled={enabled} onToggle={() => setEnabled(!enabled)} />
-        <Selector value={shape} options={SHAPES} onChange={setShape} />
-        <div style={rowStyle}>
-          <JackSocket type="in" port="rx" moduleId={id} active={rxConn} signalRef={rxInRef} label="in" size="sm" />
-          <Knob value={speed} onChange={setSpeed} label="spd" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="ry" moduleId={id} active={ryConn} signalRef={ryInRef} label="in" size="sm" />
-          <Knob value={scale} onChange={setScale} label="scl" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="rz" moduleId={id} active={rzConn} signalRef={rzInRef} label="in" size="sm" />
-          <Knob value={resolution} onChange={setResolution} label="res" />
-        </div>
-        <div style={rowStyle}>
-          <JackSocket type="in" port="fov" moduleId={id} active={fovConn} signalRef={fovInRef} label="in" size="sm" />
-          <Knob value={fov} onChange={setFov} label="fov" />
-        </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <JackSocket type="in" port="scale" moduleId={id} active={scaleConn} signalRef={scaleInRef} label="scl" />
-          <JackSocket type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkInRef} label="clk" />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
-        </div>
-      </div>
-    </Module>
-  )
+  return <WireframePanel shape={shape} speed={speed} scale={scale} resolution={resolution} fov={fov} enabled={enabled} onToggle={() => setEnabled(!enabled)} onShapeChange={setShape} onSpeedChange={setSpeed} onScaleChange={setScale} onResolutionChange={setResolution} onFovChange={setFov} id={id} rxConn={rxConn} rxInRef={rxInRef} ryConn={ryConn} ryInRef={ryInRef} rzConn={rzConn} rzInRef={rzInRef} scaleConn={scaleConn} scaleInRef={scaleInRef} fovConn={fovConn} fovInRef={fovInRef} clkConn={clkConn} clkInRef={clkInRef} outRef={outRef} />
 }
