@@ -1,89 +1,128 @@
-// ClockDividerModule — divide incoming clock by N
-// 4HP
+// ClockDividerModule — rotating clock divider
+// 4HP. Clock input, 6 division outputs (1, 1/2, 1/3, 1/4, 1/5, 1/6), rotate + reset inputs.
 
 import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import Selector from '../controls/Selector'
+import LabeledJack from '../controls/LabeledJack'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-const DIVISIONS = ['2', '4', '8', '16']
-const GATE_DURATION = 0.03 // 30ms pulse
+const GATE_DURATION = 0.03
+const DIVS = [1, 2, 3, 4, 5, 6, 7, 8]
 
-function ClockDividerPanel({ division, enabled, onToggle, onDivisionChange, id, inConnected, inRef, outputRef }) {
+function ClockDividerPanel({ enabled, onToggle, id, inConn, inRef, rotConn, rotRef, rstConn, rstRef, outRefs }) {
   return (
     <Module label="Div" enabled={enabled} onToggle={onToggle}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
-
-        <Selector value={division} options={DIVISIONS} onChange={onDivisionChange} />
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          </div>
-          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
-          </div>
+        <LabeledJack type="in" port="in" moduleId={id} active={inConn} signalRef={inRef} label="in" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
+          {DIVS.map(d => (
+            <LabeledJack key={d} type="out" port={`d${d}`} moduleId={id} signalRef={outRefs[d]} label={d === 1 ? '1' : `1/${d}`} />
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <LabeledJack type="in" port="rot" moduleId={id} active={rotConn} signalRef={rotRef} label="rot" />
+          <LabeledJack type="in" port="rst" moduleId={id} active={rstConn} signalRef={rstRef} label="rst" />
         </div>
       </div>
     </Module>
   )
 }
 
-export default function ClockDividerModule({ id = 'cdiv1', preview }) {
-  if (preview) return <ClockDividerPanel division="4" enabled={false} onToggle={() => {}} onDivisionChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outputRef={{ current: null }} />
+const NULL_REF = { current: null }
+const NULL_REFS = Object.fromEntries(DIVS.map(d => [d, NULL_REF]))
 
-  const [division, setDivision] = useState('4')
+export default function ClockDividerModule({ id = 'cdiv1', preview }) {
+  if (preview) return <ClockDividerPanel enabled={false} onToggle={() => {}} id={id} inConn={false} inRef={NULL_REF} rotConn={false} rotRef={NULL_REF} rstConn={false} rstRef={NULL_REF} outRefs={NULL_REFS} />
+
   const [enabled, setEnabled] = useState(true)
+  const enabledRef = useRef(true)
   const routing = usePatchRouting()
 
-  const divRef = useRef('4')
-  const enabledRef = useRef(true)
-  const prevRef = useRef(false)
-  const countRef = useRef(0)
-  const gateTimerRef = useRef(0)
-  const outputRef = useRef(null)
+  const prevClkRef = useRef(false)
+  const prevRotRef = useRef(false)
+  const prevRstRef = useRef(false)
+  const rotationRef = useRef(0)
+  const divCounts = useRef(Object.fromEntries(DIVS.map(d => [d, 0])))
+  const divTimers = useRef(Object.fromEntries(DIVS.map(d => [d, 0])))
   const inRef = useRef(null)
+  const rotRef = useRef(null)
+  const rstRef = useRef(null)
+  const outRefs = Object.fromEntries(DIVS.map(d => [d, useRef(null)]))
 
-  divRef.current = division
   enabledRef.current = enabled
 
   const conns = routing?.connections || []
-  const inConnected = conns.some(c => c.toModuleId === id && c.toPort === 'in')
+  const inConn = conns.some(c => c.toModuleId === id && c.toPort === 'in')
+  const rotConn = conns.some(c => c.toModuleId === id && c.toPort === 'rot')
+  const rstConn = conns.some(c => c.toModuleId === id && c.toPort === 'rst')
+
+  const outputs = Object.fromEntries(DIVS.map(d => [`d${d}`, { type: 'scalar' }]))
 
   useModule({
     id,
-    inputs: { in: { type: 'scalar' } },
-    outputs: { out: { type: 'scalar' } },
+    inputs: { in: { type: 'scalar' }, rot: { type: 'scalar' }, rst: { type: 'scalar' } },
+    outputs,
     process: (inputs, dt) => {
-      if (!enabledRef.current) { outputRef.current = null; return { out: null } }
-      inRef.current = inputs.in
+      const result = Object.fromEntries(DIVS.map(d => [`d${d}`, null]))
 
-      gateTimerRef.current = Math.max(0, gateTimerRef.current - dt)
-
-      // Rising edge detection
-      const high = readScalar(inputs.in) > 50
-      if (high && !prevRef.current) {
-        countRef.current++
-        const n = parseInt(divRef.current, 10)
-        if (countRef.current >= n) {
-          countRef.current = 0
-          gateTimerRef.current = GATE_DURATION
-        }
+      if (!enabledRef.current) {
+        DIVS.forEach(d => { outRefs[d].current = null })
+        return result
       }
-      prevRef.current = high
 
-      const out = scalar(gateTimerRef.current > 0 ? 100 : 0)
-      outputRef.current = out
-      return { out }
+      inRef.current = inputs.in
+      rotRef.current = inputs.rot
+      rstRef.current = inputs.rst
+
+      // Rotate: shift division assignment on rising edge
+      const rotHigh = readScalar(inputs.rot) > 50
+      if (rotHigh && !prevRotRef.current) {
+        rotationRef.current = (rotationRef.current + 1) % DIVS.length
+      }
+      prevRotRef.current = rotHigh
+
+      // Reset: return to default assignment on rising edge
+      const rstHigh = readScalar(inputs.rst) > 50
+      if (rstHigh && !prevRstRef.current) {
+        rotationRef.current = 0
+        DIVS.forEach(d => { divCounts.current[d] = 0 })
+      }
+      prevRstRef.current = rstHigh
+
+      // Decay gate timers
+      DIVS.forEach(d => { divTimers.current[d] = Math.max(0, divTimers.current[d] - dt) })
+
+      // Clock rising edge
+      const clkHigh = readScalar(inputs.in) > 50
+      if (clkHigh && !prevClkRef.current) {
+        DIVS.forEach(d => {
+          divCounts.current[d]++
+          if (divCounts.current[d] >= d) {
+            divCounts.current[d] = 0
+            divTimers.current[d] = GATE_DURATION
+          }
+        })
+      }
+      prevClkRef.current = clkHigh
+
+      // Output with rotation applied
+      const rot = rotationRef.current
+      DIVS.forEach((d, i) => {
+        const rotatedDiv = DIVS[(i + rot) % DIVS.length]
+        const out = scalar(divTimers.current[rotatedDiv] > 0 ? 100 : 0)
+        outRefs[d].current = out
+        result[`d${d}`] = out
+      })
+
+      return result
     },
   })
 
-  return <ClockDividerPanel division={division} enabled={enabled} onToggle={() => setEnabled(!enabled)} onDivisionChange={setDivision} id={id} inConnected={inConnected} inRef={inRef} outputRef={outputRef} />
+  return <ClockDividerPanel enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} inConn={inConn} inRef={inRef} rotConn={rotConn} rotRef={rotRef} rstConn={rstConn} rstRef={rstRef} outRefs={outRefs} />
 }

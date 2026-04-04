@@ -5,29 +5,24 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 function ScaleOffsetPanel({ scale, offset, enabled, onToggle, onScaleChange, onOffsetChange, id, inConnected, inRef, outputRef }) {
   return (
-    <Module label="S+O" enabled={enabled} onToggle={onToggle}>
+    <Module label="S+O" enabled={enabled} onToggle={onToggle} u={1}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
 
-        <Knob value={scale} onChange={onScaleChange} min={0} max={200} label="scl" />
-        <Knob value={offset} onChange={onOffsetChange} min={0} max={100} label="ofs" />
+        <Knob value={scale} onChange={onScaleChange} min={0} max={200} label="scl" variant="row-right" />
+        <Knob value={offset} onChange={onOffsetChange} min={0} max={100} label="ofs" variant="row-right" />
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          </div>
-          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
-          </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <LabeledJack type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
         </div>
       </div>
     </Module>

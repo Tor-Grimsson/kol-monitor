@@ -5,9 +5,9 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { pen, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import Selector from '../controls/Selector'
+import IconSelect from '../controls/IconSelect'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const CAPS = ['round', 'square', 'butt']
@@ -22,28 +22,31 @@ function PenPanel({ thickness, dash, gap, opacity, cap, lofi, enabled, onToggle,
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
 
+        <IconSelect value={cap} onChange={onCapChange} columns={3} items={[
+          { value: 'round', icon: 'cap-round' }, { value: 'square', icon: 'cap-square' }, { value: 'butt', icon: 'cap-butt' },
+        ]} />
+
         <div style={rowStyle}>
-          <JackSocket type="in" port="tk" moduleId={id} active={thkConn} signalRef={thkInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="tk" moduleId={id} active={thkConn} signalRef={thkInRef} label="in" size="sm" />
           <Knob value={thickness} onChange={onThicknessChange} label="thk" />
         </div>
         <div style={rowStyle}>
-          <JackSocket type="in" port="ds" moduleId={id} active={dshConn} signalRef={dshInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="ds" moduleId={id} active={dshConn} signalRef={dshInRef} label="in" size="sm" />
           <Knob value={dash} onChange={onDashChange} label="dsh" />
         </div>
         <div style={rowStyle}>
-          <JackSocket type="in" port="gp" moduleId={id} active={gapConn} signalRef={gapInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="gp" moduleId={id} active={gapConn} signalRef={gapInRef} label="in" size="sm" />
           <Knob value={gap} onChange={onGapChange} label="gap" />
         </div>
         <div style={rowStyle}>
-          <JackSocket type="in" port="op" moduleId={id} active={opConn} signalRef={opInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="op" moduleId={id} active={opConn} signalRef={opInRef} label="in" size="sm" />
           <Knob value={opacity} onChange={onOpacityChange} label="op" />
         </div>
-
-        <Selector value={cap} options={CAPS} onChange={onCapChange} />
         <Knob value={lofi} onChange={onLofiChange} label="lofi" />
-        <JackSocket type="in" port="clr" moduleId={id} active={colorConn} signalRef={colorInRef} label="color" size="sm" />
-
-        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <LabeledJack type="in" port="clr" moduleId={id} active={colorConn} signalRef={colorInRef} label="color" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
       </div>
     </Module>
   )

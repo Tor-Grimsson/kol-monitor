@@ -1,5 +1,5 @@
 // ConstantModule — test source, outputs a fixed scalar value
-// 4HP, one knob, one output jack
+// 4HP 1U, one knob, one output jack
 
 import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
@@ -10,7 +10,7 @@ import Knob from '../controls/Knob'
 
 function ConstantPanel({ value, enabled, onToggle, onValueChange, id, outputRef }) {
   return (
-    <Module label="Const" enabled={enabled} onToggle={onToggle}>
+    <Module label="Const" enabled={enabled} onToggle={onToggle} u={1}>
       <div style={{
         display: 'flex',
         flexDirection: 'column',

@@ -4,13 +4,14 @@
 import { useRef, useEffect, useState } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
+import FlipToggle from '../controls/FlipToggle'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
 const BUF_LEN = 128
 
-function MonitorPanel({ canvasRef, enabled, onToggle, id, aConnected, inputARef, bConnected, inputBRef, penConnected, penRef, outARef, outBRef }) {
+function MonitorPanel({ canvasRef, overlay, onOverlayChange, enabled, onToggle, id, aConnected, inputARef, bConnected, inputBRef, penConnected, penRef, outARef, outBRef }) {
   return (
     <Module label="Mon" enabled={enabled} onToggle={onToggle}>
       <div style={{
@@ -33,12 +34,12 @@ function MonitorPanel({ canvasRef, enabled, onToggle, id, aConnected, inputARef,
         />
 
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
-          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={inputARef} label="a" />
-          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={inputBRef} label="b" />
-          <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="a" moduleId={id} signalRef={outARef} label="a" />
-          <JackSocket type="out" port="b" moduleId={id} signalRef={outBRef} label="b" />
+          <LabeledJack type="in" port="a" moduleId={id} active={aConnected} signalRef={inputARef} label="a" />
+          <LabeledJack type="in" port="b" moduleId={id} active={bConnected} signalRef={inputBRef} label="b" />
+          <LabeledJack type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" />
+          <FlipToggle value={overlay} onChange={onOverlayChange} labelA="spl" labelB="ovr" />
+          <LabeledJack type="out" port="a" moduleId={id} signalRef={outARef} label="a" />
+          <LabeledJack type="out" port="b" moduleId={id} signalRef={outBRef} label="b" />
         </div>
       </div>
     </Module>
@@ -46,14 +47,17 @@ function MonitorPanel({ canvasRef, enabled, onToggle, id, aConnected, inputARef,
 }
 
 export default function MonitorModule({ id = 'mon1', preview }) {
-  if (preview) return <MonitorPanel canvasRef={{ current: null }} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={{ current: null }} bConnected={false} inputBRef={{ current: null }} penConnected={false} penRef={{ current: null }} outARef={{ current: null }} outBRef={{ current: null }} />
+  if (preview) return <MonitorPanel canvasRef={{ current: null }} overlay={false} onOverlayChange={() => {}} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={{ current: null }} bConnected={false} inputBRef={{ current: null }} penConnected={false} penRef={{ current: null }} outARef={{ current: null }} outBRef={{ current: null }} />
 
   const canvasRef = useRef(null)
   const inputARef = useRef(null)
   const inputBRef = useRef(null)
   const penRef = useRef(null)
+  const [overlay, setOverlay] = useState(false)
+  const overlayRef = useRef(false)
   const [enabled, setEnabled] = useState(true)
   const enabledRef = useRef(true)
+  overlayRef.current = overlay
   enabledRef.current = enabled
   const routing = usePatchRouting()
 
@@ -141,14 +145,19 @@ export default function MonitorModule({ id = 'mon1', preview }) {
       const hasB = inputBRef.current != null
       const wi = writeIdxRef.current
       const p = penRef.current
+      const ovr = overlayRef.current
 
-      const aw = hasB ? Math.floor(w / 2) : w
-      drawSignal(ctx, inputARef.current, 0, 0, aw, h, historyA.current, wi, BUF_LEN, p)
-
-      if (hasB) {
+      if (hasB && !ovr) {
+        // Split view
+        const aw = Math.floor(w / 2)
+        drawSignal(ctx, inputARef.current, 0, 0, aw, h, historyA.current, wi, BUF_LEN, p)
         ctx.fillStyle = 'rgba(40,40,40,0.5)'
-        ctx.fillRect(Math.floor(w / 2), 0, 1, h)
-        drawSignal(ctx, inputBRef.current, Math.floor(w / 2) + 1, 0, Math.ceil(w / 2) - 1, h, historyB.current, wi, BUF_LEN, p)
+        ctx.fillRect(aw, 0, 1, h)
+        drawSignal(ctx, inputBRef.current, aw + 1, 0, Math.ceil(w / 2) - 1, h, historyB.current, wi, BUF_LEN, p)
+      } else {
+        // Overlay or single channel
+        drawSignal(ctx, inputARef.current, 0, 0, w, h, historyA.current, wi, BUF_LEN, p)
+        if (hasB) drawSignal(ctx, inputBRef.current, 0, 0, w, h, historyB.current, wi, BUF_LEN, p)
       }
 
       raf = requestAnimationFrame(draw)
@@ -158,5 +167,5 @@ export default function MonitorModule({ id = 'mon1', preview }) {
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  return <MonitorPanel canvasRef={canvasRef} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
+  return <MonitorPanel canvasRef={canvasRef} overlay={overlay} onOverlayChange={setOverlay} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
 }

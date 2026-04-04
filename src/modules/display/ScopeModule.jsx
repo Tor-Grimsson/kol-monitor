@@ -7,12 +7,13 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Divider from '../../components/atoms/Divider'
+import FlipToggle from '../controls/FlipToggle'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
 const BUF_LEN = 128
 
-function ScopePanel({ canvasRef, enabled, onToggle, id, aConnected, inputARef, bConnected, inputBRef, penConnected, penRef, outARef, outBRef }) {
+function ScopePanel({ canvasRef, overlay, onOverlayChange, enabled, onToggle, id, aConnected, inputARef, bConnected, inputBRef, penConnected, penRef, outARef, outBRef }) {
   return (
     <Module label="Scope" enabled={enabled} onToggle={onToggle} u={1}>
       <div style={{ display: 'flex', height: '100%', gap: 6, alignItems: 'center' }}>
@@ -29,7 +30,10 @@ function ScopePanel({ canvasRef, enabled, onToggle, id, aConnected, inputARef, b
           height={80}
           style={{ flex: 1, minWidth: 0, height: '100%', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)' }}
         />
-        <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} size="sm" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+          <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} />
+          <FlipToggle value={overlay} onChange={onOverlayChange} labelA="spl" labelB="ovr" />
+        </div>
       </div>
     </Module>
   )
@@ -38,9 +42,11 @@ function ScopePanel({ canvasRef, enabled, onToggle, id, aConnected, inputARef, b
 const NULL_REF = { current: null }
 
 export default function ScopeModule({ id = 'scope1', preview }) {
-  if (preview) return <ScopePanel canvasRef={NULL_REF} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={NULL_REF} bConnected={false} inputBRef={NULL_REF} penConnected={false} penRef={NULL_REF} outARef={NULL_REF} outBRef={NULL_REF} />
+  if (preview) return <ScopePanel canvasRef={NULL_REF} overlay={false} onOverlayChange={() => {}} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={NULL_REF} bConnected={false} inputBRef={NULL_REF} penConnected={false} penRef={NULL_REF} outARef={NULL_REF} outBRef={NULL_REF} />
 
   const canvasRef = useRef(null)
+  const [overlay, setOverlay] = useState(false)
+  const overlayRef = useRef(false)
   const inputARef = useRef(null)
   const inputBRef = useRef(null)
   const penRef = useRef(null)
@@ -48,6 +54,7 @@ export default function ScopeModule({ id = 'scope1', preview }) {
   const outBRef = useRef(null)
   const [enabled, setEnabled] = useState(true)
   const enabledRef = useRef(true)
+  overlayRef.current = overlay
   enabledRef.current = enabled
   const routing = usePatchRouting()
 
@@ -116,14 +123,17 @@ export default function ScopeModule({ id = 'scope1', preview }) {
       const hasB = inputBRef.current != null
       const wi = writeIdxRef.current
       const p = penRef.current
+      const ovr = overlayRef.current
 
-      const aw = hasB ? Math.floor(w / 2) : w
-      drawSignal(ctx, inputARef.current, 0, 0, aw, h, historyA.current, wi, BUF_LEN, p)
-
-      if (hasB) {
+      if (hasB && !ovr) {
+        const aw = Math.floor(w / 2)
+        drawSignal(ctx, inputARef.current, 0, 0, aw, h, historyA.current, wi, BUF_LEN, p)
         ctx.fillStyle = 'rgba(40,40,40,0.5)'
-        ctx.fillRect(Math.floor(w / 2), 0, 1, h)
-        drawSignal(ctx, inputBRef.current, Math.floor(w / 2) + 1, 0, Math.ceil(w / 2) - 1, h, historyB.current, wi, BUF_LEN, p)
+        ctx.fillRect(aw, 0, 1, h)
+        drawSignal(ctx, inputBRef.current, aw + 1, 0, Math.ceil(w / 2) - 1, h, historyB.current, wi, BUF_LEN, p)
+      } else {
+        drawSignal(ctx, inputARef.current, 0, 0, w, h, historyA.current, wi, BUF_LEN, p)
+        if (hasB) drawSignal(ctx, inputBRef.current, 0, 0, w, h, historyB.current, wi, BUF_LEN, p)
       }
 
       raf = requestAnimationFrame(draw)
@@ -133,5 +143,5 @@ export default function ScopeModule({ id = 'scope1', preview }) {
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  return <ScopePanel canvasRef={canvasRef} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
+  return <ScopePanel canvasRef={canvasRef} overlay={overlay} onOverlayChange={setOverlay} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
 }

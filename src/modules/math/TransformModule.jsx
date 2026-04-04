@@ -7,6 +7,7 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
@@ -19,40 +20,33 @@ function TransformPanel({ posX, posY, scale, rotX, rotY, rotZ, enabled, onToggle
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
-        <div style={{ display: 'flex', gap: 4, width: '100%', padding: '0 2px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="x" moduleId={id} active={xConn} signalRef={xInRef} label="cv" size="sm" />
-              <Knob value={posX} onChange={onPosXChange} label="x" />
-            </div>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="y" moduleId={id} active={yConn} signalRef={yInRef} label="cv" size="sm" />
-              <Knob value={posY} onChange={onPosYChange} label="y" />
-            </div>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="s" moduleId={id} active={sConn} signalRef={sInRef} label="cv" size="sm" />
-              <Knob value={scale} onChange={onScaleChange} label="scl" />
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="rx" moduleId={id} active={rxConn} signalRef={rxInRef} label="cv" size="sm" />
-              <Knob value={rotX} onChange={onRotXChange} label="rX" />
-            </div>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="ry" moduleId={id} active={ryConn} signalRef={ryInRef} label="cv" size="sm" />
-              <Knob value={rotY} onChange={onRotYChange} label="rY" />
-            </div>
-            <div style={rowStyle}>
-              <JackSocket type="in" port="rz" moduleId={id} active={rzConn} signalRef={rzInRef} label="cv" size="sm" />
-              <Knob value={rotZ} onChange={onRotZChange} label="rZ" />
-            </div>
-          </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="x" moduleId={id} active={xConn} signalRef={xInRef} size="sm" />
+          <Knob value={posX} onChange={onPosXChange} label="x" />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConn} signalRef={inRef} label="in" />
-          <div style={{ width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        <div style={rowStyle}>
+          <JackSocket type="in" port="y" moduleId={id} active={yConn} signalRef={yInRef} size="sm" />
+          <Knob value={posY} onChange={onPosYChange} label="y" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="s" moduleId={id} active={sConn} signalRef={sInRef} size="sm" />
+          <Knob value={scale} onChange={onScaleChange} label="scl" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="rx" moduleId={id} active={rxConn} signalRef={rxInRef} size="sm" />
+          <Knob value={rotX} onChange={onRotXChange} label="rX" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="ry" moduleId={id} active={ryConn} signalRef={ryInRef} size="sm" />
+          <Knob value={rotY} onChange={onRotYChange} label="rY" />
+        </div>
+        <div style={rowStyle}>
+          <JackSocket type="in" port="rz" moduleId={id} active={rzConn} signalRef={rzInRef} size="sm" />
+          <Knob value={rotZ} onChange={onRotZChange} label="rZ" />
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <LabeledJack type="in" port="in" moduleId={id} active={inConn} signalRef={inRef} label="in" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
     </Module>

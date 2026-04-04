@@ -9,7 +9,7 @@ import { ModuleRow } from '../utility/ModuleLayout'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import RampSelect from '../controls/RampSelect'
+import IconSelect from '../controls/IconSelect'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['up', 'down', 'tri']
@@ -21,7 +21,9 @@ function RampPanel({ rate, shape, enabled, onToggle, onRateChange, onShapeChange
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
-        <RampSelect value={shape} onChange={onShapeChange} />
+        <IconSelect value={shape} onChange={onShapeChange} columns={3} items={[
+          { value: 'up', icon: 'ramp-up' }, { value: 'down', icon: 'ramp-down' }, { value: 'tri', icon: 'ramp-tri' },
+        ]} />
         <ModuleRow>
           <JackSocket type="in" port="rateCV" moduleId={id} active={rateCvConn} signalRef={rateCvRef} size="sm" />
           <Knob value={rate} onChange={onRateChange} label="rate" variant="row-right" />

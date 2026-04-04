@@ -4,8 +4,9 @@
 import { useRef, useEffect, useState } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
+import Divider from '../../components/atoms/Divider'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
@@ -34,14 +35,12 @@ function OutputPanel({ canvasRef, bg, enabled, onToggle, onBgChange, id, connect
           }}
         />
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-          <JackSocket type="in" port="bg" moduleId={id} active={bgConnected} signalRef={bgInRef} label="cv" size="sm" />
+        <div style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 6 }}>
+          <LabeledJack type="in" port="bg" moduleId={id} active={bgConnected} signalRef={bgInRef} label="cv" size="sm" />
           <Knob value={bg} onChange={onBgChange} label="bg" />
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
+          <Divider variant="vertical" className="py-1.5" />
           {CHANNELS.map(ch => (
-            <JackSocket
+            <LabeledJack
               key={ch}
               type="in"
               port={ch}
@@ -51,7 +50,8 @@ function OutputPanel({ canvasRef, bg, enabled, onToggle, onBgChange, id, connect
               label={ch}
             />
           ))}
-          <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
+          <Divider variant="vertical" className="py-1.5" />
+          <LabeledJack type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
         </div>
       </div>
     </Module>

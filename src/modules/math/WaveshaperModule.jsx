@@ -1,102 +1,189 @@
-// WaveshaperModule — nonlinear waveshaping with multiple modes
-// 6HP
+// WaveshaperModule — signal curve shaper
+// 6HP 3U. Shape selector, amount + symmetry knobs with CV.
 
 import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, readScalar } from '../../hooks/signals'
+import { scalar, color, points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import Selector from '../controls/Selector'
+import IconSelect from '../controls/IconSelect'
+import Toggle from '../controls/Toggle'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-const MODES = ['clip', 'fold', 'wrap', 'sine']
+const MODES = ['exp', 'log', 'scurve', 'clip', 'fold', 'wrap', 'step', 'sine']
 
-function shape(x, mode) {
+function makeShaper(mode, sym) {
+  const s = sym * 2
+  const pow_exp = s + 0.5
+  const pow_log = 1 / (s + 0.5)
+  const k = 1 + s * 4
+  const scale = 1 + s
+  const steps = Math.max(2, Math.round(2 + s * 8))
+  const invSteps = 1 / steps
+  const sinScale = Math.PI * (0.5 + s)
+
   switch (mode) {
-    case 'clip':
-      return Math.max(-1, Math.min(1, x))
-    case 'fold': {
-      let v = x
+    case 'exp': return (x) => Math.pow(x, pow_exp)
+    case 'log': return (x) => Math.pow(x, pow_log)
+    case 'scurve': return (x) => 1 / (1 + Math.exp(-k * (x - 0.5)))
+    case 'clip': return (x) => { const v = x * scale; return v < 0 ? 0 : v > 1 ? 1 : v }
+    case 'fold': return (x) => {
+      let v = x * scale
       for (let i = 0; i < 4; i++) {
         if (v > 1) v = 2 - v
-        else if (v < -1) v = -2 - v
+        else if (v < 0) v = -v
         else break
       }
       return v
     }
-    case 'wrap': {
-      let v = ((x + 1) % 2 + 2) % 2 - 1
-      return v
-    }
-    case 'sine':
-      return Math.sin(x * Math.PI)
-    default:
-      return x
+    case 'wrap': return (x) => ((x * scale) % 1 + 1) % 1
+    case 'step': return (x) => Math.round(x * steps) * invSteps
+    case 'sine': return (x) => (Math.sin((x - 0.5) * sinScale) + 1) / 2
+    default: return (x) => x
   }
 }
 
-function WaveshaperPanel({ mode, drive, enabled, onToggle, onModeChange, onDriveChange, id, inConnected, inRef, outRef }) {
+function WaveshaperPanel({ mode, amount, symmetry, smooth, smoothFold, enabled, onToggle, onModeChange, onAmountChange, onSymmetryChange, onSmoothChange, onSmoothFoldChange, id, inConnected, inRef, amtCvConn, amtCvRef, symCvConn, symCvRef, smCvConn, smCvRef, outRef }) {
   return (
     <Module label="Shaper" enabled={enabled} onToggle={onToggle}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
-        <Selector value={mode} options={MODES} onChange={onModeChange} />
-        <Knob value={drive} onChange={onDriveChange} label="drive" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        <IconSelect value={mode} onChange={onModeChange} columns={2} items={[
+          { value: 'exp', icon: 'shaper-exp' }, { value: 'log', icon: 'shaper-log' },
+          { value: 'scurve', icon: 'shaper-scurve', label: 's-curve' }, { value: 'clip', icon: 'shaper-clip' },
+          { value: 'fold', icon: 'shaper-fold' }, { value: 'wrap', icon: 'shaper-wrap' },
+          { value: 'step', icon: 'shaper-step' }, { value: 'sine', icon: 'shaper-sine' },
+        ]} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <JackSocket type="in" port="amtCV" moduleId={id} active={amtCvConn} signalRef={amtCvRef} size="sm" />
+          <Knob value={amount} onChange={onAmountChange} label="amt" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <JackSocket type="in" port="symCV" moduleId={id} active={symCvConn} signalRef={symCvRef} size="sm" />
+          <Knob value={symmetry} onChange={onSymmetryChange} label="sym" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <JackSocket type="in" port="smCV" moduleId={id} active={smCvConn} signalRef={smCvRef} size="sm" />
+          <Knob value={smooth} onChange={onSmoothChange} label="smo" />
+          <Toggle horizontal value={smoothFold} onChange={onSmoothFoldChange} label="hm" size="sm" />
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <LabeledJack type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
     </Module>
   )
 }
 
-export default function WaveshaperModule({ id = 'wshp1', preview }) {
-  if (preview) return <WaveshaperPanel mode="clip" drive={50} enabled={false} onToggle={() => {}} onModeChange={() => {}} onDriveChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outRef={{ current: null }} />
+const NULL_REF = { current: null }
 
-  const [mode, setMode] = useState('clip')
-  const [drive, setDrive] = useState(50)
+export default function WaveshaperModule({ id = 'wshp1', preview }) {
+  if (preview) return <WaveshaperPanel mode="exp" amount={50} symmetry={50} smooth={0} smoothFold={false} enabled={false} onToggle={() => {}} onModeChange={() => {}} onAmountChange={() => {}} onSymmetryChange={() => {}} onSmoothChange={() => {}} onSmoothFoldChange={() => {}} id={id} inConnected={false} inRef={NULL_REF} amtCvConn={false} amtCvRef={NULL_REF} symCvConn={false} symCvRef={NULL_REF} smCvConn={false} smCvRef={NULL_REF} outRef={NULL_REF} />
+
+  const [mode, setMode] = useState('exp')
+  const [amount, setAmount] = useState(50)
+  const [symmetry, setSymmetry] = useState(50)
+  const [smooth, setSmooth] = useState(0)
+  const [smoothFold, setSmoothFold] = useState(false)
   const [enabled, setEnabled] = useState(true)
   const routing = usePatchRouting()
 
-  const modeRef = useRef('clip')
-  const driveRef = useRef(50)
+  const modeRef = useRef('exp')
+  const amountRef = useRef(50)
+  const symmetryRef = useRef(50)
+  const smoothRef = useRef(0)
+  const smoothFoldRef = useRef(false)
   const enabledRef = useRef(true)
   const outRef = useRef(null)
   const inRef = useRef(null)
+  const amtCvRef = useRef(null)
+  const symCvRef = useRef(null)
+  const smCvRef = useRef(null)
 
   modeRef.current = mode
-  driveRef.current = drive
+  amountRef.current = amount
+  symmetryRef.current = symmetry
+  smoothRef.current = smooth
+  smoothFoldRef.current = smoothFold
   enabledRef.current = enabled
 
   const conns = routing?.connections || []
   const inConnected = conns.some(c => c.toModuleId === id && c.toPort === 'in')
+  const amtCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'amtCV')
+  const symCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'symCV')
+  const smCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'smCV')
 
   useModule({
     id,
-    inputs: { in: { type: 'scalar' } },
-    outputs: { out: { type: 'scalar' } },
+    inputs: { in: { type: 'any' }, amtCV: { type: 'scalar' }, symCV: { type: 'scalar' }, smCV: { type: 'scalar' } },
+    outputs: { out: { type: 'any' } },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       inRef.current = inputs.in
+      amtCvRef.current = inputs.amtCV
+      symCvRef.current = inputs.symCV
+      smCvRef.current = inputs.smCV
 
-      const val = readScalar(inputs.in)
-      // Normalize to -1..1
-      let x = val / 50 - 1
-      // Apply drive
-      x *= 1 + driveRef.current / 10
-      // Shape
-      x = shape(x, modeRef.current)
-      // Convert back to 0-100
-      const out = scalar((x + 1) * 50)
-      outRef.current = out
-      return { out }
+      const input = inputs.in
+      if (!input) { outRef.current = null; return { out: null } }
+
+      const amt = (inputs.amtCV ? readScalar(inputs.amtCV) : amountRef.current) / 100
+      const sym = (inputs.symCV ? readScalar(inputs.symCV) : symmetryRef.current) / 100
+      const smo = (inputs.smCV ? readScalar(inputs.smCV) : smoothRef.current) / 100
+      const shaper = makeShaper(modeRef.current, sym)
+      const fold = smoothFoldRef.current
+
+      const mix = (v) => {
+        const shaped = v * (1 - amt) + shaper(v) * amt
+        if (smo === 0) return shaped
+        if (fold) {
+          // Harmonic fold: multiply deviation from center, fold back on overflow
+          const dev = (shaped - 0.5) * (1 + smo * 4)
+          let f = dev
+          for (let i = 0; i < 4; i++) {
+            if (f > 0.5) f = 1 - f
+            else if (f < -0.5) f = -1 - f
+            else break
+          }
+          return 0.5 + f
+        }
+        // Compress: pull toward center
+        return 0.5 + (shaped - 0.5) * (1 - smo)
+      }
+
+      // Points: shape each point's y value
+      if (input.type === 'points') {
+        const shaped = input.value.map(pt => ({ ...pt, y: mix(pt.y) }))
+        const out = points(shaped, input.edges)
+        outRef.current = out
+        return { out }
+      }
+
+      // Color: shape each channel
+      if (input.type === 'color') {
+        const c = input.value
+        const out = color(mix(c.r), mix(c.g), mix(c.b), c.a)
+        outRef.current = out
+        return { out }
+      }
+
+      // Scalar: shape the value
+      if (input.type === 'scalar') {
+        const out = scalar(mix(input.value / 100) * 100)
+        outRef.current = out
+        return { out }
+      }
+
+      // Fallback
+      outRef.current = input
+      return { out: input }
     },
   })
 
-  return <WaveshaperPanel mode={mode} drive={drive} enabled={enabled} onToggle={() => setEnabled(!enabled)} onModeChange={setMode} onDriveChange={setDrive} id={id} inConnected={inConnected} inRef={inRef} outRef={outRef} />
+  return <WaveshaperPanel mode={mode} amount={amount} symmetry={symmetry} smooth={smooth} smoothFold={smoothFold} enabled={enabled} onToggle={() => setEnabled(!enabled)} onModeChange={setMode} onAmountChange={setAmount} onSymmetryChange={setSymmetry} onSmoothChange={setSmooth} onSmoothFoldChange={setSmoothFold} id={id} inConnected={inConnected} inRef={inRef} amtCvConn={amtCvConn} amtCvRef={amtCvRef} symCvConn={symCvConn} symCvRef={symCvRef} smCvConn={smCvConn} smCvRef={smCvRef} outRef={outRef} />
 }

@@ -70,9 +70,6 @@ export default function Fader({ value = 100, onChange, label, min = 0, max = 100
           borderRadius: 1,
         }} />
       </div>
-      <span style={{
-        color: 'rgba(255,255,255,0.4)', lineHeight: 1,
-      }} className="kol-helper-xxxxs">{value}</span>
     </div>
   )
 }

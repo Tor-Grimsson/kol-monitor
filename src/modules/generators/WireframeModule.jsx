@@ -5,9 +5,9 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import Selector from '../controls/Selector'
+import IconSelect from '../controls/IconSelect'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['cube', 'tetra', 'octa', 'sphere']
@@ -79,27 +79,30 @@ function WireframePanel({ shape, speed, scale, resolution, fov, enabled, onToggl
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
-        <Selector value={shape} options={SHAPES} onChange={onShapeChange} />
+        <IconSelect value={shape} onChange={onShapeChange} columns={2} items={[
+          { value: 'cube', icon: 'shape-cube' }, { value: 'tetra', icon: 'shape-tetra' },
+          { value: 'octa', icon: 'shape-octa' }, { value: 'sphere', icon: 'shape-sphere' },
+        ]} />
         <div style={rowStyle}>
-          <JackSocket type="in" port="rx" moduleId={id} active={rxConn} signalRef={rxInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="rx" moduleId={id} active={rxConn} signalRef={rxInRef} label="in" size="sm" />
           <Knob value={speed} onChange={onSpeedChange} label="spd" />
         </div>
         <div style={rowStyle}>
-          <JackSocket type="in" port="ry" moduleId={id} active={ryConn} signalRef={ryInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="ry" moduleId={id} active={ryConn} signalRef={ryInRef} label="in" size="sm" />
           <Knob value={scale} onChange={onScaleChange} label="scl" />
         </div>
         <div style={rowStyle}>
-          <JackSocket type="in" port="rz" moduleId={id} active={rzConn} signalRef={rzInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="rz" moduleId={id} active={rzConn} signalRef={rzInRef} label="in" size="sm" />
           <Knob value={resolution} onChange={onResolutionChange} label="res" />
         </div>
         <div style={rowStyle}>
-          <JackSocket type="in" port="fov" moduleId={id} active={fovConn} signalRef={fovInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="fov" moduleId={id} active={fovConn} signalRef={fovInRef} label="in" size="sm" />
           <Knob value={fov} onChange={onFovChange} label="fov" />
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          <JackSocket type="in" port="scale" moduleId={id} active={scaleConn} signalRef={scaleInRef} label="scl" />
-          <JackSocket type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkInRef} label="clk" />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+          <LabeledJack type="in" port="scale" moduleId={id} active={scaleConn} signalRef={scaleInRef} label="scl" />
+          <LabeledJack type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkInRef} label="clk" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
     </Module>

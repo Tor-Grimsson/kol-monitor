@@ -3,40 +3,47 @@
 ## Current State
 
 ### Active Work
-- **36 modules** (35 + Scope). All support `preview` prop. Header managed by Module wrapper with `u` prop.
-- **1U modules complete**: Power, Mult, Noise Tools, Attenuverter, VCA, Logic, Comparator, Switch, Ring Mod, Reverb, Ramp, Scope, Patch — all redesigned with consistent layouts, CV inputs, LabeledJack.
+- **37 modules**. All support `preview` prop. Header managed by Module wrapper with `u` prop. All use LabeledJack.
+- **IconSelect** — single reusable icon button grid for all type selectors.
+- **Knob** — variants: column, row-left, row-right. `bipolar` prop for `-/+` marker.
+- **Controls**: Knob, FlipToggle (v/h), LED (multi-color), LabeledJack (top/bottom/left/right), Toggle (v/h), Fader (no value readout), Dropdown, IconSelect, Selector, ModuleHeader.
 - **Layout components**: ModuleLayout (3u/1u/1u-stacked), ModuleControls, ModuleJacks, ModuleRow.
-- **Controls**: Knob (col/row-left/row-right), FlipToggle (vertical/horizontal), LED, LabeledJack (top/bottom/left/right), Toggle (vertical/horizontal), Fader, Dropdown, Selector, WaveSelect, RampSelect, LogicSelect.
-- **Design page**: `/design` for visual prototyping. Noise Tools + Quadratt mockups.
+- **Design page**: `/design` for visual prototyping.
 - **Zoom + pan**: CSS zoom, spacebar+drag to pan. 1HP=16px, ROW_WIDTH=1664px.
 - **Workbench**: Fixed bottom panel, Library + Workbench tabs, category/size filters.
-- **Reverb**: Full signal processing (scalar/color/points), 12 taps, mix/freeze/src/byp controls.
 
-### Default Rack Layout
+### Module Summary
+
+**1U**: Power (6), Mult (8), Noise Tools (22), Attenuverter (26), VCA (8), Logic (8), Comparator (6), Switch (10), Ring Mod (6), Reverb (10), Ramp (6), Scope (16), Patch (6), Constant (4), Quantizer (4), Scale/Ofs (4), S&H (6)
+
+**3U**: Clock (4), ClockDiv (4), LFO (6), Envelope (6), Sequencer (12), Pen (6), Mixer (6), Maths (20), Filter (6), Transform (6), Waveform (6), RGB Osc (8), Wireframe (6), SMX3 (8), LineGen (6), Waveshaper (6), Delay (6), Monitor (12), Output (16), Console (48)
+
+### Default Rack
 - **Row 1 (1U)**: Power, Mult, Noise, Atten, VCA, Logic, Comparator
-- **Row 2 (3U)**: Clock, Clk Div, LFO, Envelope, Sequencer, Constant, Pen, Quantizer, Scale/Ofs, Maths, Mixer
-- **Row 3 (3U)**: Waveform, RGB Osc, Wireframe, SMX3, LineGen, Waveshaper, Delay, Monitor, Output
-- **Row 4 (1U)**: Patch, Switch, Ring, Reverb, Ramp, Scope
+- **Row 2 (3U)**: Clock, ClkDiv, LFO, Env, Seq, Pen, Mixer, Wave, RGB, Wire, SMX3, LineGen, Shaper, Delay, Monitor
+- **Row 3 (3U)**: Transform, Maths, Filter, Console, Output
+- **Row 4 (1U)**: Patch, Switch, Ring, Reverb, Ramp, Scope, Constant, Quantizer, ScaleOfs
 
-### Known Issues
-- 3U modules not yet redesigned with layout components/LabeledJack
-- Preset knob values not applied on switch (useState reads init on mount only)
-- Drag-to-reorder within rack not implemented
-- Some dividers may need padding after default removal
+### Key Module Details
+- **Console** (48HP): 4 channels (input, s1/s2 sends, flex fader, mute), R1/R2 send on/off toggles, stacked send/return, master with canvas + controls row.
+- **Maths** (20HP): Dual func gen, 4 independent attenuverters, SUM/OR/INV bus, cycle input, LEDs.
+- **Monitor/Scope**: Split/overlay FlipToggle for dual-channel display.
+- **Envelope**: Cycle starts immediately from idle, skips sustain in cycle mode.
+- **Waveshaper** (6HP): 8 modes, amount/symmetry/smooth with harmonic fold.
+- **Filter** (6HP): SVF LP/HP/BP/Notch, handles all signal types.
+- **Reverb** (10HP): 12 taps, mix/freeze/src/byp.
 
-### Recent Changes (2026-04-04, session 19)
-- All 1U modules redesigned with consistent layouts and CV inputs
-- New ScopeModule (16HP 1U) — oscilloscope with pass-through
-- Reverb: full signal processing, 12 taps, mix/freeze/src/byp
-- New controls: RampSelect, LogicSelect
-- New SVG icons: ramp-up/down/tri, logic-and/or/xor/not/nand/nor
-- LabeledJack: left/right label positions added
-- Toggle: gap increased to 4px
-- Divider: default padding removed, added per-use
-- Dropdown: capitalize transform
+### Recent Changes (2026-04-04, session 21)
+- Console redesign: better spacing, flex faders, send on/off toggles, single control row under canvas
+- Monitor + Scope: split/overlay FlipToggle
+- Envelope: cycle fix (starts from idle, skips sustain)
+- Maths: 4 independent attenuverters, cycle input, layout improvements
+- Fader: value readout removed
 
-### Recent Changes (2026-04-03, sessions 16-18)
-- Repo isolation, flattened src, zoom system, workbench, typography tiers, preview mode, design page, Noise Tools, Attenuverter, Mult redesigns
+### Recent Changes (2026-04-04, session 20)
+- FilterModule, Maths redesign, Waveshaper rewrite, Clock/ClockDiv upgrades
+- IconSelect consolidation, LabeledJack migration, Knob bipolar prop, 30+ SVG icons
+- HP adjustments, rack redistribution
 
 ## Project Overview
 
@@ -45,21 +52,14 @@
 **Live:** https://kol-monitor-six.vercel.app/
 
 ### Key Files
-- `src/VideoModulo.jsx` — Main layout: sidebar, rack, workbench, zoom, pan
-- `src/RackView.jsx` — Rack case rendering
-- `src/Workbench.jsx` — Bottom panel: workbench + library
+- `src/VideoModulo.jsx` — Main layout
+- `src/RackView.jsx` — Rack rendering
+- `src/Workbench.jsx` — Bottom panel
 - `src/ModuloSidebar.jsx` — Left sidebar
-- `src/pages/ModuleDesign.jsx` — Visual prototyping at /design
-- `src/moduleRegistry.js` — 36 module definitions
-- `src/hooks/useRackState.js` — Rack state: rows, workbench, edit mode
-- `src/hooks/useRenderLoop.js` — Render loop (topo sort, power gating)
-- `src/hooks/signals.js` — Signal types: scalar, color, points, pen
-- `src/modules/utility/Module.jsx` — Module wrapper: header, u prop
-- `src/modules/utility/ModuleLayout.jsx` — Layout variants + ModuleControls/Jacks/Row
-- `src/modules/utility/eurorack.js` — HP_PX=16, ROW_WIDTH=1664
-- `src/modules/utility/JackSocket.jsx` — Jack with bg, labelSize props
-- `src/modules/controls/LabeledJack.jsx` — Jack + label (top/bottom/left/right)
-- `src/modules/controls/` — Knob, Fader, Dropdown, Toggle, FlipToggle, LED, Selector, WaveSelect, RampSelect, LogicSelect, ModuleHeader
-- `src/components/atoms/Divider.jsx` — Divider (no default padding)
-- `src/components/icons/Icon.jsx` — SVG icon loader (caret-down/right for I/O grids)
-- `src/icons/Icon.jsx` — Module icon loader (wave/ramp/logic SVGs)
+- `src/pages/ModuleDesign.jsx` — Prototyping at /design
+- `src/moduleRegistry.js` — 37 modules
+- `src/hooks/` — useRackState, useRenderLoop, usePatchRouting, useCasePower, signals
+- `src/modules/utility/` — Module, ModuleLayout, eurorack, JackSocket, Case, PatchCableOverlay, PowerModule
+- `src/modules/controls/` — Knob, Fader, Dropdown, Toggle, FlipToggle, LED, LabeledJack, IconSelect, Selector, ModuleHeader
+- `src/components/atoms/Divider.jsx`
+- `src/icons/Icon.jsx`

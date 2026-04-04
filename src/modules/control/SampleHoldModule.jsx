@@ -5,7 +5,7 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
@@ -18,10 +18,10 @@ function SampleHoldPanel({ smooth, enabled, onToggle, onSmoothChange, id, inConn
       }}>
         <Knob value={smooth} onChange={onSmoothChange} label="slew" />
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          <JackSocket type="in" port="trig" moduleId={id} active={trigConnected} signalRef={trigRef} label="trig" />
+          <LabeledJack type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <LabeledJack type="in" port="trig" moduleId={id} active={trigConnected} signalRef={trigRef} label="trig" />
           <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
     </Module>

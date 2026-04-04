@@ -6,9 +6,9 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import Selector from '../controls/Selector'
+import IconSelect from '../controls/IconSelect'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['line', 'grid', 'circle', 'spiral', 'lissa']
@@ -114,20 +114,23 @@ function LineGenPanel({ shape, freq, density, speed, enabled, onToggle, onShapeC
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
-        <Selector value={shape} options={SHAPES} onChange={onShapeChange} />
+        <IconSelect value={shape} onChange={onShapeChange} columns={3} items={[
+          { value: 'line', icon: 'line-line' }, { value: 'grid', icon: 'line-grid' }, { value: 'circle', icon: 'line-circle' },
+          { value: 'spiral', icon: 'line-spiral' }, { value: 'lissa', icon: 'line-lissa', label: 'lissajous' },
+        ]} />
         <div style={rowStyle}>
-          <JackSocket type="in" port="freq" moduleId={id} active={freqConn} signalRef={freqInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="freq" moduleId={id} active={freqConn} signalRef={freqInRef} label="in" size="sm" />
           <Knob value={freq} onChange={onFreqChange} label="frq" />
         </div>
         <div style={rowStyle}>
-          <JackSocket type="in" port="dens" moduleId={id} active={densConn} signalRef={densInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="dens" moduleId={id} active={densConn} signalRef={densInRef} label="in" size="sm" />
           <Knob value={density} onChange={onDensityChange} label="den" />
         </div>
         <div style={rowStyle}>
-          <JackSocket type="in" port="spd" moduleId={id} active={spdConn} signalRef={spdInRef} label="in" size="sm" />
+          <LabeledJack type="in" port="spd" moduleId={id} active={spdConn} signalRef={spdInRef} label="in" size="sm" />
           <Knob value={speed} onChange={onSpeedChange} label="spd" />
         </div>
-        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
       </div>
     </Module>
   )

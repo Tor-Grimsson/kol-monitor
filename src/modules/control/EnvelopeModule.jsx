@@ -5,7 +5,7 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import Toggle from '../controls/Toggle'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
@@ -23,15 +23,15 @@ function EnvelopePanel({ attack, decay, sustain, release, cycle, enabled, onTogg
           <Knob value={attack} onChange={onAttackChange} label="A" />
           <div style={{ position: 'absolute', left: '50%', marginLeft: -28, top: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <Toggle value={cycle} onChange={onCycleChange} label="cyc" />
-            <JackSocket type="in" port="clk" moduleId={id} active={clkConnected} signalRef={clkInRef} label="clk" size="sm" />
+            <LabeledJack type="in" port="clk" moduleId={id} active={clkConnected} signalRef={clkInRef} label="clk" size="sm" />
           </div>
         </div>
         <Knob value={decay} onChange={onDecayChange} label="D" />
         <Knob value={sustain} onChange={onSustainChange} label="S" />
         <Knob value={release} onChange={onReleaseChange} label="R" />
         <div style={{ display: 'flex', gap: 8 }}>
-          <JackSocket type="in" port="gate" moduleId={id} active={gateConnected} signalRef={gateInRef} label="gate" />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+          <LabeledJack type="in" port="gate" moduleId={id} active={gateConnected} signalRef={gateInRef} label="gate" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
     </Module>
@@ -95,6 +95,9 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
       if (clkHigh && !prevClkRef.current) stageRef.current = STAGES.ATTACK
       prevClkRef.current = clkHigh
 
+      // Cycle: start if idle
+      if (cycleRef.current && stageRef.current === STAGES.IDLE) stageRef.current = STAGES.ATTACK
+
       // Gate transitions
       if (gateOn && !wasOn) stageRef.current = STAGES.ATTACK
       if (!gateOn && wasOn && stageRef.current !== STAGES.IDLE) stageRef.current = STAGES.RELEASE
@@ -116,6 +119,7 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
         if (level <= sLevel) { level = sLevel; stageRef.current = STAGES.SUSTAIN }
       } else if (stage === STAGES.SUSTAIN) {
         level = sLevel
+        if (cycleRef.current && !gateOn) stageRef.current = STAGES.RELEASE
       } else if (stage === STAGES.RELEASE) {
         level -= (dt / rTime) * level
         if (level <= 0.5) { level = 0; stageRef.current = cycleRef.current ? STAGES.ATTACK : STAGES.IDLE }

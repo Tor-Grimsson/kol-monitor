@@ -7,7 +7,7 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Divider from '../../components/atoms/Divider'
-import LogicSelect from '../controls/LogicSelect'
+import IconSelect from '../controls/IconSelect'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const MODES = ['and', 'or', 'xor', 'not', 'nand', 'nor']
@@ -29,7 +29,10 @@ function LogicPanel({ mode, enabled, onToggle, onModeChange, id, aConnected, aIn
     <Module label="Logic" enabled={enabled} onToggle={onToggle} u={1}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <LogicSelect value={mode} onChange={onModeChange} />
+          <IconSelect value={mode} onChange={onModeChange} columns={3} items={[
+            { value: 'and', icon: 'logic-and' }, { value: 'or', icon: 'logic-or' }, { value: 'xor', icon: 'logic-xor' },
+            { value: 'not', icon: 'logic-not' }, { value: 'nand', icon: 'logic-nand' }, { value: 'nor', icon: 'logic-nor' },
+          ]} />
           <Divider className="pt-1" />
           <div style={{ display: 'flex', alignItems: 'stretch', gap: 8 }}>
             <LabeledJack type="in" port="a" moduleId={id} active={aConnected} signalRef={aInRef} label="a" />

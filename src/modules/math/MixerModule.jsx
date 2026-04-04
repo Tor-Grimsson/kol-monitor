@@ -5,7 +5,7 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
@@ -19,24 +19,24 @@ function MixerPanel({ la, lb, lc, ld, enabled, onToggle, onLaChange, onLbChange,
 
         {/* 4 rows: input jack + level knob */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
+          <LabeledJack type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
           <Knob value={la} onChange={onLaChange} label="a" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
+          <LabeledJack type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
           <Knob value={lb} onChange={onLbChange} label="b" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="c" moduleId={id} active={cConnected} signalRef={cRef} label="c" />
+          <LabeledJack type="in" port="c" moduleId={id} active={cConnected} signalRef={cRef} label="c" />
           <Knob value={lc} onChange={onLcChange} label="c" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="d" moduleId={id} active={dConnected} signalRef={dRef} label="d" />
+          <LabeledJack type="in" port="d" moduleId={id} active={dConnected} signalRef={dRef} label="d" />
           <Knob value={ld} onChange={onLdChange} label="d" />
         </div>
 
         {/* Output */}
-        <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
       </div>
     </Module>
   )

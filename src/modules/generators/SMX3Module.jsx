@@ -5,8 +5,9 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar, color } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
+import Divider from '../../components/atoms/Divider'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 function clamp01(n) { return n < 0 ? 0 : n > 100 ? 100 : n }
@@ -23,9 +24,9 @@ function SMX3Panel({ k11, k12, k13, k21, k22, k23, k31, k32, k33, enabled, onTog
 
         {/* Inputs */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
-          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
-          <JackSocket type="in" port="c" moduleId={id} active={cConnected} signalRef={cRef} label="c" />
+          <LabeledJack type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
+          <LabeledJack type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
+          <LabeledJack type="in" port="c" moduleId={id} active={cConnected} signalRef={cRef} label="c" />
         </div>
 
         {/* 3x3 knob matrix */}
@@ -47,11 +48,11 @@ function SMX3Panel({ k11, k12, k13, k21, k22, k23, k31, k32, k33, enabled, onTog
 
         {/* Outputs */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="out" port="r" moduleId={id} signalRef={rOutRef} label="r" />
-          <JackSocket type="out" port="g" moduleId={id} signalRef={gOutRef} label="g" />
-          <JackSocket type="out" port="b" moduleId={id} signalRef={bOutRef} label="b" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={colorOutRef} label="clr" />
+          <LabeledJack type="out" port="r" moduleId={id} signalRef={rOutRef} label="r" />
+          <LabeledJack type="out" port="g" moduleId={id} signalRef={gOutRef} label="g" />
+          <LabeledJack type="out" port="b" moduleId={id} signalRef={bOutRef} label="b" />
+          <Divider variant="vertical" className="py-1.5" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={colorOutRef} label="clr" />
         </div>
       </div>
     </Module>

@@ -5,9 +5,9 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import WaveSelect from '../controls/WaveSelect'
+import IconSelect from '../controls/IconSelect'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['sin', 'saw', 'tri', 'sqr']
@@ -30,13 +30,16 @@ function LFOPanel({ rate, depth, offset, shape, enabled, onToggle, onRateChange,
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
-        <WaveSelect value={shape} onChange={onShapeChange} />
+        <IconSelect value={shape} onChange={onShapeChange} columns={2} items={[
+          { value: 'sin', icon: 'wave-sin' }, { value: 'saw', icon: 'wave-saw' },
+          { value: 'tri', icon: 'wave-tri' }, { value: 'sqr', icon: 'wave-sqr' },
+        ]} />
         <Knob value={rate} onChange={onRateChange} label="rate" />
         <Knob value={depth} onChange={onDepthChange} label="dep" />
         <Knob value={offset} onChange={onOffsetChange} label="ofs" />
         <div style={{ display: 'flex', gap: 8 }}>
-          <JackSocket type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncInRef} label="sync" />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+          <LabeledJack type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncInRef} label="sync" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
     </Module>

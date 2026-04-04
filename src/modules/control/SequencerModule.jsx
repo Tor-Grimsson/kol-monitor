@@ -5,10 +5,11 @@ import { useState, useRef, useCallback } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import Toggle from '../controls/Toggle'
 import Knob from '../controls/Knob'
+import Divider from '../../components/atoms/Divider'
 
 const STEPS_PER_PAGE = 8
 const TOTAL_PAGES = 4
@@ -28,11 +29,11 @@ function StepGrid({ steps, page, currentStep, length, onChange }) {
   const handleDrag = useCallback((idx, e) => {
     e.preventDefault()
     const globalIdx = offset + idx
-    const startY = e.clientY
+    const startX = e.clientX
     const startVal = steps[globalIdx]
 
     const handleMove = (e) => {
-      const delta = (startY - e.clientY) * 0.8
+      const delta = (e.clientX - startX) * 0.8
       const next = Math.round(Math.max(0, Math.min(100, startVal + delta)))
       const newSteps = [...steps]
       newSteps[globalIdx] = next
@@ -47,7 +48,7 @@ function StepGrid({ steps, page, currentStep, length, onChange }) {
   }, [steps, offset, onChange])
 
   return (
-    <div style={{ display: 'flex', gap: 1, alignItems: 'flex-end', flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 2, padding: 3, border: '1px solid rgba(255,255,255,0.04)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start', flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 2, padding: 2, border: '1px solid rgba(255,255,255,0.04)' }}>
       {pageSteps.map((val, i) => {
         const globalIdx = offset + i
         const isActive = globalIdx === currentStep
@@ -58,11 +59,12 @@ function StepGrid({ steps, page, currentStep, length, onChange }) {
             onPointerDown={(e) => handleDrag(i, e)}
             style={{
               flex: 1,
-              height: `${val}%`,
-              minHeight: 2,
+              width: `${val}%`,
+              minWidth: 2,
+              height: '100%',
               backgroundColor: isActive ? '#e74c3c' : outOfRange ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.2)',
               borderRadius: 1,
-              cursor: 'ns-resize',
+              cursor: 'ew-resize',
               touchAction: 'none',
               transition: 'background-color 0.05s',
               opacity: outOfRange ? 0.4 : 1,
@@ -102,8 +104,8 @@ function SequencerPanel({ steps, page, currentStep, length, follow, enabled, onT
             >›</span>
           </div>
 
-          <Knob value={length} onChange={onLengthChange} min={1} max={32} label="len" />
-          <Toggle size="sm" value={follow} onChange={onFollowChange} label="fol" />
+          <Knob value={length} onChange={onLengthChange} min={1} max={32} label="len" variant="row-right" />
+          <Toggle horizontal size="sm" value={follow} onChange={onFollowChange} label="fol" />
           <Toggle horizontal size="sm" value={false} onChange={onRandomize} label="rnd" />
         </div>
 
@@ -112,11 +114,11 @@ function SequencerPanel({ steps, page, currentStep, length, follow, enabled, onT
 
         {/* Jacks: inputs left, outputs right, divider */}
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
-          <JackSocket type="in" port="clock" moduleId={id} active={clockConnected} signalRef={clockInRef} label="clk" />
-          <JackSocket type="in" port="reset" moduleId={id} active={resetConnected} signalRef={resetInRef} label="rst" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="gate" moduleId={id} signalRef={gateOutRef} label="gate" />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+          <LabeledJack type="in" port="clock" moduleId={id} active={clockConnected} signalRef={clockInRef} label="clk" />
+          <LabeledJack type="in" port="reset" moduleId={id} active={resetConnected} signalRef={resetInRef} label="rst" />
+          <Divider variant="vertical" className="py-1.5" />
+          <LabeledJack type="out" port="gate" moduleId={id} signalRef={gateOutRef} label="gate" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
     </Module>

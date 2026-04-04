@@ -7,7 +7,7 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar, points } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
@@ -21,25 +21,24 @@ function DelayPanel({ time, mix, copies, fb, enabled, onToggle, onTimeChange, on
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
-          <JackSocket type="in" port="tCV" moduleId={id} active={timeConn} signalRef={timeInRef} label="cv" size="sm" />
+          <LabeledJack type="in" port="tCV" moduleId={id} active={timeConn} signalRef={timeInRef} label="cv" size="sm" />
           <Knob value={time} onChange={onTimeChange} label="time" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
-          <JackSocket type="in" port="mCV" moduleId={id} active={mixConn} signalRef={mixInRef} label="cv" size="sm" />
+          <LabeledJack type="in" port="mCV" moduleId={id} active={mixConn} signalRef={mixInRef} label="cv" size="sm" />
           <Knob value={mix} onChange={onMixChange} label="mix" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
-          <JackSocket type="in" port="cCV" moduleId={id} active={copyConn} signalRef={copyInRef} label="cv" size="sm" />
+          <LabeledJack type="in" port="cCV" moduleId={id} active={copyConn} signalRef={copyInRef} label="cv" size="sm" />
           <Knob value={copies} onChange={onCopiesChange} label="copy" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
-          <JackSocket type="in" port="fCV" moduleId={id} active={fbConn} signalRef={fbInRef} label="cv" size="sm" />
+          <LabeledJack type="in" port="fCV" moduleId={id} active={fbConn} signalRef={fbInRef} label="cv" size="sm" />
           <Knob value={fb} onChange={onFbChange} label="fb" />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          <JackSocket type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
-          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <LabeledJack type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
     </Module>
