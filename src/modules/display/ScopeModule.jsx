@@ -1,57 +1,51 @@
-// MonitorModule — Canvas2D display for any signal type
-// 12HP, two channels (A/B), pass-through outputs, pen input for style
+// ScopeModule — 1U oscilloscope/monitor
+// Canvas display with vertically stacked inputs, pass-through outputs
 
 import { useRef, useEffect, useState } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
+import Divider from '../../components/atoms/Divider'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
 const BUF_LEN = 128
 
-function MonitorPanel({ canvasRef, enabled, onToggle, id, aConnected, inputARef, bConnected, inputBRef, penConnected, penRef, outARef, outBRef }) {
+function ScopePanel({ canvasRef, enabled, onToggle, id, aConnected, inputARef, bConnected, inputBRef, penConnected, penRef, outARef, outBRef }) {
   return (
-    <Module label="Mon" enabled={enabled} onToggle={onToggle}>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        gap: 4,
-      }}>
-
+    <Module label="Scope" enabled={enabled} onToggle={onToggle} u={1}>
+      <div style={{ display: 'flex', height: '100%', gap: 6, alignItems: 'center' }}>
+        <div className="px-1" style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
+          <LabeledJack type="in" port="a" moduleId={id} active={aConnected} signalRef={inputARef} label="a" labelPosition="left" />
+          <LabeledJack type="in" port="b" moduleId={id} active={bConnected} signalRef={inputBRef} label="b" labelPosition="left" />
+          <Divider className="pb-1" />
+          <LabeledJack type="out" port="a" moduleId={id} signalRef={outARef} label="a" labelPosition="left" />
+          <LabeledJack type="out" port="b" moduleId={id} signalRef={outBRef} label="b" labelPosition="left" />
+        </div>
         <canvas
           ref={canvasRef}
-          width={160}
-          height={100}
-          style={{
-            flex: 1,
-            width: '100%',
-            borderRadius: 2,
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}
+          width={200}
+          height={80}
+          style={{ flex: 1, minWidth: 0, height: '100%', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)' }}
         />
-
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
-          <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={inputARef} label="a" />
-          <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={inputBRef} label="b" />
-          <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="a" moduleId={id} signalRef={outARef} label="a" />
-          <JackSocket type="out" port="b" moduleId={id} signalRef={outBRef} label="b" />
-        </div>
+        <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} size="sm" />
       </div>
     </Module>
   )
 }
 
-export default function MonitorModule({ id = 'mon1', preview }) {
-  if (preview) return <MonitorPanel canvasRef={{ current: null }} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={{ current: null }} bConnected={false} inputBRef={{ current: null }} penConnected={false} penRef={{ current: null }} outARef={{ current: null }} outBRef={{ current: null }} />
+const NULL_REF = { current: null }
+
+export default function ScopeModule({ id = 'scope1', preview }) {
+  if (preview) return <ScopePanel canvasRef={NULL_REF} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={NULL_REF} bConnected={false} inputBRef={NULL_REF} penConnected={false} penRef={NULL_REF} outARef={NULL_REF} outBRef={NULL_REF} />
 
   const canvasRef = useRef(null)
   const inputARef = useRef(null)
   const inputBRef = useRef(null)
   const penRef = useRef(null)
+  const outARef = useRef(null)
+  const outBRef = useRef(null)
   const [enabled, setEnabled] = useState(true)
   const enabledRef = useRef(true)
   enabledRef.current = enabled
@@ -62,25 +56,14 @@ export default function MonitorModule({ id = 'mon1', preview }) {
   const bConnected = conns.some(c => c.toModuleId === id && c.toPort === 'b')
   const penConnected = conns.some(c => c.toModuleId === id && c.toPort === 'pen')
 
-  const outARef = useRef(null)
-  const outBRef = useRef(null)
-
-  // Ring buffers for scalar scope traces
   const historyA = useRef(new Float32Array(BUF_LEN))
   const historyB = useRef(new Float32Array(BUF_LEN))
   const writeIdxRef = useRef(0)
 
   useModule({
     id,
-    inputs: {
-      a: { type: 'any' },
-      b: { type: 'any' },
-      pen: { type: 'pen' },
-    },
-    outputs: {
-      a: { type: 'any' },
-      b: { type: 'any' },
-    },
+    inputs: { a: { type: 'any' }, b: { type: 'any' }, pen: { type: 'pen' } },
+    outputs: { a: { type: 'any' }, b: { type: 'any' } },
     process: (inputs) => {
       if (!enabledRef.current) {
         inputARef.current = null; inputBRef.current = null
@@ -93,19 +76,15 @@ export default function MonitorModule({ id = 'mon1', preview }) {
       outARef.current = inputs.a
       outBRef.current = inputs.b
 
-      // Push scalar values into ring buffers
       const idx = writeIdxRef.current
-      if (inputs.a && inputs.a.type === 'scalar') historyA.current[idx] = inputs.a.value
-      else historyA.current[idx] = 0
-      if (inputs.b && inputs.b.type === 'scalar') historyB.current[idx] = inputs.b.value
-      else historyB.current[idx] = 0
+      historyA.current[idx] = inputs.a?.type === 'scalar' ? inputs.a.value : 0
+      historyB.current[idx] = inputs.b?.type === 'scalar' ? inputs.b.value : 0
       writeIdxRef.current = (idx + 1) % BUF_LEN
 
       return { a: inputs.a, b: inputs.b }
     },
   })
 
-  // Resize canvas to match display size
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -118,7 +97,6 @@ export default function MonitorModule({ id = 'mon1', preview }) {
     return () => ro.disconnect()
   }, [])
 
-  // Canvas drawing loop
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -132,11 +110,8 @@ export default function MonitorModule({ id = 'mon1', preview }) {
 
       ctx.fillStyle = 'rgba(8,8,8,0.95)'
       ctx.fillRect(0, 0, w, h)
-
       ctx.fillStyle = 'rgba(0,0,0,0.15)'
-      for (let y = 0; y < h; y += 3) {
-        ctx.fillRect(0, y, w, 1)
-      }
+      for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1)
 
       const hasB = inputBRef.current != null
       const wi = writeIdxRef.current
@@ -158,5 +133,5 @@ export default function MonitorModule({ id = 'mon1', preview }) {
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  return <MonitorPanel canvasRef={canvasRef} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
+  return <ScopePanel canvasRef={canvasRef} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
 }

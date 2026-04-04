@@ -6,7 +6,6 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
@@ -15,15 +14,13 @@ const CHANNELS = ['a', 'b', 'c', 'd']
 
 function OutputPanel({ canvasRef, bg, enabled, onToggle, onBgChange, id, connected, inputRefs, penConnected, penRef, bgConnected, bgInRef }) {
   return (
-    <Module>
+    <Module label="Out" enabled={enabled} onToggle={onToggle}>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         gap: 4,
-        padding: '4px 0',
       }}>
-        <ModuleHeader label="Out" enabled={enabled} onToggle={onToggle} />
 
         <canvas
           ref={canvasRef}

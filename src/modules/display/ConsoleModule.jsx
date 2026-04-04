@@ -9,7 +9,6 @@ import JackSocket from '../utility/JackSocket'
 import Knob from '../controls/Knob'
 import Fader from '../controls/Fader'
 import Toggle from '../controls/Toggle'
-import ModuleHeader from '../controls/ModuleHeader'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
@@ -30,7 +29,7 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
   const setMutes = [setMuteA, setMuteB, setMuteC, setMuteD]
 
   return (
-    <Module>
+    <Module label="Console" enabled={enabled} onToggle={onToggle}>
       <div style={{ display: 'flex', height: '100%', gap: 2, padding: '4px 2px' }}>
 
         {/* 4 Channel strips */}
@@ -69,7 +68,6 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
 
         {/* Master */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 1, minHeight: 0 }}>
-          <ModuleHeader label="Console" enabled={enabled} onToggle={onToggle} />
           <canvas
             ref={canvasRef}
             width={200}

@@ -5,8 +5,9 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import JackSocket from '../utility/JackSocket'
-import Selector from '../controls/Selector'
+import LabeledJack from '../controls/LabeledJack'
+import Divider from '../../components/atoms/Divider'
+import LogicSelect from '../controls/LogicSelect'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const MODES = ['and', 'or', 'xor', 'not', 'nand', 'nor']
@@ -25,22 +26,16 @@ function logic(mode, a, b) {
 
 function LogicPanel({ mode, enabled, onToggle, onModeChange, id, aConnected, aInRef, bConnected, bInRef, outputRef }) {
   return (
-    <Module label="Logic" enabled={enabled} onToggle={onToggle}>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-
-        <Selector value={mode} options={MODES} onChange={onModeChange} />
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aInRef} label="a" />
-            <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bInRef} label="b" />
-          </div>
-          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
+    <Module label="Logic" enabled={enabled} onToggle={onToggle} u={1}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          <LogicSelect value={mode} onChange={onModeChange} />
+          <Divider className="pt-1" />
+          <div style={{ display: 'flex', alignItems: 'stretch', gap: 8 }}>
+            <LabeledJack type="in" port="a" moduleId={id} active={aConnected} signalRef={aInRef} label="a" />
+            <LabeledJack type="in" port="b" moduleId={id} active={bConnected} signalRef={bInRef} label="b" />
+            <Divider variant="vertical" className="py-1.5" />
+            <LabeledJack type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
           </div>
         </div>
       </div>

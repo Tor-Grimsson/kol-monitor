@@ -4,36 +4,35 @@
 import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
+import { ModuleControls } from '../utility/ModuleLayout'
 import JackSocket from '../utility/JackSocket'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 function MultPanel({ enabled, onToggle, id, in1Connected, in2Connected, in1Ref, in2Ref, out1aRef, out1bRef, out1cRef, out1dRef, out2aRef, out2bRef, out2cRef, out2dRef }) {
-  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }
+  const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }
 
   return (
-    <Module label="Mult" enabled={enabled} onToggle={onToggle}>
+    <Module label="Mult" enabled={enabled} onToggle={onToggle} u={1}>
       <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', height: '100%', gap: 2,
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'center', height: '100%',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <ModuleControls>
+          <JackSocket type="in" port="in1" moduleId={id} active={in1Connected} signalRef={in1Ref} />
           <div style={rowStyle}>
-            <JackSocket type="in" port="in1" moduleId={id} active={in1Connected} signalRef={in1Ref} />
-            <div style={{ width: 4 }} />
             <JackSocket type="out" port="1a" moduleId={id} signalRef={out1aRef} />
             <JackSocket type="out" port="1b" moduleId={id} signalRef={out1bRef} />
             <JackSocket type="out" port="1c" moduleId={id} signalRef={out1cRef} />
             <JackSocket type="out" port="1d" moduleId={id} signalRef={out1dRef} />
           </div>
+          <JackSocket type="in" port="in2" moduleId={id} active={in2Connected} signalRef={in2Ref} />
           <div style={rowStyle}>
-            <JackSocket type="in" port="in2" moduleId={id} active={in2Connected} signalRef={in2Ref} />
-            <div style={{ width: 4 }} />
             <JackSocket type="out" port="2a" moduleId={id} signalRef={out2aRef} />
             <JackSocket type="out" port="2b" moduleId={id} signalRef={out2bRef} />
             <JackSocket type="out" port="2c" moduleId={id} signalRef={out2cRef} />
             <JackSocket type="out" port="2d" moduleId={id} signalRef={out2dRef} />
           </div>
-        </div>
+        </ModuleControls>
       </div>
     </Module>
   )

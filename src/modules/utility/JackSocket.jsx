@@ -14,6 +14,7 @@ export default function JackSocket({
   active = false,
   size = 'md',
   label,
+  labelSize = 'xxs',
   category = 'utility',
   bg,
 }) {
@@ -130,7 +131,7 @@ export default function JackSocket({
         </div>
       </div>
       {label && (
-        <span className="kol-helper-xxs" style={{
+        <span className={`kol-helper-${labelSize}`} style={{
           color: 'rgba(255,255,255,0.35)',
           textTransform: 'uppercase',
           lineHeight: 1,

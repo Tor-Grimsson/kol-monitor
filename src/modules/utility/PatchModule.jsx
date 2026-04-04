@@ -5,38 +5,37 @@ import { useState, useRef } from 'react'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { patches } from '../../patches.js'
 import Module from './Module'
-import ModuleHeader from '../controls/ModuleHeader'
+
 import Dropdown from '../controls/Dropdown'
 
 function PatchPanel({ current, names, cableCount, onCurrentChange, onLoad, onSave, onClear }) {
   const btnStyle = {
-    color: 'rgba(255,255,255,0.5)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 3,
+    borderRadius: 3,
     border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 2,
-    padding: '2px 6px',
+    backgroundColor: 'transparent',
     cursor: 'pointer',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    textAlign: 'left',
+    color: 'rgba(255,255,255,0.3)',
   }
 
   return (
-    <Module>
+    <Module label="Patch" enabled={true} onToggle={() => {}} u={1}>
       <div style={{
         display: 'flex', flexDirection: 'column',
         height: '100%', padding: '4px 2px', gap: 6,
       }}>
-        <ModuleHeader label="Patch" enabled={true} onToggle={() => {}} />
 
         <div style={{ padding: '0 2px' }}>
           <Dropdown value={current} options={names} onChange={onCurrentChange} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '0 2px' }}>
-          <button className="kol-helper-xxxs" style={btnStyle} onClick={onLoad}>load</button>
-          <button className="kol-helper-xxxs" style={btnStyle} onClick={onSave}>save</button>
-          <button className="kol-helper-xxxs" style={btnStyle} onClick={onClear}>clear</button>
+          <button className="kol-helper-xxxs" style={{ ...btnStyle, flex: 1 }} onClick={onLoad}>Load</button>
+          <button className="kol-helper-xxxs" style={{ ...btnStyle, flex: 1 }} onClick={onSave}>Save</button>
+          <button className="kol-helper-xxxs" style={{ ...btnStyle, flex: 1 }} onClick={onClear}>Clear</button>
         </div>
 
         <span className="kol-helper-xxxxs" style={{

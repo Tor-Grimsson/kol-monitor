@@ -7,7 +7,7 @@ export default function Toggle({ value, onChange, label, horizontal = false, siz
   return (
     <div
       onClick={() => onChange(!value)}
-      className={`inline-flex ${horizontal ? 'flex-row' : 'flex-col'} items-center gap-0.5 select-none`}
+      className={`inline-flex ${horizontal ? 'flex-row' : 'flex-col'} items-center gap-1 select-none`}
       style={{ cursor: 'pointer', touchAction: 'none' }}
     >
       <div style={{

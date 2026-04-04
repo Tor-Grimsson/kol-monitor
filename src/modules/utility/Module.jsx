@@ -4,7 +4,7 @@
 import { MODULE_PADDING } from './eurorack'
 import ModuleHeader from '../controls/ModuleHeader'
 
-export default function Module({ children, className = 'bg-surface-secondary', label, enabled, onToggle }) {
+export default function Module({ children, className = 'bg-surface-secondary', label, enabled, onToggle, u = 3 }) {
   return (
     <div
       className={className}
@@ -13,12 +13,12 @@ export default function Module({ children, className = 'bg-surface-secondary', l
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        padding: `${MODULE_PADDING}px 0`,
+        padding: `${MODULE_PADDING}px 0 ${u === 1 ? 8 : MODULE_PADDING}px`,
         userSelect: 'none',
       }}
     >
       {label && (
-        <div style={{ flexShrink: 0, padding: '0 4px' }}>
+        <div style={{ flexShrink: 0, padding: `0 4px ${u === 1 ? 8 : 16}px` }}>
           <ModuleHeader label={label} enabled={enabled} onToggle={onToggle} />
         </div>
       )}

@@ -18,14 +18,14 @@ const Divider = ({ variant = 'horizontal', className = '', opacity = '08', inver
 
   if (isVertical) {
     return (
-      <div className={`self-stretch flex justify-center items-center ${className}`.trim()}>
+      <div className={`flex justify-center items-center ${className}`.trim()} style={{ alignSelf: 'stretch' }}>
         <div className={opacityClass} style={{ width: '1px', height: '100%' }} />
       </div>
     )
   }
 
   return (
-    <div className={className}>
+    <div className={`w-full ${className}`.trim()}>
       <div className={`${opacityClass} h-px w-full`} />
     </div>
   )

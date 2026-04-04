@@ -2,7 +2,7 @@
 
 import { useRef, useCallback } from 'react'
 
-export default function Knob({ value, onChange, min = 0, max = 100, label }) {
+export default function Knob({ value, onChange, min = 0, max = 100, label, variant = 'column' }) {
   const size = 24
   const angle = ((value - min) / (max - min)) * 270 - 135
   const r = size / 2
@@ -27,35 +27,61 @@ export default function Knob({ value, onChange, min = 0, max = 100, label }) {
     window.addEventListener('pointerup', handleUp)
   }, [value, min, max, onChange])
 
+  const knobSvg = (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={r} cy={r} r={r * 0.75} fill="rgba(30,30,30,0.9)" stroke="rgba(180,175,165,0.3)" strokeWidth="1" />
+      <line
+        x1={r} y1={r}
+        x2={r + ir * Math.cos((angle - 90) * Math.PI / 180)}
+        y2={r + ir * Math.sin((angle - 90) * Math.PI / 180)}
+        stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round"
+      />
+    </svg>
+  )
+
+  if (variant === 'row-left' || variant === 'row') {
+    return (
+      <div
+        onPointerDown={handlePointerDown}
+        style={{ cursor: 'ns-resize', touchAction: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        {label && (
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
+            {label}
+          </span>
+        )}
+        {knobSvg}
+      </div>
+    )
+  }
+
+  if (variant === 'row-right') {
+    return (
+      <div
+        onPointerDown={handlePointerDown}
+        style={{ cursor: 'ns-resize', touchAction: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        {knobSvg}
+        {label && (
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
+            {label}
+          </span>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       onPointerDown={handlePointerDown}
       style={{ cursor: 'ns-resize', touchAction: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}
     >
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={r} cy={r} r={r * 0.75} fill="rgba(30,30,30,0.9)" stroke="rgba(180,175,165,0.3)" strokeWidth="1" />
-        <line
-          x1={r} y1={r}
-          x2={r + ir * Math.cos((angle - 90) * Math.PI / 180)}
-          y2={r + ir * Math.sin((angle - 90) * Math.PI / 180)}
-          stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round"
-        />
-      </svg>
+      {knobSvg}
       {label && (
-        <span className="kol-helper-xxxs" style={{
-          color: 'rgba(255,255,255,0.35)',
-          textTransform: 'uppercase',
-          lineHeight: 1,
-        }}>
+        <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
           {label}
         </span>
       )}
-      <span className="kol-helper-xxxxs" style={{
-        color: 'rgba(255,255,255,0.5)',
-        lineHeight: 1,
-      }}>
-        {value}
-      </span>
     </div>
   )
 }

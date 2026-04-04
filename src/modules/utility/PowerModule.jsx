@@ -3,19 +3,17 @@
 
 import { useCasePower } from '../../hooks/useCasePower.jsx'
 import Module from './Module'
-import ModuleHeader from '../controls/ModuleHeader'
 
 export default function PowerModule({ id = 'power1' }) {
   const { power: on, setPower } = useCasePower()
   const toggle = () => setPower(!on)
 
   return (
-    <Module>
+    <Module label="Power" enabled={on} onToggle={toggle} u={1}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
+        justifyContent: 'center', height: '100%',
       }}>
-        <ModuleHeader label="Power" enabled={on} onToggle={toggle} />
 
         {/* Rocker switch housing */}
         <div

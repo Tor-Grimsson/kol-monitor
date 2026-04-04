@@ -8,7 +8,7 @@ export default function ModuleHeader({ label, enabled, onToggle }) {
   const isOn = power && enabled
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%', padding: '0 2px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%', padding: '0 2px', flexShrink: 0 }}>
       <div
         onClick={onToggle}
         style={{

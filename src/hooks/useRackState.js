@@ -22,21 +22,15 @@ const DEFAULT_ROWS = [
     id: 'row1', height: '1u', modules: packModules([
       { type: 'power', id: 'power1', hp: 6 },
       { type: 'mult', id: 'mult1', hp: 8 },
-      { type: 'noise', id: 'noise1', hp: 8 },
-      { type: 'attenuator', id: 'atten1', hp: 8 },
+      { type: 'noise', id: 'noise1', hp: 22 },
+      { type: 'attenuator', id: 'atten1', hp: 26 },
       { type: 'vca', id: 'vca1', hp: 8 },
-      { type: 'sampleHold', id: 'sh1', hp: 6 },
-      { type: 'logic', id: 'logic1', hp: 4 },
-      { type: 'comparator', id: 'comp1', hp: 4 },
-      { type: 'switch', id: 'sw1', hp: 4 },
-      { type: 'ringMod', id: 'ring1', hp: 6 },
-      { type: 'reverb', id: 'verb1', hp: 6 },
-      { type: 'ramp', id: 'ramp1', hp: 6 },
+      { type: 'logic', id: 'logic1', hp: 8 },
+      { type: 'comparator', id: 'comp1', hp: 6 },
     ]),
   },
   {
     id: 'row2', height: '3u', modules: packModules([
-      { type: 'patch', id: 'patch1', hp: 6 },
       { type: 'clock', id: 'clk1', hp: 4 },
       { type: 'clockDiv', id: 'div1', hp: 4 },
       { type: 'lfo', id: 'lfo1', hp: 6 },
@@ -63,9 +57,19 @@ const DEFAULT_ROWS = [
       { type: 'output', id: 'out1', hp: 16 },
     ]),
   },
+  {
+    id: 'row4', height: '1u', modules: packModules([
+      { type: 'patch', id: 'patch1', hp: 6 },
+      { type: 'switch', id: 'sw1', hp: 10 },
+      { type: 'ringMod', id: 'ring1', hp: 6 },
+      { type: 'reverb', id: 'verb1', hp: 10 },
+      { type: 'ramp', id: 'ramp1', hp: 6 },
+      { type: 'scope', id: 'scope1', hp: 16 },
+    ]),
+  },
 ]
 
-let rowCounter = 4
+let rowCounter = 5
 
 // Find first gap in a row that fits the given HP width
 function findFreeOffset(modules, hp) {

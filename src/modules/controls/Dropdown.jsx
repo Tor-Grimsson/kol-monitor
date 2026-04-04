@@ -35,9 +35,9 @@ export default function Dropdown({ value, options, onChange, label }) {
     borderRadius: 2,
     padding: '2px 6px',
     cursor: 'pointer',
-    textTransform: 'uppercase',
+    textTransform: 'capitalize',
     letterSpacing: '0.5px',
-    textAlign: 'left',
+    textAlign: 'center',
     width: '100%',
     display: 'block',
   }
@@ -47,7 +47,7 @@ export default function Dropdown({ value, options, onChange, label }) {
       {label && (
         <span className="kol-helper-xxxs" style={{
           color: 'rgba(255,255,255,0.35)',
-          textTransform: 'uppercase',
+          textTransform: 'capitalize',
           lineHeight: 1,
         }}>
           {label}
@@ -89,7 +89,7 @@ export default function Dropdown({ value, options, onChange, label }) {
                 backgroundColor: opt === value ? 'rgba(255,255,255,0.06)' : 'transparent',
                 padding: '3px 8px',
                 cursor: 'pointer',
-                textTransform: 'uppercase',
+                textTransform: 'capitalize',
                 letterSpacing: '0.5px',
               }}
             >

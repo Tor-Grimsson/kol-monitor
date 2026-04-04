@@ -1,73 +1,93 @@
-// SwitchModule — CV-controlled A/B signal switch
-// 4HP
+// SwitchModule — dual CV-controlled A/B signal switch
+// 8HP 1U. Two independent switches.
 
 import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
+import Divider from '../../components/atoms/Divider'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-function SwitchPanel({ enabled, onToggle, id, aConnected, aInRef, bConnected, bInRef, cvConnected, cvInRef, outputRef }) {
+function SwitchPanel({ enabled, onToggle, id,
+  a1Conn, a1Ref, b1Conn, b1Ref, cv1Conn, cv1Ref, out1Ref,
+  a2Conn, a2Ref, b2Conn, b2Ref, cv2Conn, cv2Ref, out2Ref,
+}) {
+  const rowStyle = { display: 'flex', alignItems: 'stretch', gap: 8 }
   return (
-    <Module label="Switch" enabled={enabled} onToggle={onToggle}>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'space-between', height: '100%', padding: '4px 0',
-      }}>
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <JackSocket type="in" port="a" moduleId={id} active={aConnected} signalRef={aInRef} label="a" />
-            <JackSocket type="in" port="b" moduleId={id} active={bConnected} signalRef={bInRef} label="b" />
+    <Module label="Switch" enabled={enabled} onToggle={onToggle} u={1}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={rowStyle}>
+            <LabeledJack type="in" port="a1" moduleId={id} active={a1Conn} signalRef={a1Ref} label="a" />
+            <LabeledJack type="in" port="b1" moduleId={id} active={b1Conn} signalRef={b1Ref} label="b" />
+            <LabeledJack type="in" port="cv1" moduleId={id} active={cv1Conn} signalRef={cv1Ref} label="cv" />
+            <Divider variant="vertical" className="py-1.5" />
+            <LabeledJack type="out" port="out1" moduleId={id} signalRef={out1Ref} label="out" />
           </div>
-          <JackSocket type="in" port="cv" moduleId={id} active={cvConnected} signalRef={cvInRef} label="cv" />
-          <div style={{ width: '80%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
+          <Divider />
+          <div style={rowStyle}>
+            <LabeledJack type="in" port="a2" moduleId={id} active={a2Conn} signalRef={a2Ref} label="a" />
+            <LabeledJack type="in" port="b2" moduleId={id} active={b2Conn} signalRef={b2Ref} label="b" />
+            <LabeledJack type="in" port="cv2" moduleId={id} active={cv2Conn} signalRef={cv2Ref} label="cv" />
+            <Divider variant="vertical" className="py-1.5" />
+            <LabeledJack type="out" port="out2" moduleId={id} signalRef={out2Ref} label="out" />
+          </div>
         </div>
       </div>
     </Module>
   )
 }
 
+const NULL_REF = { current: null }
+
 export default function SwitchModule({ id = 'sw1', preview }) {
-  if (preview) return <SwitchPanel enabled={false} onToggle={() => {}} id={id} aConnected={false} aInRef={{ current: null }} bConnected={false} bInRef={{ current: null }} cvConnected={false} cvInRef={{ current: null }} outputRef={{ current: null }} />
+  if (preview) return <SwitchPanel enabled={false} onToggle={() => {}} id={id}
+    a1Conn={false} a1Ref={NULL_REF} b1Conn={false} b1Ref={NULL_REF} cv1Conn={false} cv1Ref={NULL_REF} out1Ref={NULL_REF}
+    a2Conn={false} a2Ref={NULL_REF} b2Conn={false} b2Ref={NULL_REF} cv2Conn={false} cv2Ref={NULL_REF} out2Ref={NULL_REF}
+  />
 
   const [enabled, setEnabled] = useState(true)
   const routing = usePatchRouting()
-
   const enabledRef = useRef(true)
-  const outputRef = useRef(null)
-  const aInRef = useRef(null)
-  const bInRef = useRef(null)
-  const cvInRef = useRef(null)
-
   enabledRef.current = enabled
 
+  const a1Ref = useRef(null), b1Ref = useRef(null), cv1Ref = useRef(null), out1Ref = useRef(null)
+  const a2Ref = useRef(null), b2Ref = useRef(null), cv2Ref = useRef(null), out2Ref = useRef(null)
+
   const conns = routing?.connections || []
-  const aConnected = conns.some(c => c.toModuleId === id && c.toPort === 'a')
-  const bConnected = conns.some(c => c.toModuleId === id && c.toPort === 'b')
-  const cvConnected = conns.some(c => c.toModuleId === id && c.toPort === 'cv')
+  const a1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'a1')
+  const b1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'b1')
+  const cv1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'cv1')
+  const a2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'a2')
+  const b2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'b2')
+  const cv2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'cv2')
 
   useModule({
     id,
     inputs: {
-      a: { type: 'any' },
-      b: { type: 'any' },
-      cv: { type: 'scalar' },
+      a1: { type: 'any' }, b1: { type: 'any' }, cv1: { type: 'scalar' },
+      a2: { type: 'any' }, b2: { type: 'any' }, cv2: { type: 'scalar' },
     },
-    outputs: { out: { type: 'any' } },
+    outputs: { out1: { type: 'any' }, out2: { type: 'any' } },
     process: (inputs) => {
-      if (!enabledRef.current) { outputRef.current = null; return { out: null } }
-      aInRef.current = inputs.a
-      bInRef.current = inputs.b
-      cvInRef.current = inputs.cv
+      if (!enabledRef.current) {
+        out1Ref.current = null; out2Ref.current = null
+        return { out1: null, out2: null }
+      }
+      a1Ref.current = inputs.a1; b1Ref.current = inputs.b1; cv1Ref.current = inputs.cv1
+      a2Ref.current = inputs.a2; b2Ref.current = inputs.b2; cv2Ref.current = inputs.cv2
 
-      const out = readScalar(inputs.cv) > 50 ? inputs.b : inputs.a
-      outputRef.current = out
-      return { out: out || null }
+      const o1 = readScalar(inputs.cv1) > 50 ? inputs.b1 : inputs.a1
+      const o2 = readScalar(inputs.cv2) > 50 ? inputs.b2 : inputs.a2
+      out1Ref.current = o1; out2Ref.current = o2
+      return { out1: o1 || null, out2: o2 || null }
     },
   })
 
-  return <SwitchPanel enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} aInRef={aInRef} bConnected={bConnected} bInRef={bInRef} cvConnected={cvConnected} cvInRef={cvInRef} outputRef={outputRef} />
+  return <SwitchPanel enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id}
+    a1Conn={a1Conn} a1Ref={a1Ref} b1Conn={b1Conn} b1Ref={b1Ref} cv1Conn={cv1Conn} cv1Ref={cv1Ref} out1Ref={out1Ref}
+    a2Conn={a2Conn} a2Ref={a2Ref} b2Conn={b2Conn} b2Ref={b2Ref} cv2Conn={cv2Conn} cv2Ref={cv2Ref} out2Ref={out2Ref}
+  />
 }

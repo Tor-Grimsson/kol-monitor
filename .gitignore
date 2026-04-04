@@ -25,6 +25,7 @@ dist-ssr
 
 a_torg
 .claude
+src/components-mirrors
 
 # Playwright
 /test-results/

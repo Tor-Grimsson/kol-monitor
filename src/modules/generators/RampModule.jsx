@@ -5,26 +5,30 @@ import { useState, useRef } from 'react'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
+import { ModuleRow } from '../utility/ModuleLayout'
 import JackSocket from '../utility/JackSocket'
+import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import Selector from '../controls/Selector'
+import RampSelect from '../controls/RampSelect'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['up', 'down', 'tri']
 
-function RampPanel({ rate, shape, enabled, onToggle, onRateChange, onShapeChange, id, syncConnected, syncRef, outRef }) {
+function RampPanel({ rate, shape, enabled, onToggle, onRateChange, onShapeChange, id, rateCvConn, rateCvRef, syncConnected, syncRef, outRef }) {
   return (
-    <Module label="Ramp" enabled={enabled} onToggle={onToggle}>
+    <Module label="Ramp" enabled={enabled} onToggle={onToggle} u={1}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
-        <Selector value={shape} options={SHAPES} onChange={onShapeChange} />
-        <Knob value={rate} onChange={onRateChange} label="rate" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <JackSocket type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncRef} label="sync" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-          <JackSocket type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        <RampSelect value={shape} onChange={onShapeChange} />
+        <ModuleRow>
+          <JackSocket type="in" port="rateCV" moduleId={id} active={rateCvConn} signalRef={rateCvRef} size="sm" />
+          <Knob value={rate} onChange={onRateChange} label="rate" variant="row-right" />
+        </ModuleRow>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <LabeledJack type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncRef} label="rst" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
     </Module>
@@ -32,7 +36,7 @@ function RampPanel({ rate, shape, enabled, onToggle, onRateChange, onShapeChange
 }
 
 export default function RampModule({ id = 'ramp1', preview }) {
-  if (preview) return <RampPanel rate={20} shape="up" enabled={false} onToggle={() => {}} onRateChange={() => {}} onShapeChange={() => {}} id={id} syncConnected={false} syncRef={{ current: null }} outRef={{ current: null }} />
+  if (preview) return <RampPanel rate={20} shape="up" enabled={false} onToggle={() => {}} onRateChange={() => {}} onShapeChange={() => {}} id={id} rateCvConn={false} rateCvRef={{ current: null }} syncConnected={false} syncRef={{ current: null }} outRef={{ current: null }} />
 
   const [rate, setRate] = useState(20)
   const [shape, setShape] = useState('up')
@@ -46,6 +50,7 @@ export default function RampModule({ id = 'ramp1', preview }) {
   const prevSyncRef = useRef(false)
   const outRef = useRef(null)
   const syncRef = useRef(null)
+  const rateCvRef = useRef(null)
 
   rateRef.current = rate
   shapeRef.current = shape
@@ -53,14 +58,16 @@ export default function RampModule({ id = 'ramp1', preview }) {
 
   const conns = routing?.connections || []
   const syncConnected = conns.some(c => c.toModuleId === id && c.toPort === 'sync')
+  const rateCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'rateCV')
 
   useModule({
     id,
-    inputs: { sync: { type: 'scalar' } },
+    inputs: { sync: { type: 'scalar' }, rateCV: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs, dt) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       syncRef.current = inputs.sync
+      rateCvRef.current = inputs.rateCV
 
       // Rising edge detection on sync
       const syncVal = readScalar(inputs.sync)
@@ -69,7 +76,8 @@ export default function RampModule({ id = 'ramp1', preview }) {
       prevSyncRef.current = syncHigh
 
       // Hz: map knob 0-100 to 0.1-10
-      const hz = 0.1 + (rateRef.current / 100) * 9.9
+      const rateVal = inputs.rateCV ? readScalar(inputs.rateCV) : rateRef.current
+      const hz = 0.1 + (rateVal / 100) * 9.9
       phaseRef.current = (phaseRef.current + dt * hz) % 1
 
       const p = phaseRef.current
@@ -86,5 +94,5 @@ export default function RampModule({ id = 'ramp1', preview }) {
     },
   })
 
-  return <RampPanel rate={rate} shape={shape} enabled={enabled} onToggle={() => setEnabled(!enabled)} onRateChange={setRate} onShapeChange={setShape} id={id} syncConnected={syncConnected} syncRef={syncRef} outRef={outRef} />
+  return <RampPanel rate={rate} shape={shape} enabled={enabled} onToggle={() => setEnabled(!enabled)} onRateChange={setRate} onShapeChange={setShape} id={id} rateCvConn={rateCvConn} rateCvRef={rateCvRef} syncConnected={syncConnected} syncRef={syncRef} outRef={outRef} />
 }
