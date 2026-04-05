@@ -46,7 +46,6 @@ const DEFAULT_ROWS = [
       { type: 'lineGen', id: 'line1', hp: 6 },
       { type: 'waveshaper', id: 'wshp1', hp: 6 },
       { type: 'delay', id: 'delay1', hp: 6 },
-      { type: 'monitor', id: 'mon1', hp: 12 },
     ]),
   },
   {
@@ -56,13 +55,15 @@ const DEFAULT_ROWS = [
       { type: 'filter', id: 'filt1', hp: 6 },
       { type: 'radialGen', id: 'radial1', hp: 12 },
       { type: 'modGen', id: 'modgen1', hp: 14 },
-      { type: 'console', id: 'con1', hp: 48 },
+      { type: 'monitor', id: 'mon1', hp: 12 },
     ]),
   },
   {
     id: 'row4', height: '3u', modules: packModules([
-      { type: 'generator', id: 'gen1', hp: 12 },
+      { type: 'generator', id: 'gen1', hp: 10 },
       { type: 'generator2', id: 'gen2', hp: 10 },
+      { type: 'dither', id: 'dith1', hp: 14 },
+      { type: 'console', id: 'con1', hp: 48 },
     ]),
   },
   {

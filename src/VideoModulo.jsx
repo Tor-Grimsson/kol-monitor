@@ -7,6 +7,7 @@ import { useRackState } from './hooks/useRackState'
 import { MODULE_DEFS } from './moduleRegistry'
 import { ROW_WIDTH } from './modules/utility/eurorack'
 import PatchCableOverlay from './modules/utility/PatchCableOverlay.jsx'
+import { useKeybindings } from './hooks/useKeybindings'
 import RackView from './RackView.jsx'
 import ModuloSidebar from './ModuloSidebar.jsx'
 import Workbench from './Workbench.jsx'
@@ -24,6 +25,8 @@ function VideoModuloInner() {
   const { power, timingRef, toggleAll } = useCasePower()
   const [zoom, setZoom] = useState(1)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [viewLocked, setViewLocked] = useState(false)
+  const viewLockedRef = useRef(false)
 
   useRenderLoop(modulesRef, connectionsRef, power, timingRef)
 
@@ -35,21 +38,7 @@ function VideoModuloInner() {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
   const panStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
 
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.code === 'Space' && !e.repeat && !e.target.closest('input, textarea')) { e.preventDefault(); spaceDown.current = true; if (rackOuterRef.current) rackOuterRef.current.style.cursor = 'grab' }
-      if ((e.metaKey || e.ctrlKey) && (e.key === '=' || e.key === '+')) { e.preventDefault(); setZoom(z => Math.min(2, z + 0.1)) }
-      if ((e.metaKey || e.ctrlKey) && e.key === '-') { e.preventDefault(); setZoom(z => Math.max(0.5, z - 0.1)) }
-      if ((e.metaKey || e.ctrlKey) && e.key === '0') { e.preventDefault(); setZoom(1) }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'h') { e.preventDefault(); setSidebarOpen(s => !s) }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'e') { e.preventDefault(); const r = rackRef2.current; r.setEditMode(!r.editMode) }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'm') { e.preventDefault(); toggleAll() }
-    }
-    const onKeyUp = (e) => { if (e.code === 'Space') { spaceDown.current = false; if (rackOuterRef.current) rackOuterRef.current.style.cursor = '' } }
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
-    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
-  }, [])
+  useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom, setPanOffset, setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll })
 
   const handlePanDown = useCallback((e) => {
     if (!spaceDown.current) return
@@ -73,8 +62,25 @@ function VideoModuloInner() {
     window.addEventListener('pointerup', onUp)
   }, [panOffset])
 
+  // Wheel/trackpad pans the canvas
+  useEffect(() => {
+    const el = rackOuterRef.current
+    if (!el) return
+    const onWheel = (e) => {
+      e.preventDefault()
+      if (viewLockedRef.current) return
+      if (e.altKey) {
+        setZoom(z => Math.min(2, Math.max(0.5, z - e.deltaY * 0.002)))
+      } else {
+        setPanOffset(prev => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }))
+      }
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [])
+
   return (
-    <div className="min-h-screen bg-surface-primary flex relative" style={{ overflow: 'hidden' }}>
+    <div className="bg-surface-primary flex relative" style={{ overflow: 'hidden', height: '100vh' }}>
       {sidebarOpen && (
         <div className="sidebar-width flex-shrink-0 border-r border-fg-08 overflow-y-auto" style={{
           backgroundColor: 'var(--kol-bg-surface-primary, #0a0a0a)',
@@ -107,6 +113,14 @@ function VideoModuloInner() {
           [Show]
         </button>
       )}
+
+      <button
+        onClick={() => setViewLocked(v => { viewLockedRef.current = !v; return !v })}
+        className="fixed bottom-3 left-3 z-50 kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+        style={{ background: 'none', border: 'none', padding: 0, color: viewLocked ? 'rgba(231,76,60,0.9)' : undefined }}
+      >
+        [{viewLocked ? 'Locked' : 'Lock'}]
+      </button>
 
       <div ref={rackOuterRef} onPointerDown={handlePanDown} className="flex-1 relative" style={{ minHeight: '100vh', overflow: 'hidden', display: 'grid', placeItems: 'center', marginLeft: sidebarOpen ? 'var(--sidebar-width)' : 0 }}>
         <div ref={rackRef} className="relative" style={{ zoom, width: BASE_WIDTH, transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}>

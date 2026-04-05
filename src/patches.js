@@ -4,9 +4,12 @@
 export const patches = {
   // Default connections loaded on startup
   ref: [
-    { fromModuleId: 'radial1', fromPort: 'out', toModuleId: 'con1', toPort: 'a' },
     { fromModuleId: 'con1', fromPort: 'snd1', toModuleId: 'verb1', toPort: 'in' },
     { fromModuleId: 'verb1', fromPort: 'out', toModuleId: 'con1', toPort: 'rtn1' },
+    { fromModuleId: 'dith1', fromPort: 'out', toModuleId: 'con1', toPort: 'a' },
+    { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'dith1', toPort: 'clr' },
+    { fromModuleId: 'gen2', fromPort: 'out', toModuleId: 'dith1', toPort: 'in' },
+    { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'con1', toPort: 'b' },
   ],
 
   empty: { rows: [{ height: '1u', modules: [] }, { height: '3u', modules: [] }, { height: '3u', modules: [] }], connections: [] },

@@ -36,8 +36,9 @@ import SMX3Module from './modules/generators/SMX3Module.jsx'
 import LineGenModule from './modules/generators/LineGenModule.jsx'
 import RadialGenModule from './modules/generators/RadialGenModule.jsx'
 import ModulatorGenModule from './modules/generators/ModulatorGenModule.jsx'
-import GeneratorModule from './modules/generators/GeneratorModule.jsx'
-import Generator2Module from './modules/generators/Generator2Module.jsx'
+import GeneratorModule from './modules/generators/GenLofiModule.jsx'
+import Generator2Module from './modules/generators/GenHifiModule.jsx'
+import DitherModule from './modules/generators/DitherModule.jsx'
 
 import ScopeModule from './modules/display/ScopeModule.jsx'
 import MonitorModule from './modules/display/MonitorModule.jsx'
@@ -87,8 +88,9 @@ export const MODULE_DEFS = {
   lineGen:   { component: LineGenModule,      hp: 6,  u: 3, category: 'generators', label: 'LineGen' },
   radialGen: { component: RadialGenModule,   hp: 12, u: 3, category: 'generators', label: 'Radial' },
   modGen:    { component: ModulatorGenModule, hp: 14, u: 3, category: 'generators', label: 'Modulator' },
-  generator: { component: GeneratorModule,    hp: 12, u: 3, category: 'generators', label: 'Generator' },
-  generator2:{ component: Generator2Module,   hp: 10, u: 3, category: 'generators', label: 'Generator 2' },
+  generator: { component: GeneratorModule,    hp: 10, u: 3, category: 'generators', label: 'Gen Lofi' },
+  generator2:{ component: Generator2Module,   hp: 10, u: 3, category: 'generators', label: 'Gen Hifi' },
+  dither:    { component: DitherModule,      hp: 14, u: 3, category: 'generators', label: 'Dither' },
 
   // Display
   scope:     { component: ScopeModule,        hp: 16, u: 1, category: 'display',    label: 'Scope' },

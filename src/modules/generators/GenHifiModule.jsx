@@ -2,7 +2,7 @@
 // 12HP 3U. Each algorithm generates its own geometry directly.
 // Gradient, pattern, wave, color — proper spatial output.
 
-import { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, color, points, readScalar } from '../../hooks/signals'
@@ -52,6 +52,7 @@ const PARAM_DEFS = {
   gradient: [
     { key: 'p1', label: 'ang' },
     { key: 'p2', label: 'spd' },
+    { key: 'p3', label: 'spc' },
   ],
   pattern: [
     { key: 'p1', label: 'spc' },
@@ -79,22 +80,22 @@ function quad(pts, edges, x1, y1, x2, y2) {
   edges.push([base, base + 1], [base + 1, base + 2], [base + 2, base + 3], [base + 3, base])
 }
 
-function generateGradient(subType, p1, p2, t, oscillate) {
+function generateGradient(subType, p1, p2, p3, t, oscillate) {
   const pts = []
   const edges = []
   const angle = (p1 / 100) * Math.PI * 2
-  // SPD knob (p2) directly sets phase position, animation time adds on top
   const phase = (p2 / 100) + (oscillate ? Math.sin(t) : t)
-  const steps = 16
+  const spc = 0.01 + (p3 / 100) * 0.06
 
   switch (subType) {
     case 'linear': {
+      const steps = Math.max(4, Math.round(8 + (p3 / 100) * 24))
       const dx = Math.cos(angle)
       const dy = Math.sin(angle)
       for (let i = 0; i < steps; i++) {
         const n = i / steps
         const brightness = ((n + phase) % 1 + 1) % 1
-        const size = 0.02 + brightness * 0.04
+        const size = spc * (0.5 + brightness)
         const cx = 0.5 + dx * (n - 0.5) * 0.8
         const cy = 0.5 + dy * (n - 0.5) * 0.8
         quad(pts, edges, cx - size, cy - size, cx + size, cy + size)
@@ -102,13 +103,13 @@ function generateGradient(subType, p1, p2, t, oscillate) {
       break
     }
     case 'radial': {
-      const rings = 8
-      const segsPerRing = 12
+      const rings = Math.max(2, Math.round(4 + (p3 / 100) * 12))
+      const segsPerRing = Math.max(4, Math.round(6 + (p3 / 100) * 12))
       const spread = 0.1 + (p1 / 100) * 0.4
       for (let r = 0; r < rings; r++) {
         const radius = (r + 1) / rings * spread
         const brightness = ((r / rings + phase) % 1 + 1) % 1
-        const size = 0.02 + brightness * 0.03
+        const size = spc * (0.5 + brightness * 0.8)
         for (let s = 0; s < segsPerRing; s++) {
           const a = (s / segsPerRing) * Math.PI * 2 + angle
           const cx = 0.5 + Math.cos(a) * radius
@@ -119,7 +120,7 @@ function generateGradient(subType, p1, p2, t, oscillate) {
       break
     }
     case 'conic': {
-      const segs = 24
+      const segs = Math.max(6, Math.round(12 + (p3 / 100) * 24))
       const radius = 0.35
       for (let i = 0; i < segs; i++) {
         const a = (i / segs) * Math.PI * 2
@@ -127,7 +128,7 @@ function generateGradient(subType, p1, p2, t, oscillate) {
         const r = radius * (0.5 + brightness * 0.5)
         const cx = 0.5 + Math.cos(a) * r
         const cy = 0.5 + Math.sin(a) * r
-        const size = 0.01 + brightness * 0.02
+        const size = spc * (0.5 + brightness)
         quad(pts, edges, cx - size, cy - size, cx + size, cy + size)
       }
       break
@@ -280,7 +281,7 @@ function generateColor(p1, p2, p3) {
 
 function generate(mode, subType, p1, p2, p3, p4, t, animate, speed, oscillate, ampVal, dutyVal, ofsVal) {
   switch (mode) {
-    case 'gradient': return generateGradient(subType, p1, p2, t, oscillate)
+    case 'gradient': return generateGradient(subType, p1, p2, p3, t, oscillate)
     case 'pattern': return generatePattern(subType, p1, p2, p3, t, animate, speed)
     case 'wave': return generateWave(subType, p1, p2, p3, p4, t, ampVal, dutyVal, ofsVal)
     case 'color': return generateColor(p1, p2, p3)
@@ -307,34 +308,43 @@ function hslToRgb(h, s, l) {
 
 function Generator2Panel({
   mode, subType, p1, p2, p3, p4, amp, duty, offset, animate, speed, lfoOn, lfoFreq, oscillate, enabled, onToggle, id,
+  colorH, colorS, colorL, colorSub, colorAni, onColorHChange, onColorSChange, onColorLChange, onColorSubChange, onColorAniChange,
   onModeChange, onSubTypeChange, onP1Change, onP2Change, onP3Change, onP4Change, onAmpChange, onDutyChange, onOffsetChange,
   onAnimateChange, onSpeedChange, onLfoOnChange, onLfoFreqChange, onOscillateChange,
   p1Conn, p1Ref, p2Conn, p2Ref, p3Conn, p3Ref, p4Conn, p4Ref,
   spdConn, spdRef, clkConn, clkRef, ampConn, ampCvRef, dtyConn, dtyCvRef, ofsConn, ofsCvRef,
   pointsOutRef, colorOutRef, scalarOutRef, lfoOutRef,
 }) {
-  const params = (PARAM_DEFS[mode] || []).filter(p => {
-    if (p.key === 'p4' && subType !== 'sqr') return false
-    if (p.key === 'p2' && p.label === 'spd' && !animate) return false
-    return true
-  })
-  const subs = SUB_ITEMS[mode] || []
+  const isColor = mode === 'color'
+  const params = isColor
+    ? [{ key: 'ch', label: 'h' }, { key: 'cs', label: 's' }, { key: 'cl', label: 'l' }]
+    : (PARAM_DEFS[mode] || []).filter(p => {
+        if (p.key === 'p4' && subType !== 'sqr') return false
+        return true
+      })
+  const subs = isColor ? SUB_ITEMS.color : (SUB_ITEMS[mode] || [])
   const paramMap = {
     p1: { value: p1, onChange: onP1Change, conn: p1Conn, ref: p1Ref },
     p2: { value: p2, onChange: onP2Change, conn: p2Conn, ref: p2Ref },
     p3: { value: p3, onChange: onP3Change, conn: p3Conn, ref: p3Ref },
     p4: { value: p4, onChange: onP4Change, conn: p4Conn, ref: p4Ref },
+    ch: { value: colorH, onChange: onColorHChange, conn: false, ref: { current: null } },
+    cs: { value: colorS, onChange: onColorSChange, conn: false, ref: { current: null } },
+    cl: { value: colorL, onChange: onColorLChange, conn: false, ref: { current: null } },
   }
 
   return (
-    <Module label="Generator 2" enabled={enabled} onToggle={onToggle}>
+    <Module label="Gen Hifi" enabled={enabled} onToggle={onToggle}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 4, padding: '2px 4px' }}>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
-          {MODE_ITEMS.map(item => (
-            <LabeledControl key={item.value} label={item.text}>
-              <IconButton icon={item.icon} active={mode === item.value} onClick={() => onModeChange(item.value)} />
-            </LabeledControl>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+          {MODE_ITEMS.map((item, i) => (
+            <React.Fragment key={item.value}>
+              {i === 3 && <Divider variant="vertical" className="py-1" />}
+              <LabeledControl label={item.text}>
+                <IconButton icon={item.icon} title={item.value} active={mode === item.value} onClick={() => onModeChange(item.value)} />
+              </LabeledControl>
+            </React.Fragment>
           ))}
         </div>
 
@@ -344,7 +354,7 @@ function Generator2Panel({
           <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
             {subs.map(item => (
               <LabeledControl key={item.value} label={item.text}>
-                <IconButton icon={item.icon} active={subType === item.value} onClick={() => onSubTypeChange(item.value)} />
+                <IconButton icon={item.icon} title={item.value} active={isColor ? colorSub === item.value : subType === item.value} onClick={() => isColor ? onColorSubChange(item.value) : onSubTypeChange(item.value)} />
               </LabeledControl>
             ))}
           </div>
@@ -376,9 +386,14 @@ function Generator2Panel({
           {animate && <CvKnob port="spd" moduleId={id} active={spdConn} signalRef={spdRef} value={speed} onChange={onSpeedChange} label="rate" direction="vertical" />}
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
-          <Toggle value={animate} onChange={onAnimateChange} label="ani" size="sm" horizontal />
-          <Toggle value={lfoOn} onChange={onLfoOnChange} label="lfo" size="sm" horizontal />
-          {mode === 'gradient' && <Toggle value={oscillate} onChange={onOscillateChange} label="dir" size="sm" horizontal />}
+          {isColor
+            ? <Toggle value={colorAni} onChange={onColorAniChange} label="ani" size="sm" horizontal />
+            : <>
+                <Toggle value={animate} onChange={onAnimateChange} label="ani" size="sm" horizontal />
+                <Toggle value={lfoOn} onChange={onLfoOnChange} label="lfo" size="sm" horizontal />
+                {mode === 'gradient' && <Toggle value={oscillate} onChange={onOscillateChange} label="dir" size="sm" horizontal />}
+              </>
+          }
         </div>
 
         <Divider className="px-1" />
@@ -400,6 +415,7 @@ function Generator2Panel({
 export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   if (preview) return <Generator2Panel
     mode="pattern" subType="checker" p1={50} p2={50} p3={50} p4={50} amp={50} duty={50} offset={0} animate={false} speed={50} lfoOn={false} lfoFreq={50} oscillate={false}
+    colorH={50} colorS={70} colorL={50} colorSub="mono" colorAni={false} onColorHChange={() => {}} onColorSChange={() => {}} onColorLChange={() => {}} onColorSubChange={() => {}} onColorAniChange={() => {}}
     enabled={false} onToggle={() => {}} id={id}
     onModeChange={() => {}} onSubTypeChange={() => {}} onP1Change={() => {}} onP2Change={() => {}} onP3Change={() => {}} onP4Change={() => {}} onAmpChange={() => {}} onDutyChange={() => {}} onOffsetChange={() => {}}
     onAnimateChange={() => {}} onSpeedChange={() => {}} onLfoOnChange={() => {}} onLfoFreqChange={() => {}} onOscillateChange={() => {}}
@@ -423,6 +439,11 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   const [lfoOn, setLfoOn] = useState(init?.lfoOn ?? false)
   const [lfoFreq, setLfoFreq] = useState(init?.lfoFreq ?? 50)
   const [oscillate, setOscillate] = useState(init?.oscillate ?? false)
+  const [colorH, setColorH] = useState(init?.colorH ?? 50)
+  const [colorS, setColorS] = useState(init?.colorS ?? 70)
+  const [colorL, setColorL] = useState(init?.colorL ?? 50)
+  const [colorSub, setColorSub] = useState(init?.colorSub ?? 'mono')
+  const [colorAni, setColorAni] = useState(init?.colorAni ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
@@ -444,6 +465,12 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   const lfoOnRef = useRef(false)
   const lfoFreqRef = useRef(50)
   const oscillateRef = useRef(false)
+  const colorHRef = useRef(50)
+  const colorSRef = useRef(70)
+  const colorLRef = useRef(50)
+  const colorSubRef = useRef('mono')
+  const colorAniRef = useRef(false)
+  const colorTimeRef = useRef(0)
   const p1CvRef = useRef(null)
   const p2CvRef = useRef(null)
   const p3CvRef = useRef(null)
@@ -473,6 +500,11 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   lfoOnRef.current = lfoOn
   lfoFreqRef.current = lfoFreq
   oscillateRef.current = oscillate
+  colorHRef.current = colorH
+  colorSRef.current = colorS
+  colorLRef.current = colorL
+  colorSubRef.current = colorSub
+  colorAniRef.current = colorAni
 
   const conns = routing?.connections || []
   const p1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'p1')
@@ -484,6 +516,11 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   const ampConn = conns.some(c => c.toModuleId === id && c.toPort === 'amp')
   const dtyConn = conns.some(c => c.toModuleId === id && c.toPort === 'dty')
   const ofsConn = conns.some(c => c.toModuleId === id && c.toPort === 'ofs')
+
+  // Track last geometry mode so switching to color tab doesn't change points output
+  const geoModeRef = useRef(mode !== 'color' ? mode : 'pattern')
+  const geoSubRef = useRef(subType)
+  if (mode !== 'color') { geoModeRef.current = mode; geoSubRef.current = subType }
 
   const handleModeChange = (m) => {
     setMode(m)
@@ -538,32 +575,31 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
       const ampVal = inputs.amp ? readScalar(inputs.amp) : ampRef.current
       const dtyVal = inputs.dty ? readScalar(inputs.dty) : dutyRef.current
       const ofsVal = inputs.ofs ? readScalar(inputs.ofs) : offsetRef.current
-      const geom = generate(modeRef.current, subTypeRef.current, v1, v2, v3, v4, animTimeRef.current, animateRef.current, spdVal, oscillateRef.current, ampVal, dtyVal, ofsVal)
+      const geom = generate(geoModeRef.current, geoSubRef.current, v1, v2, v3, v4, animTimeRef.current, animateRef.current, spdVal, oscillateRef.current, ampVal, dtyVal, ofsVal)
       const pOut = points(geom.pts, geom.edges)
       pOut.aspectFill = true
       pOut.fill = true
       pOut.strokeWidth = 1
       pointsOutRef.current = pOut
 
-      let cOut = null
-      if (modeRef.current === 'color') {
-        const baseH = ((v1 / 100) + (animateRef.current ? animTimeRef.current * 0.1 : 0)) % 1
-        const s = v2 / 100, l = v3 / 100
-        const sub = subTypeRef.current
-        let h = baseH
-        if (sub === 'comp') {
-          // Alternate between base and complement
-          h = Math.floor(animTimeRef.current * 2) % 2 === 0 ? baseH : (baseH + 0.5) % 1
-        } else if (sub === 'anl') {
-          const step = Math.floor(animTimeRef.current * 3) % 3
-          h = (baseH + (step - 1) * (30 / 360) + 1) % 1
-        } else if (sub === 'tri') {
-          const step = Math.floor(animTimeRef.current * 3) % 3
-          h = (baseH + step * (1 / 3)) % 1
-        }
-        const rgb = hslToRgb(h, s, l)
-        cOut = color(rgb.r, rgb.g, rgb.b)
+      // Color output — independent animation time
+      if (colorAniRef.current) colorTimeRef.current += dt
+      const cBaseH = ((colorHRef.current / 100) + (colorAniRef.current ? colorTimeRef.current * 0.1 : 0)) % 1
+      const cS = colorSRef.current / 100
+      const cL = colorLRef.current / 100
+      let cH = cBaseH
+      const cSub = colorSubRef.current
+      if (cSub === 'comp') {
+        cH = Math.floor(colorTimeRef.current * 2) % 2 === 0 ? cBaseH : (cBaseH + 0.5) % 1
+      } else if (cSub === 'anl') {
+        const cStep = Math.floor(colorTimeRef.current * 3) % 3
+        cH = (cBaseH + (cStep - 1) * (30 / 360) + 1) % 1
+      } else if (cSub === 'tri') {
+        const cStep = Math.floor(colorTimeRef.current * 3) % 3
+        cH = (cBaseH + cStep * (1 / 3)) % 1
       }
+      const cRgb = hslToRgb(cH, cS, cL)
+      const cOut = color(cRgb.r, cRgb.g, cRgb.b)
       colorOutRef.current = cOut
 
       const sOut = scalar(50)
@@ -575,6 +611,7 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
 
   return <Generator2Panel
     mode={mode} subType={subType} p1={p1} p2={p2} p3={p3} p4={p4} amp={amp} duty={duty} offset={offset} animate={animate} speed={speed} lfoOn={lfoOn} lfoFreq={lfoFreq} oscillate={oscillate}
+    colorH={colorH} colorS={colorS} colorL={colorL} colorSub={colorSub} colorAni={colorAni} onColorHChange={setColorH} onColorSChange={setColorS} onColorLChange={setColorL} onColorSubChange={setColorSub} onColorAniChange={setColorAni}
     enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id}
     onModeChange={handleModeChange} onSubTypeChange={setSubType}
     onP1Change={setP1} onP2Change={setP2} onP3Change={setP3} onP4Change={setP4} onAmpChange={setAmp} onDutyChange={setDuty} onOffsetChange={setOffset}

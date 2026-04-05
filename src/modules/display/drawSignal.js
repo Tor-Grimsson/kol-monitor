@@ -133,7 +133,9 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
   }
 
   if (signal.edges && signal.edges.length > 0) {
-    const color = penColor(p, 'strokeWidth' in signal ? '#ffffff' : WIRE_COLOR)
+    const color = signal.color
+      ? `rgb(${Math.round(signal.color.r * 255)},${Math.round(signal.color.g * 255)},${Math.round(signal.color.b * 255)})`
+      : penColor(p, 'strokeWidth' in signal ? '#ffffff' : WIRE_COLOR)
 
     // Fill — trace closed shapes from edges
     if (signal.fill) {
