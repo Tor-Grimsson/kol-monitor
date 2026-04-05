@@ -2,6 +2,7 @@
 // 4HP. Clock input, 6 division outputs (1, 1/2, 1/3, 1/4, 1/5, 1/6), rotate + reset inputs.
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -40,7 +41,7 @@ const NULL_REFS = Object.fromEntries(DIVS.map(d => [d, NULL_REF]))
 export default function ClockDividerModule({ id = 'cdiv1', preview }) {
   if (preview) return <ClockDividerPanel enabled={false} onToggle={() => {}} id={id} inConn={false} inRef={NULL_REF} rotConn={false} rotRef={NULL_REF} rstConn={false} rstRef={NULL_REF} outRefs={NULL_REFS} />
 
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   const routing = usePatchRouting()
 

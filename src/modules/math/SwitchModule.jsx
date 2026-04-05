@@ -2,6 +2,7 @@
 // 8HP 1U. Two independent switches.
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -48,7 +49,7 @@ export default function SwitchModule({ id = 'sw1', preview }) {
     a2Conn={false} a2Ref={NULL_REF} b2Conn={false} b2Ref={NULL_REF} cv2Conn={false} cv2Ref={NULL_REF} out2Ref={NULL_REF}
   />
 
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
   const enabledRef = useRef(true)
   enabledRef.current = enabled

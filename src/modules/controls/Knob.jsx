@@ -2,7 +2,7 @@
 
 import { useRef, useCallback } from 'react'
 
-export default function Knob({ value, onChange, min = 0, max = 100, label, variant = 'column', bipolar = false }) {
+export default function Knob({ value, onChange, min = 0, max = 100, label, variant = 'column', bipolar = false, labelMinWidth }) {
   const size = 24
   const angle = ((value - min) / (max - min)) * 270 - 135
   const r = size / 2
@@ -63,7 +63,7 @@ export default function Knob({ value, onChange, min = 0, max = 100, label, varia
       >
         {knobSvg}
         {label && (
-          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1, minWidth: labelMinWidth }}>
             {label}
           </span>
         )}
@@ -74,11 +74,8 @@ export default function Knob({ value, onChange, min = 0, max = 100, label, varia
   return (
     <div
       onPointerDown={handlePointerDown}
-      style={{ cursor: 'ns-resize', touchAction: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}
+      style={{ cursor: 'ns-resize', touchAction: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
     >
-      {bipolar && (
-        <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', lineHeight: 1, marginBottom: 2 }}>-/+</span>
-      )}
       {knobSvg}
       {label && (
         <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>

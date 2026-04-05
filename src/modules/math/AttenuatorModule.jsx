@@ -2,6 +2,7 @@
 // 26HP 1U. UNI/-/+ toggle per channel, normalled cascade between outputs.
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -62,7 +63,7 @@ export default function AttenuatorModule({ id = 'atten1', preview }) {
 
   const [levels, setLevels] = useState([100, 100, 100, 100])
   const [modes, setModes] = useState([false, false, false, false]) // false = uni, true = bipolar
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const enabledRef = useRef(true)

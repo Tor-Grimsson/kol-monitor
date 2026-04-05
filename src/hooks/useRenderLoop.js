@@ -44,13 +44,14 @@ function topoSort(modulesMap, connections) {
   return { sorted, delayed }
 }
 
-export function useRenderLoop(modulesRef, connectionsRef, power = true) {
+export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRef) {
   const rafRef = useRef(null)
   const outputsRef = useRef(new Map())
   const prevOutputsRef = useRef(new Map())
   const startTimeRef = useRef(0)
   const lastFrameRef = useRef(0)
-  const timingRef = useRef({ evalMs: 0, frameCount: 0 })
+  const localTimingRef = useRef({ evalMs: 0, frameCount: 0 })
+  const fpsAccRef = useRef({ frames: 0, lastSample: 0, fps: 60 })
 
   const powerRef = useRef(power)
   powerRef.current = power
@@ -119,9 +120,29 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true) {
     }
 
     const evalMs = performance.now() - evalStart
-    timingRef.current.evalMs = evalMs
-    timingRef.current.frameCount++
-    if (timingRef.current.frameCount % 60 === 0) {
+    localTimingRef.current.evalMs = evalMs
+    localTimingRef.current.frameCount++
+
+    // Frame timing — measures real frame duration (includes render/paint/composite)
+    const frameDt = dt * 1000 // dt is in seconds, convert to ms
+    const fpsAcc = fpsAccRef.current
+    fpsAcc.frames++
+    if (now - fpsAcc.lastSample >= 1000) {
+      fpsAcc.fps = fpsAcc.frames
+      fpsAcc.frames = 0
+      fpsAcc.lastSample = now
+    }
+
+    // Write to shared timing ref for perf module
+    if (timingRef) {
+      timingRef.current.frameMs = frameDt
+      timingRef.current.evalMs = evalMs
+      timingRef.current.fps = fpsAcc.fps
+      timingRef.current.moduleCount = sorted.length
+      timingRef.current.frameCount = localTimingRef.current.frameCount
+    }
+
+    if (localTimingRef.current.frameCount % 60 === 0) {
       console.debug(`[VM] eval: ${evalMs.toFixed(2)}ms (${sorted.length} modules)`)
     }
 
@@ -138,5 +159,5 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true) {
     }
   }, [tick])
 
-  return { outputsRef, timingRef }
+  return { outputsRef, timingRef: localTimingRef }
 }

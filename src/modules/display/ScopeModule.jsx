@@ -2,6 +2,7 @@
 // Canvas display with vertically stacked inputs, pass-through outputs
 
 import { useRef, useEffect, useState } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
@@ -52,7 +53,7 @@ export default function ScopeModule({ id = 'scope1', preview }) {
   const penRef = useRef(null)
   const outARef = useRef(null)
   const outBRef = useRef(null)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   overlayRef.current = overlay
   enabledRef.current = enabled

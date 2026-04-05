@@ -2,6 +2,7 @@
 // 16HP, 4 layered inputs, background brightness, pen input for style
 
 import { useRef, useEffect, useState } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
@@ -66,7 +67,7 @@ export default function OutputModule({ id = 'out1', preview }) {
 
   const canvasRef = useRef(null)
   const [bg, setBg] = useState(0)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   enabledRef.current = enabled
   const routing = usePatchRouting()

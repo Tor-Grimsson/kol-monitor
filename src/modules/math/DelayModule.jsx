@@ -4,6 +4,7 @@
 // For scalars: feedback creates decaying repeats
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar, points } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -52,7 +53,7 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
   const [mix, setMix] = useState(init?.mix ?? 50)
   const [copies, setCopies] = useState(init?.copies ?? 30)
   const [fb, setFb] = useState(init?.fb ?? 50)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const timeRef = useRef(50)

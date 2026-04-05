@@ -2,12 +2,13 @@
 // 48HP — endpoint for compositing, routing, and display
 
 import { useRef, useEffect, useState } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import Fader from '../controls/Fader'
+import Slider from '../controls/Slider'
 import Toggle from '../controls/Toggle'
 import Divider from '../../components/atoms/Divider'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
@@ -16,7 +17,15 @@ import { drawSignal } from './drawSignal'
 const BUF_LEN = 128
 const CHS = ['a', 'b', 'c', 'd']
 
-function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s2A, s2B, s2C, s2D, rtn1, rtn2, muteA, muteB, muteC, muteD, send1On, send2On, bg, masterLvl, enabled, onToggle, setLvlA, setLvlB, setLvlC, setLvlD, setS1A, setS1B, setS1C, setS1D, setS2A, setS2B, setS2C, setS2D, setRtn1, setRtn2, setMuteA, setMuteB, setMuteC, setMuteD, setSend1On, setSend2On, setBg, setMasterLvl, id, chConns, chRefs, rtn1Conn, rtn1InRef, rtn2Conn, rtn2InRef, penConn, penRef, bgConn, bgInRef, send1Ref, send2Ref, masterOutRef }) {
+// Scale any signal type by a 0-1 level
+function scaleSignal(sig, lvl) {
+  if (sig.type === 'scalar') return { ...sig, value: sig.value * lvl }
+  if (sig.type === 'color') return { ...sig, value: { ...sig.value, a: (sig.value.a ?? 1) * lvl } }
+  // Points/pen: attach opacity level for renderer
+  return { ...sig, opacity: lvl }
+}
+
+function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s2A, s2B, s2C, s2D, rtn1, rtn2, muteA, muteB, muteC, muteD, send1On, send2On, bg, masterLvl, mstS1, mstS2, masterOn, enabled, onToggle, setLvlA, setLvlB, setLvlC, setLvlD, setS1A, setS1B, setS1C, setS1D, setS2A, setS2B, setS2C, setS2D, setRtn1, setRtn2, setMuteA, setMuteB, setMuteC, setMuteD, setSend1On, setSend2On, setBg, setMasterLvl, setMstS1, setMstS2, setMasterOn, id, chConns, chRefs, rtn1Conn, rtn1InRef, rtn2Conn, rtn2InRef, penConn, penRef, bgConn, bgInRef, mstPenConn, mstPenRef, mstBgConn, mstBgRef, send1Ref, send2Ref, masterOutRef }) {
   const lvls = [lvlA, lvlB, lvlC, lvlD]
   const setLvls = [setLvlA, setLvlB, setLvlC, setLvlD]
   const s1s = [s1A, s1B, s1C, s1D]
@@ -40,7 +49,7 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
               <Knob value={s1s[i]} onChange={setS1s[i]} label="s1" />
               <Knob value={s2s[i]} onChange={setS2s[i]} label="s2" />
               <div style={{ flex: 1, display: 'flex', alignItems: 'stretch', padding: '16px 0' }}>
-                <Fader value={lvls[i]} onChange={setLvls[i]} height="100%" />
+                <Slider value={lvls[i]} onChange={setLvls[i]} direction="vertical" height="100%" />
               </div>
               <Toggle value={!mutes[i]} onChange={() => setMutes[i](!mutes[i])} label="on" size="sm" />
             </div>
@@ -67,7 +76,20 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
           </div>
         </div>
 
-        {/* Master */}
+        <Divider variant="vertical" />
+
+        {/* Master strip */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', gap: 3 }}>
+          <LabeledJack type="in" port="mstBg" moduleId={id} active={mstBgConn} signalRef={mstBgRef} label="bg" />
+          <Knob value={mstS1} onChange={setMstS1} label="s1" />
+          <Knob value={mstS2} onChange={setMstS2} label="s2" />
+          <div style={{ flex: 1, display: 'flex', alignItems: 'stretch', padding: '16px 0' }}>
+            <Slider value={masterLvl} onChange={setMasterLvl} direction="vertical" height="100%" />
+          </div>
+          <Toggle value={masterOn} onChange={setMasterOn} label="on" size="sm" />
+        </div>
+
+        {/* Canvas + controls */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1, minHeight: 0 }}>
           <canvas
             ref={canvasRef}
@@ -78,7 +100,6 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <LabeledJack type="in" port="bgCV" moduleId={id} active={bgConn} signalRef={bgInRef} label="cv" />
             <Knob value={bg} onChange={setBg} label="bg" />
-            <Knob value={masterLvl} onChange={setMasterLvl} label="mst" />
             <LabeledJack type="in" port="pen" moduleId={id} active={penConn} signalRef={penRef} label="pen" />
             <LabeledJack type="out" port="out" moduleId={id} signalRef={masterOutRef} label="out" />
           </div>
@@ -131,7 +152,10 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   // Master
   const [bg, setBg] = useState(init?.bg ?? 0)
   const [masterLvl, setMasterLvl] = useState(init?.masterLvl ?? 100)
-  const [enabled, setEnabled] = useState(true)
+  const [mstS1, setMstS1] = useState(init?.mstS1 ?? 0)
+  const [mstS2, setMstS2] = useState(init?.mstS2 ?? 0)
+  const [masterOn, setMasterOn] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
 
   const routing = usePatchRouting()
   const enabledRef = useRef(true)
@@ -148,6 +172,9 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   const rtn2Ref = useRef(80)
   const bgRef = useRef(0)
   const masterLvlRef = useRef(100)
+  const mstS1Ref = useRef(0)
+  const mstS2Ref = useRef(0)
+  const masterOnRef = useRef(true)
 
   lvlRefs.current = { a: lvlA, b: lvlB, c: lvlC, d: lvlD }
   s1Refs.current = { a: s1A, b: s1B, c: s1C, d: s1D }
@@ -157,6 +184,9 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   rtn2Ref.current = rtn2
   bgRef.current = bg
   masterLvlRef.current = masterLvl
+  mstS1Ref.current = mstS1
+  mstS2Ref.current = mstS2
+  masterOnRef.current = masterOn
 
   // Signal refs
   const chRefs = useRef({ a: null, b: null, c: null, d: null })
@@ -164,6 +194,8 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   const rtn2InRef = useRef(null)
   const penRef = useRef(null)
   const bgInRef = useRef(null)
+  const mstPenRef = useRef(null)
+  const mstBgRef = useRef(null)
   const send1Ref = useRef(null)
   const send2Ref = useRef(null)
   const masterOutRef = useRef(null)
@@ -178,6 +210,8 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   const rtn2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'rtn2')
   const penConn = conns.some(c => c.toModuleId === id && c.toPort === 'pen')
   const bgConn = conns.some(c => c.toModuleId === id && c.toPort === 'bgCV')
+  const mstPenConn = conns.some(c => c.toModuleId === id && c.toPort === 'mstPen')
+  const mstBgConn = conns.some(c => c.toModuleId === id && c.toPort === 'mstBg')
 
   useModule({
     id,
@@ -185,6 +219,7 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
       a: { type: 'any' }, b: { type: 'any' }, c: { type: 'any' }, d: { type: 'any' },
       rtn1: { type: 'any' }, rtn2: { type: 'any' },
       pen: { type: 'pen' }, bgCV: { type: 'scalar' },
+      mstPen: { type: 'pen' }, mstBg: { type: 'scalar' },
     },
     outputs: {
       snd1: { type: 'any' }, snd2: { type: 'any' }, out: { type: 'any' },
@@ -201,17 +236,24 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
       for (const ch of CHS) chRefs.current[ch] = muteRefs.current[ch] ? null : inputs[ch]
       rtn1InRef.current = inputs.rtn1
       rtn2InRef.current = inputs.rtn2
-      penRef.current = inputs.pen
-      bgInRef.current = inputs.bgCV
+      penRef.current = inputs.pen || inputs.mstPen
+      bgInRef.current = inputs.bgCV || inputs.mstBg
+      mstPenRef.current = inputs.mstPen
+      mstBgRef.current = inputs.mstBg
 
-      // Build send outputs — pick the first non-null channel with send level > 0
-      // For points: pass through. For scalars: scale by send level.
+      // Build send outputs — scale by send level
       let snd1 = null, snd2 = null
       for (const ch of CHS) {
         const sig = chRefs.current[ch]
         if (!sig) continue
-        if (send1OnRef.current && s1Refs.current[ch] > 0 && !snd1) snd1 = sig
-        if (send2OnRef.current && s2Refs.current[ch] > 0 && !snd2) snd2 = sig
+        const lvl1 = s1Refs.current[ch] / 100
+        const lvl2 = s2Refs.current[ch] / 100
+        if (send1OnRef.current && lvl1 > 0 && !snd1) {
+          snd1 = scaleSignal(sig, lvl1)
+        }
+        if (send2OnRef.current && lvl2 > 0 && !snd2) {
+          snd2 = scaleSignal(sig, lvl2)
+        }
       }
       send1Ref.current = snd1
       send2Ref.current = snd2
@@ -264,28 +306,33 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
       ctx.fillStyle = `rgb(${g},${g},${g})`
       ctx.fillRect(0, 0, w, h)
 
+      if (!masterOnRef.current) { raf = requestAnimationFrame(draw); return }
+
       const wi = writeIdxRef.current
       const p = penRef.current
+      const mst = masterLvlRef.current / 100
 
-      // Draw channels at their levels
+      // Draw channels at their levels × master
       for (const ch of CHS) {
         if (muteRefs.current[ch]) continue
         const sig = chRefs.current[ch]
         if (!sig) continue
         const lvl = lvlRefs.current[ch] / 100
-        ctx.globalAlpha = lvl
+        ctx.globalAlpha = lvl * mst
         drawSignal(ctx, sig, 0, 0, w, h, historyRefs.current[ch], wi, BUF_LEN, p)
         ctx.globalAlpha = 1
       }
 
-      // Draw returns
+      // Draw returns — opacity = max send level × return level × master
       if (rtn1InRef.current) {
-        ctx.globalAlpha = rtn1Ref.current / 100
+        const maxSnd1 = Math.max(s1Refs.current.a, s1Refs.current.b, s1Refs.current.c, s1Refs.current.d, mstS1Ref.current) / 100
+        ctx.globalAlpha = maxSnd1 * (rtn1Ref.current / 100) * mst
         drawSignal(ctx, rtn1InRef.current, 0, 0, w, h, historyRefs.current.r1, wi, BUF_LEN, p)
         ctx.globalAlpha = 1
       }
       if (rtn2InRef.current) {
-        ctx.globalAlpha = rtn2Ref.current / 100
+        const maxSnd2 = Math.max(s2Refs.current.a, s2Refs.current.b, s2Refs.current.c, s2Refs.current.d, mstS2Ref.current) / 100
+        ctx.globalAlpha = maxSnd2 * (rtn2Ref.current / 100) * mst
         drawSignal(ctx, rtn2InRef.current, 0, 0, w, h, historyRefs.current.r2, wi, BUF_LEN, p)
         ctx.globalAlpha = 1
       }
@@ -297,5 +344,5 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  return <ConsolePanel canvasRef={canvasRef} lvlA={lvlA} lvlB={lvlB} lvlC={lvlC} lvlD={lvlD} s1A={s1A} s1B={s1B} s1C={s1C} s1D={s1D} s2A={s2A} s2B={s2B} s2C={s2C} s2D={s2D} rtn1={rtn1} rtn2={rtn2} muteA={muteA} muteB={muteB} muteC={muteC} muteD={muteD} send1On={send1On} send2On={send2On} bg={bg} masterLvl={masterLvl} enabled={enabled} onToggle={() => setEnabled(!enabled)} setLvlA={setLvlA} setLvlB={setLvlB} setLvlC={setLvlC} setLvlD={setLvlD} setS1A={setS1A} setS1B={setS1B} setS1C={setS1C} setS1D={setS1D} setS2A={setS2A} setS2B={setS2B} setS2C={setS2C} setS2D={setS2D} setRtn1={setRtn1} setRtn2={setRtn2} setMuteA={setMuteA} setMuteB={setMuteB} setMuteC={setMuteC} setMuteD={setMuteD} setSend1On={setSend1On} setSend2On={setSend2On} setBg={setBg} setMasterLvl={setMasterLvl} id={id} chConns={chConns} chRefs={chRefs} rtn1Conn={rtn1Conn} rtn1InRef={rtn1InRef} rtn2Conn={rtn2Conn} rtn2InRef={rtn2InRef} penConn={penConn} penRef={penRef} bgConn={bgConn} bgInRef={bgInRef} send1Ref={send1Ref} send2Ref={send2Ref} masterOutRef={masterOutRef} />
+  return <ConsolePanel canvasRef={canvasRef} lvlA={lvlA} lvlB={lvlB} lvlC={lvlC} lvlD={lvlD} s1A={s1A} s1B={s1B} s1C={s1C} s1D={s1D} s2A={s2A} s2B={s2B} s2C={s2C} s2D={s2D} rtn1={rtn1} rtn2={rtn2} muteA={muteA} muteB={muteB} muteC={muteC} muteD={muteD} send1On={send1On} send2On={send2On} bg={bg} masterLvl={masterLvl} mstS1={mstS1} mstS2={mstS2} masterOn={masterOn} enabled={enabled} onToggle={() => setEnabled(!enabled)} setLvlA={setLvlA} setLvlB={setLvlB} setLvlC={setLvlC} setLvlD={setLvlD} setS1A={setS1A} setS1B={setS1B} setS1C={setS1C} setS1D={setS1D} setS2A={setS2A} setS2B={setS2B} setS2C={setS2C} setS2D={setS2D} setRtn1={setRtn1} setRtn2={setRtn2} setMuteA={setMuteA} setMuteB={setMuteB} setMuteC={setMuteC} setMuteD={setMuteD} setSend1On={setSend1On} setSend2On={setSend2On} setBg={setBg} setMasterLvl={setMasterLvl} setMstS1={setMstS1} setMstS2={setMstS2} setMasterOn={setMasterOn} id={id} chConns={chConns} chRefs={chRefs} rtn1Conn={rtn1Conn} rtn1InRef={rtn1InRef} rtn2Conn={rtn2Conn} rtn2InRef={rtn2InRef} penConn={penConn} penRef={penRef} bgConn={bgConn} bgInRef={bgInRef} mstPenConn={mstPenConn} mstPenRef={mstPenRef} mstBgConn={mstBgConn} mstBgRef={mstBgRef} send1Ref={send1Ref} send2Ref={send2Ref} masterOutRef={masterOutRef} />
 }

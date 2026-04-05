@@ -2,6 +2,7 @@
 // 6HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -32,7 +33,7 @@ export default function SampleHoldModule({ id = 'sh1', preview }) {
   if (preview) return <SampleHoldPanel smooth={0} enabled={false} onToggle={() => {}} onSmoothChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} trigConnected={false} trigRef={{ current: null }} outRef={{ current: null }} />
 
   const [smooth, setSmooth] = useState(0)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const smoothRef = useRef(0)

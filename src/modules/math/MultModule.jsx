@@ -2,6 +2,7 @@
 // 8HP 1U. Two rows: in→4 out. Second input normalled from first.
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
 import { ModuleControls } from '../utility/ModuleLayout'
@@ -41,7 +42,7 @@ function MultPanel({ enabled, onToggle, id, in1Connected, in2Connected, in1Ref, 
 export default function MultModule({ id = 'mult1', preview }) {
   if (preview) return <MultPanel enabled={false} onToggle={() => {}} id={id} in1Connected={false} in2Connected={false} in1Ref={{ current: null }} in2Ref={{ current: null }} out1aRef={{ current: null }} out1bRef={{ current: null }} out1cRef={{ current: null }} out1dRef={{ current: null }} out2aRef={{ current: null }} out2bRef={{ current: null }} out2cRef={{ current: null }} out2dRef={{ current: null }} />
 
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   const routing = usePatchRouting()
   enabledRef.current = enabled

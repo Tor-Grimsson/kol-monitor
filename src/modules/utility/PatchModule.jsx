@@ -70,6 +70,7 @@ export default function PatchModule({ id = 'patch1', preview }) {
     setSaved(prev => ({ ...prev, [name]: snapshot }))
     setCurrent(name)
     setSaveSlot(s => s + 1)
+    navigator.clipboard.writeText(JSON.stringify(snapshot, null, 2)).catch(() => {})
   }
 
   const handleClear = () => {

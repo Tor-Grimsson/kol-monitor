@@ -2,6 +2,7 @@
 // 12HP, two channels (A/B), pass-through outputs, pen input for style
 
 import { useRef, useEffect, useState } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
@@ -55,7 +56,7 @@ export default function MonitorModule({ id = 'mon1', preview }) {
   const penRef = useRef(null)
   const [overlay, setOverlay] = useState(false)
   const overlayRef = useRef(false)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   overlayRef.current = overlay
   enabledRef.current = enabled

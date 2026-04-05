@@ -2,6 +2,7 @@
 // 4HP 1U, one knob, one output jack
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -40,7 +41,7 @@ export default function ConstantModule({ id = 'const1', preview }) {
   if (preview) return <ConstantPanel value={50} enabled={false} onToggle={() => {}} onValueChange={() => {}} id={id} outputRef={{ current: null }} />
 
   const [value, setValue] = useState(50)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const valueRef = useRef(50)
   const enabledRef = useRef(true)
   const outputRef = useRef(null)

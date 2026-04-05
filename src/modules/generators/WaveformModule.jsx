@@ -2,6 +2,7 @@
 // 6HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -65,7 +66,7 @@ export default function WaveformModule({ id = 'wave1', preview }) {
   const [amp, setAmp] = useState(100)
   const [speed, setSpeed] = useState(50)
   const [shape, setShape] = useState('sin')
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const enabledRef = useRef(true)

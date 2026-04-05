@@ -1,40 +1,49 @@
-// SequencerModule — 32-step sequencer with length, pagination, follow
-// 12HP
+// SequencerModule — 32-step sequencer with stepped faders, 3-state gates, pagination
+// 16HP
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
-import Toggle from '../controls/Toggle'
-import Knob from '../controls/Knob'
+import CvKnob from '../controls/CvKnob'
+import IconSelect from '../controls/IconSelect'
+import FlipToggle from '../controls/FlipToggle'
+import LED from '../controls/LED'
 import Divider from '../../components/atoms/Divider'
+import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const STEPS_PER_PAGE = 8
 const TOTAL_PAGES = 4
 const TOTAL_STEPS = STEPS_PER_PAGE * TOTAL_PAGES
 const GATE_DURATION = 0.03
+const NUM_STOPS = 10
 
 function initSteps() {
-  const s = new Array(TOTAL_STEPS)
-  for (let i = 0; i < TOTAL_STEPS; i++) s[i] = Math.round(Math.random() * 100)
-  return s
+  return Array.from({ length: TOTAL_STEPS }, () => Math.floor(Math.random() * NUM_STOPS))
 }
 
-function StepGrid({ steps, page, currentStep, length, onChange }) {
+function ledColor(gateVal, isActive) {
+  if (isActive) return 'red'
+  if (gateVal === 0) return 'green'
+  if (gateVal === 1) return 'yellow'
+  return 'red'
+}
+
+function StepGrid({ steps, gates, page, currentStep, onChange, onGateChange }) {
   const offset = page * STEPS_PER_PAGE
   const pageSteps = steps.slice(offset, offset + STEPS_PER_PAGE)
 
-  const handleDrag = useCallback((idx, e) => {
+  const handleDrag = (idx, e) => {
     e.preventDefault()
     const globalIdx = offset + idx
-    const startX = e.clientX
+    const startY = e.clientY
     const startVal = steps[globalIdx]
 
     const handleMove = (e) => {
-      const delta = (e.clientX - startX) * 0.8
-      const next = Math.round(Math.max(0, Math.min(100, startVal + delta)))
+      const delta = (startY - e.clientY) * 0.8
+      const next = Math.round(Math.max(0, Math.min(NUM_STOPS - 1, startVal + delta / 10)))
       const newSteps = [...steps]
       newSteps[globalIdx] = next
       onChange(newSteps)
@@ -45,79 +54,88 @@ function StepGrid({ steps, page, currentStep, length, onChange }) {
     }
     window.addEventListener('pointermove', handleMove)
     window.addEventListener('pointerup', handleUp)
-  }, [steps, offset, onChange])
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start', flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 2, padding: 2, border: '1px solid rgba(255,255,255,0.04)' }}>
-      {pageSteps.map((val, i) => {
-        const globalIdx = offset + i
-        const isActive = globalIdx === currentStep
-        const outOfRange = globalIdx >= length
-        return (
-          <div
-            key={i}
-            onPointerDown={(e) => handleDrag(i, e)}
-            style={{
-              flex: 1,
-              width: `${val}%`,
-              minWidth: 2,
-              height: '100%',
-              backgroundColor: isActive ? '#e74c3c' : outOfRange ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.2)',
-              borderRadius: 1,
-              cursor: 'ew-resize',
-              touchAction: 'none',
-              transition: 'background-color 0.05s',
-              opacity: outOfRange ? 0.4 : 1,
-            }}
-          />
-        )
-      })}
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 4 }}>
+      <div style={{ flex: 1, padding: '8px 0' }}>
+        <div style={{ height: '100%', position: 'relative', padding: '0 4px' }}>
+          {Array.from({ length: NUM_STOPS }).map((_, t) => (
+            <div key={t} style={{
+              position: 'absolute',
+              bottom: `${((t + 1) / (NUM_STOPS + 1)) * 100}%`,
+              left: 4, right: 4, height: 1,
+              backgroundColor: 'rgba(255,255,255,0.08)',
+            }} />
+          ))}
+          <div style={{ position: 'relative', display: 'flex', height: '100%', justifyContent: 'space-evenly', zIndex: 1 }}>
+            {pageSteps.map((val, i) => {
+              const globalIdx = offset + i
+              const norm = (val + 1) / (NUM_STOPS + 1)
+              const isActive = globalIdx === currentStep
+              return (
+                <div key={i}
+                  onPointerDown={(e) => handleDrag(i, e)}
+                  style={{ width: 8, height: '100%', position: 'relative', cursor: 'ns-resize', touchAction: 'none' }}
+                >
+                  <div style={{
+                    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+                    backgroundColor: '#0a0a0a', borderRadius: 4,
+                    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)', zIndex: 1,
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: `calc(${norm * 100}% - 8px)`,
+                    left: -1, right: -1,
+                    height: 16, borderRadius: 1,
+                    backgroundColor: isActive ? '#e74c3c' : 'rgba(180,175,165,0.7)',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.3)', zIndex: 2,
+                  }} />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-evenly', padding: '0 4px' }}>
+        {pageSteps.map((_, i) => {
+          const globalIdx = offset + i
+          return (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <FlipToggle value={gates[globalIdx]} onChange={(v) => onGateChange(globalIdx, v)} positions={3} />
+              <LED active={true} size="sm" color={ledColor(gates[globalIdx], globalIdx === currentStep)} />
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
-function SequencerPanel({ steps, page, currentStep, length, follow, enabled, onToggle, onStepsChange, onPageChange, onLengthChange, onFollowChange, onRandomize, id, clockConnected, clockInRef, resetConnected, resetInRef, gateOutRef, outRef }) {
-  const pageLabel = `${page + 1}/${TOTAL_PAGES}`
-
+function SequencerPanel({ steps, gates, page, currentStep, length, enabled, onToggle, onStepsChange, onGateChange, onPageChange, onLengthChange, id, clockConnected, clockInRef, resetConnected, resetInRef, lenCvConnected, lenCvRef, gateOutRef, outRef }) {
   return (
     <Module label="Seq" enabled={enabled} onToggle={onToggle}>
-      <div style={{
-        display: 'flex', flexDirection: 'column',
-        height: '100%', padding: '4px 2px', gap: 4,
-      }}>
-
-        {/* Controls row: pagination + length + follow + randomize */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, padding: '0 2px', userSelect: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <span
-              onClick={() => onPageChange(p => p <= 0 ? TOTAL_PAGES - 1 : p - 1)}
-              className="kol-helper-xxxs"
-              style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: '0 1px' }}
-            >‹</span>
-            <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              {pageLabel}
-            </span>
-            <span
-              onClick={() => onPageChange(p => p >= TOTAL_PAGES - 1 ? 0 : p + 1)}
-              className="kol-helper-xxxs"
-              style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: '0 1px' }}
-            >›</span>
-          </div>
-
-          <Knob value={length} onChange={onLengthChange} min={1} max={32} label="len" variant="row-right" />
-          <Toggle horizontal size="sm" value={follow} onChange={onFollowChange} label="fol" />
-          <Toggle horizontal size="sm" value={false} onChange={onRandomize} label="rnd" />
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '4px 2px', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
+          <IconSelect value={page} onChange={onPageChange} columns={4} items={[
+            { value: 0, icon: 'seq-a' },
+            { value: 1, icon: 'seq-b' },
+            { value: 2, icon: 'seq-c' },
+            { value: 3, icon: 'seq-d' },
+          ]} />
+          <CvKnob port="lenCV" moduleId={id} active={lenCvConnected} signalRef={lenCvRef} value={length} onChange={onLengthChange} label={String(length)} variant="row-right" labelMinWidth={16} />
         </div>
 
-        {/* Steps */}
-        <StepGrid steps={steps} page={page} currentStep={currentStep} length={length} onChange={onStepsChange} />
+        <Divider className="px-1 pt-2" />
 
-        {/* Jacks: inputs left, outputs right, divider */}
+        <StepGrid steps={steps} gates={gates} page={page} currentStep={currentStep} onChange={onStepsChange} onGateChange={onGateChange} />
+
+        <Divider className="px-1 py-2" />
+
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
           <LabeledJack type="in" port="clock" moduleId={id} active={clockConnected} signalRef={clockInRef} label="clk" />
           <LabeledJack type="in" port="reset" moduleId={id} active={resetConnected} signalRef={resetInRef} label="rst" />
-          <Divider variant="vertical" className="py-1.5" />
-          <LabeledJack type="out" port="gate" moduleId={id} signalRef={gateOutRef} label="gate" />
+          <LabeledJack type="out" port="gate" moduleId={id} signalRef={gateOutRef} label="gte" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
@@ -127,22 +145,23 @@ function SequencerPanel({ steps, page, currentStep, length, follow, enabled, onT
 
 export default function SequencerModule({ id = 'seq1', preview }) {
   if (preview) {
-    const defaultSteps = new Array(TOTAL_STEPS).fill(50)
-    return <SequencerPanel steps={defaultSteps} page={0} currentStep={0} length={8} follow={true} enabled={false} onToggle={() => {}} onStepsChange={() => {}} onPageChange={() => {}} onLengthChange={() => {}} onFollowChange={() => {}} onRandomize={() => {}} id={id} clockConnected={false} clockInRef={{ current: null }} resetConnected={false} resetInRef={{ current: null }} gateOutRef={{ current: null }} outRef={{ current: null }} />
+    return <SequencerPanel steps={new Array(TOTAL_STEPS).fill(5)} gates={new Array(TOTAL_STEPS).fill(0)} page={0} currentStep={0} length={8} enabled={false} onToggle={() => {}} onStepsChange={() => {}} onGateChange={() => {}} onPageChange={() => {}} onLengthChange={() => {}} id={id} clockConnected={false} clockInRef={{ current: null }} resetConnected={false} resetInRef={{ current: null }} lenCvConnected={false} lenCvRef={{ current: null }} gateOutRef={{ current: null }} outRef={{ current: null }} />
   }
 
   const [steps, setSteps] = useState(initSteps)
+  const [gates, setGates] = useState(() => new Array(TOTAL_STEPS).fill(0)) // 0=on, 1=skip, 2=off
   const [currentStep, setCurrentStep] = useState(0)
   const [page, setPage] = useState(0)
   const [length, setLength] = useState(8)
-  const [follow, setFollow] = useState(true)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const enabledRef = useRef(true)
   const stepsRef = useRef(steps)
+  const gatesRef = useRef(gates)
   const stepRef = useRef(0)
   const lengthRef = useRef(8)
+  const lenCvRef = useRef(null)
   const prevClockRef = useRef(false)
   const prevResetRef = useRef(false)
   const gateTimerRef = useRef(0)
@@ -152,30 +171,27 @@ export default function SequencerModule({ id = 'seq1', preview }) {
   const resetInRef = useRef(null)
 
   stepsRef.current = steps
+  gatesRef.current = gates
   enabledRef.current = enabled
   lengthRef.current = length
 
   const conns = routing?.connections || []
   const clockConnected = conns.some(c => c.toModuleId === id && c.toPort === 'clock')
   const resetConnected = conns.some(c => c.toModuleId === id && c.toPort === 'reset')
+  const lenCvConnected = conns.some(c => c.toModuleId === id && c.toPort === 'lenCV')
 
   useModule({
     id,
-    inputs: {
-      clock: { type: 'scalar' },
-      reset: { type: 'scalar' },
-    },
-    outputs: {
-      out: { type: 'scalar' },
-      gate: { type: 'scalar' },
-    },
+    inputs: { clock: { type: 'scalar' }, reset: { type: 'scalar' }, lenCV: { type: 'scalar' } },
+    outputs: { out: { type: 'scalar' }, gate: { type: 'scalar' } },
     process: (inputs, dt) => {
       if (!enabledRef.current) { outRef.current = null; gateOutRef.current = null; return { out: null, gate: null } }
       clockInRef.current = inputs.clock
       resetInRef.current = inputs.reset
+      lenCvRef.current = inputs.lenCV
       gateTimerRef.current = Math.max(0, gateTimerRef.current - dt)
 
-      const len = lengthRef.current
+      const len = inputs.lenCV ? Math.max(1, Math.round(1 + (readScalar(inputs.lenCV) / 100) * 31)) : lengthRef.current
       const clockHigh = readScalar(inputs.clock) > 50
       const resetHigh = readScalar(inputs.reset) > 50
 
@@ -184,15 +200,19 @@ export default function SequencerModule({ id = 'seq1', preview }) {
         setCurrentStep(0)
       }
       if (clockHigh && !prevClockRef.current) {
-        stepRef.current = (stepRef.current + 1) % len
-        setCurrentStep(stepRef.current)
-        gateTimerRef.current = GATE_DURATION
+        let next = (stepRef.current + 1) % len
+        let safety = 0
+        while (gatesRef.current[next] === 1 && safety < len) { next = (next + 1) % len; safety++ }
+        stepRef.current = next
+        setCurrentStep(next)
+        if (gatesRef.current[next] === 0) gateTimerRef.current = GATE_DURATION
       }
 
       prevClockRef.current = clockHigh
       prevResetRef.current = resetHigh
 
-      const out = scalar(stepsRef.current[stepRef.current])
+      const stepGate = gatesRef.current[stepRef.current]
+      const out = scalar(stepGate === 2 ? 0 : (stepsRef.current[stepRef.current] / (NUM_STOPS - 1)) * 100)
       const gate = scalar(gateTimerRef.current > 0 ? 100 : 0)
       outRef.current = out
       gateOutRef.current = gate
@@ -200,18 +220,11 @@ export default function SequencerModule({ id = 'seq1', preview }) {
     },
   })
 
-  // Follow playhead: auto-switch page to show active step
-  if (follow) {
-    const stepPage = Math.floor(currentStep / STEPS_PER_PAGE)
-    if (stepPage !== page) setPage(stepPage)
+  const handleGateChange = (idx, val) => {
+    const newGates = [...gates]
+    newGates[idx] = val
+    setGates(newGates)
   }
 
-  const handleRandomize = () => {
-    const newSteps = [...steps]
-    const off = page * STEPS_PER_PAGE
-    for (let i = 0; i < STEPS_PER_PAGE; i++) newSteps[off + i] = Math.round(Math.random() * 100)
-    setSteps(newSteps)
-  }
-
-  return <SequencerPanel steps={steps} page={page} currentStep={currentStep} length={length} follow={follow} enabled={enabled} onToggle={() => setEnabled(!enabled)} onStepsChange={setSteps} onPageChange={setPage} onLengthChange={setLength} onFollowChange={setFollow} onRandomize={handleRandomize} id={id} clockConnected={clockConnected} clockInRef={clockInRef} resetConnected={resetConnected} resetInRef={resetInRef} gateOutRef={gateOutRef} outRef={outRef} />
+  return <SequencerPanel steps={steps} gates={gates} page={page} currentStep={currentStep} length={length} enabled={enabled} onToggle={() => setEnabled(!enabled)} onStepsChange={setSteps} onGateChange={handleGateChange} onPageChange={setPage} onLengthChange={setLength} id={id} clockConnected={clockConnected} clockInRef={clockInRef} resetConnected={resetConnected} resetInRef={resetInRef} lenCvConnected={lenCvConnected} lenCvRef={lenCvRef} gateOutRef={gateOutRef} outRef={outRef} />
 }

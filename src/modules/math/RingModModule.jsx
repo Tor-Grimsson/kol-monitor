@@ -2,6 +2,7 @@
 // 6HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -38,7 +39,7 @@ export default function RingModModule({ id = 'ring1', preview }) {
   if (preview) return <RingModPanel depth={100} enabled={false} onToggle={() => {}} onDepthChange={() => {}} id={id} aConnected={false} aRef={{ current: null }} bConnected={false} bRef={{ current: null }} depthCvConn={false} depthCvRef={{ current: null }} outRef={{ current: null }} />
 
   const [depth, setDepth] = useState(100)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const depthRef = useRef(100)

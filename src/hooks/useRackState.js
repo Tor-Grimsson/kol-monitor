@@ -20,7 +20,8 @@ function packModules(modules) {
 const DEFAULT_ROWS = [
   {
     id: 'row1', height: '1u', modules: packModules([
-      { type: 'power', id: 'power1', hp: 6 },
+      { type: 'power', id: 'power1', hp: 4 },
+      { type: 'perf', id: 'perf1', hp: 4 },
       { type: 'mult', id: 'mult1', hp: 8 },
       { type: 'noise', id: 'noise1', hp: 22 },
       { type: 'attenuator', id: 'atten1', hp: 26 },
@@ -35,7 +36,7 @@ const DEFAULT_ROWS = [
       { type: 'clockDiv', id: 'div1', hp: 4 },
       { type: 'lfo', id: 'lfo1', hp: 6 },
       { type: 'envelope', id: 'env1', hp: 6 },
-      { type: 'sequencer', id: 'seq1', hp: 12 },
+      { type: 'sequencer', id: 'seq1', hp: 16 },
       { type: 'pen', id: 'pen1', hp: 6 },
       { type: 'mixer', id: 'mix1', hp: 6 },
       { type: 'waveform', id: 'wave1', hp: 6 },
@@ -53,12 +54,19 @@ const DEFAULT_ROWS = [
       { type: 'transform', id: 'xform1', hp: 6 },
       { type: 'maths', id: 'maths1', hp: 20 },
       { type: 'filter', id: 'filt1', hp: 6 },
+      { type: 'radialGen', id: 'radial1', hp: 12 },
+      { type: 'modGen', id: 'modgen1', hp: 14 },
       { type: 'console', id: 'con1', hp: 48 },
-      { type: 'output', id: 'out1', hp: 16 },
     ]),
   },
   {
-    id: 'row4', height: '1u', modules: packModules([
+    id: 'row4', height: '3u', modules: packModules([
+      { type: 'generator', id: 'gen1', hp: 12 },
+      { type: 'generator2', id: 'gen2', hp: 10 },
+    ]),
+  },
+  {
+    id: 'row5', height: '1u', modules: packModules([
       { type: 'patch', id: 'patch1', hp: 6 },
       { type: 'switch', id: 'sw1', hp: 10 },
       { type: 'ringMod', id: 'ring1', hp: 6 },

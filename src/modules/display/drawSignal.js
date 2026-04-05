@@ -18,7 +18,7 @@ function penColor(p, fallback) {
 function applyPen(ctx, p) {
   ctx.lineWidth = p.thickness
   ctx.lineCap = p.cap
-  ctx.globalAlpha = p.opacity / 100
+  ctx.globalAlpha *= p.opacity / 100
   ctx.setLineDash(p.dash > 0.5 ? [p.dash, p.gap || p.dash] : [])
 }
 
@@ -73,27 +73,101 @@ export function drawColor(ctx, signal, x, y, w, h, p) {
 }
 
 // Points: wireframe (with edges) or waveform polyline (without edges)
+// Supports signal.strokeWidth, signal.fill, signal.grid from RadialGen
 export function drawPoints(ctx, signal, x, y, w, h, p) {
   const pts = signal.value
   if (!pts || pts.length === 0) return
 
   applyPen(ctx, p)
 
+  // Apply signal-level opacity (from console send levels)
+  if (signal.opacity != null) ctx.globalAlpha *= signal.opacity
+
+  // Override pen thickness if signal carries strokeWidth
+  if (signal.strokeWidth != null) ctx.lineWidth = signal.strokeWidth
+
+  // Aspect: contain (aspectLock) or cover (aspectFill)
+  let dx = x, dy = y, dw = w, dh = h
+  if (signal.aspectFill) {
+    const side = Math.max(w, h)
+    dx = x + (w - side) / 2
+    dy = y + (h - side) / 2
+    dw = side
+    dh = side
+  } else if (signal.aspectLock) {
+    const side = Math.min(w, h)
+    dx = x + (w - side) / 2
+    dy = y + (h - side) / 2
+    dw = side
+    dh = side
+  }
+
+  // Grid — full grid covering entire canvas area (not clipped to aspect)
+  if (signal.grid) {
+    ctx.lineWidth = 1
+    const divisions = 8
+    // Grid lines
+    ctx.strokeStyle = REF_COLOR
+    ctx.beginPath()
+    for (let i = 0; i <= divisions; i++) {
+      if (i === divisions / 2) continue // skip center, drawn as crosshair
+      const gx = x + (i / divisions) * w
+      ctx.moveTo(gx, y)
+      ctx.lineTo(gx, y + h)
+      const gy = y + (i / divisions) * h
+      ctx.moveTo(x, gy)
+      ctx.lineTo(x + w, gy)
+    }
+    ctx.stroke()
+    // Crosshair — more visible
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'
+    ctx.beginPath()
+    ctx.moveTo(x + w / 2, y)
+    ctx.lineTo(x + w / 2, y + h)
+    ctx.moveTo(x, y + h / 2)
+    ctx.lineTo(x + w, y + h / 2)
+    ctx.stroke()
+    // Restore stroke width
+    if (signal.strokeWidth != null) ctx.lineWidth = signal.strokeWidth
+    else applyPen(ctx, p)
+  }
+
   if (signal.edges && signal.edges.length > 0) {
-    ctx.strokeStyle = penColor(p, WIRE_COLOR)
+    const color = penColor(p, 'strokeWidth' in signal ? '#ffffff' : WIRE_COLOR)
+
+    // Fill — trace closed shapes from edges
+    if (signal.fill) {
+      ctx.fillStyle = color
+      let prevTo = -1
+      for (let e = 0; e < signal.edges.length; e++) {
+        const [i, j] = signal.edges[e]
+        if (i >= pts.length || j >= pts.length) continue
+        if (i !== prevTo) {
+          if (prevTo !== -1) { ctx.closePath(); ctx.fill() }
+          ctx.beginPath()
+          ctx.moveTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
+        }
+        ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
+        prevTo = j
+      }
+      if (prevTo !== -1) { ctx.closePath(); ctx.fill() }
+    }
+
+    // Stroke
+    ctx.strokeStyle = color
     ctx.beginPath()
     for (const [i, j] of signal.edges) {
       if (i >= pts.length || j >= pts.length) continue
-      ctx.moveTo(x + pts[i].x * w, y + pts[i].y * h)
-      ctx.lineTo(x + pts[j].x * w, y + pts[j].y * h)
+      ctx.moveTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
+      ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
     }
     ctx.stroke()
   } else {
     ctx.strokeStyle = penColor(p, SCOPE_COLOR)
     ctx.beginPath()
-    ctx.moveTo(x + pts[0].x * w, y + pts[0].y * h)
+    ctx.moveTo(dx + pts[0].x * dw, dy + pts[0].y * dh)
     for (let i = 1; i < pts.length; i++) {
-      ctx.lineTo(x + pts[i].x * w, y + pts[i].y * h)
+      ctx.lineTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
     }
     ctx.stroke()
   }

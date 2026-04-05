@@ -1,0 +1,328 @@
+// ModulatorGenModule — frequency modulation circle generator
+// 12HP 3U. Ports DialRotation from kol-modulator into modular signal path.
+// Breathing concentric circles with wave distortion → points output.
+
+import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModule } from '../../hooks/useModuleRegistry.jsx'
+import { points, readScalar } from '../../hooks/signals'
+import Module from '../utility/Module'
+import LabeledJack from '../controls/LabeledJack'
+import CvKnob from '../controls/CvKnob'
+import CvSlider from '../controls/CvSlider'
+import Toggle from '../controls/Toggle'
+import Divider from '../../components/atoms/Divider'
+import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+
+// --- Math ported from kol-modulator/DialRotation.jsx ---
+
+function generateCirclePoints(radius, amp, freq, drift, phaseOffset, quantize, scaleF, numPoints) {
+  const pts = []
+  const shouldQuantize = quantize
+
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (i / numPoints) * Math.PI * 2
+
+    let wavePhase
+    if (shouldQuantize) {
+      const cyclesPerCircle = Math.round(freq / 10)
+      wavePhase = angle * cyclesPerCircle + ((drift + phaseOffset) * 0.1)
+    } else {
+      wavePhase = ((angle / (Math.PI * 2) * 180 + drift + phaseOffset) / 60) * freq
+    }
+
+    const waveOffset = amp * Math.sin(wavePhase)
+    const r = (radius + waveOffset) * scaleF
+
+    pts.push({
+      x: 0.5 + Math.cos(angle) * r,
+      y: 0.5 + Math.sin(angle) * r,
+    })
+  }
+
+  // Closed loop edges
+  const edges = []
+  for (let i = 0; i < pts.length; i++) {
+    edges.push([i, (i + 1) % pts.length])
+  }
+
+  return { pts, edges }
+}
+
+// --- UI Panel ---
+
+function ModulatorGenPanel({
+  intensity, frequency, separation, scale, circles,
+  breathTime, breathAmp, speed,
+  quantize, absolute, freeze, resolution,
+  enabled, onToggle, id,
+  onIntensityChange, onFrequencyChange, onSeparationChange,
+  onScaleChange, onCirclesChange, onResolutionChange,
+  onBreathTimeChange, onBreathAmpChange, onSpeedChange,
+  onQuantizeChange, onAbsoluteChange, onFreezeChange,
+  intConn, intRef, frqConn, frqRef, sepConn, sepRef,
+  sclConn, sclRef, cirConn, cirRef, resConn, resRef,
+  brtConn, brtRef, bamConn, bamRef, spdConn, spdRef,
+  strConn, strInRef, outRef,
+}) {
+
+
+  return (
+    <Module label="Mod" enabled={enabled} onToggle={onToggle}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 4, padding: '2px 0' }}>
+
+        {/* Group 1 — toggles + sliders */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', padding: '0 4px' }}>
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase' }}>Shape</span>
+          <CvSlider port="int" moduleId={id} active={intConn} signalRef={intRef} value={intensity} onChange={onIntensityChange} label="Int" />
+          <CvSlider port="frq" moduleId={id} active={frqConn} signalRef={frqRef} value={frequency} onChange={onFrequencyChange} label="Frq" />
+          <CvSlider port="sep" moduleId={id} active={sepConn} signalRef={sepRef} value={separation} onChange={onSeparationChange} label="Sep" />
+          <CvSlider port="scl" moduleId={id} active={sclConn} signalRef={sclRef} value={scale} onChange={onScaleChange} label="Scl" />
+          <CvSlider port="cir" moduleId={id} active={cirConn} signalRef={cirRef} value={circles} onChange={onCirclesChange} label="Cir" />
+          <CvSlider port="res" moduleId={id} active={resConn} signalRef={resRef} value={resolution} onChange={onResolutionChange} label="Res" />
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Toggle value={absolute} onChange={onAbsoluteChange} label="Int A/B" size="sm" horizontal />
+            <Toggle value={quantize} onChange={onQuantizeChange} label="Quantize" size="sm" horizontal />
+          </div>
+        </div>
+
+        <Divider className="px-3" />
+
+        {/* Group 2 — breath (internal LFO) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', padding: '0 4px' }}>
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase' }}>Breath</span>
+          <CvSlider port="brt" moduleId={id} active={brtConn} signalRef={brtRef} value={breathTime} onChange={onBreathTimeChange} label="Brt" />
+          <CvSlider port="bam" moduleId={id} active={bamConn} signalRef={bamRef} value={breathAmp} onChange={onBreathAmpChange} label="Bam" />
+          <CvSlider port="spd" moduleId={id} active={spdConn} signalRef={spdRef} value={speed} onChange={onSpeedChange} label="Spd" />
+          <Toggle value={freeze} onChange={onFreezeChange} label="Freeze" size="sm" horizontal />
+        </div>
+
+        <Divider className="px-3" />
+
+        {/* Group 3 — output */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+          <LabeledJack type="in" port="str" moduleId={id} active={strConn} signalRef={strInRef} label="str" />
+          <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
+        </div>
+      </div>
+    </Module>
+  )
+}
+
+// --- Module logic ---
+
+export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
+  if (preview) return <ModulatorGenPanel
+    intensity={50} frequency={50} separation={30} scale={50} circles={13}
+    breathTime={30} breathAmp={25} speed={50}
+    quantize={false} absolute={false} freeze={false} resolution={50}
+    enabled={false} onToggle={() => {}} id={id}
+    onIntensityChange={() => {}} onFrequencyChange={() => {}} onSeparationChange={() => {}}
+    onScaleChange={() => {}} onCirclesChange={() => {}} onResolutionChange={() => {}}
+    onBreathTimeChange={() => {}} onBreathAmpChange={() => {}} onSpeedChange={() => {}}
+    onQuantizeChange={() => {}} onAbsoluteChange={() => {}} onFreezeChange={() => {}}
+    intConn={false} intRef={{ current: null }} frqConn={false} frqRef={{ current: null }}
+    sepConn={false} sepRef={{ current: null }} sclConn={false} sclRef={{ current: null }}
+    cirConn={false} cirRef={{ current: null }} resConn={false} resRef={{ current: null }}
+    brtConn={false} brtRef={{ current: null }} bamConn={false} bamRef={{ current: null }}
+    spdConn={false} spdRef={{ current: null }}
+    strConn={false} strInRef={{ current: null }} outRef={{ current: null }}
+  />
+
+  const [intensity, setIntensity] = useState(init?.intensity ?? 50)
+  const [frequency, setFrequency] = useState(init?.frequency ?? 50)
+  const [separation, setSeparation] = useState(init?.separation ?? 30)
+  const [scale, setScale] = useState(init?.scale ?? 50)
+  const [circles, setCircles] = useState(init?.circles ?? 13)
+  const [resolution, setResolution] = useState(init?.resolution ?? 50)
+  const [breathTime, setBreathTime] = useState(init?.breathTime ?? 30)
+  const [breathAmp, setBreathAmp] = useState(init?.breathAmp ?? 25)
+  const [speed, setSpeed] = useState(init?.speed ?? 50)
+  const [quantize, setQuantize] = useState(init?.quantize ?? false)
+  const [absolute, setAbsolute] = useState(init?.absolute ?? false)
+  const [freeze, setFreeze] = useState(false)
+  const [enabled, setEnabled] = useModuleEnabled()
+  const routing = usePatchRouting()
+
+  // Refs for process
+  const enabledRef = useRef(true)
+  const intensityRef = useRef(50)
+  const frequencyRef = useRef(50)
+  const separationRef = useRef(30)
+  const scaleRef = useRef(50)
+  const circlesRef = useRef(13)
+  const resolutionRef = useRef(50)
+  const breathTimeRef = useRef(30)
+  const breathAmpRef = useRef(25)
+  const speedRef = useRef(50)
+  const quantizeRef = useRef(false)
+  const absoluteRef = useRef(false)
+  const freezeRef = useRef(false)
+
+  // Internal breath state
+  const driftRef = useRef(0)
+  const breathPhaseRef = useRef(0)
+
+  // Signal refs
+  const outRef = useRef(null)
+  const intCvRef = useRef(null)
+  const frqCvRef = useRef(null)
+  const sepCvRef = useRef(null)
+  const sclCvRef = useRef(null)
+  const cirCvRef = useRef(null)
+  const resCvRef = useRef(null)
+  const brtCvRef = useRef(null)
+  const bamCvRef = useRef(null)
+  const spdCvRef = useRef(null)
+  const strInRef = useRef(null)
+
+  enabledRef.current = enabled
+  intensityRef.current = intensity
+  frequencyRef.current = frequency
+  separationRef.current = separation
+  scaleRef.current = scale
+  circlesRef.current = circles
+  resolutionRef.current = resolution
+  breathTimeRef.current = breathTime
+  breathAmpRef.current = breathAmp
+  speedRef.current = speed
+  quantizeRef.current = quantize
+  absoluteRef.current = absolute
+  freezeRef.current = freeze
+
+  const conns = routing?.connections || []
+  const intConn = conns.some(c => c.toModuleId === id && c.toPort === 'int')
+  const frqConn = conns.some(c => c.toModuleId === id && c.toPort === 'frq')
+  const sepConn = conns.some(c => c.toModuleId === id && c.toPort === 'sep')
+  const sclConn = conns.some(c => c.toModuleId === id && c.toPort === 'scl')
+  const cirConn = conns.some(c => c.toModuleId === id && c.toPort === 'cir')
+  const resConn = conns.some(c => c.toModuleId === id && c.toPort === 'res')
+  const brtConn = conns.some(c => c.toModuleId === id && c.toPort === 'brt')
+  const bamConn = conns.some(c => c.toModuleId === id && c.toPort === 'bam')
+  const spdConn = conns.some(c => c.toModuleId === id && c.toPort === 'spd')
+  const strConn = conns.some(c => c.toModuleId === id && c.toPort === 'str')
+
+  useModule({
+    id,
+    inputs: {
+      int: { type: 'scalar' }, frq: { type: 'scalar' }, sep: { type: 'scalar' },
+      scl: { type: 'scalar' }, cir: { type: 'scalar' }, res: { type: 'scalar' },
+      brt: { type: 'scalar' }, bam: { type: 'scalar' }, spd: { type: 'scalar' },
+      str: { type: 'scalar' },
+    },
+    outputs: { out: { type: 'points' } },
+    process: (inputs, dt, t) => {
+      if (!enabledRef.current) { outRef.current = null; return { out: null } }
+
+      // Store CV inputs for jack glow
+      intCvRef.current = inputs.int
+      frqCvRef.current = inputs.frq
+      sepCvRef.current = inputs.sep
+      sclCvRef.current = inputs.scl
+      cirCvRef.current = inputs.cir
+      resCvRef.current = inputs.res
+      brtCvRef.current = inputs.brt
+      bamCvRef.current = inputs.bam
+      spdCvRef.current = inputs.spd
+      strInRef.current = inputs.str
+
+      // Read knob or CV
+      const int = inputs.int ? readScalar(inputs.int) : intensityRef.current
+      const frq = inputs.frq ? readScalar(inputs.frq) : frequencyRef.current
+      const sep = inputs.sep ? readScalar(inputs.sep) : separationRef.current
+      const scl = inputs.scl ? readScalar(inputs.scl) : scaleRef.current
+      const cir = inputs.cir ? Math.max(1, Math.round(1 + (readScalar(inputs.cir) / 100) * 7)) : Math.max(1, Math.round(1 + (circlesRef.current / 100) * 7))
+      const brt = inputs.brt ? 1 + (readScalar(inputs.brt) / 100) * 9 : 1 + (breathTimeRef.current / 100) * 9
+      const bam = inputs.bam ? readScalar(inputs.bam) : breathAmpRef.current
+      const spd = inputs.spd ? readScalar(inputs.spd) / 50 : speedRef.current / 50
+      const str = inputs.str ? 0.5 + (readScalar(inputs.str) / 100) * 4.5 : 1.5
+      const numPts = Math.round(24 + ((inputs.res ? readScalar(inputs.res) : resolutionRef.current) / 100) * 156) // 24-180
+
+      // Internal breath oscillator (replaces GSAP)
+      if (!freezeRef.current) {
+        breathPhaseRef.current += (dt * spd) / Math.max(0.5, brt)
+        driftRef.current += (Math.sin(breathPhaseRef.current * Math.PI * 2) * 0.5 + 0.5) * 0.5 * spd
+      }
+      const breathVal = Math.sin(breathPhaseRef.current * Math.PI * 2) * 0.5 + 0.5 // 0-1
+
+      // Calculate amplitude and frequency based on mode
+      const globalScaleF = scl / 100
+      let totalAmp, totalFreq
+
+      if (absoluteRef.current) {
+        const breathMod = breathVal * (bam / 100) * 40
+        totalAmp = (int * 0.4 + breathMod) * globalScaleF
+        totalFreq = (frq * 0.2) * globalScaleF
+      } else {
+        const baseAmp = int * 0.2
+        const breathMod = breathVal * (bam / 100) * 40
+        totalAmp = (baseAmp + breathMod) * globalScaleF
+        totalFreq = (frq * 0.15) * globalScaleF
+      }
+
+      const breathSep = breathVal * (sep / 100) * 60 * globalScaleF
+
+      // Normalize to 0-0.5 coordinate space
+      const baseRadius = 0.15
+      const normAmp = totalAmp / 400
+      const normFreq = Math.max(10, totalFreq * 10)
+
+      // Generate all circles
+      let allPts = []
+      let allEdges = []
+
+      // Main circle
+      const main = generateCirclePoints(baseRadius, normAmp, normFreq, driftRef.current, 0, quantizeRef.current, 1, numPts)
+      allPts = main.pts
+      allEdges = main.edges
+
+      // Concentric pairs
+      for (let pair = 1; pair < cir; pair++) {
+        const baseOffset = pair * (sep / 100) * 0.1 * globalScaleF
+        const totalSep = (breathSep / 400) * pair
+        const phaseOfs = pair * 15
+        const ampVar = normAmp * (1 + pair * 0.1)
+        const freqVar = normFreq * (1 + pair * 0.05)
+
+        // Inner
+        const innerR = baseRadius - baseOffset - totalSep
+        if (innerR > 0.01) {
+          const inner = generateCirclePoints(innerR, ampVar, freqVar, driftRef.current, phaseOfs, quantizeRef.current, 1, numPts)
+          const offset = allPts.length
+          allPts = allPts.concat(inner.pts)
+          allEdges = allEdges.concat(inner.edges.map(([a, b]) => [a + offset, b + offset]))
+        }
+
+        // Outer
+        const outerR = baseRadius + baseOffset + totalSep
+        const outer = generateCirclePoints(outerR, ampVar, freqVar, driftRef.current, phaseOfs, quantizeRef.current, 1, numPts)
+        const offset2 = allPts.length
+        allPts = allPts.concat(outer.pts)
+        allEdges = allEdges.concat(outer.edges.map(([a, b]) => [a + offset2, b + offset2]))
+      }
+
+      const out = points(allPts, allEdges)
+      out.strokeWidth = str
+      out.aspectLock = true
+      outRef.current = out
+      return { out }
+    },
+  })
+
+  return <ModulatorGenPanel
+    intensity={intensity} frequency={frequency} separation={separation} scale={scale} circles={circles} resolution={resolution}
+    breathTime={breathTime} breathAmp={breathAmp} speed={speed}
+    quantize={quantize} absolute={absolute} freeze={freeze}
+    enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id}
+    onIntensityChange={setIntensity} onFrequencyChange={setFrequency} onSeparationChange={setSeparation}
+    onScaleChange={setScale} onCirclesChange={setCircles} onResolutionChange={setResolution}
+    onBreathTimeChange={setBreathTime} onBreathAmpChange={setBreathAmp} onSpeedChange={setSpeed}
+    onQuantizeChange={setQuantize} onAbsoluteChange={setAbsolute} onFreezeChange={setFreeze}
+    intConn={intConn} intRef={intCvRef} frqConn={frqConn} frqRef={frqCvRef}
+    sepConn={sepConn} sepRef={sepCvRef} sclConn={sclConn} sclRef={sclCvRef}
+    cirConn={cirConn} cirRef={cirCvRef} resConn={resConn} resRef={resCvRef}
+    brtConn={brtConn} brtRef={brtCvRef} bamConn={bamConn} bamRef={bamCvRef}
+    spdConn={spdConn} spdRef={spdCvRef}
+    strConn={strConn} strInRef={strInRef} outRef={outRef}
+  />
+}

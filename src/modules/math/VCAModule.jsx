@@ -2,6 +2,7 @@
 // 8HP 1U. Two independent VCAs.
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -45,7 +46,7 @@ export default function VCAModule({ id = 'vca1', preview }) {
     in2Conn={false} in2Ref={NULL_REF} cv2Conn={false} cv2Ref={NULL_REF} out2Ref={NULL_REF}
   />
 
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   const routing = usePatchRouting()
   enabledRef.current = enabled

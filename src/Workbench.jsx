@@ -3,10 +3,11 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { MODULE_DEFS, CATEGORIES, getModulesByCategory } from './moduleRegistry'
+import Divider from './components/atoms/Divider'
 import { TOTAL_HP, hpToPx } from './modules/utility/eurorack'
 import Module from './modules/utility/Module'
 
-const DEFAULT_HEIGHT = 140
+const DEFAULT_HEIGHT = Math.round(window.innerHeight * 0.3)
 const MIN_HEIGHT = 80
 const MAX_HEIGHT = 600
 
@@ -76,27 +77,32 @@ export default function Workbench({ modules, onReturn, onAddModule }) {
 
   return (
     <div className="border-t border-fg-08 bg-surface-primary" style={{ flexShrink: 0 }}>
-      {/* Drag handle + tabs */}
+      {/* Drag handle */}
       <div
         onPointerDown={handleDragStart}
-        className="flex items-center gap-4"
-        style={{ cursor: 'ns-resize', padding: '6px 12px 0' }}
+        style={{ height: 4, cursor: 'ns-resize', flexShrink: 0, position: 'relative' }}
       >
-        <span
-          onClick={(e) => { e.stopPropagation(); setTab('workbench') }}
-          className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'workbench' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
-        >Workbench</span>
-        <span
-          onClick={(e) => { e.stopPropagation(); setTab('library') }}
-          className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'library' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
-        >Library</span>
+        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: -4, width: 24, height: 1, backgroundColor: 'rgba(255,255,255,0.15)', pointerEvents: 'none' }} />
       </div>
+      {/* Tabs + Content */}
+      <div className="p-4" style={{ height }}>
+        <div className="flex items-center gap-4 mb-3">
+          <span
+            onClick={(e) => { e.stopPropagation(); setTab('workbench') }}
+            className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'workbench' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+          >Workbench</span>
+          <span
+            onClick={(e) => { e.stopPropagation(); setTab('library') }}
+            className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'library' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+          >Library</span>
+        </div>
 
-      {/* Content */}
-      <div className="flex" style={{ height }}>
+        <Divider />
+
+        <div className="flex" style={{ flex: 1, minHeight: 0 }}>
         {/* Category filters (library only) */}
         {tab === 'library' && (
-          <div className="flex flex-col gap-1 p-3 pr-2 shrink-0">
+          <div className="flex flex-col gap-1 pr-4 shrink-0">
             <div className="flex gap-2">
               <span
                 onClick={() => setUFilter(uFilter === 3 ? null : 3)}
@@ -123,7 +129,7 @@ export default function Workbench({ modules, onReturn, onAddModule }) {
         )}
 
         {/* Modules */}
-        <div className="flex items-start gap-1 p-3 pl-2 overflow-x-auto flex-1">
+        <div className="flex items-start gap-1 overflow-x-auto flex-1" style={{ paddingTop: 12 }}>
         {tab === 'workbench' && modules.length === 0 && (
           <div style={{
             width: hpToPx(8),
@@ -179,6 +185,7 @@ export default function Workbench({ modules, onReturn, onAddModule }) {
             onClick={() => onAddModule?.(mod.type)}
           />
         ))}
+        </div>
         </div>
       </div>
     </div>

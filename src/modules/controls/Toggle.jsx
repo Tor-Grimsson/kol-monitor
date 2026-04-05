@@ -2,13 +2,13 @@
 
 const SIZES = { sm: 8, md: 12 }
 
-export default function Toggle({ value, onChange, label, horizontal = false, size = 'md' }) {
+export default function Toggle({ value, onChange, label, horizontal = false, size = 'md', padding = 4 }) {
   const s = SIZES[size]
   return (
     <div
       onClick={() => onChange(!value)}
       className={`inline-flex ${horizontal ? 'flex-row' : 'flex-col'} items-center gap-1 select-none`}
-      style={{ cursor: 'pointer', touchAction: 'none' }}
+      style={{ cursor: 'pointer', touchAction: 'none', padding }}
     >
       <div style={{
         width: s,

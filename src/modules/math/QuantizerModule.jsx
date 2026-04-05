@@ -2,6 +2,7 @@
 // 4HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -32,7 +33,7 @@ export default function QuantizerModule({ id = 'quant1', preview }) {
   if (preview) return <QuantizerPanel steps={8} enabled={false} onToggle={() => {}} onStepsChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outputRef={{ current: null }} />
 
   const [steps, setSteps] = useState(8)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const stepsRef = useRef(8)

@@ -2,6 +2,13 @@
 // Format: { rows: [{ height, modules: [{ type, id }] }], connections: [...] }
 
 export const patches = {
+  // Default connections loaded on startup
+  ref: [
+    { fromModuleId: 'radial1', fromPort: 'out', toModuleId: 'con1', toPort: 'a' },
+    { fromModuleId: 'con1', fromPort: 'snd1', toModuleId: 'verb1', toPort: 'in' },
+    { fromModuleId: 'verb1', fromPort: 'out', toModuleId: 'con1', toPort: 'rtn1' },
+  ],
+
   empty: { rows: [{ height: '1u', modules: [] }, { height: '3u', modules: [] }, { height: '3u', modules: [] }], connections: [] },
 
   init: {

@@ -2,6 +2,7 @@
 // 6HP 3U. Cutoff + resonance with CV, type selector.
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, color, points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -51,7 +52,7 @@ export default function FilterModule({ id = 'filt1', preview }) {
   const [mode, setMode] = useState('lp')
   const [cutoff, setCutoff] = useState(50)
   const [resonance, setResonance] = useState(0)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const modeRef = useRef('lp')

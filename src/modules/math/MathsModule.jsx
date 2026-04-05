@@ -2,6 +2,7 @@
 // 8HP. Ch1+Ch4: rise/fall/cycle/vari-response with CV. Ch2+Ch3: attenuverters. SUM/OR/INV outputs.
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -156,7 +157,7 @@ export default function MathsModule({ id = 'maths1', preview }) {
   const [atten2, setAtten2] = useState(50)
   const [atten3, setAtten3] = useState(50)
   const [atten4, setAtten4] = useState(50)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const [eor1Active, setEor1Active] = useState(false)
   const [eoc1Active, setEoc1Active] = useState(false)
   const [eor2Active, setEor2Active] = useState(false)

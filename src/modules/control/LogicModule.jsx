@@ -2,6 +2,7 @@
 // 4HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -50,7 +51,7 @@ export default function LogicModule({ id = 'logic1', preview }) {
   if (preview) return <LogicPanel mode="and" enabled={false} onToggle={() => {}} onModeChange={() => {}} id={id} aConnected={false} aInRef={{ current: null }} bConnected={false} bInRef={{ current: null }} outputRef={{ current: null }} />
 
   const [mode, setMode] = useState('and')
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const modeRef = useRef('and')

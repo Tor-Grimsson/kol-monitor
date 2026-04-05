@@ -2,6 +2,7 @@
 // 6HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -53,7 +54,7 @@ export default function LFOModule({ id = 'lfo1', init, preview }) {
   const [depth, setDepth] = useState(init?.depth ?? 100)
   const [offset, setOffset] = useState(init?.offset ?? 50)
   const [shape, setShape] = useState(init?.shape ?? 'sin')
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const rateRef = useRef(10)

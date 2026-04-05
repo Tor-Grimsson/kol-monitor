@@ -2,6 +2,7 @@
 // 4HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -34,7 +35,7 @@ export default function ScaleOffsetModule({ id = 'sco1', preview }) {
 
   const [scale, setScale] = useState(100)
   const [offset, setOffset] = useState(50)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const scaleRef = useRef(100)

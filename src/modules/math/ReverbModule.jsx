@@ -2,6 +2,7 @@
 // 6HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, color, points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -62,7 +63,7 @@ export default function ReverbModule({ id = 'verb1', preview }) {
   const [freeze, setFreeze] = useState(false)
   const [bypass, setBypass] = useState(false)
   const [bypassFx, setBypassFx] = useState(false)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const sizeRef = useRef(50)

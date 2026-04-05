@@ -3,6 +3,7 @@
 // Pure math → points output, like Wireframe but flat
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -143,7 +144,7 @@ export default function LineGenModule({ id = 'line1', init, preview }) {
   const [freq, setFreq] = useState(init?.freq ?? 20)
   const [density, setDensity] = useState(init?.density ?? 50)
   const [speed, setSpeed] = useState(init?.speed ?? 50)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const enabledRef = useRef(true)

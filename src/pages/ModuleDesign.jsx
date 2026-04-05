@@ -5,7 +5,10 @@ import Module from '../modules/utility/Module'
 import JackSocket from '../modules/utility/JackSocket'
 import LabeledJack from '../modules/controls/LabeledJack'
 import Knob from '../modules/controls/Knob'
+import CvKnob from '../modules/controls/CvKnob'
+import Slider from '../modules/controls/Slider'
 import FlipToggle from '../modules/controls/FlipToggle'
+import Toggle from '../modules/controls/Toggle'
 import LED from '../modules/controls/LED'
 import Divider from '../components/atoms/Divider'
 import Icon from '../components/icons/Icon'
@@ -258,6 +261,170 @@ function QuadrattDesign() {
   )
 }
 
+function SequencerStepsDesign() {
+  const steps = [80, 45, 90, 20, 60, 35, 75, 10, 55, 30, 95, 15, 70, 40, 85, 25]
+  const gates = [true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true]
+  const activeStep = 3
+  const show16 = false
+  const visibleSteps = show16 ? steps : steps.slice(0, 8)
+  const visibleGates = show16 ? gates : gates.slice(0, 8)
+
+  const stepFader = (val, i) => {
+    const norm = val / 100
+    const isActive = i === activeStep
+    const gateOn = visibleGates[i]
+    return (
+      <div key={i} style={{
+        flex: 1, height: '100%',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+      }}>
+        <div style={{
+          width: 2, flex: 1,
+          backgroundColor: 'rgba(255,255,255,0.06)',
+          position: 'relative',
+          opacity: gateOn ? 1 : 0.3,
+        }}>
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            height: `${norm * 100}%`,
+            backgroundColor: isActive ? 'rgba(231,76,60,0.3)' : 'rgba(255,255,255,0.08)',
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: `calc(${norm * 100}% - 3px)`,
+            left: -2,
+            width: 6, height: 6, borderRadius: '50%',
+            backgroundColor: isActive ? '#e74c3c' : 'rgba(255,255,255,0.5)',
+          }} />
+        </div>
+        <FlipToggle value={gateOn} onChange={() => {}} />
+        <LED active={isActive} size="sm" />
+      </div>
+    )
+  }
+
+  return (
+    <Panel hp={16} u={3} label="Seq">
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 4, padding: '4px 0' }}>
+        {/* Controls row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.6)' }}>‹</span>
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.6)' }}>1-8</span>
+          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.6)' }}>›</span>
+          <Knob value={8} onChange={() => {}} label="len" variant="row-right" />
+          <Toggle value={show16} onChange={() => {}} label="16" size="sm" horizontal />
+        </div>
+        {/* Step faders */}
+        <div style={{ display: 'flex', gap: 3, flex: 1, padding: '0 4px' }}>
+          {visibleSteps.map((val, i) => stepFader(val, i))}
+        </div>
+        <Divider className="px-3 py-2" />
+        {/* Jacks */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+          <LabeledJack type="in" port="clock" moduleId="seqd" label="clk" />
+          <LabeledJack type="in" port="reset" moduleId="seqd" label="rst" />
+          <LabeledJack type="out" port="out" moduleId="seqd" label="out" />
+          <LabeledJack type="out" port="gate" moduleId="seqd" label="gte" />
+        </div>
+      </div>
+    </Panel>
+  )
+}
+
+function SequencerStepsV2() {
+  const steps = [80, 45, 90, 20, 60, 35, 75, 10]
+  const gates = [true, true, false, true, true, false, true, true]
+  const activeStep = 3
+
+  return (
+    <Panel hp={16} u={3} label="Seq v2">
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 4, padding: '4px 0' }}>
+        {/* Controls row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
+          {/* Page buttons */}
+          <div style={{ display: 'flex', gap: 3 }}>
+            {[1, 2, 3, 4].map(p => (
+              <button key={p} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 16, height: 16, padding: 0,
+                borderRadius: 3,
+                border: p === 1 ? '1px solid #e74c3c' : '1px solid rgba(255,255,255,0.08)',
+                backgroundColor: p === 1 ? 'rgba(231,76,60,0.15)' : 'transparent',
+                color: p === 1 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)',
+                cursor: 'pointer',
+              }}>
+                <span className="kol-helper-xxxxs">{p}</span>
+              </button>
+            ))}
+          </div>
+          <CvKnob port="lenCV" moduleId="seqv2" active={false} signalRef={{ current: null }} value={8} onChange={() => {}} label="len" variant="row-right" />
+        </div>
+        <Divider className="px-1 pt-2" />
+        {/* Step faders — v3 style with spanning lines */}
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 4 }}>
+          {/* Groove area — lines + faders */}
+          <div style={{ flex: 1, padding: '8px 0' }}>
+            <div style={{ height: '100%', position: 'relative', padding: '0 4px' }}>
+              {/* Lines spanning full width */}
+              {Array.from({ length: 10 }).map((_, t) => (
+                <div key={t} style={{
+                  position: 'absolute',
+                  bottom: `${((t + 1) / 11) * 100}%`,
+                  left: 4, right: 4, height: 1,
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                }} />
+              ))}
+              {/* Grooves + thumbs */}
+              <div style={{ position: 'relative', display: 'flex', height: '100%', justifyContent: 'space-evenly', zIndex: 1 }}>
+              {steps.map((val, i) => {
+                const norm = val / 100
+                const isActive = i === activeStep
+                const gateOn = gates[i]
+                return (
+                  <div key={i} style={{ width: 8, height: '100%', position: 'relative' }}>
+                    <div style={{
+                      position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+                      backgroundColor: '#0a0a0a', borderRadius: 4,
+                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)', zIndex: 1,
+                    }} />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: `calc(${norm * 100}% - 8px)`,
+                      left: -1, right: -1,
+                      height: 16, borderRadius: 1,
+                      backgroundColor: isActive ? '#e74c3c' : 'rgba(180,175,165,0.7)',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.3)', zIndex: 2,
+                      opacity: gateOn ? 1 : 0.3,
+                    }} />
+                  </div>
+                )
+              })}
+              </div>
+            </div>
+          </div>
+          {/* Toggles + LEDs row */}
+          <div style={{ display: 'flex', justifyContent: 'space-evenly', padding: '0 4px' }}>
+            {steps.map((_, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <FlipToggle value={gates[i] ? 0 : 1} onChange={() => {}} positions={3} />
+                <LED active={i === activeStep} size="sm" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <Divider className="px-1 py-2" />
+        {/* Jacks */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+          <LabeledJack type="in" port="clock" moduleId="seqv2" label="clk" />
+          <LabeledJack type="in" port="reset" moduleId="seqv2" label="rst" />
+          <LabeledJack type="out" port="out" moduleId="seqv2" label="out" />
+          <LabeledJack type="out" port="gate" moduleId="seqv2" label="gte" />
+        </div>
+      </div>
+    </Panel>
+  )
+}
+
 export default function ModuleDesign() {
   return (
     <ModuleRegistryProvider>
@@ -309,6 +476,141 @@ export default function ModuleDesign() {
                       {i < 3 && <Icon name="caret-right" size={8} style={{ color: 'rgba(255,255,255,0.25)', position: 'absolute', right: -14, top: '50%', transform: 'translateY(-50%)' }} />}
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Sequencer step faders — v1 + v2 side by side */}
+              <div style={{ display: 'flex', gap: 48 }}>
+                <div>
+                  <span className="kol-helper-xs text-fg-32 uppercase">System — Sequencer v1</span>
+                  <div className="mt-4">
+                    <SequencerStepsDesign />
+                  </div>
+                </div>
+                <div>
+                  <span className="kol-helper-xs text-fg-32 uppercase">System — Sequencer v2</span>
+                  <div className="mt-4">
+                    <SequencerStepsV2 />
+                  </div>
+                </div>
+              </div>
+
+              {/* StepSlider v1 + v2 side by side */}
+              <div style={{ display: 'flex', gap: 48 }}>
+                <div>
+                  <span className="kol-helper-xs text-fg-32 uppercase">Component — StepSlider v1</span>
+                  <div className="mt-4" style={{ display: 'flex', gap: 24, alignItems: 'flex-end' }}>
+                    {[80, 45, 20, 60].map((val, i) => {
+                      const ticks = 10
+                      const norm = val / 100
+                      return (
+                        <div key={i} style={{ height: 160 }}>
+                          <div style={{
+                            width: 20, height: '100%', position: 'relative',
+                            backgroundColor: 'rgba(0,0,0,0.4)',
+                            borderRadius: 2,
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
+                          }}>
+                            {Array.from({ length: ticks + 1 }).map((_, t) => (
+                              <div key={t} style={{
+                                position: 'absolute',
+                                bottom: `${(t / ticks) * 100}%`,
+                                left: 2, right: 2, height: 1,
+                                backgroundColor: 'rgba(255,255,255,0.25)',
+                              }} />
+                            ))}
+                            <div style={{
+                              position: 'absolute',
+                              bottom: `calc(${norm * 100}% - 5px)`,
+                              left: 1, right: 1,
+                              height: 10, borderRadius: 2,
+                              backgroundColor: 'rgba(180,175,165,0.6)',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                            }} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <span className="kol-helper-xs text-fg-32 uppercase">Component — StepSlider v2</span>
+                  <div className="mt-4" style={{ height: 160, position: 'relative', width: 200 }}>
+                    {Array.from({ length: 11 }).map((_, t) => (
+                      <div key={t} style={{
+                        position: 'absolute',
+                        bottom: `${(t / 10) * 100}%`,
+                        left: 0, right: 0, height: 1,
+                        backgroundColor: 'rgba(255,255,255,0.2)',
+                      }} />
+                    ))}
+                    <div style={{ position: 'relative', display: 'flex', height: '100%', justifyContent: 'space-around', zIndex: 1 }}>
+                      {[80, 45, 20, 60, 90, 30, 55, 70].map((val, i) => {
+                        const norm = val / 100
+                        return (
+                          <div key={i} style={{ width: 20, height: '100%', position: 'relative' }}>
+                            <div style={{
+                              position: 'absolute',
+                              left: '50%', transform: 'translateX(-50%)',
+                              top: 0, bottom: 0, width: 4,
+                              backgroundColor: 'rgba(0,0,0,0.5)',
+                              borderRadius: 1,
+                              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.6)',
+                            }} />
+                            <div style={{
+                              position: 'absolute',
+                              bottom: `calc(${norm * 100}% - 5px)`,
+                              left: 2, right: 2,
+                              height: 10, borderRadius: 2,
+                              backgroundColor: 'rgba(180,175,165,0.6)',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                            }} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <span className="kol-helper-xs text-fg-32 uppercase">Component — StepSlider v3</span>
+                  <div className="mt-4" style={{ height: 180, position: 'relative', width: 280, padding: '16px 0' }}>
+                    {Array.from({ length: 9 }).map((_, t) => (
+                      <div key={t} style={{
+                        position: 'absolute',
+                        bottom: `calc(16px + ${((t + 1) / 10) * (180 - 32)}px)`,
+                        left: 0, right: 0, height: 1,
+                        backgroundColor: 'rgba(255,255,255,0.15)',
+                      }} />
+                    ))}
+                    <div style={{ position: 'relative', display: 'flex', height: '100%', justifyContent: 'space-evenly', zIndex: 1 }}>
+                      {[80, 45, 20, 60, 90, 30, 55, 70].map((val, i) => {
+                        const norm = val / 100
+                        return (
+                          <div key={i} style={{ width: 8, height: '100%', position: 'relative' }}>
+                            <div style={{
+                              position: 'absolute',
+                              left: 0, right: 0,
+                              top: 0, bottom: 0,
+                              backgroundColor: '#0a0a0a',
+                              borderRadius: 2,
+                              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
+                              zIndex: 1,
+                            }} />
+                            <div style={{
+                              position: 'absolute',
+                              bottom: `calc(${norm * 100}% - 4px)`,
+                              left: -1, right: -1,
+                              height: 8, borderRadius: 1,
+                              backgroundColor: 'rgba(180,175,165,0.7)',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              zIndex: 2,
+                            }} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
 

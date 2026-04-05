@@ -2,6 +2,7 @@
 // 6HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -46,7 +47,7 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
   const [sustain, setSustain] = useState(init?.sustain ?? 70)
   const [release, setRelease] = useState(init?.release ?? 50)
   const [cycle, setCycle] = useState(init?.cycle ?? false)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const aRef = useRef(10)

@@ -2,6 +2,7 @@
 // 8HP — per-channel osc toggle: on = rate oscillator, off = constant brightness
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { color, scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -67,7 +68,7 @@ export default function RGBOscillatorModule({ id = 'rgb1', preview }) {
   const [rClr, setRClr] = useState(false)
   const [gClr, setGClr] = useState(false)
   const [bClr, setBClr] = useState(false)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const enabledRef = useRef(true)

@@ -2,6 +2,7 @@
 // 4HP. Run/stop toggle, BPM knob, 6 division outputs (1, 1/2, 1/3, 1/4, 1/5, 1/6)
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -49,7 +50,7 @@ export default function ClockModule({ id = 'clk1', init, preview }) {
   const [bpm, setBpm] = useState(init?.bpm ?? 120)
   const [running, setRunning] = useState(true)
   const [clockPulse, setClockPulse] = useState(false)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   const runningRef = useRef(true)
   const bpmRef = useRef(120)

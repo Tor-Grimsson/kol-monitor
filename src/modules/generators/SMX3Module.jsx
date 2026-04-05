@@ -2,6 +2,7 @@
 // 12HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar, color } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -71,7 +72,7 @@ export default function SMX3Module({ id = 'smx1', preview }) {
   const [k31, setK31] = useState(50)
   const [k32, setK32] = useState(50)
   const [k33, setK33] = useState(50)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const k11Ref = useRef(50); const k12Ref = useRef(50); const k13Ref = useRef(50)

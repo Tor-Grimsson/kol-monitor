@@ -34,6 +34,10 @@ import NoiseModule from './modules/generators/NoiseModule.jsx'
 import RampModule from './modules/generators/RampModule.jsx'
 import SMX3Module from './modules/generators/SMX3Module.jsx'
 import LineGenModule from './modules/generators/LineGenModule.jsx'
+import RadialGenModule from './modules/generators/RadialGenModule.jsx'
+import ModulatorGenModule from './modules/generators/ModulatorGenModule.jsx'
+import GeneratorModule from './modules/generators/GeneratorModule.jsx'
+import Generator2Module from './modules/generators/Generator2Module.jsx'
 
 import ScopeModule from './modules/display/ScopeModule.jsx'
 import MonitorModule from './modules/display/MonitorModule.jsx'
@@ -42,6 +46,7 @@ import ConsoleModule from './modules/display/ConsoleModule.jsx'
 
 import PatchModule from './modules/utility/PatchModule.jsx'
 import PowerModule from './modules/utility/PowerModule.jsx'
+import PerfModule from './modules/utility/PerfModule.jsx'
 
 export const MODULE_DEFS = {
   // Control
@@ -49,7 +54,7 @@ export const MODULE_DEFS = {
   clockDiv:  { component: ClockDividerModule, hp: 4,  u: 3, category: 'control',    label: 'Clk Div' },
   lfo:       { component: LFOModule,          hp: 6,  u: 3, category: 'control',    label: 'LFO' },
   envelope:  { component: EnvelopeModule,     hp: 6,  u: 3, category: 'control',    label: 'Envelope' },
-  sequencer: { component: SequencerModule,    hp: 12, u: 3, category: 'control',    label: 'Sequencer' },
+  sequencer: { component: SequencerModule,    hp: 16, u: 3, category: 'control',    label: 'Sequencer' },
   constant:  { component: ConstantModule,     hp: 4,  u: 1, category: 'control',    label: 'Constant' },
   logic:     { component: LogicModule,        hp: 8,  u: 1, category: 'control',    label: 'Logic' },
   comparator:{ component: ComparatorModule,   hp: 6,  u: 1, category: 'control',    label: 'Comparator' },
@@ -80,6 +85,10 @@ export const MODULE_DEFS = {
   ramp:      { component: RampModule,         hp: 6,  u: 1, category: 'generators', label: 'Ramp' },
   smx3:      { component: SMX3Module,         hp: 8,  u: 3, category: 'generators', label: 'SMX3' },
   lineGen:   { component: LineGenModule,      hp: 6,  u: 3, category: 'generators', label: 'LineGen' },
+  radialGen: { component: RadialGenModule,   hp: 12, u: 3, category: 'generators', label: 'Radial' },
+  modGen:    { component: ModulatorGenModule, hp: 14, u: 3, category: 'generators', label: 'Modulator' },
+  generator: { component: GeneratorModule,    hp: 12, u: 3, category: 'generators', label: 'Generator' },
+  generator2:{ component: Generator2Module,   hp: 10, u: 3, category: 'generators', label: 'Generator 2' },
 
   // Display
   scope:     { component: ScopeModule,        hp: 16, u: 1, category: 'display',    label: 'Scope' },
@@ -89,7 +98,8 @@ export const MODULE_DEFS = {
 
   // Utility
   patch:     { component: PatchModule,        hp: 6,  u: 1, category: 'utility',    label: 'Patch' },
-  power:     { component: PowerModule,       hp: 6,  u: 1, category: 'utility',    label: 'Power' },
+  power:     { component: PowerModule,       hp: 4,  u: 1, category: 'utility',    label: 'Power' },
+  perf:      { component: PerfModule,        hp: 4,  u: 1, category: 'utility',    label: 'Perf' },
 }
 
 export const CATEGORIES = ['control', 'math', 'generators', 'display', 'utility']

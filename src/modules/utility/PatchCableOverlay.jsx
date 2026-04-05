@@ -9,9 +9,11 @@ function getJackCenter(element, container) {
   if (!element || !container) return null
   const er = element.getBoundingClientRect()
   const cr = container.getBoundingClientRect()
+  // CSS zoom scales getBoundingClientRect but SVG coords are in unzoomed space
+  const zoom = parseFloat(container.style.zoom) || 1
   return {
-    x: er.left + er.width / 2 - cr.left + container.scrollLeft,
-    y: er.top + er.height / 2 - cr.top,
+    x: (er.left + er.width / 2 - cr.left) / zoom + container.scrollLeft,
+    y: (er.top + er.height / 2 - cr.top) / zoom,
   }
 }
 
@@ -56,9 +58,10 @@ export default function PatchCableOverlay({ containerRef }) {
       const container = containerRef?.current
       if (!container) return
       const cr = container.getBoundingClientRect()
+      const zoom = parseFloat(container.style.zoom) || 1
       setMousePos({
-        x: e.clientX - cr.left + container.scrollLeft,
-        y: e.clientY - cr.top,
+        x: (e.clientX - cr.left) / zoom + container.scrollLeft,
+        y: (e.clientY - cr.top) / zoom,
       })
     }
     window.addEventListener('pointermove', handleMove)

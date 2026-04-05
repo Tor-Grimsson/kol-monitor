@@ -2,6 +2,7 @@
 // 20HP 1U. Left-to-right signal flow with normalled connections.
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -95,7 +96,7 @@ export default function NoiseModule({ id = 'noise1', preview }) {
   const [slewTime, setSlewTime] = useState(50)
   const [randomMode, setRandomMode] = useState(false)
   const [trackMode, setTrackMode] = useState(false)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const [clockPulse, setClockPulse] = useState(false)
   const [randomActive, setRandomActive] = useState(false)
   const routing = usePatchRouting()

@@ -3,6 +3,7 @@
 // X/Y rotation simulates 3D via projection
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -62,7 +63,7 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
   const [rotX, setRotX] = useState(init?.rotX ?? 0)
   const [rotY, setRotY] = useState(init?.rotY ?? 0)
   const [rotZ, setRotZ] = useState(init?.rotZ ?? 0)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const enabledRef = useRef(true)
@@ -164,6 +165,12 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
       })
 
       const out = points(transformed, inputs.in.edges)
+      // Preserve metadata from input signal
+      if (inputs.in.strokeWidth != null) out.strokeWidth = inputs.in.strokeWidth
+      if (inputs.in.fill) out.fill = inputs.in.fill
+      if (inputs.in.grid) out.grid = inputs.in.grid
+      if (inputs.in.aspectLock) out.aspectLock = inputs.in.aspectLock
+      if (inputs.in.opacity != null) out.opacity = inputs.in.opacity
       outRef.current = out
       return { out }
     },

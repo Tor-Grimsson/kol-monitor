@@ -2,6 +2,7 @@
 // 8HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -117,7 +118,7 @@ export default function WireframeModule({ id = 'wire1', preview }) {
   const [scale, setScale] = useState(50)
   const [resolution, setResolution] = useState(50)
   const [fov, setFov] = useState(50)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const enabledRef = useRef(true)

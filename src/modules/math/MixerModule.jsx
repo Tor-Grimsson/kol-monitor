@@ -2,6 +2,7 @@
 // 8HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -49,7 +50,7 @@ export default function MixerModule({ id = 'mix1', preview }) {
   const [lb, setLb] = useState(100)
   const [lc, setLc] = useState(100)
   const [ld, setLd] = useState(100)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const laRef = useRef(100)

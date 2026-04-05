@@ -2,6 +2,7 @@
 // 6HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { pen, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -61,7 +62,7 @@ export default function PenModule({ id = 'pen1', init, preview }) {
   const [opacity, setOpacity] = useState(init?.opacity ?? 100)
   const [cap, setCap] = useState(init?.cap ?? 'round')
   const [lofi, setLofi] = useState(init?.lofi ?? 0)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const enabledRef = useRef(true)

@@ -2,6 +2,7 @@
 // 4HP
 
 import { useState, useRef } from 'react'
+import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -34,7 +35,7 @@ export default function ComparatorModule({ id = 'cmp1', preview }) {
   if (preview) return <ComparatorPanel threshold={50} enabled={false} onToggle={() => {}} onThresholdChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} thrCvConn={false} thrCvRef={{ current: null }} outputRef={{ current: null }} />
 
   const [threshold, setThreshold] = useState(50)
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
 
   const threshRef = useRef(50)
