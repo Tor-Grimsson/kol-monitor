@@ -11,6 +11,7 @@ import LogicModule from './modules/control/LogicModule.jsx'
 import ComparatorModule from './modules/control/ComparatorModule.jsx'
 import SampleHoldModule from './modules/control/SampleHoldModule.jsx'
 import PenModule from './modules/control/PenModule.jsx'
+import JoystickModule from './modules/control/JoystickModule.jsx'
 
 import MultModule from './modules/math/MultModule.jsx'
 import AttenuatorModule from './modules/math/AttenuatorModule.jsx'
@@ -39,6 +40,8 @@ import ModulatorGenModule from './modules/generators/ModulatorGenModule.jsx'
 import GeneratorModule from './modules/generators/GenLofiModule.jsx'
 import Generator2Module from './modules/generators/GenHifiModule.jsx'
 import DitherModule from './modules/generators/DitherModule.jsx'
+import SVGModule from './modules/generators/SVGModule.jsx'
+import LifeModule from './modules/generators/LifeModule.jsx'
 
 import ScopeModule from './modules/display/ScopeModule.jsx'
 import MonitorModule from './modules/display/MonitorModule.jsx'
@@ -61,6 +64,7 @@ export const MODULE_DEFS = {
   comparator:{ component: ComparatorModule,   hp: 6,  u: 1, category: 'control',    label: 'Comparator' },
   sampleHold:{ component: SampleHoldModule,   hp: 6,  u: 1, category: 'control',    label: 'S&H' },
   pen:       { component: PenModule,          hp: 6,  u: 3, category: 'control',    label: 'Pen' },
+  joystick:  { component: JoystickModule,    hp: 12, u: 1, category: 'control',    label: 'Joystick' },
 
   // Math
   mult:      { component: MultModule,         hp: 8,  u: 1, category: 'math',       label: 'Mult' },
@@ -81,7 +85,7 @@ export const MODULE_DEFS = {
   // Generators
   rgb:       { component: RGBOscillatorModule,hp: 8,  u: 3, category: 'generators', label: 'RGB Osc' },
   waveform:  { component: WaveformModule,     hp: 6,  u: 3, category: 'generators', label: 'Waveform' },
-  wireframe: { component: WireframeModule,    hp: 6,  u: 3, category: 'generators', label: 'Wireframe' },
+  wireframe: { component: WireframeModule,    hp: 8,  u: 3, category: 'generators', label: 'Gen 3D' },
   noise:     { component: NoiseModule,        hp: 22, u: 1, category: 'generators', label: 'Noise' },
   ramp:      { component: RampModule,         hp: 6,  u: 1, category: 'generators', label: 'Ramp' },
   smx3:      { component: SMX3Module,         hp: 8,  u: 3, category: 'generators', label: 'SMX3' },
@@ -91,6 +95,8 @@ export const MODULE_DEFS = {
   generator: { component: GeneratorModule,    hp: 10, u: 3, category: 'generators', label: 'Gen Lofi' },
   generator2:{ component: Generator2Module,   hp: 10, u: 3, category: 'generators', label: 'Gen Hifi' },
   dither:    { component: DitherModule,      hp: 14, u: 3, category: 'generators', label: 'Dither' },
+  svg:       { component: SVGModule,         hp: 10, u: 1, category: 'generators', label: 'SVG' },
+  life:      { component: LifeModule,        hp: 12, u: 3, category: 'generators', label: 'Life' },
 
   // Display
   scope:     { component: ScopeModule,        hp: 16, u: 1, category: 'display',    label: 'Scope' },

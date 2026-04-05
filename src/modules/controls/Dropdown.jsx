@@ -8,24 +8,20 @@ export default function Dropdown({ value, options, onChange, label }) {
   const triggerRef = useRef(null)
   const [pos, setPos] = useState({ top: 0, left: 0 })
 
-  const handleOpen = useCallback(() => {
+  const handleToggle = useCallback(() => {
+    if (open) { setOpen(false); return }
     if (!triggerRef.current) return
     const rect = triggerRef.current.getBoundingClientRect()
     setPos({ top: rect.bottom + 2, left: rect.left })
     setOpen(true)
-  }, [])
+  }, [open])
 
-  // Close on outside click
+  // Close on Escape
   useEffect(() => {
     if (!open) return
-    const handleClick = () => setOpen(false)
     const handleKey = (e) => { if (e.key === 'Escape') setOpen(false) }
-    window.addEventListener('pointerdown', handleClick)
     window.addEventListener('keydown', handleKey)
-    return () => {
-      window.removeEventListener('pointerdown', handleClick)
-      window.removeEventListener('keydown', handleKey)
-    }
+    return () => window.removeEventListener('keydown', handleKey)
   }, [open])
 
   const triggerStyle = {
@@ -57,46 +53,53 @@ export default function Dropdown({ value, options, onChange, label }) {
         ref={triggerRef}
         className="kol-helper-xxxs"
         style={triggerStyle}
-        onPointerDown={(e) => { e.stopPropagation(); handleOpen() }}
+        onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); handleToggle() }}
       >
         {value || '—'}
       </button>
       {open && createPortal(
-        <div
-          style={{
-            position: 'fixed',
-            top: pos.top,
-            left: pos.left,
-            minWidth: 60,
-            maxHeight: 160,
-            overflowY: 'auto',
-            backgroundColor: 'rgba(20,20,20,0.95)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 3,
-            zIndex: 9999,
-            padding: '2px 0',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {options.map(opt => (
-            <div
-              key={opt}
-              onClick={() => { onChange(opt); setOpen(false) }}
-              className="kol-helper-xxxs"
-              style={{
-                color: opt === value ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)',
-                backgroundColor: opt === value ? 'rgba(255,255,255,0.06)' : 'transparent',
-                padding: '3px 8px',
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-                letterSpacing: '0.5px',
-              }}
-            >
-              {opt}
-            </div>
-          ))}
-        </div>,
+        <>
+          {/* Backdrop — catches outside clicks */}
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+            onPointerDown={() => setOpen(false)}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              top: pos.top,
+              left: pos.left,
+              minWidth: 60,
+              maxHeight: 160,
+              overflowY: 'auto',
+              backgroundColor: 'rgba(20,20,20,0.95)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 3,
+              zIndex: 9999,
+              padding: '2px 0',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            {options.map(opt => (
+              <div
+                key={opt}
+                onPointerDown={() => { onChange(opt); setOpen(false) }}
+                className="kol-helper-xxxs"
+                style={{
+                  color: opt === value ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)',
+                  backgroundColor: opt === value ? 'rgba(255,255,255,0.06)' : 'transparent',
+                  padding: '3px 8px',
+                  cursor: 'pointer',
+                  textTransform: 'capitalize',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {opt}
+              </div>
+            ))}
+          </div>
+        </>,
         document.body
       )}
     </>

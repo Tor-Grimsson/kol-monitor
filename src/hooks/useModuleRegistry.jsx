@@ -33,7 +33,7 @@ export function useModuleRegistry() {
 }
 
 // Convenience hook for modules — register on mount, unregister on unmount
-export function useModule({ id, inputs, outputs, process }) {
+export function useModule({ id, inputs, outputs, process, stateRef }) {
   const registry = useModuleRegistry()
   const processRef = useRef(process)
   processRef.current = process
@@ -43,6 +43,7 @@ export function useModule({ id, inputs, outputs, process }) {
       id,
       inputs,
       outputs,
+      stateRef,
       process: (...args) => processRef.current(...args),
     }
     registry.register(descriptor)

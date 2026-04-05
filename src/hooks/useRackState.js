@@ -3,15 +3,21 @@
 import { useState, useCallback } from 'react'
 import { MODULE_DEFS } from '../moduleRegistry'
 import { TOTAL_HP } from '../modules/utility/eurorack'
+import { patches } from '../patches'
 
 let nextId = 1
 function uid(type) { return `${type}_${nextId++}` }
+
+const ON = new Set(patches.ref?.on || [])
+const CONSOLE_INIT = new Map((patches.ref?.console || []).map(c => [c.id, c]))
 
 // Pack modules left-to-right, calculating offsets
 function packModules(modules) {
   let offset = 0
   return modules.map(m => {
-    const mod = { ...m, offset }
+    const consoleData = CONSOLE_INIT.get(m.id)
+    const state = { ...m.state, ...consoleData, enabled: ON.has(m.id) }
+    const mod = { ...m, offset, state }
     offset += m.hp
     return mod
   })
@@ -28,6 +34,7 @@ const DEFAULT_ROWS = [
       { type: 'vca', id: 'vca1', hp: 8 },
       { type: 'logic', id: 'logic1', hp: 8 },
       { type: 'comparator', id: 'comp1', hp: 6 },
+      { type: 'joystick', id: 'joy1', hp: 12 },
     ]),
   },
   {
@@ -41,7 +48,7 @@ const DEFAULT_ROWS = [
       { type: 'mixer', id: 'mix1', hp: 6 },
       { type: 'waveform', id: 'wave1', hp: 6 },
       { type: 'rgb', id: 'rgb1', hp: 8 },
-      { type: 'wireframe', id: 'wire1', hp: 6 },
+      { type: 'wireframe', id: 'wire1', hp: 8 },
       { type: 'smx3', id: 'smx1', hp: 8 },
       { type: 'lineGen', id: 'line1', hp: 6 },
       { type: 'waveshaper', id: 'wshp1', hp: 6 },
@@ -64,6 +71,7 @@ const DEFAULT_ROWS = [
       { type: 'generator2', id: 'gen2', hp: 10 },
       { type: 'dither', id: 'dith1', hp: 14 },
       { type: 'console', id: 'con1', hp: 48 },
+      { type: 'life', id: 'life1', hp: 12 },
     ]),
   },
   {
@@ -77,6 +85,7 @@ const DEFAULT_ROWS = [
       { type: 'constant', id: 'const1', hp: 4 },
       { type: 'quantizer', id: 'quant1', hp: 4 },
       { type: 'scaleOfs', id: 'scl1', hp: 4 },
+      { type: 'svg', id: 'svg1', hp: 10 },
     ]),
   },
 ]

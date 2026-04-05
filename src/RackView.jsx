@@ -1,5 +1,6 @@
 // RackView — renders the eurorack case with modules in rows
 
+import { ModuleInitContext } from './hooks/useModuleEnabled'
 import { MODULE_DEFS } from './moduleRegistry'
 import { TOTAL_HP, hpToPx } from './modules/utility/eurorack'
 import Case, { RackRow } from './modules/utility/Case.jsx'
@@ -39,7 +40,9 @@ export default function RackView({ rows, editMode, onSendToWorkbench, rowRefs })
                       }}
                     />
                   )}
-                  <Comp id={mod.id} init={mod.state} />
+                  <ModuleInitContext.Provider value={mod.state}>
+                    <Comp id={mod.id} init={mod.state} />
+                  </ModuleInitContext.Provider>
                 </div>
               )
             })}

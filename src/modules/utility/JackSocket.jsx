@@ -27,6 +27,7 @@ export default function JackSocket({
     && routing?.pendingOutput?.port === port
     && routing?.pendingOutput?.moduleId === moduleId
   const hasPending = !!routing?.pendingOutput
+  const isConnected = active || (type === 'out' && routing?.connections?.some(c => c.fromModuleId === moduleId && c.fromPort === port))
   const catColor = DEFAULT_COLOR
 
   // Register jack element for hit testing
@@ -62,6 +63,7 @@ export default function JackSocket({
   }, [signalRef, catColor])
 
   const handlePointerDown = useCallback((e) => {
+    if (routing?.lockedRef?.current) return
     if (type === 'out') {
       e.preventDefault()
       routing?.selectOutput(moduleId, port)
@@ -69,7 +71,7 @@ export default function JackSocket({
   }, [type, port, moduleId, routing])
 
   const handleClick = useCallback((e) => {
-    // Don't disconnect if we just finished a drag (that creates a connection)
+    if (routing?.lockedRef?.current) return
     if (routing?.pendingOutput) return
     if (type === 'in' && active) {
       e.stopPropagation()
@@ -125,7 +127,7 @@ export default function JackSocket({
             width: `${hole}px`,
             height: `${hole}px`,
             borderRadius: '50%',
-            backgroundColor: active || isPending ? `${catColor}66` : 'rgba(0,0,0,0.6)',
+            backgroundColor: routing?.visibilityRef?.current !== 'on' && isConnected ? (type === 'out' ? '#e74c3c' : '#f59e0b') : isConnected || isPending ? `${catColor}66` : 'rgba(0,0,0,0.6)',
             border: type === 'in' ? '1px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.3)',
           }} />
         </div>

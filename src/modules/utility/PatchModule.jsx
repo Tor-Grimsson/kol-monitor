@@ -3,6 +3,7 @@
 
 import { useState, useRef } from 'react'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useModuleRegistry } from '../../hooks/useModuleRegistry.jsx'
 import { patches } from '../../patches.js'
 import Module from './Module'
 
@@ -53,6 +54,7 @@ export default function PatchModule({ id = 'patch1', preview }) {
   if (preview) return <PatchPanel current="init" names={['init']} cableCount={0} onCurrentChange={() => {}} onLoad={() => {}} onSave={() => {}} onClear={() => {}} />
 
   const routing = usePatchRouting()
+  const { modulesRef } = useModuleRegistry()
   const [saved, setSaved] = useState(() => ({ ...patches }))
   const [current, setCurrent] = useState('init')
   const [saveSlot, setSaveSlot] = useState(1)
@@ -70,7 +72,22 @@ export default function PatchModule({ id = 'patch1', preview }) {
     setSaved(prev => ({ ...prev, [name]: snapshot }))
     setCurrent(name)
     setSaveSlot(s => s + 1)
-    navigator.clipboard.writeText(JSON.stringify(snapshot, null, 2)).catch(() => {})
+
+    // Only list modules that are on + console active channels
+    const modules = modulesRef.current
+    const on = []
+    const consoleChannels = []
+    for (const [id, mod] of modules) {
+      const hasOutput = mod.lastOutputs && Object.values(mod.lastOutputs).some(v => v != null)
+      if (hasOutput) on.push(id)
+      if (mod.stateRef) {
+        const state = mod.stateRef?.current || {}
+        consoleChannels.push({ id, ...state })
+      }
+    }
+
+    const full = { connections: snapshot, on, console: consoleChannels }
+    navigator.clipboard.writeText(JSON.stringify(full, null, 2)).catch(() => {})
   }
 
   const handleClear = () => {

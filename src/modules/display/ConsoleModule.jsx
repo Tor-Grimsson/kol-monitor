@@ -138,23 +138,23 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   const [rtn2, setRtn2] = useState(init?.rtn2 ?? 80)
 
   // Send enables
-  const [send1On, setSend1On] = useState(true)
-  const [send2On, setSend2On] = useState(true)
+  const [send1On, setSend1On] = useState(init?.send1On ?? true)
+  const [send2On, setSend2On] = useState(init?.send2On ?? true)
   const send1OnRef = useRef(true)
   const send2OnRef = useRef(true)
 
   // Mutes
-  const [muteA, setMuteA] = useState(false)
-  const [muteB, setMuteB] = useState(false)
-  const [muteC, setMuteC] = useState(false)
-  const [muteD, setMuteD] = useState(false)
+  const [muteA, setMuteA] = useState(init?.muteA ?? false)
+  const [muteB, setMuteB] = useState(init?.muteB ?? false)
+  const [muteC, setMuteC] = useState(init?.muteC ?? false)
+  const [muteD, setMuteD] = useState(init?.muteD ?? false)
 
   // Master
   const [bg, setBg] = useState(init?.bg ?? 0)
   const [masterLvl, setMasterLvl] = useState(init?.masterLvl ?? 100)
   const [mstS1, setMstS1] = useState(init?.mstS1 ?? 0)
   const [mstS2, setMstS2] = useState(init?.mstS2 ?? 0)
-  const [masterOn, setMasterOn] = useState(true)
+  const [masterOn, setMasterOn] = useState(init?.masterOn ?? true)
   const [enabled, setEnabled] = useModuleEnabled()
 
   const routing = usePatchRouting()
@@ -213,8 +213,12 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   const mstPenConn = conns.some(c => c.toModuleId === id && c.toPort === 'mstPen')
   const mstBgConn = conns.some(c => c.toModuleId === id && c.toPort === 'mstBg')
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { muteA, muteB, muteC, muteD, masterOn, send1On, send2On }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       a: { type: 'any' }, b: { type: 'any' }, c: { type: 'any' }, d: { type: 'any' },
       rtn1: { type: 'any' }, rtn2: { type: 'any' },

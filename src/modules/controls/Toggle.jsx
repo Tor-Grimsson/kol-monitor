@@ -1,12 +1,30 @@
 // Toggle — red circle on/off button with label below
+// momentary: fires onChange(true) on click, LED auto-clears after flash
+
+import { useState, useRef } from 'react'
 
 const SIZES = { sm: 8, md: 12 }
 
-export default function Toggle({ value, onChange, label, horizontal = false, size = 'md', padding = 4 }) {
+export default function Toggle({ value, onChange, label, horizontal = false, size = 'md', padding = 4, momentary = false }) {
+  const [lit, setLit] = useState(false)
+  const timerRef = useRef(null)
   const s = SIZES[size]
+  const isOn = momentary ? lit : value
+
+  const handleClick = () => {
+    if (momentary) {
+      onChange(true)
+      setLit(true)
+      clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => setLit(false), 120)
+    } else {
+      onChange(!value)
+    }
+  }
+
   return (
     <div
-      onClick={() => onChange(!value)}
+      onClick={handleClick}
       className={`inline-flex ${horizontal ? 'flex-row' : 'flex-col'} items-center gap-1 select-none`}
       style={{ cursor: 'pointer', touchAction: 'none', padding }}
     >
@@ -15,7 +33,7 @@ export default function Toggle({ value, onChange, label, horizontal = false, siz
         height: s,
         borderRadius: '50%',
         backgroundColor: '#e74c3c',
-        opacity: value ? 1 : 0.3,
+        opacity: isOn ? 1 : 0.3,
         border: 'none',
       }} />
       {label && (

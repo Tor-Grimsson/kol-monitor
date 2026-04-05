@@ -174,6 +174,18 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
     ctx.stroke()
   }
 
+  // Per-axis colored lines (from Gen 3D)
+  if (signal.axes) {
+    for (const axis of signal.axes) {
+      ctx.strokeStyle = `rgb(${Math.round(axis.color.r * 255)},${Math.round(axis.color.g * 255)},${Math.round(axis.color.b * 255)})`
+      ctx.globalAlpha = 0.5
+      ctx.beginPath()
+      ctx.moveTo(dx + axis.pts[0].x * dw, dy + axis.pts[0].y * dh)
+      ctx.lineTo(dx + axis.pts[1].x * dw, dy + axis.pts[1].y * dh)
+      ctx.stroke()
+    }
+  }
+
   resetPen(ctx)
 }
 

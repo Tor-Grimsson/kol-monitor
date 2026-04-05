@@ -115,6 +115,7 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
         const result = mod.process(inputs, dt, t)
         if (result) {
           outputsRef.current.set(id, result)
+          mod.lastOutputs = result
         }
       }
     }

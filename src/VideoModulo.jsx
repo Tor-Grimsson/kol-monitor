@@ -12,12 +12,15 @@ import RackView from './RackView.jsx'
 import ModuloSidebar from './ModuloSidebar.jsx'
 import Workbench from './Workbench.jsx'
 import { patches } from './patches.js'
+import ShortcutsOverlay from './ShortcutsOverlay.jsx'
+import Icon from './icons/Icon.jsx'
 
 const BASE_WIDTH = ROW_WIDTH + 52  // row + side panels (24+24) + padding (2+2)
 
 function VideoModuloInner() {
   const { modulesRef } = useModuleRegistry()
-  const { connectionsRef } = usePatchRouting()
+  const routing = usePatchRouting()
+  const { connectionsRef } = routing
   const rackRef = useRef(null)
   const rowRefs = useRef({})
   const rackOuterRef = useRef(null)
@@ -27,6 +30,11 @@ function VideoModuloInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [viewLocked, setViewLocked] = useState(false)
   const viewLockedRef = useRef(false)
+  const [cableLocked, setCableLocked] = useState(false)
+  const [cableVisibility, setCableVisibility] = useState('trans') // 'on' | 'off' | 'trans'
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  routing.lockedRef.current = cableLocked
+  routing.visibilityRef.current = cableVisibility
 
   useRenderLoop(modulesRef, connectionsRef, power, timingRef)
 
@@ -38,7 +46,7 @@ function VideoModuloInner() {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
   const panStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
 
-  useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom, setPanOffset, setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll })
+  useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom, setPanOffset, setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts })
 
   const handlePanDown = useCallback((e) => {
     if (!spaceDown.current) return
@@ -114,9 +122,25 @@ function VideoModuloInner() {
         </button>
       )}
 
+      {/* Cable controls — bottom left */}
+      <div className="fixed bottom-3 left-3 z-50 select-none" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+        <div className="kol-helper-xs text-fg-48" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          [Cables
+          <span onClick={() => setCableLocked(v => !v)} className="hover:text-fg-96 cursor-pointer" style={{ color: cableLocked ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
+            <Icon name={cableLocked ? 'cable-lock' : 'cable-unlock'} size={14} />
+          </span>
+          <span onClick={() => setCableVisibility(v => v === 'on' ? 'off' : v === 'off' ? 'trans' : 'on')} className="hover:text-fg-96 cursor-pointer" style={{ color: cableVisibility === 'off' ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
+            <Icon name={cableVisibility === 'on' ? 'cable-on' : cableVisibility === 'off' ? 'cable-off' : 'cable-trans'} size={14} />
+          </span>]
+        </div>
+      </div>
+
+      {showShortcuts && <ShortcutsOverlay onClose={() => setShowShortcuts(false)} />}
+
+      {/* Lock — bottom right */}
       <button
         onClick={() => setViewLocked(v => { viewLockedRef.current = !v; return !v })}
-        className="fixed bottom-3 left-3 z-50 kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+        className="fixed bottom-3 right-3 z-50 kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
         style={{ background: 'none', border: 'none', padding: 0, color: viewLocked ? 'rgba(231,76,60,0.9)' : undefined }}
       >
         [{viewLocked ? 'Locked' : 'Lock'}]
@@ -124,7 +148,7 @@ function VideoModuloInner() {
 
       <div ref={rackOuterRef} onPointerDown={handlePanDown} className="flex-1 relative" style={{ minHeight: '100vh', overflow: 'hidden', display: 'grid', placeItems: 'center', marginLeft: sidebarOpen ? 'var(--sidebar-width)' : 0 }}>
         <div ref={rackRef} className="relative" style={{ zoom, width: BASE_WIDTH, transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}>
-          <PatchCableOverlay containerRef={rackRef} />
+          <PatchCableOverlay containerRef={rackRef} cableVisibility={cableVisibility} cableLocked={cableLocked} onCableUnlock={() => setCableLocked(false)} />
           <RackView
             rows={rack.rows}
             editMode={rack.editMode}
@@ -156,7 +180,7 @@ function VideoModuloInner() {
 export default function VideoModulo() {
   return (
     <ModuleRegistryProvider>
-      <PatchRoutingProvider initialConnections={patches.ref}>
+      <PatchRoutingProvider initialConnections={patches.ref.connections}>
         <CasePowerProvider>
           <VideoModuloInner />
         </CasePowerProvider>

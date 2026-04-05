@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react'
 
-export function useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom, setPanOffset, setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll }) {
+export function useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom, setPanOffset, setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts }) {
   useEffect(() => {
     const noInput = (e) => !e.target.closest('input, textarea')
 
@@ -38,6 +38,15 @@ export function useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom
 
       // Lock view
       if ((mod || noInput(e)) && e.key === 'l') { e.preventDefault(); setViewLocked(v => { viewLockedRef.current = !v; return !v }) }
+
+      // Cable lock
+      if (noInput(e) && !mod && e.key === 'c') { e.preventDefault(); setCableLocked(v => !v) }
+
+      // Cable visibility
+      if ((mod || noInput(e)) && e.key === 'o') { e.preventDefault(); setCableVisibility(v => v === 'on' ? 'off' : v === 'off' ? 'trans' : 'on') }
+
+      // Shortcuts overlay
+      if (noInput(e) && !mod && e.key === 's') { e.preventDefault(); setShowShortcuts(v => !v) }
 
       // Snap view: 4 5 6 = top-left/center/right, 1 2 3 = bottom-left/center/right
       if (noInput(e) && !mod && '123456'.includes(e.key)) {

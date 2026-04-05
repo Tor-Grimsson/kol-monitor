@@ -29,11 +29,22 @@ function catenaryPath(x1, y1, x2, y2) {
   return `M${x1},${y1} C${cp1x},${cp1y} ${cp2x},${cp2y} ${x2},${y2}`
 }
 
-export default function PatchCableOverlay({ containerRef }) {
+export default function PatchCableOverlay({ containerRef, cableVisibility = 'on', cableLocked = false, onCableUnlock }) {
   const routing = usePatchRouting()
   const svgRef = useRef(null)
   const [mousePos, setMousePos] = useState(null)
   const [, forceUpdate] = useState(0)
+  const [altDown, setAltDown] = useState(false)
+  const [hoveredCable, setHoveredCable] = useState(null)
+
+  // Track alt key
+  useEffect(() => {
+    const down = (e) => { if (e.shiftKey) setAltDown(true) }
+    const up = (e) => { if (e.key === 'Shift') { setAltDown(false); setHoveredCable(null) } }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
+  }, [])
 
   // Re-render after connections change (delayed so jacks register first)
   const conns = routing?.connections
@@ -79,7 +90,7 @@ export default function PatchCableOverlay({ containerRef }) {
     const from = getJackCenter(fromEl, container)
     const to = getJackCenter(toEl, container)
     if (!from || !to) return null
-    return { path: catenaryPath(from.x, from.y, to.x, to.y), color: WIRE_COLOR }
+    return { path: catenaryPath(from.x, from.y, to.x, to.y), color: WIRE_COLOR, conn }
   }).filter(Boolean)
 
   let pendingCable = null
@@ -103,9 +114,9 @@ export default function PatchCableOverlay({ containerRef }) {
         left: 0,
         width: svgWidth,
         height: svgHeight,
-        pointerEvents: 'none',
+        pointerEvents: altDown ? 'auto' : 'none',
         overflow: 'visible',
-        zIndex: 10,
+        zIndex: altDown ? 50 : 10,
       }}
     >
       <defs>
@@ -114,14 +125,39 @@ export default function PatchCableOverlay({ containerRef }) {
         </filter>
       </defs>
 
-      {cables.map((cable, i) => (
-        <g key={i}>
-          <path d={cable.path} fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="4" strokeLinecap="round" />
-          <path d={cable.path} fill="none" stroke={cable.color} strokeWidth="2.5" strokeLinecap="round" filter="url(#vm-cable-shadow)" />
-        </g>
-      ))}
+      {cables.map((cable, i) => {
+        const isHovered = hoveredCable === i
+        const visible = cableVisibility !== 'off' || isHovered
+        const opacity = isHovered ? 1 : cableVisibility === 'trans' ? 0.2 : cableVisibility === 'off' ? 0 : 1
+        return (
+          <g key={i} opacity={visible ? opacity : 0}>
+            {/* Hit area — fat invisible stroke */}
+            <path
+              d={cable.path}
+              fill="none"
+              stroke="transparent"
+              strokeWidth="20"
+              strokeLinecap="round"
+              style={{ cursor: altDown ? 'pointer' : 'default', pointerEvents: altDown ? 'stroke' : 'none' }}
+              onMouseEnter={altDown ? () => setHoveredCable(i) : undefined}
+              onMouseLeave={() => setHoveredCable(null)}
+              onClick={altDown ? (e) => {
+                e.stopPropagation()
+                if (cableLocked && onCableUnlock) onCableUnlock()
+              } : undefined}
+              onDoubleClick={altDown ? (e) => {
+                e.stopPropagation()
+                routing?.removeConnection(cable.conn.toModuleId, cable.conn.toPort)
+              } : undefined}
+            />
+            {/* Visible cable */}
+            <path d={cable.path} fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="4" strokeLinecap="round" />
+            <path d={cable.path} fill="none" stroke={isHovered ? '#ffffff' : cable.color} strokeWidth="2.5" strokeLinecap="round" filter="url(#vm-cable-shadow)" />
+          </g>
+        )
+      })}
 
-      {pendingCable && (
+      {!cableLocked && pendingCable && (
         <path d={pendingCable} fill="none" stroke="rgba(231,76,60,0.4)" strokeWidth="2" strokeLinecap="round" strokeDasharray="6,4" />
       )}
     </svg>

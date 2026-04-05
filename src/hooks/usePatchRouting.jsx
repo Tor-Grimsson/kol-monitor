@@ -107,6 +107,8 @@ export function PatchRoutingProvider({ initialConnections, children }) {
     connections,
     connectionsRef,
     jackRefs,
+    lockedRef: { current: false },
+    visibilityRef: { current: 'on' },
     registerJack,
     selectOutput,
     removeConnection,

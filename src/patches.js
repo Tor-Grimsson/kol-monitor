@@ -3,14 +3,26 @@
 
 export const patches = {
   // Default connections loaded on startup
-  ref: [
-    { fromModuleId: 'con1', fromPort: 'snd1', toModuleId: 'verb1', toPort: 'in' },
-    { fromModuleId: 'verb1', fromPort: 'out', toModuleId: 'con1', toPort: 'rtn1' },
-    { fromModuleId: 'dith1', fromPort: 'out', toModuleId: 'con1', toPort: 'a' },
-    { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'dith1', toPort: 'clr' },
-    { fromModuleId: 'gen2', fromPort: 'out', toModuleId: 'dith1', toPort: 'in' },
-    { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'con1', toPort: 'b' },
-  ],
+  ref: {
+    connections: [
+      { fromModuleId: 'con1', fromPort: 'snd1', toModuleId: 'verb1', toPort: 'in' },
+      { fromModuleId: 'verb1', fromPort: 'out', toModuleId: 'con1', toPort: 'rtn1' },
+      { fromModuleId: 'dith1', fromPort: 'out', toModuleId: 'con1', toPort: 'a' },
+      { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'dith1', toPort: 'clr' },
+      { fromModuleId: 'gen2', fromPort: 'out', toModuleId: 'dith1', toPort: 'in' },
+      { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'con1', toPort: 'b' },
+      { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'joy1', fromPort: 'z', toModuleId: 'wire1', toPort: 'rz' },
+      { fromModuleId: 'joy1', fromPort: 'y', toModuleId: 'wire1', toPort: 'rx' },
+      { fromModuleId: 'joy1', fromPort: 'x', toModuleId: 'wire1', toPort: 'ry' },
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'seq1', toPort: 'clock' },
+      { fromModuleId: 'seq1', fromPort: 'out', toModuleId: 'wire1', toPort: 'clk' },
+      { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'dith1', toPort: 'clk' },
+      { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'gen2', toPort: 'clk' },
+    ],
+    on: ['joy1', 'clk1', 'seq1', 'wire1', 'mon1', 'gen2', 'dith1', 'con1', 'life1', 'verb1', 'ramp1'],
+    console: [{ id: 'con1', muteA: false, muteB: true, muteC: true, muteD: true, masterOn: true, send1On: true, send2On: true }],
+  },
 
   empty: { rows: [{ height: '1u', modules: [] }, { height: '3u', modules: [] }, { height: '3u', modules: [] }], connections: [] },
 
