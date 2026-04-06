@@ -9,7 +9,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import IconSelect from '../controls/IconSelect'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const CAPS = ['round', 'square', 'butt']
 
@@ -63,7 +63,7 @@ export default function PenModule({ id = 'pen1', init, preview }) {
   const [cap, setCap] = useState(init?.cap ?? 'round')
   const [lofi, setLofi] = useState(init?.lofi ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const thkRef = useRef(15)
@@ -87,15 +87,18 @@ export default function PenModule({ id = 'pen1', init, preview }) {
   capRef.current = cap
   lofiRef.current = lofi
 
-  const conns = routing?.connections || []
-  const thkConn = conns.some(c => c.toModuleId === id && c.toPort === 'tk')
-  const dshConn = conns.some(c => c.toModuleId === id && c.toPort === 'ds')
-  const gapConn = conns.some(c => c.toModuleId === id && c.toPort === 'gp')
-  const opConn = conns.some(c => c.toModuleId === id && c.toPort === 'op')
-  const colorConn = conns.some(c => c.toModuleId === id && c.toPort === 'clr')
+  const thkConn = cp.has('tk')
+  const dshConn = cp.has('ds')
+  const gapConn = cp.has('gp')
+  const opConn = cp.has('op')
+  const colorConn = cp.has('clr')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { thickness, dash, gap, opacity, cap, lofi }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       tk: { type: 'scalar' },
       ds: { type: 'scalar' },

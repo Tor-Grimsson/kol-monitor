@@ -10,7 +10,7 @@ import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
 import Toggle from '../controls/Toggle'
 import IconSelect from '../controls/IconSelect'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['cube', 'tetra', 'octa', 'ico', 'sphere', 'torus', 'cyl']
 
@@ -108,25 +108,25 @@ function generateGeometry(shape, res) {
   }
 }
 
-function rotateX(v, a) {
-  const c = Math.cos(a), s = Math.sin(a)
-  return [v[0], v[1] * c - v[2] * s, v[1] * s + v[2] * c]
+// Combined rotation matrix — 6 trig calls total instead of 6 per vertex
+function buildRotationMatrix(rx, ry, rz) {
+  const cx = Math.cos(rx), sx = Math.sin(rx)
+  const cy = Math.cos(ry), sy = Math.sin(ry)
+  const cz = Math.cos(rz), sz = Math.sin(rz)
+  return [
+    cy * cz,                    cy * sz,                   -sy,
+    sx * sy * cz - cx * sz,     sx * sy * sz + cx * cz,     sx * cy,
+    cx * sy * cz + sx * sz,     cx * sy * sz - sx * cz,     cx * cy,
+  ]
 }
 
-function rotateY(v, a) {
-  const c = Math.cos(a), s = Math.sin(a)
-  return [v[0] * c + v[2] * s, v[1], -v[0] * s + v[2] * c]
-}
-
-function rotateZ(v, a) {
-  const c = Math.cos(a), s = Math.sin(a)
-  return [v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2]]
-}
-
-function project(v, fov) {
-  const d = fov
-  const scale = d / (d + v[2])
-  return { x: 0.5 + v[0] * scale * 0.3, y: 0.5 + v[1] * scale * 0.3 }
+function transformAndProject(v, m, s, fov) {
+  const x = v[0] * s, y = v[1] * s, z = v[2] * s
+  const rx = m[0] * x + m[1] * y + m[2] * z
+  const ry = m[3] * x + m[4] * y + m[5] * z
+  const rz = m[6] * x + m[7] * y + m[8] * z
+  const scale = fov / (fov + rz)
+  return { x: 0.5 + rx * scale * 0.3, y: 0.5 + ry * scale * 0.3 }
 }
 
 function WireframePanel({ shape, rxVal, ryVal, rzVal, speed, scale, resolution, fov, animate, grid, enabled, onToggle, onShapeChange, onRxChange, onRyChange, onRzChange, onSpeedChange, onScaleChange, onResolutionChange, onFovChange, onAnimateChange, onGridChange, onReset, id, rxConn, rxRef, ryConn, ryRef, rzConn, rzRef, spdConn, spdRef, sclConn, sclRef, resConn, resRef, fovConn, fovRef, clrConn, clrRef, clkConn, clkRef, outRef }) {
@@ -180,7 +180,7 @@ export default function WireframeModule({ id = 'wire1', preview }) {
   const [resolution, setResolution] = useState(50)
   const [fov, setFov] = useState(50)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const shapeRef = useRef('cube')
@@ -195,6 +195,8 @@ export default function WireframeModule({ id = 'wire1', preview }) {
   const fovRef = useRef(50)
   const prevClkRef = useRef(false)
   const rotRef = useRef({ x: 0, y: 0, z: 0 })
+  const geomCacheRef = useRef(null)
+  const geomKeyRef = useRef('')
   const outRef = useRef(null)
   const rxCvRef = useRef(null)
   const ryCvRef = useRef(null)
@@ -220,19 +222,22 @@ export default function WireframeModule({ id = 'wire1', preview }) {
 
   const handleReset = () => { rotRef.current = { x: 0, y: 0, z: 0 }; setRxVal(50); setRyVal(50); setRzVal(50) }
 
-  const conns = routing?.connections || []
-  const rxConn = conns.some(c => c.toModuleId === id && c.toPort === 'rx')
-  const ryConn = conns.some(c => c.toModuleId === id && c.toPort === 'ry')
-  const rzConn = conns.some(c => c.toModuleId === id && c.toPort === 'rz')
-  const spdConn = conns.some(c => c.toModuleId === id && c.toPort === 'spd')
-  const sclConn = conns.some(c => c.toModuleId === id && c.toPort === 'scl')
-  const resConn = conns.some(c => c.toModuleId === id && c.toPort === 'res')
-  const fovConn = conns.some(c => c.toModuleId === id && c.toPort === 'fov')
-  const clrConn = conns.some(c => c.toModuleId === id && c.toPort === 'clr')
-  const clkConn = conns.some(c => c.toModuleId === id && c.toPort === 'clk')
+  const rxConn = cp.has('rx')
+  const ryConn = cp.has('ry')
+  const rzConn = cp.has('rz')
+  const spdConn = cp.has('spd')
+  const sclConn = cp.has('scl')
+  const resConn = cp.has('res')
+  const fovConn = cp.has('fov')
+  const clrConn = cp.has('clr')
+  const clkConn = cp.has('clk')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { shape, rxVal, ryVal, rzVal, speed, scale, resolution, fov, animate, grid }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       rx: { type: 'scalar' }, ry: { type: 'scalar' }, rz: { type: 'scalar' },
       spd: { type: 'scalar' }, scl: { type: 'scalar' }, res: { type: 'scalar' },
@@ -270,14 +275,14 @@ export default function WireframeModule({ id = 'wire1', preview }) {
       const res = Math.round(8 + ((inputs.res ? readScalar(inputs.res) : resRef.current) / 100) * 56)
       const f = 1 + ((inputs.fov ? readScalar(inputs.fov) : fovRef.current) / 100) * 5
 
-      const geom = generateGeometry(shapeRef.current, res)
-      const projected = geom.vertices.map(v => {
-        const scaled = [v[0] * s, v[1] * s, v[2] * s]
-        let r = rotateX(scaled, rx)
-        r = rotateY(r, ry)
-        r = rotateZ(r, rz)
-        return project(r, f)
-      })
+      const geomKey = shapeRef.current + ':' + res
+      if (geomKey !== geomKeyRef.current) {
+        geomCacheRef.current = generateGeometry(shapeRef.current, res)
+        geomKeyRef.current = geomKey
+      }
+      const geom = geomCacheRef.current
+      const m = buildRotationMatrix(rx, ry, rz)
+      const projected = geom.vertices.map(v => transformAndProject(v, m, s, f))
 
       const out = points(projected, geom.edges)
       out.aspectLock = true
@@ -292,7 +297,7 @@ export default function WireframeModule({ id = 'wire1', preview }) {
           { v: [[0,0,-axisLen],[0,0,axisLen]], color: {r:0.2, g:0.4, b:1} },
         ]
         out.axes = axisColors.map(({ v, color }) => ({
-          pts: v.map(p => { let r = rotateX(p, rx); r = rotateY(r, ry); r = rotateZ(r, rz); return project(r, f) }),
+          pts: v.map(p => transformAndProject(p, m, 1, f)),
           color,
         }))
       }

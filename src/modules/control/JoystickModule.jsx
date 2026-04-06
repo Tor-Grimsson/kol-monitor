@@ -131,8 +131,12 @@ export default function JoystickModule({ id = 'joy1', init, preview }) {
 
   const handleMove = useCallback((nx, ny) => { setX(nx); setY(ny) }, [])
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { x, y, z, snap }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {},
     outputs: { x: { type: 'scalar' }, y: { type: 'scalar' }, z: { type: 'scalar' } },
     process: () => {

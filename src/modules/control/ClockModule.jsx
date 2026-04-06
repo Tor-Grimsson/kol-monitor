@@ -67,8 +67,12 @@ export default function ClockModule({ id = 'clk1', init, preview }) {
 
   const outputs = Object.fromEntries(DIVS.map(d => [`d${d}`, { type: 'scalar' }]))
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { bpm, running }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {},
     outputs,
     process: (inputs, dt) => {

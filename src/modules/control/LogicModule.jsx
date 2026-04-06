@@ -9,7 +9,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Divider from '../../components/atoms/Divider'
 import IconSelect from '../controls/IconSelect'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const MODES = ['and', 'or', 'xor', 'not', 'nand', 'nor']
 
@@ -52,7 +52,7 @@ export default function LogicModule({ id = 'logic1', preview }) {
 
   const [mode, setMode] = useState('and')
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const modeRef = useRef('and')
   const enabledRef = useRef(true)
@@ -63,12 +63,15 @@ export default function LogicModule({ id = 'logic1', preview }) {
   modeRef.current = mode
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const aConnected = conns.some(c => c.toModuleId === id && c.toPort === 'a')
-  const bConnected = conns.some(c => c.toModuleId === id && c.toPort === 'b')
+  const aConnected = cp.has('a')
+  const bConnected = cp.has('b')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { mode }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { a: { type: 'scalar' }, b: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs) => {

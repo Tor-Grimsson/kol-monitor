@@ -8,7 +8,7 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function SampleHoldPanel({ smooth, enabled, onToggle, onSmoothChange, id, inConnected, inRef, trigConnected, trigRef, outRef }) {
   return (
@@ -34,7 +34,7 @@ export default function SampleHoldModule({ id = 'sh1', preview }) {
 
   const [smooth, setSmooth] = useState(0)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const smoothRef = useRef(0)
   const enabledRef = useRef(true)
@@ -48,12 +48,15 @@ export default function SampleHoldModule({ id = 'sh1', preview }) {
   smoothRef.current = smooth
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const inConnected = conns.some(c => c.toModuleId === id && c.toPort === 'in')
-  const trigConnected = conns.some(c => c.toModuleId === id && c.toPort === 'trig')
+  const inConnected = cp.has('in')
+  const trigConnected = cp.has('trig')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { smooth }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { in: { type: 'scalar' }, trig: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs, dt) => {

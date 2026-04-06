@@ -8,7 +8,7 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function MixerPanel({ la, lb, lc, ld, enabled, onToggle, onLaChange, onLbChange, onLcChange, onLdChange, id, aConnected, aRef, bConnected, bRef, cConnected, cRef, dConnected, dRef, outRef }) {
   return (
@@ -51,7 +51,7 @@ export default function MixerModule({ id = 'mix1', preview }) {
   const [lc, setLc] = useState(100)
   const [ld, setLd] = useState(100)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const laRef = useRef(100)
   const lbRef = useRef(100)
@@ -70,14 +70,17 @@ export default function MixerModule({ id = 'mix1', preview }) {
   ldRef.current = ld
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const aConnected = conns.some(c => c.toModuleId === id && c.toPort === 'a')
-  const bConnected = conns.some(c => c.toModuleId === id && c.toPort === 'b')
-  const cConnected = conns.some(c => c.toModuleId === id && c.toPort === 'c')
-  const dConnected = conns.some(c => c.toModuleId === id && c.toPort === 'd')
+  const aConnected = cp.has('a')
+  const bConnected = cp.has('b')
+  const cConnected = cp.has('c')
+  const dConnected = cp.has('d')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { la, lb, lc, ld }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       a: { type: 'scalar' }, b: { type: 'scalar' },
       c: { type: 'scalar' }, d: { type: 'scalar' },

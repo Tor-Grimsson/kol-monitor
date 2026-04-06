@@ -10,7 +10,7 @@ import { scalar, readScalar, points } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const BUF_SIZE = 256
 
@@ -54,7 +54,7 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
   const [copies, setCopies] = useState(init?.copies ?? 30)
   const [fb, setFb] = useState(init?.fb ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const timeRef = useRef(50)
   const mixRef = useRef(50)
@@ -77,15 +77,18 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
   const copyInRef = useRef(null)
   const fbInRef = useRef(null)
 
-  const conns = routing?.connections || []
-  const inConnected = conns.some(c => c.toModuleId === id && c.toPort === 'in')
-  const timeConn = conns.some(c => c.toModuleId === id && c.toPort === 'tCV')
-  const mixConn = conns.some(c => c.toModuleId === id && c.toPort === 'mCV')
-  const copyConn = conns.some(c => c.toModuleId === id && c.toPort === 'cCV')
-  const fbConn = conns.some(c => c.toModuleId === id && c.toPort === 'fCV')
+  const inConnected = cp.has('in')
+  const timeConn = cp.has('tCV')
+  const mixConn = cp.has('mCV')
+  const copyConn = cp.has('cCV')
+  const fbConn = cp.has('fCV')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { time, mix, copies, fb }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       in: { type: 'any' },
       tCV: { type: 'scalar' },
@@ -140,6 +143,8 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
           if (tap.edges) for (const [a, b] of tap.edges) allEdges.push([a + offset, b + offset])
         }
         const out = points(allPts, allEdges.length > 0 ? allEdges : null)
+        out.strokeWidth = input.strokeWidth ?? 1
+        if (input.color) out.color = input.color
         outRef.current = out
         return { out }
       }

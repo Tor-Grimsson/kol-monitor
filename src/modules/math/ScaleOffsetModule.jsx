@@ -8,7 +8,7 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function ScaleOffsetPanel({ scale, offset, enabled, onToggle, onScaleChange, onOffsetChange, id, inConnected, inRef, outputRef }) {
   return (
@@ -36,7 +36,7 @@ export default function ScaleOffsetModule({ id = 'sco1', preview }) {
   const [scale, setScale] = useState(100)
   const [offset, setOffset] = useState(50)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const scaleRef = useRef(100)
   const offsetRef = useRef(50)
@@ -48,11 +48,14 @@ export default function ScaleOffsetModule({ id = 'sco1', preview }) {
   offsetRef.current = offset
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const inConnected = conns.some(c => c.toModuleId === id && c.toPort === 'in')
+  const inConnected = cp.has('in')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { scale, offset }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { in: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs) => {

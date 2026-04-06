@@ -2,8 +2,10 @@
 
 import { useRef, useCallback } from 'react'
 
-export default function Knob({ value, onChange, min = 0, max = 100, label, variant = 'column', bipolar = false, labelMinWidth }) {
-  const size = 24
+const SIZES = { sm: 24, md: 32, lg: 40, xl: 64 }
+
+export default function Knob({ value, onChange, min = 0, max = 100, label, variant = 'column', bipolar = false, labelMinWidth, size: sizeProp = 'sm' }) {
+  const size = SIZES[sizeProp] || SIZES.sm
   const angle = ((value - min) / (max - min)) * 270 - 135
   const r = size / 2
   const ir = r * 0.56

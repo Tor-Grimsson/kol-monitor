@@ -1,6 +1,7 @@
 // Module registration context — ref-based Map, no React re-renders
 
 import { createContext, useContext, useRef, useEffect, useMemo } from 'react'
+import { getLastEnabledRef } from './useModuleEnabled'
 
 const ModuleRegistryContext = createContext(null)
 
@@ -37,6 +38,8 @@ export function useModule({ id, inputs, outputs, process, stateRef }) {
   const registry = useModuleRegistry()
   const processRef = useRef(process)
   processRef.current = process
+  // Auto-grab enabledRef from useModuleEnabled (called before useModule in every module)
+  const capturedEnabledRef = useRef(getLastEnabledRef())
 
   useEffect(() => {
     const descriptor = {
@@ -44,6 +47,7 @@ export function useModule({ id, inputs, outputs, process, stateRef }) {
       inputs,
       outputs,
       stateRef,
+      enabledRef: capturedEnabledRef.current,
       process: (...args) => processRef.current(...args),
     }
     registry.register(descriptor)

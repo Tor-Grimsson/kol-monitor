@@ -2,7 +2,8 @@
 // 12HP 3U. Built-in canvas preview. CLK/RST/CLR inputs, points output.
 // RULE knob sweeps through automata rulesets (center = classic B3/S23).
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
+import { useCanvasLoop } from '../../hooks/useCanvasLoop'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar } from '../../hooks/signals'
@@ -10,7 +11,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
 import Toggle from '../controls/Toggle'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Cellular automata rulesets ---
 // Format: { birth: Set, survive: Set }
@@ -260,7 +261,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
   const [ruleVal, setRuleVal] = useState(init?.rule ?? 44) // ~center = classic Life
   const [zoom, setZoom] = useState(init?.zoom ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const showRef = useRef(true)
@@ -304,19 +305,22 @@ export default function LifeModule({ id = 'life1', init, preview }) {
     setRuleVal(Math.round(Math.round(v / step) * step))
   }
 
-  const conns = routing?.connections || []
-  const dnsConn = conns.some(c => c.toModuleId === id && c.toPort === 'dns')
-  const szConn = conns.some(c => c.toModuleId === id && c.toPort === 'sz')
-  const spdConn = conns.some(c => c.toModuleId === id && c.toPort === 'spd')
-  const ruleConn = conns.some(c => c.toModuleId === id && c.toPort === 'rule')
-  const clkConn = conns.some(c => c.toModuleId === id && c.toPort === 'clk')
-  const rstConn = conns.some(c => c.toModuleId === id && c.toPort === 'rst')
-  const clrConn = conns.some(c => c.toModuleId === id && c.toPort === 'clr')
+  const dnsConn = cp.has('dns')
+  const szConn = cp.has('sz')
+  const spdConn = cp.has('spd')
+  const ruleConn = cp.has('rule')
+  const clkConn = cp.has('clk')
+  const rstConn = cp.has('rst')
+  const clrConn = cp.has('clr')
 
   const rule = getRule(ruleVal)
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { wrap, show, density, size, speed, ruleVal, zoom }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       dns: { type: 'scalar' }, sz: { type: 'scalar' }, spd: { type: 'scalar' },
       rule: { type: 'scalar' }, clk: { type: 'scalar' }, rst: { type: 'scalar' },
@@ -421,47 +425,25 @@ export default function LifeModule({ id = 'life1', init, preview }) {
     },
   })
 
-  // Fixed canvas resolution — immune to CSS zoom
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    canvas.width = 160
-    canvas.height = 160
-  }, [])
-
-  // Canvas drawing loop
-  useEffect(() => {
+  useCanvasLoop(canvasRef, () => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    let raf
+    const w = canvas.width, h = canvas.height
+    if (!w || !h) return
 
-    const draw = () => {
-      const w = canvas.width
-      const h = canvas.height
-      if (!w || !h) { raf = requestAnimationFrame(draw); return }
+    ctx.clearRect(0, 0, w, h)
+    ctx.fillStyle = '#080808'
+    ctx.fillRect(0, 0, w, h)
 
-      ctx.clearRect(0, 0, w, h)
-      ctx.fillStyle = '#080808'
-      ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = 'rgba(0,0,0,0.15)'
+    for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1)
 
-      // Scanlines
-      ctx.fillStyle = 'rgba(0,0,0,0.15)'
-      for (let y = 0; y < h; y += 3) {
-        ctx.fillRect(0, y, w, 1)
-      }
-
-      if (gridRef.current && enabledRef.current && showRef.current) {
-        const { cols, rows } = gridDimsRef.current
-        drawLife(ctx, gridRef.current, cols, rows, w, h, clrColorRef.current, zoomRef.current)
-      }
-
-      raf = requestAnimationFrame(draw)
+    if (gridRef.current && enabledRef.current && showRef.current) {
+      const { cols, rows } = gridDimsRef.current
+      drawLife(ctx, gridRef.current, cols, rows, w, h, clrColorRef.current, zoomRef.current)
     }
-
-    raf = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(raf)
-  }, [])
+  })
 
   return <LifePanel
     canvasRef={canvasRef} wrap={wrap} show={show} density={density} size={size} speed={speed}

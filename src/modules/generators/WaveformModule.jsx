@@ -9,7 +9,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import IconSelect from '../controls/IconSelect'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['sin', 'saw', 'tri', 'sqr']
 const RESOLUTION = 64
@@ -67,7 +67,7 @@ export default function WaveformModule({ id = 'wave1', preview }) {
   const [speed, setSpeed] = useState(50)
   const [shape, setShape] = useState('sin')
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const freqRef = useRef(20)
@@ -88,14 +88,17 @@ export default function WaveformModule({ id = 'wave1', preview }) {
   enabledRef.current = enabled
   shapeRef.current = shape
 
-  const conns = routing?.connections || []
-  const freqConn = conns.some(c => c.toModuleId === id && c.toPort === 'freq')
-  const ampConn = conns.some(c => c.toModuleId === id && c.toPort === 'amp')
-  const spdConn = conns.some(c => c.toModuleId === id && c.toPort === 'spd')
-  const clkConn = conns.some(c => c.toModuleId === id && c.toPort === 'clk')
+  const freqConn = cp.has('freq')
+  const ampConn = cp.has('amp')
+  const spdConn = cp.has('spd')
+  const clkConn = cp.has('clk')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { freq, amp, speed, shape }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       freq: { type: 'scalar' },
       amp: { type: 'scalar' },

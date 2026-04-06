@@ -48,8 +48,12 @@ export default function ConstantModule({ id = 'const1', preview }) {
   valueRef.current = value
   enabledRef.current = enabled
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { value }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {},
     outputs: { value: { type: 'scalar' } },
     process: () => {

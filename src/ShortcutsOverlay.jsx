@@ -17,7 +17,8 @@ export default function ShortcutsOverlay({ onClose }) {
         <span>Cable visibility</span><span className="text-fg-96">O</span>
         <span>Zoom in / out</span><span className="text-fg-96">+ / −</span>
         <span>Reset zoom</span><span className="text-fg-96">0</span>
-        <span>Snap positions</span><span className="text-fg-96">1–6</span>
+        <span>Clear display</span><span className="text-fg-96">D</span>
+        <span>Snap positions</span><span className="text-fg-96">1–9</span>
         <span>Pan (drag)</span><span className="text-fg-96">Space</span>
         <span>Zoom</span><span className="text-fg-96">Alt+Scroll</span>
         <span>Pan</span><span className="text-fg-96">Scroll</span>

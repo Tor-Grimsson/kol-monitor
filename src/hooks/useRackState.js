@@ -1,6 +1,6 @@
 // Rack state — manages rows, modules with HP offsets, parked modules, edit mode
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { MODULE_DEFS } from '../moduleRegistry'
 import { TOTAL_HP } from '../modules/utility/eurorack'
 import { patches } from '../patches'
@@ -28,6 +28,7 @@ const DEFAULT_ROWS = [
     id: 'row1', height: '1u', modules: packModules([
       { type: 'power', id: 'power1', hp: 4 },
       { type: 'perf', id: 'perf1', hp: 4 },
+      { type: 'patch', id: 'patch1', hp: 6 },
       { type: 'mult', id: 'mult1', hp: 8 },
       { type: 'noise', id: 'noise1', hp: 22 },
       { type: 'attenuator', id: 'atten1', hp: 26 },
@@ -63,6 +64,7 @@ const DEFAULT_ROWS = [
       { type: 'radialGen', id: 'radial1', hp: 12 },
       { type: 'modGen', id: 'modgen1', hp: 14 },
       { type: 'monitor', id: 'mon1', hp: 12 },
+      { type: 'magneto', id: 'mag1', hp: 28 },
     ]),
   },
   {
@@ -86,6 +88,8 @@ const DEFAULT_ROWS = [
       { type: 'quantizer', id: 'quant1', hp: 4 },
       { type: 'scaleOfs', id: 'scl1', hp: 4 },
       { type: 'svg', id: 'svg1', hp: 10 },
+      { type: 's2v', id: 's2v1', hp: 8 },
+      { type: 'v2s', id: 'v2s1', hp: 4 },
     ]),
   },
 ]
@@ -184,45 +188,25 @@ export function useRackState() {
     ))
   }, [])
 
-  // Load a preset: keeps existing rows, replaces modules within them
+  // Load a preset: builds rows from preset definition
   const loadPreset = useCallback((preset) => {
     if (!preset || !preset.rows) return
-    // Collect all preset modules, assign HP from registry
-    const allMods = preset.rows.flatMap(r => r.modules.map(m => {
-      const def = MODULE_DEFS[m.type]
-      return { type: m.type, id: m.id, hp: def?.hp || 4, u: def?.u || 3, state: m.state }
-    }))
-    // Distribute into existing rows: 1U modules into 1U rows, 3U into 3U rows
-    setRows(prev => {
-      const rows1u = prev.filter(r => r.height === '1u')
-      const rows3u = prev.filter(r => r.height === '3u')
-      const mods1u = allMods.filter(m => m.u === 1)
-      const mods3u = allMods.filter(m => m.u === 3)
-      // Clear all rows then fill
-      const cleared = prev.map(r => ({ ...r, modules: [] }))
-      // Pack 1U modules into 1U rows
-      let r1i = 0
-      for (const mod of mods1u) {
-        const row = cleared.find(r => r.height === '1u' && r.modules.reduce((s, m) => s + m.hp, 0) + mod.hp <= TOTAL_HP)
-        if (row) {
-          const offset = row.modules.reduce((s, m) => s + m.hp, 0)
-          row.modules.push({ ...mod, offset })
-        }
-      }
-      // Pack 3U modules into 3U rows
-      for (const mod of mods3u) {
-        const row = cleared.find(r => r.height === '3u' && r.modules.reduce((s, m) => s + m.hp, 0) + mod.hp <= TOTAL_HP)
-        if (row) {
-          const offset = row.modules.reduce((s, m) => s + m.hp, 0)
-          row.modules.push({ ...mod, offset })
-        }
-      }
-      return cleared
+    const newRows = preset.rows.map((r, i) => {
+      let offset = 0
+      const modules = r.modules.map(m => {
+        const def = MODULE_DEFS[m.type]
+        const hp = def?.hp || 4
+        const mod = { type: m.type, id: m.id, hp, u: def?.u || 3, offset, state: m.state }
+        offset += hp
+        return mod
+      })
+      return { id: `row-${i}`, height: r.height, modules }
     })
+    setRows(newRows)
     setWorkbench([])
   }, [])
 
-  return {
+  return useMemo(() => ({
     rows,
     workbench,
     editMode,
@@ -234,5 +218,5 @@ export function useRackState() {
     addRow,
     removeRow,
     setRowHeight,
-  }
+  }), [rows, workbench, editMode, setEditMode, loadPreset, addModule, sendToWorkbench, returnFromWorkbench, addRow, removeRow, setRowHeight])
 }

@@ -9,7 +9,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import IconSelect from '../controls/IconSelect'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['sin', 'saw', 'tri', 'sqr']
 
@@ -55,7 +55,7 @@ export default function LFOModule({ id = 'lfo1', init, preview }) {
   const [offset, setOffset] = useState(init?.offset ?? 50)
   const [shape, setShape] = useState(init?.shape ?? 'sin')
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const rateRef = useRef(10)
   const depthRef = useRef(100)
@@ -73,11 +73,14 @@ export default function LFOModule({ id = 'lfo1', init, preview }) {
   shapeRef.current = shape
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const syncConnected = conns.some(c => c.toModuleId === id && c.toPort === 'sync')
+  const syncConnected = cp.has('sync')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { rate, depth, offset, shape }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { sync: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs, dt) => {

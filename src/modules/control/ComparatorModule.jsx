@@ -10,7 +10,7 @@ import { ModuleRow } from '../utility/ModuleLayout'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function ComparatorPanel({ threshold, enabled, onToggle, onThresholdChange, id, inConnected, inRef, thrCvConn, thrCvRef, outputRef }) {
   return (
@@ -36,7 +36,7 @@ export default function ComparatorModule({ id = 'cmp1', preview }) {
 
   const [threshold, setThreshold] = useState(50)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const threshRef = useRef(50)
   const enabledRef = useRef(true)
@@ -47,12 +47,15 @@ export default function ComparatorModule({ id = 'cmp1', preview }) {
   threshRef.current = threshold
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const inConnected = conns.some(c => c.toModuleId === id && c.toPort === 'in')
-  const thrCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'thrCV')
+  const inConnected = cp.has('in')
+  const thrCvConn = cp.has('thrCV')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { threshold }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { in: { type: 'scalar' }, thrCV: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs) => {

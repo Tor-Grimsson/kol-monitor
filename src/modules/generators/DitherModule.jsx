@@ -14,7 +14,7 @@ import IconSelect from '../controls/IconSelect'
 import LabeledControl from '../controls/LabeledControl'
 import Toggle from '../controls/Toggle'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Mode definitions ---
 
@@ -89,45 +89,34 @@ function addRotatedLine(pts, edges, cx, cy, x1, y1, x2, y2, cos, sin) {
 
 // --- Shape geometry generators ---
 
+function scaleUnit(unit, r) {
+  const v = new Array(unit.length)
+  for (let i = 0; i < unit.length; i++) v[i] = [unit[i][0] * r, unit[i][1] * r]
+  return v
+}
+
 function addShape(pts, edges, cx, cy, r, type, rot) {
   if (r < 0.001) return
-  const cos = Math.cos(rot), sin = Math.sin(rot)
+  const noRot = rot === 0
+  const cos = noRot ? 1 : Math.cos(rot)
+  const sin = noRot ? 0 : Math.sin(rot)
 
   switch (type) {
-    case 'circle': {
-      const v = [], n = 8
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2
-        v.push([Math.cos(a) * r, Math.sin(a) * r])
-      }
-      addRotatedPoly(pts, edges, cx, cy, v, cos, sin)
+    case 'circle':
+      addRotatedPoly(pts, edges, cx, cy, scaleUnit(UNIT_CIRCLE_8, r), cos, sin)
       break
-    }
     case 'rect':
       addRotatedPoly(pts, edges, cx, cy, [[-r, -r], [r, -r], [r, r], [-r, r]], cos, sin)
       break
     case 'tri':
       addRotatedPoly(pts, edges, cx, cy, [[0, -r], [r * 0.87, r * 0.5], [-r * 0.87, r * 0.5]], cos, sin)
       break
-    case 'oct': {
-      const v = [], n = 8
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2 + Math.PI / 8
-        v.push([Math.cos(a) * r, Math.sin(a) * r])
-      }
-      addRotatedPoly(pts, edges, cx, cy, v, cos, sin)
+    case 'oct':
+      addRotatedPoly(pts, edges, cx, cy, scaleUnit(UNIT_OCT_8, r), cos, sin)
       break
-    }
-    case 'star': {
-      const v = [], spikes = 5
-      for (let i = 0; i < spikes * 2; i++) {
-        const a = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2
-        const rad = i % 2 === 0 ? r : r * 0.4
-        v.push([Math.cos(a) * rad, Math.sin(a) * rad])
-      }
-      addRotatedPoly(pts, edges, cx, cy, v, cos, sin)
+    case 'star':
+      addRotatedPoly(pts, edges, cx, cy, scaleUnit(UNIT_STAR_10, r), cos, sin)
       break
-    }
     case 'cross': {
       const w = r * 0.3
       addRotatedPoly(pts, edges, cx, cy, [
@@ -136,28 +125,15 @@ function addShape(pts, edges, cx, cy, r, type, rot) {
       ], cos, sin)
       break
     }
-    case 'hex': {
-      const v = []
-      for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2 + Math.PI / 6
-        v.push([Math.cos(a) * r, Math.sin(a) * r])
-      }
-      addRotatedPoly(pts, edges, cx, cy, v, cos, sin)
+    case 'hex':
+      addRotatedPoly(pts, edges, cx, cy, scaleUnit(UNIT_HEX_6, r), cos, sin)
       break
-    }
     case 'diamond':
       addRotatedPoly(pts, edges, cx, cy, [[0, -r], [r, 0], [0, r], [-r, 0]], cos, sin)
       break
-    case 'gear': {
-      const v = [], teeth = 8
-      for (let i = 0; i < teeth * 2; i++) {
-        const a = (i / (teeth * 2)) * Math.PI * 2
-        const rad = i % 2 === 0 ? r : r * 0.7
-        v.push([Math.cos(a) * rad, Math.sin(a) * rad])
-      }
-      addRotatedPoly(pts, edges, cx, cy, v, cos, sin)
+    case 'gear':
+      addRotatedPoly(pts, edges, cx, cy, scaleUnit(UNIT_GEAR_16, r), cos, sin)
       break
-    }
     case 'flower': {
       const petals = 5, res = 6
       for (let i = 0; i < petals; i++) {
@@ -282,14 +258,43 @@ function addAscii(pts, edges, cx, cy, r, charType) {
   }
 }
 
+// --- Pre-computed unit shapes (avoid trig per cell) ---
+
+const UNIT_CIRCLE_8 = Array.from({ length: 8 }, (_, i) => {
+  const a = (i / 8) * Math.PI * 2
+  return [Math.cos(a), Math.sin(a)]
+})
+
+const UNIT_OCT_8 = Array.from({ length: 8 }, (_, i) => {
+  const a = (i / 8) * Math.PI * 2 + Math.PI / 8
+  return [Math.cos(a), Math.sin(a)]
+})
+
+const UNIT_HEX_6 = Array.from({ length: 6 }, (_, i) => {
+  const a = (i / 6) * Math.PI * 2 + Math.PI / 6
+  return [Math.cos(a), Math.sin(a)]
+})
+
+const UNIT_STAR_10 = Array.from({ length: 10 }, (_, i) => {
+  const a = (i / 10) * Math.PI * 2 - Math.PI / 2
+  const rad = i % 2 === 0 ? 1 : 0.4
+  return [Math.cos(a) * rad, Math.sin(a) * rad]
+})
+
+const UNIT_GEAR_16 = Array.from({ length: 16 }, (_, i) => {
+  const a = (i / 16) * Math.PI * 2
+  const rad = i % 2 === 0 ? 1 : 0.7
+  return [Math.cos(a) * rad, Math.sin(a) * rad]
+})
+
 // --- Grid layouts (return {cells: [{nx, ny}], cellSize}) ---
+// Clipped to -0.1..1.1 range (small bleed for edge coverage, not 2-cell pad)
 
 function layoutGrid(count) {
   const cells = []
   const step = 1 / count
-  const pad = 2
-  for (let gy = -pad; gy < count + pad; gy++) {
-    for (let gx = -pad; gx < count + pad; gx++) {
+  for (let gy = -1; gy <= count; gy++) {
+    for (let gx = -1; gx <= count; gx++) {
       cells.push({ nx: (gx + 0.5) * step, ny: (gy + 0.5) * step })
     }
   }
@@ -301,11 +306,9 @@ function layoutHex(count) {
   const step = 1 / count
   const rowH = step * 0.866
   const rows = Math.ceil(1 / rowH)
-  const pad = 2
-  for (let gy = -pad; gy < rows + pad; gy++) {
+  for (let gy = -1; gy <= rows; gy++) {
     const offset = gy % 2 === 0 ? 0 : step * 0.5
-    const cols = count + pad * 2
-    for (let gx = -pad; gx < count + pad; gx++) {
+    for (let gx = -1; gx <= count; gx++) {
       cells.push({ nx: (gx + 0.5) * step + offset, ny: gy * rowH + rowH * 0.5 })
     }
   }
@@ -422,21 +425,41 @@ function buildDensityMap(signal, cellCount) {
   return map
 }
 
-// Build per-cell fill map from points input using ray casting (accurate, heavy)
+// Build per-cell fill map from points input using ray casting with Y-bucketed edges
 function buildFillMap(signal, cellCount) {
   if (!signal || signal.type !== 'points') return null
   const srcPts = signal.value
   const srcEdges = signal.edges
   if (!srcPts || srcPts.length === 0 || !srcEdges || srcEdges.length === 0) return null
-  const map = new Float32Array(cellCount * cellCount)
+
+  // Y-bucketed edges, sorted by max X within each row for early exit
   const step = 1 / cellCount
+  const buckets = new Array(cellCount)
+  for (let i = 0; i < cellCount; i++) buckets[i] = []
+
+  for (const [i, j] of srcEdges) {
+    if (i >= srcPts.length || j >= srcPts.length) continue
+    const y1 = srcPts[i].y, y2 = srcPts[j].y
+    const maxX = Math.max(srcPts[i].x, srcPts[j].x)
+    const rowMin = Math.max(0, Math.floor(Math.min(y1, y2) * cellCount))
+    const rowMax = Math.min(cellCount - 1, Math.floor(Math.max(y1, y2) * cellCount))
+    for (let r = rowMin; r <= rowMax; r++) buckets[r].push({ i, j, maxX })
+  }
+
+  // Sort each bucket by maxX ascending — edges fully left of cell can be skipped
+  for (let r = 0; r < cellCount; r++) buckets[r].sort((a, b) => a.maxX - b.maxX)
+
+  const map = new Float32Array(cellCount * cellCount)
   for (let gy = 0; gy < cellCount; gy++) {
     const cy = (gy + 0.5) * step
+    const rowEdges = buckets[gy]
     for (let gx = 0; gx < cellCount; gx++) {
       const cx = (gx + 0.5) * step
       let crossings = 0
-      for (const [i, j] of srcEdges) {
-        if (i >= srcPts.length || j >= srcPts.length) continue
+      for (let e = 0; e < rowEdges.length; e++) {
+        // Edge entirely left of cell — ray goes right, can't cross
+        if (rowEdges[e].maxX <= cx) continue
+        const { i, j } = rowEdges[e]
         const y1 = srcPts[i].y, y2 = srcPts[j].y
         if ((y1 <= cy && y2 > cy) || (y2 <= cy && y1 > cy)) {
           const xCross = srcPts[i].x + (cy - y1) / (y2 - y1) * (srcPts[j].x - srcPts[i].x)
@@ -449,7 +472,33 @@ function buildFillMap(signal, cellCount) {
   return map
 }
 
-function generateDither(isEngine, mode, isAscii, asciiSet, shape, cellCountVal, gapVal, scaleVal, contrastVal, angleVal, intensityVal, invert, animate, fill, t, inputSignal, ray) {
+// Box blur on density/fill map — smooths cell transitions
+function blurMap(map, cellCount, passes) {
+  if (passes <= 0) return map
+  let src = map
+  let dst = new Float32Array(cellCount * cellCount)
+  for (let p = 0; p < passes; p++) {
+    for (let y = 0; y < cellCount; y++) {
+      for (let x = 0; x < cellCount; x++) {
+        let sum = 0, count = 0
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const nx = x + dx, ny = y + dy
+            if (nx >= 0 && nx < cellCount && ny >= 0 && ny < cellCount) {
+              sum += src[ny * cellCount + nx]
+              count++
+            }
+          }
+        }
+        dst[y * cellCount + x] = sum / count
+      }
+    }
+    const tmp = src; src = dst; dst = tmp
+  }
+  return src
+}
+
+function generateDither(isEngine, mode, isAscii, asciiSet, shape, cellCountVal, gapVal, scaleVal, contrastVal, angleVal, intensityVal, invert, animate, fill, t, inputSignal, ray, blur) {
   const pts = []
   const edges = []
 
@@ -478,24 +527,28 @@ function generateDither(isEngine, mode, isAscii, asciiSet, shape, cellCountVal, 
   // Shape index for shape mode
   const selectedShape = shape
 
-  // Build input map: density (fast) or fill/ray casting (accurate)
-  const inputMap = (!isEngine && inputSignal?.type === 'points')
+  // Build input map: density (fast) or fill/ray casting (accurate), then blur
+  const blurPasses = Math.round((blur / 100) * 5)
+  let inputMap = (!isEngine && inputSignal?.type === 'points')
     ? (ray ? buildFillMap(inputSignal, cellCount) : buildDensityMap(inputSignal, cellCount))
     : null
+  if (inputMap && blurPasses > 0) inputMap = blurMap(inputMap, cellCount, blurPasses)
   const scalarVal = inputSignal ? readScalar(inputSignal) : null
+
+  // Pre-sort ASCII density ramp once (not per cell)
+  const asciiSorted = isAscii ? ASCII_DENSITY_ORDER.filter(c => asciiSet.includes(c)) : null
+  const asciiLen = asciiSorted ? asciiSorted.length : 0
 
   for (const cell of cells) {
     let brightness
 
     if (inputMap) {
-      // Filter + points: per-cell brightness from source
       const gx = Math.floor(cell.nx * cellCount)
       const gy = Math.floor(cell.ny * cellCount)
       brightness = (gx >= 0 && gx < cellCount && gy >= 0 && gy < cellCount)
         ? inputMap[gy * cellCount + gx]
         : 0
     } else if (scalarVal != null) {
-      // Scalar input: modulate internal brightness field
       brightness = sampleBrightness(cell.nx, cell.ny, mode, isEngine, angleRad, t, animate) * (scalarVal / 100)
     } else {
       // No input: internal brightness field only
@@ -534,11 +587,10 @@ function generateDither(isEngine, mode, isAscii, asciiSet, shape, cellCountVal, 
 
     // Draw shape or ASCII character
     if (isAscii) {
-      // Sort active chars by density order, map brightness to set
-      const sorted = ASCII_DENSITY_ORDER.filter(c => asciiSet.includes(c))
-      if (sorted.length === 0) continue
-      const charIdx = sorted.length === 1 ? 0 : Math.min(sorted.length - 1, Math.floor(brightness * sorted.length))
-      addAscii(pts, edges, cx, cy, halfCell - gapNorm, sorted[charIdx])
+      if (asciiLen === 0) continue
+      const charIdx = asciiLen === 1 ? 0 : Math.min(asciiLen - 1, Math.floor(brightness * asciiLen))
+      const charR = (halfCell - gapNorm) * (0.4 + brightness * 0.6)
+      addAscii(pts, edges, cx, cy, charR, asciiSorted[charIdx])
     } else {
       addShape(pts, edges, cx, cy, r, selectedShape, rot)
     }
@@ -550,10 +602,10 @@ function generateDither(isEngine, mode, isAscii, asciiSet, shape, cellCountVal, 
 // --- UI ---
 
 function DitherPanel({
-  isEngine, mode, shape, isAscii, asciiSet, cellCount, gap, scale, contrast, angle, intensity, speed,
+  isEngine, mode, shape, isAscii, asciiSet, cellCount, gap, scale, contrast, angle, intensity, speed, blur,
   invert, animate, fill, ray, enabled, onToggle, id,
   onIsEngineChange, onModeChange, onShapeChange, onIsAsciiChange, onAsciiSetChange,
-  onCellCountChange, onGapChange, onScaleChange, onContrastChange, onAngleChange, onIntensityChange, onSpeedChange,
+  onCellCountChange, onGapChange, onScaleChange, onContrastChange, onAngleChange, onIntensityChange, onSpeedChange, onBlurChange,
   onInvertChange, onAnimateChange, onFillChange, onRayChange,
   spdConn, spdCvRef, clkConn, clkCvRef,
   sizeCvRef, gapCvRef, sclCvRef, ctrCvRef, angCvRef, intCvRef,
@@ -642,6 +694,7 @@ function DitherPanel({
           {(isEngine || mode === 'flow') && <CvKnob port="ang" moduleId={id} active={angConn} signalRef={angCvRef} value={angle} onChange={onAngleChange} label="ang" direction="vertical" />}
           {!isEngine && !isAscii && mode !== 'halftone' && mode !== 'crosshatch' && <CvKnob port="int" moduleId={id} active={intConn} signalRef={intCvRef} value={intensity} onChange={onIntensityChange} label="mix" direction="vertical" />}
           {animate && (isEngine || mode === 'halftone' || mode === 'crt' || mode === 'melt') && <CvKnob port="spd" moduleId={id} active={spdConn} signalRef={spdCvRef} value={speed} onChange={onSpeedChange} label="rate" direction="vertical" />}
+          <CvKnob port="blur" moduleId={id} value={blur} onChange={onBlurChange} label="blr" direction="vertical" />
         </div>
 
         {/* Toggles + rate */}
@@ -676,7 +729,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     invert={false} animate={false} fill={true} enabled={false} onToggle={() => {}} id={id}
     onIsEngineChange={() => {}} onModeChange={() => {}} onShapeChange={() => {}} onIsAsciiChange={() => {}} onAsciiSetChange={() => {}}
     onCellCountChange={() => {}} onGapChange={() => {}} onScaleChange={() => {}} onContrastChange={() => {}} onAngleChange={() => {}} onIntensityChange={() => {}}
-    onInvertChange={() => {}} onAnimateChange={() => {}} onFillChange={() => {}} ray={false} onRayChange={() => {}} onSpeedChange={() => {}} speed={50}
+    onInvertChange={() => {}} onAnimateChange={() => {}} onFillChange={() => {}} ray={false} onRayChange={() => {}} onSpeedChange={() => {}} speed={50} blur={0} onBlurChange={() => {}}
     spdConn={false} spdCvRef={{ current: null }} clkConn={false} clkCvRef={{ current: null }}
     sizeCvRef={{ current: null }} gapCvRef={{ current: null }} sclCvRef={{ current: null }}
     ctrCvRef={{ current: null }} angCvRef={{ current: null }} intCvRef={{ current: null }}
@@ -701,8 +754,9 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
   const [fill, setFill] = useState(init?.fill ?? true)
   const [speed, setSpeed] = useState(init?.speed ?? 50)
   const [ray, setRay] = useState(init?.ray ?? false)
+  const [blur, setBlur] = useState(init?.blur ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   // State value refs (for process loop)
   const enabledRef = useRef(true)
@@ -725,6 +779,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
   const clkCvRef = useRef(null)
   const prevClkRef = useRef(false)
   const rayRef = useRef(false)
+  const blurRef = useRef(0)
   const animTimeRef = useRef(0)
 
   // CV signal refs
@@ -760,27 +815,31 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
   fillRef.current = fill
   speedRef.current = speed
   rayRef.current = ray
+  blurRef.current = blur
 
   // Connection detection
-  const conns = routing?.connections || []
-  const sizeConn = conns.some(c => c.toModuleId === id && c.toPort === 'size')
-  const gapConn = conns.some(c => c.toModuleId === id && c.toPort === 'gap')
-  const sclConn = conns.some(c => c.toModuleId === id && c.toPort === 'scl')
-  const ctrConn = conns.some(c => c.toModuleId === id && c.toPort === 'ctr')
-  const angConn = conns.some(c => c.toModuleId === id && c.toPort === 'ang')
-  const intConn = conns.some(c => c.toModuleId === id && c.toPort === 'int')
-  const inConn = conns.some(c => c.toModuleId === id && c.toPort === 'in')
-  const clrConn = conns.some(c => c.toModuleId === id && c.toPort === 'clr')
-  const spdConn = conns.some(c => c.toModuleId === id && c.toPort === 'spd')
-  const clkConn = conns.some(c => c.toModuleId === id && c.toPort === 'clk')
+  const sizeConn = cp.has('size')
+  const gapConn = cp.has('gap')
+  const sclConn = cp.has('scl')
+  const ctrConn = cp.has('ctr')
+  const angConn = cp.has('ang')
+  const intConn = cp.has('int')
+  const inConn = cp.has('in')
+  const clrConn = cp.has('clr')
+  const spdConn = cp.has('spd')
+  const clkConn = cp.has('clk')
 
   const handleIsEngineChange = (v) => {
     setIsEngine(v)
     setMode(v ? 'grid' : 'halftone')
   }
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { isEngine, mode, shape, isAscii, asciiSet, cellCount, gap, scale, contrast, angle, intensity, invert, animate, fill, speed, ray, blur }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       in: { type: 'scalar' }, clr: { type: 'color' }, clk: { type: 'scalar' }, spd: { type: 'scalar' },
       size: { type: 'scalar' }, gap: { type: 'scalar' }, scl: { type: 'scalar' },
@@ -824,7 +883,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
       const geom = generateDither(
         isEngineRef.current, modeRef.current, isAsciiRef.current, asciiSetRef.current,
         shapeRef.current, vSize, vGap, vScale, vContrast, vAngle, vIntensity,
-        invertRef.current, animateRef.current, fillRef.current, animTimeRef.current, inputs.in || null, rayRef.current,
+        invertRef.current, animateRef.current, fillRef.current, animTimeRef.current, inputs.in || null, rayRef.current, blurRef.current,
       )
 
       const pOut = points(geom.pts, geom.edges)
@@ -856,7 +915,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     onIsEngineChange={handleIsEngineChange} onModeChange={setMode} onShapeChange={setShape} onIsAsciiChange={setIsAscii} onAsciiSetChange={setAsciiSet}
     onCellCountChange={setCellCount} onGapChange={setGap} onScaleChange={setScale} onContrastChange={setContrast}
     onAngleChange={setAngle} onIntensityChange={setIntensity}
-    onInvertChange={setInvert} onAnimateChange={setAnimate} onFillChange={setFill} ray={ray} onRayChange={setRay} onSpeedChange={setSpeed} speed={speed}
+    onInvertChange={setInvert} onAnimateChange={setAnimate} onFillChange={setFill} ray={ray} onRayChange={setRay} onSpeedChange={setSpeed} speed={speed} blur={blur} onBlurChange={setBlur}
     spdConn={spdConn} spdCvRef={spdCvRef} clkConn={clkConn} clkCvRef={clkCvRef}
     sizeCvRef={sizeCvRef} gapCvRef={gapCvRef} sclCvRef={sclCvRef}
     ctrCvRef={ctrCvRef} angCvRef={angCvRef} intCvRef={intCvRef}

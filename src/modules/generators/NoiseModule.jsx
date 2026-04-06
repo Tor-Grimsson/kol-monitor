@@ -11,7 +11,7 @@ import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import FlipToggle from '../controls/FlipToggle'
 import LED from '../controls/LED'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function NoisePanel({
   rate, slewTime, randomMode, trackMode, enabled, onToggle,
@@ -99,7 +99,7 @@ export default function NoiseModule({ id = 'noise1', preview }) {
   const [enabled, setEnabled] = useModuleEnabled()
   const [clockPulse, setClockPulse] = useState(false)
   const [randomActive, setRandomActive] = useState(false)
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const rateRef = useRef(50)
@@ -133,14 +133,17 @@ export default function NoiseModule({ id = 'noise1', preview }) {
   randomModeRef.current = randomMode
   trackModeRef.current = trackMode
 
-  const conns = routing?.connections || []
-  const clkInConn = conns.some(c => c.toModuleId === id && c.toPort === 'clkIn')
-  const trigInConn = conns.some(c => c.toModuleId === id && c.toPort === 'trigIn')
-  const shInConn = conns.some(c => c.toModuleId === id && c.toPort === 'shIn')
-  const slewInConn = conns.some(c => c.toModuleId === id && c.toPort === 'slewIn')
+  const clkInConn = cp.has('clkIn')
+  const trigInConn = cp.has('trigIn')
+  const shInConn = cp.has('shIn')
+  const slewInConn = cp.has('slewIn')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { rate, slewTime, randomMode, trackMode }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       clkIn: { type: 'scalar' },
       trigIn: { type: 'scalar' },

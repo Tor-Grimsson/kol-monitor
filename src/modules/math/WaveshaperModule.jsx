@@ -11,7 +11,7 @@ import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import IconSelect from '../controls/IconSelect'
 import Toggle from '../controls/Toggle'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const MODES = ['exp', 'log', 'scurve', 'clip', 'fold', 'wrap', 'step', 'sine']
 
@@ -92,7 +92,7 @@ export default function WaveshaperModule({ id = 'wshp1', preview }) {
   const [smooth, setSmooth] = useState(0)
   const [smoothFold, setSmoothFold] = useState(false)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const modeRef = useRef('exp')
   const amountRef = useRef(50)
@@ -113,14 +113,17 @@ export default function WaveshaperModule({ id = 'wshp1', preview }) {
   smoothFoldRef.current = smoothFold
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const inConnected = conns.some(c => c.toModuleId === id && c.toPort === 'in')
-  const amtCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'amtCV')
-  const symCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'symCV')
-  const smCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'smCV')
+  const inConnected = cp.has('in')
+  const amtCvConn = cp.has('amtCV')
+  const symCvConn = cp.has('symCV')
+  const smCvConn = cp.has('smCV')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { mode, amount, symmetry, smooth, smoothFold }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { in: { type: 'any' }, amtCV: { type: 'scalar' }, symCV: { type: 'scalar' }, smCV: { type: 'scalar' } },
     outputs: { out: { type: 'any' } },
     process: (inputs) => {

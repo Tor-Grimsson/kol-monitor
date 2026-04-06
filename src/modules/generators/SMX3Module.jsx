@@ -9,7 +9,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function clamp01(n) { return n < 0 ? 0 : n > 100 ? 100 : n }
 
@@ -73,7 +73,7 @@ export default function SMX3Module({ id = 'smx1', preview }) {
   const [k32, setK32] = useState(50)
   const [k33, setK33] = useState(50)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const k11Ref = useRef(50); const k12Ref = useRef(50); const k13Ref = useRef(50)
   const k21Ref = useRef(50); const k22Ref = useRef(50); const k23Ref = useRef(50)
@@ -92,13 +92,16 @@ export default function SMX3Module({ id = 'smx1', preview }) {
   k31Ref.current = k31; k32Ref.current = k32; k33Ref.current = k33
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const aConnected = conns.some(c => c.toModuleId === id && c.toPort === 'a')
-  const bConnected = conns.some(c => c.toModuleId === id && c.toPort === 'b')
-  const cConnected = conns.some(c => c.toModuleId === id && c.toPort === 'c')
+  const aConnected = cp.has('a')
+  const bConnected = cp.has('b')
+  const cConnected = cp.has('c')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { k11, k12, k13, k21, k22, k23, k31, k32, k33 }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { a: { type: 'scalar' }, b: { type: 'scalar' }, c: { type: 'scalar' } },
     outputs: {
       r: { type: 'scalar' }, g: { type: 'scalar' }, b: { type: 'scalar' },

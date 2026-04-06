@@ -1,7 +1,7 @@
 // MathsModule — dual function generator + dual attenuverter + utility bus
 // 8HP. Ch1+Ch4: rise/fall/cycle/vari-response with CV. Ch2+Ch3: attenuverters. SUM/OR/INV outputs.
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
@@ -12,7 +12,7 @@ import Knob from '../controls/Knob'
 import Toggle from '../controls/Toggle'
 import Divider from '../../components/atoms/Divider'
 import LED from '../controls/LED'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { usePatchRouting, useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const EOC_DURATION = 0.03
 
@@ -158,13 +158,21 @@ export default function MathsModule({ id = 'maths1', preview }) {
   const [atten3, setAtten3] = useState(50)
   const [atten4, setAtten4] = useState(50)
   const [enabled, setEnabled] = useModuleEnabled()
-  const [eor1Active, setEor1Active] = useState(false)
-  const [eoc1Active, setEoc1Active] = useState(false)
-  const [eor2Active, setEor2Active] = useState(false)
-  const [eoc2Active, setEoc2Active] = useState(false)
-  const [orActive, setOrActive] = useState(false)
-  const [invActive, setInvActive] = useState(false)
-  const routing = usePatchRouting()
+  // LED state: refs written at 60fps, synced to state at ~10fps for display
+  const ledRefs = useRef({ eor1: false, eoc1: false, eor2: false, eoc2: false, or: false, inv: false })
+  const [leds, setLeds] = useState({ eor1: false, eoc1: false, eor2: false, eoc2: false, or: false, inv: false })
+  useEffect(() => {
+    const id = setInterval(() => {
+      const r = ledRefs.current
+      setLeds(prev => {
+        if (prev.eor1 === r.eor1 && prev.eoc1 === r.eoc1 && prev.eor2 === r.eor2 &&
+            prev.eoc2 === r.eoc2 && prev.or === r.or && prev.inv === r.inv) return prev
+        return { ...r }
+      })
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
 
   const enabledRef = useRef(true)
   const rise1Ref = useRef(50), fall1Ref = useRef(50), cycle1Ref = useRef(false), vari1Ref = useRef(50)
@@ -190,24 +198,20 @@ export default function MathsModule({ id = 'maths1', preview }) {
   rise2Ref.current = rise2; fall2Ref.current = fall2; cycle2Ref.current = cycle2; vari2Ref.current = vari2
   atten1Ref.current = atten1; atten2Ref.current = atten2; atten3Ref.current = atten3; atten4Ref.current = atten4
 
-  const conns = routing?.connections || []
-  const trig1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'trig1')
-  const sig1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'sig1')
-  const riseCV1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'rCV1')
-  const fallCV1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'fCV1')
-  const bothCV1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'bCV1')
-  const trig2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'trig2')
-  const sig2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'sig2')
-  const riseCV2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'rCV2')
-  const fallCV2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'fCV2')
-  const bothCV2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'bCV2')
-  const cyc1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'cyc1')
-  const cyc2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'cyc2')
-  const in2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'in2')
-  const in3Conn = conns.some(c => c.toModuleId === id && c.toPort === 'in3')
+  const cp = useConnectedPorts(id)
+  const trig1Conn = cp.has('trig1'), sig1Conn = cp.has('sig1')
+  const riseCV1Conn = cp.has('rCV1'), fallCV1Conn = cp.has('fCV1'), bothCV1Conn = cp.has('bCV1')
+  const trig2Conn = cp.has('trig2'), sig2Conn = cp.has('sig2')
+  const riseCV2Conn = cp.has('rCV2'), fallCV2Conn = cp.has('fCV2'), bothCV2Conn = cp.has('bCV2')
+  const cyc1Conn = cp.has('cyc1'), cyc2Conn = cp.has('cyc2')
+  const in2Conn = cp.has('in2'), in3Conn = cp.has('in3')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { rise1, fall1, cycle1, vari1, rise2, fall2, cycle2, vari2, atten1, atten2, atten3, atten4 }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       trig1: { type: 'scalar' }, sig1: { type: 'scalar' }, cyc1: { type: 'scalar' },
       rCV1: { type: 'scalar' }, fCV1: { type: 'scalar' }, bCV1: { type: 'scalar' },
@@ -314,9 +318,9 @@ export default function MathsModule({ id = 'maths1', preview }) {
       out2Ref.current = o4; eor2Ref.current = er4; eoc2Ref.current = ec4
       sumRef.current = s; orRef.current = o; invRef.current = inv
 
-      setEor1Active(ch1.eor > 0); setEoc1Active(ch1.eoc > 0)
-      setEor2Active(ch4.eor > 0); setEoc2Active(ch4.eoc > 0)
-      setOrActive(orVal > 5); setInvActive(invVal > 5)
+      ledRefs.current.eor1 = ch1.eor > 0; ledRefs.current.eoc1 = ch1.eoc > 0
+      ledRefs.current.eor2 = ch4.eor > 0; ledRefs.current.eoc2 = ch4.eoc > 0
+      ledRefs.current.or = orVal > 5; ledRefs.current.inv = invVal > 5
 
       return { out1: o1, eor1: er1, eoc1: ec1, out2ch: o2ch, out3ch: o3ch, out2: o4, eor2: er4, eoc2: ec4, sum: s, or: o, inv: inv }
     },
@@ -333,7 +337,7 @@ export default function MathsModule({ id = 'maths1', preview }) {
     out2Ref={out2Ref} eor2Ref={eor2Ref} eoc2Ref={eoc2Ref}
     cyc1Conn={cyc1Conn} cyc1Ref={cyc1Ref} cyc2Conn={cyc2Conn} cyc2Ref={cyc2Ref}
     in2Conn={in2Conn} in2Ref={in2Ref} in3Conn={in3Conn} in3Ref={in3Ref}
-    eor1Active={eor1Active} eoc1Active={eoc1Active} eor2Active={eor2Active} eoc2Active={eoc2Active} orActive={orActive} invActive={invActive}
+    eor1Active={leds.eor1} eoc1Active={leds.eoc1} eor2Active={leds.eor2} eoc2Active={leds.eoc2} orActive={leds.or} invActive={leds.inv}
     out2chRef={out2chRef} out3chRef={out3chRef}
     sumRef={sumRef} orRef={orRef} invRef={invRef}
   />

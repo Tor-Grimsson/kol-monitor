@@ -11,7 +11,7 @@ import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import IconSelect from '../controls/IconSelect'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['up', 'down', 'tri']
 
@@ -44,7 +44,7 @@ export default function RampModule({ id = 'ramp1', preview }) {
   const [rate, setRate] = useState(20)
   const [shape, setShape] = useState('up')
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const rateRef = useRef(20)
   const shapeRef = useRef('up')
@@ -59,12 +59,15 @@ export default function RampModule({ id = 'ramp1', preview }) {
   shapeRef.current = shape
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const syncConnected = conns.some(c => c.toModuleId === id && c.toPort === 'sync')
-  const rateCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'rateCV')
+  const syncConnected = cp.has('sync')
+  const rateCvConn = cp.has('rateCV')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { rate, shape }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { sync: { type: 'scalar' }, rateCV: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs, dt) => {

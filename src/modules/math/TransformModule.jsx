@@ -10,7 +10,7 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function TransformPanel({ posX, posY, scale, rotX, rotY, rotZ, enabled, onToggle, onPosXChange, onPosYChange, onScaleChange, onRotXChange, onRotYChange, onRotZChange, id, inConn, inRef, xConn, xInRef, yConn, yInRef, sConn, sInRef, rxConn, rxInRef, ryConn, ryInRef, rzConn, rzInRef, outRef }) {
   const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
@@ -64,7 +64,7 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
   const [rotY, setRotY] = useState(init?.rotY ?? 0)
   const [rotZ, setRotZ] = useState(init?.rotZ ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const posXRef = useRef(50)
@@ -90,17 +90,20 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
   rotYRef.current = rotY
   rotZRef.current = rotZ
 
-  const conns = routing?.connections || []
-  const inConn = conns.some(c => c.toModuleId === id && c.toPort === 'in')
-  const xConn = conns.some(c => c.toModuleId === id && c.toPort === 'x')
-  const yConn = conns.some(c => c.toModuleId === id && c.toPort === 'y')
-  const sConn = conns.some(c => c.toModuleId === id && c.toPort === 's')
-  const rxConn = conns.some(c => c.toModuleId === id && c.toPort === 'rx')
-  const ryConn = conns.some(c => c.toModuleId === id && c.toPort === 'ry')
-  const rzConn = conns.some(c => c.toModuleId === id && c.toPort === 'rz')
+  const inConn = cp.has('in')
+  const xConn = cp.has('x')
+  const yConn = cp.has('y')
+  const sConn = cp.has('s')
+  const rxConn = cp.has('rx')
+  const ryConn = cp.has('ry')
+  const rzConn = cp.has('rz')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { posX, posY, scale, rotX, rotY, rotZ }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       in: { type: 'points' },
       x: { type: 'scalar' },

@@ -14,7 +14,7 @@ import IconButton from '../controls/IconButton'
 import LabeledControl from '../controls/LabeledControl'
 import Toggle from '../controls/Toggle'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const MODE_ITEMS = [
   { value: 'gradient', icon: 'gen-gradient', text: 'grad' },
@@ -445,7 +445,7 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   const [colorSub, setColorSub] = useState(init?.colorSub ?? 'mono')
   const [colorAni, setColorAni] = useState(init?.colorAni ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const modeRef = useRef('pattern')
@@ -506,16 +506,15 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   colorSubRef.current = colorSub
   colorAniRef.current = colorAni
 
-  const conns = routing?.connections || []
-  const p1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'p1')
-  const p2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'p2')
-  const p3Conn = conns.some(c => c.toModuleId === id && c.toPort === 'p3')
-  const p4Conn = conns.some(c => c.toModuleId === id && c.toPort === 'p4')
-  const spdConn = conns.some(c => c.toModuleId === id && c.toPort === 'spd')
-  const clkConn = conns.some(c => c.toModuleId === id && c.toPort === 'clk')
-  const ampConn = conns.some(c => c.toModuleId === id && c.toPort === 'amp')
-  const dtyConn = conns.some(c => c.toModuleId === id && c.toPort === 'dty')
-  const ofsConn = conns.some(c => c.toModuleId === id && c.toPort === 'ofs')
+  const p1Conn = cp.has('p1')
+  const p2Conn = cp.has('p2')
+  const p3Conn = cp.has('p3')
+  const p4Conn = cp.has('p4')
+  const spdConn = cp.has('spd')
+  const clkConn = cp.has('clk')
+  const ampConn = cp.has('amp')
+  const dtyConn = cp.has('dty')
+  const ofsConn = cp.has('ofs')
 
   // Track last geometry mode so switching to color tab doesn't change points output
   const geoModeRef = useRef(mode !== 'color' ? mode : 'pattern')
@@ -528,8 +527,12 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
     if (subs && subs.length > 0) setSubType(subs[0].value)
   }
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { mode, subType, p1, p2, p3, p4, animate, speed, amp, duty, offset, lfoOn, lfoFreq, oscillate, colorH, colorS, colorL, colorSub, colorAni }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { p1: { type: 'scalar' }, p2: { type: 'scalar' }, p3: { type: 'scalar' }, p4: { type: 'scalar' }, spd: { type: 'scalar' }, clk: { type: 'scalar' }, amp: { type: 'scalar' }, dty: { type: 'scalar' }, ofs: { type: 'scalar' } },
     outputs: { out: { type: 'points' }, color: { type: 'color' }, scalar: { type: 'scalar' }, lfo: { type: 'scalar' } },
     process: (inputs, dt, t) => {

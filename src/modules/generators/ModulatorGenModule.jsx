@@ -12,7 +12,7 @@ import CvKnob from '../controls/CvKnob'
 import CvSlider from '../controls/CvSlider'
 import Toggle from '../controls/Toggle'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Math ported from kol-modulator/DialRotation.jsx ---
 
@@ -142,7 +142,7 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
   const [absolute, setAbsolute] = useState(init?.absolute ?? false)
   const [freeze, setFreeze] = useState(false)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   // Refs for process
   const enabledRef = useRef(true)
@@ -190,20 +190,23 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
   absoluteRef.current = absolute
   freezeRef.current = freeze
 
-  const conns = routing?.connections || []
-  const intConn = conns.some(c => c.toModuleId === id && c.toPort === 'int')
-  const frqConn = conns.some(c => c.toModuleId === id && c.toPort === 'frq')
-  const sepConn = conns.some(c => c.toModuleId === id && c.toPort === 'sep')
-  const sclConn = conns.some(c => c.toModuleId === id && c.toPort === 'scl')
-  const cirConn = conns.some(c => c.toModuleId === id && c.toPort === 'cir')
-  const resConn = conns.some(c => c.toModuleId === id && c.toPort === 'res')
-  const brtConn = conns.some(c => c.toModuleId === id && c.toPort === 'brt')
-  const bamConn = conns.some(c => c.toModuleId === id && c.toPort === 'bam')
-  const spdConn = conns.some(c => c.toModuleId === id && c.toPort === 'spd')
-  const strConn = conns.some(c => c.toModuleId === id && c.toPort === 'str')
+  const intConn = cp.has('int')
+  const frqConn = cp.has('frq')
+  const sepConn = cp.has('sep')
+  const sclConn = cp.has('scl')
+  const cirConn = cp.has('cir')
+  const resConn = cp.has('res')
+  const brtConn = cp.has('brt')
+  const bamConn = cp.has('bam')
+  const spdConn = cp.has('spd')
+  const strConn = cp.has('str')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { intensity, frequency, separation, scale, circles, resolution, breathTime, breathAmp, speed, quantize, absolute, freeze }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       int: { type: 'scalar' }, frq: { type: 'scalar' }, sep: { type: 'scalar' },
       scl: { type: 'scalar' }, cir: { type: 'scalar' }, res: { type: 'scalar' },
@@ -267,14 +270,14 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
       const normAmp = totalAmp / 400
       const normFreq = Math.max(10, totalFreq * 10)
 
-      // Generate all circles
-      let allPts = []
-      let allEdges = []
+      // Generate all circles (push instead of concat to avoid O(n²) allocation)
+      const allPts = []
+      const allEdges = []
 
       // Main circle
       const main = generateCirclePoints(baseRadius, normAmp, normFreq, driftRef.current, 0, quantizeRef.current, 1, numPts)
-      allPts = main.pts
-      allEdges = main.edges
+      for (let i = 0; i < main.pts.length; i++) allPts.push(main.pts[i])
+      for (let i = 0; i < main.edges.length; i++) allEdges.push(main.edges[i])
 
       // Concentric pairs
       for (let pair = 1; pair < cir; pair++) {
@@ -289,16 +292,16 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
         if (innerR > 0.01) {
           const inner = generateCirclePoints(innerR, ampVar, freqVar, driftRef.current, phaseOfs, quantizeRef.current, 1, numPts)
           const offset = allPts.length
-          allPts = allPts.concat(inner.pts)
-          allEdges = allEdges.concat(inner.edges.map(([a, b]) => [a + offset, b + offset]))
+          for (let i = 0; i < inner.pts.length; i++) allPts.push(inner.pts[i])
+          for (let i = 0; i < inner.edges.length; i++) allEdges.push([inner.edges[i][0] + offset, inner.edges[i][1] + offset])
         }
 
         // Outer
         const outerR = baseRadius + baseOffset + totalSep
         const outer = generateCirclePoints(outerR, ampVar, freqVar, driftRef.current, phaseOfs, quantizeRef.current, 1, numPts)
         const offset2 = allPts.length
-        allPts = allPts.concat(outer.pts)
-        allEdges = allEdges.concat(outer.edges.map(([a, b]) => [a + offset2, b + offset2]))
+        for (let i = 0; i < outer.pts.length; i++) allPts.push(outer.pts[i])
+        for (let i = 0; i < outer.edges.length; i++) allEdges.push([outer.edges[i][0] + offset2, outer.edges[i][1] + offset2])
       }
 
       const out = points(allPts, allEdges)

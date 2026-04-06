@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { TOTAL_HP, HP_PX, ROW_WIDTH, ASPECT, RAIL_HEIGHT, hpToPx } from './eurorack'
 
 // HP with grid placement — offset is 0-based HP position
@@ -9,7 +10,7 @@ const SLOTS = Array.from({ length: TOTAL_HP }, (_, i) => i)
 
 const FRAME_COLOR = 'linear-gradient(180deg, #8a8680 0%, #7a7670 50%, #6a6660 100%)'
 
-function Rail() {
+const Rail = memo(function Rail() {
   return (
     <div style={{
       height: RAIL_HEIGHT,
@@ -35,9 +36,9 @@ function Rail() {
       ))}
     </div>
   )
-}
+})
 
-export function RackRow({ height = '3u', children }) {
+export const RackRow = memo(function RackRow({ height = '3u', children }) {
   return (
     <div className="relative" style={{ width: ROW_WIDTH, aspectRatio: ASPECT[height] || ASPECT['3u'] }}>
       {/* Layer 0: case background */}
@@ -51,9 +52,9 @@ export function RackRow({ height = '3u', children }) {
       </div>
     </div>
   )
-}
+})
 
-export default function Case({ children }) {
+export default memo(function Case({ children }) {
   return (
     <div style={{ padding: '0 24px' }}>
       <div style={{ display: 'flex', flexDirection: 'row', padding: '3px 0' }}>
@@ -65,4 +66,4 @@ export default function Case({ children }) {
       </div>
     </div>
   )
-}
+})

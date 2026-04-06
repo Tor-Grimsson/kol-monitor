@@ -1,6 +1,12 @@
 // Named patch presets — each defines modules + connections
 // Format: { rows: [{ height, modules: [{ type, id }] }], connections: [...] }
 
+const UTIL_ROW = { height: '1u', modules: [
+  { type: 'power', id: 'pwr1' },
+  { type: 'perf', id: 'perf1' },
+  { type: 'patch', id: 'patch1' },
+]}
+
 export const patches = {
   // Default connections loaded on startup
   ref: {
@@ -28,12 +34,7 @@ export const patches = {
 
   init: {
     rows: [
-      { height: '1u', modules: [
-        { type: 'mult', id: 'mult1' },
-        { type: 'noise', id: 'noise1' },
-        { type: 'attenuator', id: 'atten1' },
-        { type: 'vca', id: 'vca1' },
-      ]},
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'mult', id: 'mult1' }, { type: 'noise', id: 'noise1' }, { type: 'attenuator', id: 'atten1' }, { type: 'vca', id: 'vca1' }] },
       { height: '3u', modules: [
         { type: 'patch', id: 'patch1' },
         { type: 'clock', id: 'clk1' },
@@ -78,6 +79,7 @@ export const patches = {
   // Visual: nested pulsing circles like a radar or sonar ping
   'sonar': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk', state: { bpm: 40, division: 1 } },
         { type: 'envelope', id: 'env', state: { attack: 70, decay: 40, sustain: 20, release: 80 } },
@@ -111,6 +113,7 @@ export const patches = {
   // Maths slews the logic output so transitions are smooth, not hard cuts
   'morph': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk', state: { bpm: 90, division: 3 } },
         { type: 'lfo', id: 'lfo', state: { rate: 15, shape: 'sqr', depth: 100, offset: 50 } },
@@ -161,6 +164,7 @@ export const patches = {
   // Visual: 2D pattern leaves ghost trails that rotate and breathe
   'trail-spin': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk', state: { bpm: 72, division: 2 } },
         { type: 'lfo', id: 'lfo1', state: { rate: 5, shape: 'tri', depth: 80, offset: 30 } },
@@ -200,6 +204,7 @@ export const patches = {
   // Visual: a single waveform line that slowly stretches and compresses
   'morph-wave': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo' },
         { type: 'waveform', id: 'wave' },
@@ -216,6 +221,7 @@ export const patches = {
   // Visual: waveform jumps between frequencies in a pattern, like a visual melody
   'melody': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'sequencer', id: 'seq' },
@@ -237,6 +243,7 @@ export const patches = {
   // Visual: waveform appears in bursts, grows and decays with ADSR shape
   'burst': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'envelope', id: 'env' },
@@ -260,6 +267,7 @@ export const patches = {
   // Visual: wireframe cube slowly grows and shrinks, tumbling
   'breathing': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo' },
         { type: 'wireframe', id: 'wire' },
@@ -278,6 +286,7 @@ export const patches = {
   // Visual: wireframe swinging like a pendulum
   'pendulum': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo' },
         { type: 'wireframe', id: 'wire' },
@@ -294,6 +303,7 @@ export const patches = {
   // Visual: mechanical rotating wireframe with weight and momentum
   'kraftwerk': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'envelope', id: 'env' },
@@ -317,6 +327,7 @@ export const patches = {
   // Visual: wireframe snaps between quantized orientations on each beat
   'seq-geo': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'sequencer', id: 'seq' },
@@ -340,6 +351,7 @@ export const patches = {
   // Visual: smoothly cycling through the color spectrum
   'color-cycle': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo' },
         { type: 'mult', id: 'mult' },
@@ -364,6 +376,7 @@ export const patches = {
   // Visual: color changes in smooth steps, like a palette cycling slowly
   'color-steps': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'sequencer', id: 'seq' },
@@ -390,7 +403,7 @@ export const patches = {
   // Visual: color jumps to random value on each beat, holds until next
   'sh-color': {
     rows: [
-      { height: '1u', modules: [
+      { height: '1u', modules: [...UTIL_ROW.modules,
         { type: 'noise', id: 'n1' },
         { type: 'noise', id: 'n2' },
         { type: 'noise', id: 'n3' },
@@ -422,6 +435,7 @@ export const patches = {
   // Visual: complex color mixing from independent signal sources
   'matrix': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo' },
         { type: 'ramp', id: 'ramp' },
@@ -444,6 +458,7 @@ export const patches = {
   // Visual: envelope triggered by logic pattern, scope shows the rhythm
   'rhythm': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'clockDiv', id: 'div' },
@@ -466,7 +481,7 @@ export const patches = {
   // Visual: scope trace that pulses in size with the rhythm
   'vca-pulse': {
     rows: [
-      { height: '1u', modules: [
+      { height: '1u', modules: [...UTIL_ROW.modules,
         { type: 'vca', id: 'vca' },
       ]},
       { height: '3u', modules: [
@@ -491,6 +506,7 @@ export const patches = {
   // Visual: scope shows interference pattern between two frequencies
   'metallic': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo1' },
         { type: 'lfo', id: 'lfo2' },
@@ -510,6 +526,7 @@ export const patches = {
   // Visual: scope trace with repeating echoes that decay over time
   'echo-trail': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo' },
         { type: 'delay', id: 'dly' },
@@ -527,9 +544,7 @@ export const patches = {
   // Visual: smooth drifting color from reverb-smeared noise
   'wash': {
     rows: [
-      { height: '1u', modules: [
-        { type: 'noise', id: 'noise' },
-      ]},
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'noise', id: 'noise' }] },
       { height: '3u', modules: [
         { type: 'reverb', id: 'verb' },
         { type: 'rgb', id: 'rgb' },
@@ -549,6 +564,7 @@ export const patches = {
   // Visual: ramp folded into complex waveform, changing over time
   'solarize': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'ramp', id: 'ramp' },
         { type: 'lfo', id: 'lfo' },
@@ -568,9 +584,7 @@ export const patches = {
   // Visual: scope shows a random staircase pattern that changes per beat
   'staircase': {
     rows: [
-      { height: '1u', modules: [
-        { type: 'noise', id: 'noise' },
-      ]},
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'noise', id: 'noise' }] },
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'sampleHold', id: 'sh' },
@@ -593,6 +607,7 @@ export const patches = {
   // Visual: rotating wireframe overlaid on slowly changing color field
   'wire-color': {
     rows: [
+      UTIL_ROW,
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo' },
         { type: 'wireframe', id: 'wire' },
@@ -615,10 +630,7 @@ export const patches = {
   // Visual: complex evolving color driven by shaped rhythmic sequence
   'system': {
     rows: [
-      { height: '1u', modules: [
-        { type: 'vca', id: 'vca' },
-        { type: 'mult', id: 'mult' },
-      ]},
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'vca', id: 'vca' }, { type: 'mult', id: 'mult' }] },
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'clockDiv', id: 'div' },
@@ -663,5 +675,332 @@ export const patches = {
       { fromModuleId: 'wshp', fromPort: 'out', toModuleId: 'mon', toPort: 'a' },
       { fromModuleId: 'env', fromPort: 'out', toModuleId: 'mon', toPort: 'b' },
     ],
+  },
+
+  // 70s psychedelic video delay — Magneto with spiraling hue-shifted echoes
+  // Wireframe → Magneto (cumulative rotation + zoom tunnel + rainbow hue cycling)
+  // LFO slowly modulates wireframe rotation, clock drives sequencer for rhythmic changes
+  // Pen controls line style, output displays the trippy feedback spiral
+  '70s': {
+    tags: ['analog'],
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'lfo', id: 'lfo', state: { rate: 15, shape: 'sin', depth: 60, offset: 50 } },
+        { type: 'wireframe', id: 'wire', state: { shape: 4, rx: 50, ry: 50, rz: 50, spd: 30, scl: 55, res: 50, fov: 50 } },
+        { type: 'magneto', id: 'mag', state: { mode: 'loop', dry: 15, wet: 85, speedPitch: 35, recLvl: 90, headLevels: [90, 75, 60, 40], headOn: [true, true, true, false], repeats: 45, lowCut: 25, crinkle: 20, wow: 15, spring: 10, tapeAge: 5, heads: 0, pan: 0, fbInf: false, fbPlay: true, fbPause: false } },
+        { type: 'pen', id: 'pen', state: { thickness: 20, opacity: 80 } },
+        { type: 'monitor', id: 'mon' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'wire', toPort: 'rx' },
+      { fromModuleId: 'wire', fromPort: 'out', toModuleId: 'mag', toPort: 'in' },
+      { fromModuleId: 'mag', fromPort: 'out', toModuleId: 'mon', toPort: 'a' },
+      { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'mon', toPort: 'pen' },
+    ],
+  },
+
+  // --- SHOWCASE PATCHES ---
+
+  // RadialGen with LFO-modulated amplitude → Monitor
+  // Visual: radial geometry breathing with slow modulation
+  'radial': {
+    tags: ['showcase', 'geometric', 'generative'],
+    description: 'RadialGen with LFO modulating amplitude',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'radialGen', id: 'rad1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'rad1', toPort: 'amp' },
+      { fromModuleId: 'rad1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // ModulatorGen with LFO on breath → Monitor
+  // Visual: concentric circles breathing with ambient modulation
+  'modulator': {
+    tags: ['showcase', 'generative', 'ambient'],
+    description: 'ModulatorGen with LFO on breath',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'modGen', id: 'modg1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'modg1', toPort: 'bam' },
+      { fromModuleId: 'modg1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // Wireframe → Magneto → Monitor — 70s video delay feedback
+  // Visual: wireframe with tape-style echo trails
+  'magneto': {
+    tags: ['showcase', 'feedback', 'analog'],
+    description: 'Wireframe through Magneto video delay',
+    rows: [
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'mult', id: 'mult1' }] },
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'wireframe', id: 'wire1' },
+        { type: 'magneto', id: 'mag1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'wire1', toPort: 'rx' },
+      { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'mag1', toPort: 'in' },
+      { fromModuleId: 'mag1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+    ],
+  },
+
+  // Gen Lofi 3 outputs → Mixer → Monitor
+  // Visual: lo-fi gradient, pattern, and wave signals mixed together
+  'genLofi': {
+    tags: ['showcase', 'generative', 'minimal'],
+    description: 'Gen Lofi 3 outputs mixed together',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'generator', id: 'gen1' },
+        { type: 'mixer', id: 'mix1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'gen1', toPort: 'clk' },
+      { fromModuleId: 'gen1', fromPort: 'grad', toModuleId: 'mix1', toPort: 'a' },
+      { fromModuleId: 'gen1', fromPort: 'ptrn', toModuleId: 'mix1', toPort: 'b' },
+      { fromModuleId: 'gen1', fromPort: 'wave', toModuleId: 'mix1', toPort: 'c' },
+      { fromModuleId: 'mix1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // Gen Hifi → Monitor with color output
+  // Visual: hi-fi generative visuals with color
+  'genHifi': {
+    tags: ['showcase', 'generative', 'color'],
+    description: 'Gen Hifi with color output',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'generator2', id: 'gen2' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'gen2', toPort: 'clk' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'gen2', toPort: 'freq' },
+      { fromModuleId: 'gen2', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'mon1', toPort: 'b' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // 3 generators into Console mixer
+  // Visual: multiple generator sources mixed and composited in console
+  'consoleMixer': {
+    tags: ['showcase', 'generative'],
+    description: '3 generators mixed in Console',
+    rows: [
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'mult', id: 'mult1' }] },
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'wireframe', id: 'wire1' },
+        { type: 'lineGen', id: 'line1' },
+        { type: 'waveform', id: 'wave1' },
+        { type: 'pen', id: 'pen1' },
+      ]},
+      { height: '3u', modules: [
+        { type: 'console', id: 'con1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'wire1', toPort: 'rx' },
+      { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'con1', toPort: 'a' },
+      { fromModuleId: 'line1', fromPort: 'out', toModuleId: 'con1', toPort: 'b' },
+      { fromModuleId: 'wave1', fromPort: 'out', toModuleId: 'con1', toPort: 'c' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'con1', toPort: 'pen' },
+    ],
+  },
+
+  // Wireframe with LFO on rotation → Monitor
+  // Visual: slowly rotating 3D wireframe
+  'wireframe': {
+    tags: ['showcase', 'geometric', 'minimal'],
+    description: 'Wireframe with LFO-driven rotation',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'wireframe', id: 'wire1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'wire1', toPort: 'rz' },
+      { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // Gen Hifi → Dither → Monitor
+  // Visual: hi-fi visuals processed through dithering engine
+  'dither': {
+    tags: ['showcase', 'generative'],
+    description: 'Gen Hifi through Dither processing',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'generator2', id: 'gen2' },
+        { type: 'dither', id: 'dith1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'gen2', toPort: 'clk' },
+      { fromModuleId: 'gen2', fromPort: 'out', toModuleId: 'dith1', toPort: 'in' },
+      { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'dith1', toPort: 'clr' },
+      { fromModuleId: 'dith1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // Waveform → Filter → Monitor with LFO on cutoff
+  // Visual: filtered waveform with sweeping cutoff modulation
+  'filter': {
+    tags: ['showcase', 'modulation'],
+    description: 'Waveform through Filter with LFO on cutoff',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'waveform', id: 'wave1' },
+        { type: 'filter', id: 'flt1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'wave1', toPort: 'clk' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'flt1', toPort: 'cutCV' },
+      { fromModuleId: 'wave1', fromPort: 'out', toModuleId: 'flt1', toPort: 'in' },
+      { fromModuleId: 'flt1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // Life → Monitor — cellular automaton display
+  // Visual: evolving cellular automaton patterns
+  'life': {
+    tags: ['showcase', 'generative', 'geometric'],
+    description: 'Cellular automaton on Monitor',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'life', id: 'life1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'life1', toPort: 'clk' },
+      { fromModuleId: 'life1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // LineGen → Transform → Monitor with LFO modulation
+  // Visual: 2D patterns with geometric transformation
+  'lineGen': {
+    tags: ['showcase', 'geometric', 'generative'],
+    description: 'LineGen through Transform with LFO',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'lineGen', id: 'line1' },
+        { type: 'transform', id: 'xfm1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'xfm1', toPort: 'rz' },
+      { fromModuleId: 'line1', fromPort: 'out', toModuleId: 'xfm1', toPort: 'in' },
+      { fromModuleId: 'xfm1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // 3 LFOs → SMX3 → Monitor — RGB color mixing from modulation
+  // Visual: complex color field from three independent LFO sources
+  'smx3': {
+    tags: ['showcase', 'color', 'modulation'],
+    description: '3 LFOs mixed through SMX3 color matrix',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'lfo', id: 'lfo2' },
+        { type: 'lfo', id: 'lfo3' },
+        { type: 'smx3', id: 'smx1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'smx1', toPort: 'a' },
+      { fromModuleId: 'lfo2', fromPort: 'out', toModuleId: 'smx1', toPort: 'b' },
+      { fromModuleId: 'lfo3', fromPort: 'out', toModuleId: 'smx1', toPort: 'c' },
+      { fromModuleId: 'smx1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+    ],
+  },
+
+  // Empty rack with just utilities
+  // Starting point for building new patches
+  'starter': {
+    tags: ['showcase', 'minimal'],
+    description: 'Empty rack with basic utilities.',
+    rows: [
+      UTIL_ROW,
+    ],
+    connections: [],
   },
 }

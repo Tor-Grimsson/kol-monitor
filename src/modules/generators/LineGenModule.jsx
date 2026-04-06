@@ -10,7 +10,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import IconSelect from '../controls/IconSelect'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['line', 'grid', 'circle', 'spiral', 'lissa']
 const RESOLUTION = 64
@@ -145,7 +145,7 @@ export default function LineGenModule({ id = 'line1', init, preview }) {
   const [density, setDensity] = useState(init?.density ?? 50)
   const [speed, setSpeed] = useState(init?.speed ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const shapeRef = useRef('circle')
@@ -163,13 +163,16 @@ export default function LineGenModule({ id = 'line1', init, preview }) {
   densityRef.current = density
   speedRef.current = speed
 
-  const conns = routing?.connections || []
-  const freqConn = conns.some(c => c.toModuleId === id && c.toPort === 'freq')
-  const densConn = conns.some(c => c.toModuleId === id && c.toPort === 'dens')
-  const spdConn = conns.some(c => c.toModuleId === id && c.toPort === 'spd')
+  const freqConn = cp.has('freq')
+  const densConn = cp.has('dens')
+  const spdConn = cp.has('spd')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { shape, freq, density, speed }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       freq: { type: 'scalar' },
       dens: { type: 'scalar' },

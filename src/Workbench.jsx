@@ -129,7 +129,7 @@ export default function Workbench({ modules, onReturn, onAddModule }) {
         )}
 
         {/* Modules */}
-        <div className="flex items-start gap-1 overflow-x-auto flex-1" style={{ paddingTop: 12 }}>
+        <div className="flex items-start gap-1 flex-1" style={{ paddingTop: 12, overflow: 'auto', flexWrap: 'wrap' }}>
         {tab === 'workbench' && modules.length === 0 && (
           <div style={{
             width: hpToPx(8),

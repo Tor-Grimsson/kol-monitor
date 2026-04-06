@@ -10,7 +10,7 @@ import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import IconSelect from '../controls/IconSelect'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const FILTER_ITEMS = [
   { value: 'lp', icon: 'filter-lp', label: 'low-pass' },
@@ -53,7 +53,7 @@ export default function FilterModule({ id = 'filt1', preview }) {
   const [cutoff, setCutoff] = useState(50)
   const [resonance, setResonance] = useState(0)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const modeRef = useRef('lp')
   const cutoffRef = useRef(50)
@@ -81,13 +81,16 @@ export default function FilterModule({ id = 'filt1', preview }) {
   resonanceRef.current = resonance
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const inConn = conns.some(c => c.toModuleId === id && c.toPort === 'in')
-  const cutCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'cutCV')
-  const resCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'resCV')
+  const inConn = cp.has('in')
+  const cutCvConn = cp.has('cutCV')
+  const resCvConn = cp.has('resCV')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { mode, cutoff, resonance }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { in: { type: 'any' }, cutCV: { type: 'scalar' }, resCV: { type: 'scalar' } },
     outputs: { out: { type: 'any' } },
     process: (inputs) => {

@@ -5,7 +5,7 @@ import { useState, useRef } from 'react'
 
 const SIZES = { sm: 8, md: 12 }
 
-export default function Toggle({ value, onChange, label, horizontal = false, size = 'md', padding = 4, momentary = false }) {
+export default function Toggle({ value, onChange, label, horizontal = false, size = 'md', padding = 4, momentary = false, color = '#e74c3c' }) {
   const [lit, setLit] = useState(false)
   const timerRef = useRef(null)
   const s = SIZES[size]
@@ -32,7 +32,7 @@ export default function Toggle({ value, onChange, label, horizontal = false, siz
         width: s,
         height: s,
         borderRadius: '50%',
-        backgroundColor: '#e74c3c',
+        backgroundColor: color,
         opacity: isOn ? 1 : 0.3,
         border: 'none',
       }} />

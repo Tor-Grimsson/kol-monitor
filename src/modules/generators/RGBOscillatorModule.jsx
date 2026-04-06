@@ -9,7 +9,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import Toggle from '../controls/Toggle'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr, bClr, enabled, onToggle, onRRateChange, onGRateChange, onBRateChange, onROscChange, onGOscChange, onBOscChange, onRClrChange, onGClrChange, onBClrChange, id, rConn, rInRef, gConn, gInRef, bConn, bInRef, clkConn, clkRef, rOutRef, gOutRef, bOutRef, outRef }) {
   const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '0 2px' }
@@ -69,7 +69,7 @@ export default function RGBOscillatorModule({ id = 'rgb1', preview }) {
   const [gClr, setGClr] = useState(false)
   const [bClr, setBClr] = useState(false)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const rOscRef = useRef(true)
@@ -103,14 +103,17 @@ export default function RGBOscillatorModule({ id = 'rgb1', preview }) {
   gRateRef.current = gRate
   bRateRef.current = bRate
 
-  const conns = routing?.connections || []
-  const rConn = conns.some(c => c.toModuleId === id && c.toPort === 'r')
-  const gConn = conns.some(c => c.toModuleId === id && c.toPort === 'g')
-  const bConn = conns.some(c => c.toModuleId === id && c.toPort === 'b')
-  const clkConn = conns.some(c => c.toModuleId === id && c.toPort === 'clk')
+  const rConn = cp.has('r')
+  const gConn = cp.has('g')
+  const bConn = cp.has('b')
+  const clkConn = cp.has('clk')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr, bClr }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       r: { type: 'scalar' },
       g: { type: 'scalar' },

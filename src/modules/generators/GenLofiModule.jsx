@@ -13,7 +13,7 @@ import IconButton from '../controls/IconButton'
 import LabeledControl from '../controls/LabeledControl'
 import Toggle from '../controls/Toggle'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Algorithms ---
 
@@ -246,7 +246,7 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
   const [animate, setAnimate] = useState(init?.animate ?? true)
   const [speed, setSpeed] = useState(init?.speed ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const animateRef = useRef(true)
@@ -281,16 +281,19 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
   p3Ref.current = p3
   p4Ref.current = p4
 
-  const conns = routing?.connections || []
-  const p1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'p1')
-  const p2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'p2')
-  const p3Conn = conns.some(c => c.toModuleId === id && c.toPort === 'p3')
-  const p4Conn = conns.some(c => c.toModuleId === id && c.toPort === 'p4')
-  const spdConn = conns.some(c => c.toModuleId === id && c.toPort === 'spd')
-  const clkConn = conns.some(c => c.toModuleId === id && c.toPort === 'clk')
+  const p1Conn = cp.has('p1')
+  const p2Conn = cp.has('p2')
+  const p3Conn = cp.has('p3')
+  const p4Conn = cp.has('p4')
+  const spdConn = cp.has('spd')
+  const clkConn = cp.has('clk')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { tab, gradSub, patternSub, waveSub, p1, p2, p3, p4, animate, speed }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { p1: { type: 'scalar' }, p2: { type: 'scalar' }, p3: { type: 'scalar' }, p4: { type: 'scalar' }, spd: { type: 'scalar' }, clk: { type: 'scalar' } },
     outputs: { grad: { type: 'points' }, ptrn: { type: 'points' }, wave: { type: 'points' } },
     process: (inputs, dt, t) => {

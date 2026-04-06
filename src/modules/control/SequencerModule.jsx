@@ -12,7 +12,7 @@ import IconSelect from '../controls/IconSelect'
 import FlipToggle from '../controls/FlipToggle'
 import LED from '../controls/LED'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const STEPS_PER_PAGE = 8
 const TOTAL_PAGES = 4
@@ -154,7 +154,7 @@ export default function SequencerModule({ id = 'seq1', preview }) {
   const [page, setPage] = useState(0)
   const [length, setLength] = useState(8)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const stepsRef = useRef(steps)
@@ -175,13 +175,16 @@ export default function SequencerModule({ id = 'seq1', preview }) {
   enabledRef.current = enabled
   lengthRef.current = length
 
-  const conns = routing?.connections || []
-  const clockConnected = conns.some(c => c.toModuleId === id && c.toPort === 'clock')
-  const resetConnected = conns.some(c => c.toModuleId === id && c.toPort === 'reset')
-  const lenCvConnected = conns.some(c => c.toModuleId === id && c.toPort === 'lenCV')
+  const clockConnected = cp.has('clock')
+  const resetConnected = cp.has('reset')
+  const lenCvConnected = cp.has('lenCV')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { steps, gates, page, length }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { clock: { type: 'scalar' }, reset: { type: 'scalar' }, lenCV: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' }, gate: { type: 'scalar' } },
     process: (inputs, dt) => {

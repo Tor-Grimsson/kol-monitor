@@ -9,7 +9,7 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function SwitchPanel({ enabled, onToggle, id,
   a1Conn, a1Ref, b1Conn, b1Ref, cv1Conn, cv1Ref, out1Ref,
@@ -50,20 +50,19 @@ export default function SwitchModule({ id = 'sw1', preview }) {
   />
 
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
   const enabledRef = useRef(true)
   enabledRef.current = enabled
 
   const a1Ref = useRef(null), b1Ref = useRef(null), cv1Ref = useRef(null), out1Ref = useRef(null)
   const a2Ref = useRef(null), b2Ref = useRef(null), cv2Ref = useRef(null), out2Ref = useRef(null)
 
-  const conns = routing?.connections || []
-  const a1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'a1')
-  const b1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'b1')
-  const cv1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'cv1')
-  const a2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'a2')
-  const b2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'b2')
-  const cv2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'cv2')
+  const a1Conn = cp.has('a1')
+  const b1Conn = cp.has('b1')
+  const cv1Conn = cp.has('cv1')
+  const a2Conn = cp.has('a2')
+  const b2Conn = cp.has('b2')
+  const cv2Conn = cp.has('cv2')
 
   useModule({
     id,

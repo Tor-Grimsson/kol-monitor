@@ -1,8 +1,39 @@
 // ModuloSidebar — sections: Case, Modules, Presets
 
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CATEGORIES, getModulesByCategory, MODULE_DEFS } from './moduleRegistry'
 import { patches } from './patches'
+import Icon from './components/icons/Icon'
+import RackIcon from './icons/Icon'
+import Logomark from './components/atoms/Logomark'
+
+const NAV_ITEMS = [
+  { icon: 'library', path: '/library', label: 'Library' },
+  { icon: 'settings-01', path: '/settings', label: 'Settings' },
+  { icon: 'plus', path: '/create', label: 'Create' },
+]
+
+function NavIcons() {
+  const navigate = useNavigate()
+  return (
+    <>
+      <div onClick={() => navigate('/')} title="Home" style={{ cursor: 'pointer', lineHeight: 0 }}>
+        <Logomark svgUrl="/svg/favicon-01.svg" size={16} />
+      </div>
+      {NAV_ITEMS.map(({ icon, path, label }) => (
+        <div
+          key={path}
+          onClick={() => navigate(path)}
+          title={label}
+          style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.48)', lineHeight: 0 }}
+        >
+          <Icon name={icon} size={16} />
+        </div>
+      ))}
+    </>
+  )
+}
 
 const CATEGORY_LABELS = {
   control: 'Control',
@@ -12,7 +43,7 @@ const CATEGORY_LABELS = {
   utility: 'Utility',
 }
 
-export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoomFit, onHide }) {
+export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoomFit, onHide, cableVisibility, onCableVisibility, cableLocked, onCableLocked }) {
   const [openCats, setOpenCats] = useState(() => new Set(CATEGORIES))
   const [zoomInput, setZoomInput] = useState(() => String(Math.round((zoom || 1) * 100)))
   const [presetHeight, setPresetHeight] = useState(264)
@@ -45,8 +76,10 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
     <div className="flex flex-col h-full w-full overflow-hidden" style={{ userSelect: 'none' }}>
 
       {/* Header */}
-      <div className="p-4 border-b border-fg-08 flex items-center justify-between">
-        <span className="kol-helper-xs text-fg-64">Modular Monitor</span>
+      <div className="border-b border-fg-08 flex items-center justify-between" style={{ height: 45, padding: '0 16px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <NavIcons />
+        </div>
         <span
           onClick={onHide}
           className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
@@ -166,20 +199,24 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
         </div>
       </div>
 
-      {/* Footer — edit mode toggle */}
+      {/* Footer */}
       <div className="mt-auto p-4 border-t border-fg-08 flex items-center justify-between">
         <span
           onClick={() => rack.setEditMode(!rack.editMode)}
-          className="kol-helper-xs text-fg-64 cursor-pointer select-none"
+          className="kol-helper-xs cursor-pointer select-none"
+          style={{ color: rack.editMode ? 'rgba(231,76,60,0.9)' : undefined }}
         >
-          {rack.editMode ? 'Editing' : 'Modules'}
+          [{rack.editMode ? 'Editing' : 'Modules'}]
         </span>
-        <span
-          onClick={() => rack.setEditMode(!rack.editMode)}
-          className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
-        >
-          [{rack.editMode ? 'ON' : 'OFF'}]
-        </span>
+        <div className="kol-helper-xs text-fg-48" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          [Cables
+          <span onClick={() => onCableLocked?.(!cableLocked)} className="hover:text-fg-96 cursor-pointer" style={{ color: cableLocked ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
+            <RackIcon name={cableLocked ? 'cable-lock' : 'cable-unlock'} size={14} />
+          </span>
+          <span onClick={() => onCableVisibility?.(cableVisibility === 'on' ? 'off' : cableVisibility === 'off' ? 'trans' : 'on')} className="hover:text-fg-96 cursor-pointer" style={{ color: cableVisibility === 'off' ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
+            <RackIcon name={cableVisibility === 'on' ? 'cable-on' : cableVisibility === 'off' ? 'cable-off' : 'cable-trans'} size={14} />
+          </span>]
+        </div>
       </div>
     </div>
   )

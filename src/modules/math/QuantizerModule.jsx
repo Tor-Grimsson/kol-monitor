@@ -8,7 +8,7 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function QuantizerPanel({ steps, enabled, onToggle, onStepsChange, id, inConnected, inRef, outputRef }) {
   return (
@@ -34,7 +34,7 @@ export default function QuantizerModule({ id = 'quant1', preview }) {
 
   const [steps, setSteps] = useState(8)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const stepsRef = useRef(8)
   const enabledRef = useRef(true)
@@ -44,11 +44,14 @@ export default function QuantizerModule({ id = 'quant1', preview }) {
   stepsRef.current = steps
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const inConnected = conns.some(c => c.toModuleId === id && c.toPort === 'in')
+  const inConnected = cp.has('in')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { steps }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { in: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs) => {

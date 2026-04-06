@@ -12,7 +12,7 @@ import Knob from '../controls/Knob'
 import FlipToggle from '../controls/FlipToggle'
 import Divider from '../../components/atoms/Divider'
 import Icon from '../../components/icons/Icon'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { usePatchRouting, useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function AttenPanel({ levels, modes, enabled, onToggle, onLevelChange, onModeChange, id, inConns, inRefs, outRefs }) {
   return (
@@ -65,6 +65,7 @@ export default function AttenuatorModule({ id = 'atten1', preview }) {
   const [modes, setModes] = useState([false, false, false, false]) // false = uni, true = bipolar
   const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
   const levelsRef = useRef([100, 100, 100, 100])
@@ -76,13 +77,13 @@ export default function AttenuatorModule({ id = 'atten1', preview }) {
   levelsRef.current = levels
   modesRef.current = modes
 
-  const conns = routing?.connections || []
   const inConns = {
-    a: conns.some(c => c.toModuleId === id && c.toPort === 'a'),
-    b: conns.some(c => c.toModuleId === id && c.toPort === 'b'),
-    c: conns.some(c => c.toModuleId === id && c.toPort === 'c'),
-    d: conns.some(c => c.toModuleId === id && c.toPort === 'd'),
+    a: cp.has('a'),
+    b: cp.has('b'),
+    c: cp.has('c'),
+    d: cp.has('d'),
   }
+  const conns = routing?.connections || []
   const outConns = {
     a: conns.some(c => c.fromModuleId === id && c.fromPort === 'a'),
     b: conns.some(c => c.fromModuleId === id && c.fromPort === 'b'),
@@ -90,8 +91,12 @@ export default function AttenuatorModule({ id = 'atten1', preview }) {
     d: conns.some(c => c.fromModuleId === id && c.fromPort === 'd'),
   }
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { levels, modes }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { a: { type: 'scalar' }, b: { type: 'scalar' }, c: { type: 'scalar' }, d: { type: 'scalar' } },
     outputs: { a: { type: 'scalar' }, b: { type: 'scalar' }, c: { type: 'scalar' }, d: { type: 'scalar' } },
     process: (inputs) => {

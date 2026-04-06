@@ -7,7 +7,7 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
 import { ModuleControls } from '../utility/ModuleLayout'
 import JackSocket from '../utility/JackSocket'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function MultPanel({ enabled, onToggle, id, in1Connected, in2Connected, in1Ref, in2Ref, out1aRef, out1bRef, out1cRef, out1dRef, out2aRef, out2bRef, out2cRef, out2dRef }) {
   const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }
@@ -44,7 +44,7 @@ export default function MultModule({ id = 'mult1', preview }) {
 
   const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
   enabledRef.current = enabled
 
   const in1Ref = useRef(null)
@@ -58,9 +58,8 @@ export default function MultModule({ id = 'mult1', preview }) {
   const out2cRef = useRef(null)
   const out2dRef = useRef(null)
 
-  const conns = routing?.connections || []
-  const in1Connected = conns.some(c => c.toModuleId === id && c.toPort === 'in1')
-  const in2Connected = conns.some(c => c.toModuleId === id && c.toPort === 'in2')
+  const in1Connected = cp.has('in1')
+  const in2Connected = cp.has('in2')
 
   useModule({
     id,

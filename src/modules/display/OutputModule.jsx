@@ -1,14 +1,15 @@
 // OutputModule — composited multi-layer display
 // 16HP, 4 layered inputs, background brightness, pen input for style
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
+import { useCanvasLoop } from '../../hooks/useCanvasLoop'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
 const BUF_LEN = 128
@@ -70,7 +71,7 @@ export default function OutputModule({ id = 'out1', preview }) {
   const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   enabledRef.current = enabled
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const bgRef = useRef(0)
   bgRef.current = bg
@@ -87,16 +88,19 @@ export default function OutputModule({ id = 'out1', preview }) {
   })
   const writeIdxRef = useRef(0)
 
-  const conns = routing?.connections || []
   const connected = {}
   for (const ch of CHANNELS) {
-    connected[ch] = conns.some(c => c.toModuleId === id && c.toPort === ch)
+    connected[ch] = cp.has(ch)
   }
-  const penConnected = conns.some(c => c.toModuleId === id && c.toPort === 'pen')
-  const bgConnected = conns.some(c => c.toModuleId === id && c.toPort === 'bg')
+  const penConnected = cp.has('pen')
+  const bgConnected = cp.has('bg')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { bg }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       a: { type: 'any' },
       b: { type: 'any' },
@@ -128,48 +132,26 @@ export default function OutputModule({ id = 'out1', preview }) {
     },
   })
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ro = new ResizeObserver(() => {
-      const rect = canvas.getBoundingClientRect()
-      canvas.width = Math.round(rect.width)
-      canvas.height = Math.round(rect.height)
-    })
-    ro.observe(canvas)
-    return () => ro.disconnect()
-  }, [])
-
-  useEffect(() => {
+  useCanvasLoop(canvasRef, () => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    let raf
+    const w = canvas.width, h = canvas.height
+    if (!w || !h) return
 
-    const draw = () => {
-      const w = canvas.width
-      const h = canvas.height
-      if (!w || !h) { raf = requestAnimationFrame(draw); return }
+    const bgVal = bgInRef.current?.type === 'scalar' ? bgInRef.current.value : bgRef.current
+    const g = Math.round((bgVal / 100) * 255)
+    ctx.fillStyle = `rgb(${g},${g},${g})`
+    ctx.fillRect(0, 0, w, h)
 
-      const bgVal = bgInRef.current?.type === 'scalar' ? bgInRef.current.value : bgRef.current
-      const g = Math.round((bgVal / 100) * 255)
-      ctx.fillStyle = `rgb(${g},${g},${g})`
-      ctx.fillRect(0, 0, w, h)
-
-      const wi = writeIdxRef.current
-      const p = penRef.current
-      for (const ch of CHANNELS) {
-        const signal = inputRefs.current[ch]
-        if (!signal) continue
-        drawSignal(ctx, signal, 0, 0, w, h, historyRefs.current[ch], wi, BUF_LEN, p)
-      }
-
-      raf = requestAnimationFrame(draw)
+    const wi = writeIdxRef.current
+    const p = penRef.current
+    for (const ch of CHANNELS) {
+      const signal = inputRefs.current[ch]
+      if (!signal) continue
+      drawSignal(ctx, signal, 0, 0, w, h, historyRefs.current[ch], wi, BUF_LEN, p)
     }
-
-    raf = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(raf)
-  }, [])
+  })
 
   return <OutputPanel canvasRef={canvasRef} bg={bg} enabled={enabled} onToggle={() => setEnabled(!enabled)} onBgChange={setBg} id={id} connected={connected} inputRefs={inputRefs} penConnected={penConnected} penRef={penRef} bgConnected={bgConnected} bgInRef={bgInRef} />
 }

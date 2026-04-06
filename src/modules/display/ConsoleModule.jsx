@@ -1,7 +1,8 @@
 // ConsoleModule — 4-channel mixing console with 2 send/return + master output
 // 48HP — endpoint for compositing, routing, and display
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
+import { useCanvasLoop } from '../../hooks/useCanvasLoop'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { readScalar } from '../../hooks/signals'
@@ -11,7 +12,7 @@ import Knob from '../controls/Knob'
 import Slider from '../controls/Slider'
 import Toggle from '../controls/Toggle'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
 const BUF_LEN = 128
@@ -157,7 +158,7 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   const [masterOn, setMasterOn] = useState(init?.masterOn ?? true)
   const [enabled, setEnabled] = useModuleEnabled()
 
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
   const enabledRef = useRef(true)
   send1OnRef.current = send1On
   send2OnRef.current = send2On
@@ -204,14 +205,13 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   const historyRefs = useRef(Object.fromEntries([...CHS, 'r1', 'r2'].map(k => [k, new Float32Array(BUF_LEN)])))
   const writeIdxRef = useRef(0)
 
-  const conns = routing?.connections || []
-  const chConns = Object.fromEntries(CHS.map(ch => [ch, conns.some(c => c.toModuleId === id && c.toPort === ch)]))
-  const rtn1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'rtn1')
-  const rtn2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'rtn2')
-  const penConn = conns.some(c => c.toModuleId === id && c.toPort === 'pen')
-  const bgConn = conns.some(c => c.toModuleId === id && c.toPort === 'bgCV')
-  const mstPenConn = conns.some(c => c.toModuleId === id && c.toPort === 'mstPen')
-  const mstBgConn = conns.some(c => c.toModuleId === id && c.toPort === 'mstBg')
+  const chConns = Object.fromEntries(CHS.map(ch => [ch, cp.has(ch)]))
+  const rtn1Conn = cp.has('rtn1')
+  const rtn2Conn = cp.has('rtn2')
+  const penConn = cp.has('pen')
+  const bgConn = cp.has('bgCV')
+  const mstPenConn = cp.has('mstPen')
+  const mstBgConn = cp.has('mstBg')
 
   const saveStateRef = useRef({})
   saveStateRef.current = { muteA, muteB, muteC, muteD, masterOn, send1On, send2On }
@@ -280,73 +280,47 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
     },
   })
 
-  // Canvas resize
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ro = new ResizeObserver(() => {
-      const rect = canvas.getBoundingClientRect()
-      canvas.width = Math.round(rect.width)
-      canvas.height = Math.round(rect.height)
-    })
-    ro.observe(canvas)
-    return () => ro.disconnect()
-  }, [])
-
-  // Canvas draw loop
-  useEffect(() => {
+  useCanvasLoop(canvasRef, () => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    let raf
+    const w = canvas.width, h = canvas.height
+    if (!w || !h) return
 
-    const draw = () => {
-      const w = canvas.width
-      const h = canvas.height
-      if (!w || !h) { raf = requestAnimationFrame(draw); return }
+    const bgVal = bgInRef.current?.type === 'scalar' ? bgInRef.current.value : bgRef.current
+    const g = Math.round((bgVal / 100) * 255)
+    ctx.fillStyle = `rgb(${g},${g},${g})`
+    ctx.fillRect(0, 0, w, h)
 
-      const bgVal = bgInRef.current?.type === 'scalar' ? bgInRef.current.value : bgRef.current
-      const g = Math.round((bgVal / 100) * 255)
-      ctx.fillStyle = `rgb(${g},${g},${g})`
-      ctx.fillRect(0, 0, w, h)
+    if (!masterOnRef.current) return
 
-      if (!masterOnRef.current) { raf = requestAnimationFrame(draw); return }
+    const wi = writeIdxRef.current
+    const p = penRef.current
+    const mst = masterLvlRef.current / 100
 
-      const wi = writeIdxRef.current
-      const p = penRef.current
-      const mst = masterLvlRef.current / 100
-
-      // Draw channels at their levels × master
-      for (const ch of CHS) {
-        if (muteRefs.current[ch]) continue
-        const sig = chRefs.current[ch]
-        if (!sig) continue
-        const lvl = lvlRefs.current[ch] / 100
-        ctx.globalAlpha = lvl * mst
-        drawSignal(ctx, sig, 0, 0, w, h, historyRefs.current[ch], wi, BUF_LEN, p)
-        ctx.globalAlpha = 1
-      }
-
-      // Draw returns — opacity = max send level × return level × master
-      if (rtn1InRef.current) {
-        const maxSnd1 = Math.max(s1Refs.current.a, s1Refs.current.b, s1Refs.current.c, s1Refs.current.d, mstS1Ref.current) / 100
-        ctx.globalAlpha = maxSnd1 * (rtn1Ref.current / 100) * mst
-        drawSignal(ctx, rtn1InRef.current, 0, 0, w, h, historyRefs.current.r1, wi, BUF_LEN, p)
-        ctx.globalAlpha = 1
-      }
-      if (rtn2InRef.current) {
-        const maxSnd2 = Math.max(s2Refs.current.a, s2Refs.current.b, s2Refs.current.c, s2Refs.current.d, mstS2Ref.current) / 100
-        ctx.globalAlpha = maxSnd2 * (rtn2Ref.current / 100) * mst
-        drawSignal(ctx, rtn2InRef.current, 0, 0, w, h, historyRefs.current.r2, wi, BUF_LEN, p)
-        ctx.globalAlpha = 1
-      }
-
-      raf = requestAnimationFrame(draw)
+    for (const ch of CHS) {
+      if (muteRefs.current[ch]) continue
+      const sig = chRefs.current[ch]
+      if (!sig) continue
+      const lvl = lvlRefs.current[ch] / 100
+      ctx.globalAlpha = lvl * mst
+      drawSignal(ctx, sig, 0, 0, w, h, historyRefs.current[ch], wi, BUF_LEN, p)
+      ctx.globalAlpha = 1
     }
 
-    raf = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(raf)
-  }, [])
+    if (rtn1InRef.current) {
+      const maxSnd1 = Math.max(s1Refs.current.a, s1Refs.current.b, s1Refs.current.c, s1Refs.current.d, mstS1Ref.current) / 100
+      ctx.globalAlpha = maxSnd1 * (rtn1Ref.current / 100) * mst
+      drawSignal(ctx, rtn1InRef.current, 0, 0, w, h, historyRefs.current.r1, wi, BUF_LEN, p)
+      ctx.globalAlpha = 1
+    }
+    if (rtn2InRef.current) {
+      const maxSnd2 = Math.max(s2Refs.current.a, s2Refs.current.b, s2Refs.current.c, s2Refs.current.d, mstS2Ref.current) / 100
+      ctx.globalAlpha = maxSnd2 * (rtn2Ref.current / 100) * mst
+      drawSignal(ctx, rtn2InRef.current, 0, 0, w, h, historyRefs.current.r2, wi, BUF_LEN, p)
+      ctx.globalAlpha = 1
+    }
+  })
 
   return <ConsolePanel canvasRef={canvasRef} lvlA={lvlA} lvlB={lvlB} lvlC={lvlC} lvlD={lvlD} s1A={s1A} s1B={s1B} s1C={s1C} s1D={s1D} s2A={s2A} s2B={s2B} s2C={s2C} s2D={s2D} rtn1={rtn1} rtn2={rtn2} muteA={muteA} muteB={muteB} muteC={muteC} muteD={muteD} send1On={send1On} send2On={send2On} bg={bg} masterLvl={masterLvl} mstS1={mstS1} mstS2={mstS2} masterOn={masterOn} enabled={enabled} onToggle={() => setEnabled(!enabled)} setLvlA={setLvlA} setLvlB={setLvlB} setLvlC={setLvlC} setLvlD={setLvlD} setS1A={setS1A} setS1B={setS1B} setS1C={setS1C} setS1D={setS1D} setS2A={setS2A} setS2B={setS2B} setS2C={setS2C} setS2D={setS2D} setRtn1={setRtn1} setRtn2={setRtn2} setMuteA={setMuteA} setMuteB={setMuteB} setMuteC={setMuteC} setMuteD={setMuteD} setSend1On={setSend1On} setSend2On={setSend2On} setBg={setBg} setMasterLvl={setMasterLvl} setMstS1={setMstS1} setMstS2={setMstS2} setMasterOn={setMasterOn} id={id} chConns={chConns} chRefs={chRefs} rtn1Conn={rtn1Conn} rtn1InRef={rtn1InRef} rtn2Conn={rtn2Conn} rtn2InRef={rtn2InRef} penConn={penConn} penRef={penRef} bgConn={bgConn} bgInRef={bgInRef} mstPenConn={mstPenConn} mstPenRef={mstPenRef} mstBgConn={mstBgConn} mstBgRef={mstBgRef} send1Ref={send1Ref} send2Ref={send2Ref} masterOutRef={masterOutRef} />
 }

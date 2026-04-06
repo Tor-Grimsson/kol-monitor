@@ -444,8 +444,12 @@ export default function SVGModule({ id = 'svg1', init, preview }) {
     e.target.value = ''
   }, [])
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { scale, currentName }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       clr: { type: 'color' },
       pen: { type: 'pen' },

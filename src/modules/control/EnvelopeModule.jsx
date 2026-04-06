@@ -9,7 +9,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import Toggle from '../controls/Toggle'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const STAGES = { IDLE: 0, ATTACK: 1, DECAY: 2, SUSTAIN: 3, RELEASE: 4 }
 
@@ -48,7 +48,7 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
   const [release, setRelease] = useState(init?.release ?? 50)
   const [cycle, setCycle] = useState(init?.cycle ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const aRef = useRef(10)
   const dRef = useRef(30)
@@ -71,12 +71,15 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
   enabledRef.current = enabled
   cycleRef.current = cycle
 
-  const conns = routing?.connections || []
-  const gateConnected = conns.some(c => c.toModuleId === id && c.toPort === 'gate')
-  const clkConnected = conns.some(c => c.toModuleId === id && c.toPort === 'clk')
+  const gateConnected = cp.has('gate')
+  const clkConnected = cp.has('clk')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { attack, decay, sustain, release, cycle }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       gate: { type: 'scalar' },
       clk: { type: 'scalar' },

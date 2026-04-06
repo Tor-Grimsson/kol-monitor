@@ -76,9 +76,17 @@ export function drawColor(ctx, signal, x, y, w, h, p) {
 // Supports signal.strokeWidth, signal.fill, signal.grid from RadialGen
 export function drawPoints(ctx, signal, x, y, w, h, p) {
   const pts = signal.value
-  if (!pts || pts.length === 0) return
+  const hasGroups = signal.groups && signal.groups.length > 0
+  if ((!pts || pts.length === 0) && !hasGroups) return
 
   applyPen(ctx, p)
+
+  // Background fill
+  if (signal.bg) {
+    const bg = signal.bg
+    ctx.fillStyle = `rgb(${Math.round(bg.r * 255)},${Math.round(bg.g * 255)},${Math.round(bg.b * 255)})`
+    ctx.fillRect(x, y, w, h)
+  }
 
   // Apply signal-level opacity (from console send levels)
   if (signal.opacity != null) ctx.globalAlpha *= signal.opacity
@@ -164,7 +172,7 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
       ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
     }
     ctx.stroke()
-  } else {
+  } else if (pts && pts.length > 0) {
     ctx.strokeStyle = penColor(p, SCOPE_COLOR)
     ctx.beginPath()
     ctx.moveTo(dx + pts[0].x * dw, dy + pts[0].y * dh)
@@ -172,6 +180,46 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
       ctx.lineTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
     }
     ctx.stroke()
+  }
+
+  // Per-group colored wireframes (from Magneto etc.)
+  if (signal.groups) {
+    for (const g of signal.groups) {
+      if (!g.pts || g.pts.length === 0) continue
+      const gc = g.color
+        ? `rgb(${Math.round(g.color.r * 255)},${Math.round(g.color.g * 255)},${Math.round(g.color.b * 255)})`
+        : penColor(p, WIRE_COLOR)
+      if (g.opacity != null) ctx.globalAlpha = g.opacity
+      ctx.strokeStyle = gc
+      ctx.fillStyle = gc
+      if (g.edges && g.edges.length > 0) {
+        if (g.fill && g.pts.length > 2) {
+          ctx.beginPath()
+          ctx.moveTo(dx + g.pts[0].x * dw, dy + g.pts[0].y * dh)
+          for (let i = 1; i < g.pts.length; i++) {
+            ctx.lineTo(dx + g.pts[i].x * dw, dy + g.pts[i].y * dh)
+          }
+          ctx.closePath()
+          ctx.fill()
+        }
+        if (g.stroke !== false) {
+          ctx.beginPath()
+          for (const [i, j] of g.edges) {
+            if (i >= g.pts.length || j >= g.pts.length) continue
+            ctx.moveTo(dx + g.pts[i].x * dw, dy + g.pts[i].y * dh)
+            ctx.lineTo(dx + g.pts[j].x * dw, dy + g.pts[j].y * dh)
+          }
+          ctx.stroke()
+        }
+      } else {
+        ctx.beginPath()
+        ctx.moveTo(dx + g.pts[0].x * dw, dy + g.pts[0].y * dh)
+        for (let i = 1; i < g.pts.length; i++) {
+          ctx.lineTo(dx + g.pts[i].x * dw, dy + g.pts[i].y * dh)
+        }
+        ctx.stroke()
+      }
+    }
   }
 
   // Per-axis colored lines (from Gen 3D)

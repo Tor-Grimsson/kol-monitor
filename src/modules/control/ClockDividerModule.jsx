@@ -8,7 +8,7 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const GATE_DURATION = 0.03
 const DIVS = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -43,7 +43,7 @@ export default function ClockDividerModule({ id = 'cdiv1', preview }) {
 
   const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const prevClkRef = useRef(false)
   const prevRotRef = useRef(false)
@@ -58,10 +58,9 @@ export default function ClockDividerModule({ id = 'cdiv1', preview }) {
 
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const inConn = conns.some(c => c.toModuleId === id && c.toPort === 'in')
-  const rotConn = conns.some(c => c.toModuleId === id && c.toPort === 'rot')
-  const rstConn = conns.some(c => c.toModuleId === id && c.toPort === 'rst')
+  const inConn = cp.has('in')
+  const rotConn = cp.has('rot')
+  const rstConn = cp.has('rst')
 
   const outputs = Object.fromEntries(DIVS.map(d => [`d${d}`, { type: 'scalar' }]))
 

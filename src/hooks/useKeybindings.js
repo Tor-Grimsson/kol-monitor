@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react'
 
-export function useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom, setPanOffset, setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts }) {
+export function useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom, setPanOffset, setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden }) {
   useEffect(() => {
     const noInput = (e) => !e.target.closest('input, textarea')
 
@@ -48,8 +48,11 @@ export function useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom
       // Shortcuts overlay
       if (noInput(e) && !mod && e.key === 's') { e.preventDefault(); setShowShortcuts(v => !v) }
 
-      // Snap view: 4 5 6 = top-left/center/right, 1 2 3 = bottom-left/center/right
-      if (noInput(e) && !mod && '123456'.includes(e.key)) {
+      // Clear display — hide all UI controls
+      if (noInput(e) && !mod && e.key === 'd') { e.preventDefault(); setDisplayHidden(v => !v) }
+
+      // Snap view: 7 8 9 = top, 4 5 6 = middle, 1 2 3 = bottom (numpad layout)
+      if (noInput(e) && !mod && '123456789'.includes(e.key)) {
         e.preventDefault()
         const el = rackRef.current
         if (!el) return
@@ -57,11 +60,15 @@ export function useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom
         const vw = window.innerWidth
         const vh = window.innerHeight
         const p = 48
+        const sl = 24 // nav sidebar offset
         const targets = {
-          4: { x: p, y: p },
-          5: { x: (vw - rect.width) / 2, y: p },
-          6: { x: vw - p - rect.width, y: p },
-          1: { x: p, y: vh - p - rect.height },
+          7: { x: p + sl, y: p },
+          8: { x: (vw - rect.width) / 2, y: p },
+          9: { x: vw - p - rect.width, y: p },
+          4: { x: p + sl, y: (vh - rect.height) / 2 },
+          5: { x: (vw - rect.width) / 2, y: (vh - rect.height) / 2 },
+          6: { x: vw - p - rect.width, y: (vh - rect.height) / 2 },
+          1: { x: p + sl, y: vh - p - rect.height },
           2: { x: (vw - rect.width) / 2, y: vh - p - rect.height },
           3: { x: vw - p - rect.width, y: vh - p - rect.height },
         }

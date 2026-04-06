@@ -2,9 +2,9 @@ import React from 'react'
 import Icon from '../icons/Icon'
 
 const SIZE_MAP = {
-  sm: { fontSize: 11, paddingY: 12, paddingX: 24, icon: 12 },
-  md: { fontSize: 12, paddingY: 14, paddingX: 24, icon: 14 },
-  lg: { fontSize: 14, paddingY: 16, paddingX: 24, icon: 16 }
+  sm: { icon: 14, paddingX: 16 },
+  md: { icon: 14, paddingX: 20 },
+  lg: { icon: 18, paddingX: 24 }
 }
 
 const Input = ({
@@ -12,7 +12,7 @@ const Input = ({
   placeholder = '',
   value,
   onChange,
-  size,
+  size = 'md',
   uppercase = false,
   iconLeft,
   iconSize = null,
@@ -20,53 +20,20 @@ const Input = ({
   style = {},
   ...props
 }) => {
-  const [resolvedSize, setResolvedSize] = React.useState('md')
-
-  React.useEffect(() => {
-    const determineSize = () => {
-      if (size) {
-        setResolvedSize(size)
-        return
-      }
-
-      if (typeof window === 'undefined') {
-        setResolvedSize('md')
-        return
-      }
-
-      if (window.innerWidth >= 1024) {
-        setResolvedSize('lg')
-      } else if (window.innerWidth >= 768) {
-        setResolvedSize('md')
-      } else {
-        setResolvedSize('sm')
-      }
-    }
-
-    determineSize()
-    window.addEventListener('resize', determineSize)
-    return () => window.removeEventListener('resize', determineSize)
-  }, [size])
-
-  const metrics = SIZE_MAP[resolvedSize] || SIZE_MAP.md
+  const metrics = SIZE_MAP[size] || SIZE_MAP.md
   const sizeClass =
-    resolvedSize === 'sm'
+    size === 'sm'
       ? 'input-sm'
-      : resolvedSize === 'lg'
+      : size === 'lg'
       ? 'input-lg'
       : 'input-md'
   const caseClass = uppercase ? 'uppercase' : ''
 
-  const combinedClass = `input-outline ${sizeClass} ${caseClass} kol-mono-text ${className}`.trim()
-
-  const inlineStyle = {
-    fontSize: `${metrics.fontSize}px`,
-    lineHeight: '120%',
-    padding: `${metrics.paddingY}px ${metrics.paddingX}px`,
-    ...style
-  }
+  const combinedClass = `input-outline ${sizeClass} ${caseClass} ${className}`.trim()
 
   const resolvedIconSize = iconLeft ? (iconSize ?? metrics.icon) : null
+
+  const inlineStyle = { ...style }
 
   if (iconLeft && resolvedIconSize) {
     inlineStyle.paddingLeft = metrics.paddingX + resolvedIconSize + 12
@@ -83,7 +50,7 @@ const Input = ({
             transform: 'translateY(-50%)'
           }}
         >
-          <Icon name={iconLeft} size={resolvedIconSize ?? 12} />
+          <Icon name={iconLeft} size={resolvedIconSize ?? 14} />
         </span>
       )}
       <input

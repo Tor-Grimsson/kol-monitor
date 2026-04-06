@@ -1,7 +1,8 @@
 // ScopeModule — 1U oscilloscope/monitor
 // Canvas display with vertically stacked inputs, pass-through outputs
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
+import { useCanvasLoop } from '../../hooks/useCanvasLoop'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
@@ -9,7 +10,7 @@ import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Divider from '../../components/atoms/Divider'
 import FlipToggle from '../controls/FlipToggle'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
 const BUF_LEN = 128
@@ -57,19 +58,22 @@ export default function ScopeModule({ id = 'scope1', preview }) {
   const enabledRef = useRef(true)
   overlayRef.current = overlay
   enabledRef.current = enabled
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
-  const conns = routing?.connections || []
-  const aConnected = conns.some(c => c.toModuleId === id && c.toPort === 'a')
-  const bConnected = conns.some(c => c.toModuleId === id && c.toPort === 'b')
-  const penConnected = conns.some(c => c.toModuleId === id && c.toPort === 'pen')
+  const aConnected = cp.has('a')
+  const bConnected = cp.has('b')
+  const penConnected = cp.has('pen')
 
   const historyA = useRef(new Float32Array(BUF_LEN))
   const historyB = useRef(new Float32Array(BUF_LEN))
   const writeIdxRef = useRef(0)
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { overlay }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { a: { type: 'any' }, b: { type: 'any' }, pen: { type: 'pen' } },
     outputs: { a: { type: 'any' }, b: { type: 'any' } },
     process: (inputs) => {
@@ -93,56 +97,34 @@ export default function ScopeModule({ id = 'scope1', preview }) {
     },
   })
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ro = new ResizeObserver(() => {
-      const rect = canvas.getBoundingClientRect()
-      canvas.width = Math.round(rect.width)
-      canvas.height = Math.round(rect.height)
-    })
-    ro.observe(canvas)
-    return () => ro.disconnect()
-  }, [])
-
-  useEffect(() => {
+  useCanvasLoop(canvasRef, () => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    let raf
+    const w = canvas.width, h = canvas.height
+    if (!w || !h) return
 
-    const draw = () => {
-      const w = canvas.width
-      const h = canvas.height
-      if (!w || !h) { raf = requestAnimationFrame(draw); return }
+    ctx.fillStyle = 'rgba(8,8,8,0.95)'
+    ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = 'rgba(0,0,0,0.15)'
+    for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1)
 
-      ctx.fillStyle = 'rgba(8,8,8,0.95)'
-      ctx.fillRect(0, 0, w, h)
-      ctx.fillStyle = 'rgba(0,0,0,0.15)'
-      for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1)
+    const hasB = inputBRef.current != null
+    const wi = writeIdxRef.current
+    const p = penRef.current
+    const ovr = overlayRef.current
 
-      const hasB = inputBRef.current != null
-      const wi = writeIdxRef.current
-      const p = penRef.current
-      const ovr = overlayRef.current
-
-      if (hasB && !ovr) {
-        const aw = Math.floor(w / 2)
-        drawSignal(ctx, inputARef.current, 0, 0, aw, h, historyA.current, wi, BUF_LEN, p)
-        ctx.fillStyle = 'rgba(40,40,40,0.5)'
-        ctx.fillRect(aw, 0, 1, h)
-        drawSignal(ctx, inputBRef.current, aw + 1, 0, Math.ceil(w / 2) - 1, h, historyB.current, wi, BUF_LEN, p)
-      } else {
-        drawSignal(ctx, inputARef.current, 0, 0, w, h, historyA.current, wi, BUF_LEN, p)
-        if (hasB) drawSignal(ctx, inputBRef.current, 0, 0, w, h, historyB.current, wi, BUF_LEN, p)
-      }
-
-      raf = requestAnimationFrame(draw)
+    if (hasB && !ovr) {
+      const aw = Math.floor(w / 2)
+      drawSignal(ctx, inputARef.current, 0, 0, aw, h, historyA.current, wi, BUF_LEN, p)
+      ctx.fillStyle = 'rgba(40,40,40,0.5)'
+      ctx.fillRect(aw, 0, 1, h)
+      drawSignal(ctx, inputBRef.current, aw + 1, 0, Math.ceil(w / 2) - 1, h, historyB.current, wi, BUF_LEN, p)
+    } else {
+      drawSignal(ctx, inputARef.current, 0, 0, w, h, historyA.current, wi, BUF_LEN, p)
+      if (hasB) drawSignal(ctx, inputBRef.current, 0, 0, w, h, historyB.current, wi, BUF_LEN, p)
     }
-
-    raf = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(raf)
-  }, [])
+  })
 
   return <ScopePanel canvasRef={canvasRef} overlay={overlay} onOverlayChange={setOverlay} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
 }

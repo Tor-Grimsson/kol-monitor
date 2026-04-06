@@ -10,7 +10,7 @@ import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Divider from '../../components/atoms/Divider'
 import Knob from '../controls/Knob'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function RingModPanel({ depth, enabled, onToggle, onDepthChange, id, aConnected, aRef, bConnected, bRef, depthCvConn, depthCvRef, outRef }) {
   return (
@@ -40,7 +40,7 @@ export default function RingModModule({ id = 'ring1', preview }) {
 
   const [depth, setDepth] = useState(100)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const depthRef = useRef(100)
   const enabledRef = useRef(true)
@@ -52,13 +52,16 @@ export default function RingModModule({ id = 'ring1', preview }) {
   depthRef.current = depth
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const aConnected = conns.some(c => c.toModuleId === id && c.toPort === 'a')
-  const bConnected = conns.some(c => c.toModuleId === id && c.toPort === 'b')
-  const depthCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'depthCV')
+  const aConnected = cp.has('a')
+  const bConnected = cp.has('b')
+  const depthCvConn = cp.has('depthCV')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { depth }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { a: { type: 'scalar' }, b: { type: 'scalar' }, depthCV: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs) => {

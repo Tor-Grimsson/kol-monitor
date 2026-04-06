@@ -1,6 +1,13 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import AppLayout from './components/AppLayout'
 import VideoModulo from './VideoModulo.jsx'
+import HomePage from './pages/HomePage.jsx'
+import LibraryPage from './pages/LibraryPage.jsx'
+import ModuleDetailPage from './pages/ModuleDetailPage.jsx'
+import PatchDetailPage from './pages/PatchDetailPage.jsx'
+import SettingsPage from './pages/SettingsPage.jsx'
+import CreatePage from './pages/CreatePage.jsx'
 
 const ModuleDesign = lazy(() => import('./pages/ModuleDesign.jsx'))
 
@@ -9,7 +16,17 @@ function App() {
     <BrowserRouter>
       <Suspense fallback={null}>
         <Routes>
-          <Route path="/" element={<VideoModulo />} />
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/rack" element={<VideoModulo />} />
+            <Route path="/rack/preset/:presetName" element={<VideoModulo />} />
+            <Route path="/rack/patch/:presetName" element={<VideoModulo />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/library/:moduleType" element={<ModuleDetailPage />} />
+            <Route path="/library/patch/:patchName" element={<PatchDetailPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/create" element={<CreatePage />} />
+          </Route>
           <Route path="/design" element={<ModuleDesign />} />
         </Routes>
       </Suspense>

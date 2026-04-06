@@ -12,13 +12,13 @@ import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import Toggle from '../controls/Toggle'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const TAP_PRIMES = [7, 13, 23, 37, 53, 71, 97, 113, 137, 157, 179, 199]
 
 function ReverbPanel({ size, decay, mix, freeze, bypass, bypassFx, enabled, onToggle, onSizeChange, onDecayChange, onMixChange, onFreezeChange, onBypassChange, onBypassFxChange, id, sizeCvConn, sizeCvRef, decayCvConn, decayCvRef, inConnected, inRef, outRef }) {
   return (
-    <Module label="Reverb" enabled={enabled} onToggle={onToggle} u={1}>
+    <Module label="Ghost" enabled={enabled} onToggle={onToggle} u={1}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
         <div style={{ display: 'flex', gap: 12 }}>
           {/* Left: CV + knobs */}
@@ -64,7 +64,7 @@ export default function ReverbModule({ id = 'verb1', preview }) {
   const [bypass, setBypass] = useState(false)
   const [bypassFx, setBypassFx] = useState(false)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   const sizeRef = useRef(50)
   const decayRef = useRef(50)
@@ -88,13 +88,16 @@ export default function ReverbModule({ id = 'verb1', preview }) {
   bypassFxRef.current = bypassFx
   enabledRef.current = enabled
 
-  const conns = routing?.connections || []
-  const inConnected = conns.some(c => c.toModuleId === id && c.toPort === 'in')
-  const sizeCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'sizeCV')
-  const decayCvConn = conns.some(c => c.toModuleId === id && c.toPort === 'decayCV')
+  const inConnected = cp.has('in')
+  const sizeCvConn = cp.has('sizeCV')
+  const decayCvConn = cp.has('decayCV')
+
+  const saveStateRef = useRef({})
+  saveStateRef.current = { size, decay, mix, freeze, bypass, bypassFx }
 
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: { in: { type: 'any' }, sizeCV: { type: 'scalar' }, decayCV: { type: 'scalar' } },
     outputs: { out: { type: 'any' } },
     process: (inputs) => {
@@ -147,6 +150,8 @@ export default function ReverbModule({ id = 'verb1', preview }) {
           if (signal.edges) for (const [a, b] of signal.edges) allEdges.push([a + offset, b + offset])
         }
         const out = points(allPts, allEdges.length > 0 ? allEdges : null)
+        out.strokeWidth = input.strokeWidth ?? 1
+        if (input.color) out.color = input.color
         outRef.current = out
         return { out }
       }

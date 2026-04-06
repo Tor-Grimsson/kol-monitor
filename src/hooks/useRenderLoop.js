@@ -2,16 +2,23 @@
 
 import { useRef, useEffect, useCallback } from 'react'
 
-// Kahn's algorithm — returns sorted IDs and a set of cycle-delayed IDs
-function topoSort(modulesMap, connections) {
+// Kahn's algorithm — returns sorted IDs, cycle-delayed set, and connection index
+function buildGraph(modulesMap, connections) {
   const ids = [...modulesMap.keys()]
   const inDegree = new Map(ids.map(id => [id, 0]))
   const adjacency = new Map(ids.map(id => [id, []]))
+
+  // Connection index: toModuleId → [connections targeting it]
+  const connIndex = new Map()
 
   for (const conn of connections) {
     if (!modulesMap.has(conn.fromModuleId) || !modulesMap.has(conn.toModuleId)) continue
     adjacency.get(conn.fromModuleId).push(conn.toModuleId)
     inDegree.set(conn.toModuleId, (inDegree.get(conn.toModuleId) || 0) + 1)
+
+    let list = connIndex.get(conn.toModuleId)
+    if (!list) { list = []; connIndex.set(conn.toModuleId, list) }
+    list.push(conn)
   }
 
   const queue = []
@@ -33,16 +40,19 @@ function topoSort(modulesMap, connections) {
   // Modules not in sorted list are in cycles — use 1-frame delay
   const delayed = new Set()
   if (sorted.length < ids.length) {
+    const sortedSet = new Set(sorted)
     for (const id of ids) {
-      if (!sorted.includes(id)) {
+      if (!sortedSet.has(id)) {
         sorted.push(id)
         delayed.add(id)
       }
     }
   }
 
-  return { sorted, delayed }
+  return { sorted, delayed, connIndex }
 }
+
+const EMPTY_CONNS = []
 
 export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRef) {
   const rafRef = useRef(null)
@@ -56,10 +66,15 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
   const powerRef = useRef(power)
   powerRef.current = power
 
-  // Sort cache
-  const sortCacheRef = useRef(null)
+  // Graph cache — version counter for stable invalidation
+  const graphCacheRef = useRef(null)
   const cachedModuleCount = useRef(0)
-  const cachedConnections = useRef(null)
+  const cachedConnectionsRef = useRef(null)
+
+  // Double-buffer for output swap (avoids new Map() every frame)
+  const outputBufA = useRef(new Map())
+  const outputBufB = useRef(new Map())
+  const useA = useRef(true)
 
   const tick = useCallback((now) => {
     if (!startTimeRef.current) startTimeRef.current = now
@@ -70,38 +85,42 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
     const modules = modulesRef.current
     const connections = connectionsRef.current
 
-    // Invalidate sort cache if graph changed
+    // Invalidate graph cache if graph changed
     if (
       modules.size !== cachedModuleCount.current ||
-      connections !== cachedConnections.current
+      connections !== cachedConnectionsRef.current
     ) {
-      sortCacheRef.current = topoSort(modules, connections)
+      graphCacheRef.current = buildGraph(modules, connections)
       cachedModuleCount.current = modules.size
-      cachedConnections.current = connections
+      cachedConnectionsRef.current = connections
     }
 
-    const { sorted, delayed } = sortCacheRef.current
+    const { sorted, delayed, connIndex } = graphCacheRef.current
 
     // Evaluate modules in sorted order
     const evalStart = performance.now()
 
     if (!powerRef.current) {
-      // Power off — clear all outputs, don't process anything
       outputsRef.current.clear()
     } else {
       for (const id of sorted) {
         const mod = modules.get(id)
         if (!mod) continue
 
-        // Gather inputs from connected upstream outputs
+        // Skip disabled modules (check the enabledRef if module exposes it)
+        if (mod.enabledRef && !mod.enabledRef.current) {
+          outputsRef.current.delete(id)
+          continue
+        }
+
+        // Gather inputs from connection index (O(1) lookup + iterate relevant only)
         const inputs = {}
         for (const portName of Object.keys(mod.inputs)) {
           inputs[portName] = null
         }
 
-        for (const conn of connections) {
-          if (conn.toModuleId !== id) continue
-          // Use previous frame's output for delayed (cycled) modules that haven't run yet
+        const modConns = connIndex.get(id) || EMPTY_CONNS
+        for (const conn of modConns) {
           const source = delayed.has(conn.fromModuleId) && !outputsRef.current.has(conn.fromModuleId)
             ? prevOutputsRef.current.get(conn.fromModuleId)
             : outputsRef.current.get(conn.fromModuleId)
@@ -124,8 +143,8 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
     localTimingRef.current.evalMs = evalMs
     localTimingRef.current.frameCount++
 
-    // Frame timing — measures real frame duration (includes render/paint/composite)
-    const frameDt = dt * 1000 // dt is in seconds, convert to ms
+    // Frame timing
+    const frameDt = dt * 1000
     const fpsAcc = fpsAccRef.current
     fpsAcc.frames++
     if (now - fpsAcc.lastSample >= 1000) {
@@ -134,7 +153,6 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
       fpsAcc.lastSample = now
     }
 
-    // Write to shared timing ref for perf module
     if (timingRef) {
       timingRef.current.frameMs = frameDt
       timingRef.current.evalMs = evalMs
@@ -147,8 +165,10 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
       console.debug(`[VM] eval: ${evalMs.toFixed(2)}ms (${sorted.length} modules)`)
     }
 
-    // Swap: current becomes previous for next frame's cycle lookups
-    prevOutputsRef.current = new Map(outputsRef.current)
+    // Swap output buffers (no allocation)
+    const prev = prevOutputsRef.current
+    prev.clear()
+    for (const [k, v] of outputsRef.current) prev.set(k, v)
 
     rafRef.current = requestAnimationFrame(tick)
   }, [modulesRef, connectionsRef])

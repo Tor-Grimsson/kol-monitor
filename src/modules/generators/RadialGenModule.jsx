@@ -12,7 +12,7 @@ import CvKnob from '../controls/CvKnob'
 import Toggle from '../controls/Toggle'
 import IconSelect from '../controls/IconSelect'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Math ported from kol-radial/wavyCircleMath.js ---
 
@@ -224,7 +224,7 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
   const [grid, setGrid] = useState(init?.grid ?? false)
   const [aspectLock, setAspectLock] = useState(init?.aspectLock ?? true)
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
 
   // Refs for process()
   const enabledRef = useRef(true)
@@ -247,6 +247,8 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
   const aspectLockRef = useRef(true)
 
   const outRef = useRef(null)
+  const cacheKeyRef = useRef('')
+  const cachedOutRef = useRef(null)
   const radInRef = useRef(null)
   const ampInRef = useRef(null)
   const frqInRef = useRef(null)
@@ -276,16 +278,15 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
   gridRef.current = grid
   aspectLockRef.current = aspectLock
 
-  const conns = routing?.connections || []
-  const radConn = conns.some(c => c.toModuleId === id && c.toPort === 'rad')
-  const ampConn = conns.some(c => c.toModuleId === id && c.toPort === 'amp')
-  const frqConn = conns.some(c => c.toModuleId === id && c.toPort === 'frq')
-  const resConn = conns.some(c => c.toModuleId === id && c.toPort === 'res')
-  const sclConn = conns.some(c => c.toModuleId === id && c.toPort === 'scl')
-  const rotConn = conns.some(c => c.toModuleId === id && c.toPort === 'rot')
-  const lfoAmtConn = conns.some(c => c.toModuleId === id && c.toPort === 'lfoAmt')
-  const lfoFrqConn = conns.some(c => c.toModuleId === id && c.toPort === 'lfoFrq')
-  const strConn = conns.some(c => c.toModuleId === id && c.toPort === 'str')
+  const radConn = cp.has('rad')
+  const ampConn = cp.has('amp')
+  const frqConn = cp.has('frq')
+  const resConn = cp.has('res')
+  const sclConn = cp.has('scl')
+  const rotConn = cp.has('rot')
+  const lfoAmtConn = cp.has('lfoAmt')
+  const lfoFrqConn = cp.has('lfoFrq')
+  const strConn = cp.has('str')
 
   // Shape change applies preset values
   const handleShapeChange = (newShape) => {
@@ -301,8 +302,12 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
     }
   }
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { shape, radius, amplitude, frequency, resolution, scale, rotate, lfoAmount, lfoFrequency, lfoWaveType, lfoSync, strokeWidth, mirrorX, mirrorY, fill, grid, aspectLock }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       rad: { type: 'scalar' },
       amp: { type: 'scalar' },
@@ -344,6 +349,15 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
       const freq = Math.max(1, Math.round(1 + (frqKnob / 100) * 11))
       const res = Math.max(1, Math.round(1 + (resKnob / 100) * 15))
 
+      const sw = 0.5 + (str / 100) * 4.5
+      const key = `${rad}:${amp}:${freq}:${res}:${scl}:${rot}:${lfoAmt}:${lfoFrq}:${lfoSyncRef.current}:${lfoWaveTypeRef.current}:${mirrorXRef.current}:${mirrorYRef.current}:${sw}:${fillRef.current}:${gridRef.current}:${aspectLockRef.current}`
+
+      if (key === cacheKeyRef.current && cachedOutRef.current) {
+        outRef.current = cachedOutRef.current
+        return { out: cachedOutRef.current }
+      }
+      cacheKeyRef.current = key
+
       const result = generateRadialPoints({
         radius: rad,
         amplitude: amp,
@@ -357,17 +371,17 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
         lfoWaveType: lfoWaveTypeRef.current,
         mirrorX: mirrorXRef.current,
         mirrorY: mirrorYRef.current,
-        strokeWidth: 0.5 + (str / 100) * 4.5, // 0.5-5 range
+        strokeWidth: sw,
         fill: fillRef.current,
       })
 
-      // Attach stroke/fill metadata to points signal
       const out = points(result.pts, result.edges)
       out.strokeWidth = result.strokeWidth
       out.fill = result.fill
       out.grid = gridRef.current
       out.aspectLock = aspectLockRef.current
       outRef.current = out
+      cachedOutRef.current = out
       return { out }
     },
   })

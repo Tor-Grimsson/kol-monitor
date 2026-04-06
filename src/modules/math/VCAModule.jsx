@@ -8,7 +8,7 @@ import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Divider from '../../components/atoms/Divider'
-import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function VCAPanel({ enabled, onToggle, id,
   in1Conn, in1Ref, cv1Conn, cv1Ref, out1Ref,
@@ -48,17 +48,16 @@ export default function VCAModule({ id = 'vca1', preview }) {
 
   const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
-  const routing = usePatchRouting()
+  const cp = useConnectedPorts(id)
   enabledRef.current = enabled
 
   const in1Ref = useRef(null), cv1Ref = useRef(null), out1Ref = useRef(null)
   const in2Ref = useRef(null), cv2Ref = useRef(null), out2Ref = useRef(null)
 
-  const conns = routing?.connections || []
-  const in1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'in1')
-  const cv1Conn = conns.some(c => c.toModuleId === id && c.toPort === 'cv1')
-  const in2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'in2')
-  const cv2Conn = conns.some(c => c.toModuleId === id && c.toPort === 'cv2')
+  const in1Conn = cp.has('in1')
+  const cv1Conn = cp.has('cv1')
+  const in2Conn = cp.has('in2')
+  const cv2Conn = cp.has('cv2')
 
   useModule({
     id,

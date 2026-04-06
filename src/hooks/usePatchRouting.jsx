@@ -1,7 +1,7 @@
 // Patch cable routing — purely structural connections, no config mutation
 // Adapted from arc-case/case-03, port-based instead of busKey/configKey
 
-import { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react'
+import { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react'
 
 const PatchRoutingContext = createContext(null)
 
@@ -102,18 +102,21 @@ export function PatchRoutingProvider({ initialConnections, children }) {
     setPendingOutput(null)
   }, [])
 
-  const value = {
+  const lockedRef = useRef(false)
+  const visibilityRef = useRef('on')
+
+  const value = useMemo(() => ({
     pendingOutput,
     connections,
     connectionsRef,
     jackRefs,
-    lockedRef: { current: false },
-    visibilityRef: { current: 'on' },
+    lockedRef,
+    visibilityRef,
     registerJack,
     selectOutput,
     removeConnection,
     loadPatch,
-  }
+  }), [pendingOutput, connections, registerJack, selectOutput, removeConnection, loadPatch])
 
   return (
     <PatchRoutingContext.Provider value={value}>
@@ -124,4 +127,17 @@ export function PatchRoutingProvider({ initialConnections, children }) {
 
 export function usePatchRouting() {
   return useContext(PatchRoutingContext)
+}
+
+// Memoized per-module connected input ports — replaces N × conns.some() with one Set lookup
+export function useConnectedPorts(moduleId) {
+  const routing = usePatchRouting()
+  const connections = routing?.connections || []
+  return useMemo(() => {
+    const ports = new Set()
+    for (const c of connections) {
+      if (c.toModuleId === moduleId) ports.add(c.toPort)
+    }
+    return ports
+  }, [connections, moduleId])
 }
