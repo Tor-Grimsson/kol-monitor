@@ -76,12 +76,12 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
   const outputBufB = useRef(new Map())
   const useA = useRef(true)
 
-  const tick = useCallback((now) => {
-    if (!startTimeRef.current) startTimeRef.current = now
-    const t = (now - startTimeRef.current) / 1000
-    const dt = lastFrameRef.current ? (now - lastFrameRef.current) / 1000 : 1 / 60
-    lastFrameRef.current = now
+  // Offline stepping state
+  const steppedT = useRef(0)
+  const pausedRef = useRef(false)
 
+  // Core processing — shared by tick (realtime) and stepFrame (offline)
+  function processFrame(dt, t) {
     const modules = modulesRef.current
     const connections = connectionsRef.current
 
@@ -97,9 +97,6 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
 
     const { sorted, delayed, connIndex } = graphCacheRef.current
 
-    // Evaluate modules in sorted order
-    const evalStart = performance.now()
-
     if (!powerRef.current) {
       outputsRef.current.clear()
     } else {
@@ -107,13 +104,11 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
         const mod = modules.get(id)
         if (!mod) continue
 
-        // Skip disabled modules (check the enabledRef if module exposes it)
         if (mod.enabledRef && !mod.enabledRef.current) {
           outputsRef.current.delete(id)
           continue
         }
 
-        // Gather inputs from connection index (O(1) lookup + iterate relevant only)
         const inputs = {}
         for (const portName of Object.keys(mod.inputs)) {
           inputs[portName] = null
@@ -130,7 +125,6 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
           }
         }
 
-        // Call process and store outputs
         const result = mod.process(inputs, dt, t)
         if (result) {
           outputsRef.current.set(id, result)
@@ -139,11 +133,29 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
       }
     }
 
+    // Swap output buffers (no allocation)
+    const prev = prevOutputsRef.current
+    prev.clear()
+    for (const [k, v] of outputsRef.current) prev.set(k, v)
+
+    return graphCacheRef.current?.sorted?.length || 0
+  }
+
+  const tick = useCallback((now) => {
+    if (pausedRef.current) return
+
+    if (!startTimeRef.current) startTimeRef.current = now
+    const t = (now - startTimeRef.current) / 1000
+    const dt = lastFrameRef.current ? (now - lastFrameRef.current) / 1000 : 1 / 60
+    lastFrameRef.current = now
+
+    const evalStart = performance.now()
+    const moduleCount = processFrame(dt, t)
     const evalMs = performance.now() - evalStart
+
     localTimingRef.current.evalMs = evalMs
     localTimingRef.current.frameCount++
 
-    // Frame timing
     const frameDt = dt * 1000
     const fpsAcc = fpsAccRef.current
     fpsAcc.frames++
@@ -157,18 +169,13 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
       timingRef.current.frameMs = frameDt
       timingRef.current.evalMs = evalMs
       timingRef.current.fps = fpsAcc.fps
-      timingRef.current.moduleCount = sorted.length
+      timingRef.current.moduleCount = moduleCount
       timingRef.current.frameCount = localTimingRef.current.frameCount
     }
 
     if (localTimingRef.current.frameCount % 60 === 0) {
-      console.debug(`[VM] eval: ${evalMs.toFixed(2)}ms (${sorted.length} modules)`)
+      console.debug(`[VM] eval: ${evalMs.toFixed(2)}ms (${moduleCount} modules)`)
     }
-
-    // Swap output buffers (no allocation)
-    const prev = prevOutputsRef.current
-    prev.clear()
-    for (const [k, v] of outputsRef.current) prev.set(k, v)
 
     rafRef.current = requestAnimationFrame(tick)
   }, [modulesRef, connectionsRef])
@@ -180,5 +187,31 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
     }
   }, [tick])
 
-  return { outputsRef, timingRef: localTimingRef }
+  // Render loop control for offline recording
+  const controlRef = useRef({
+    stepFrame(dt) {
+      steppedT.current += dt
+      processFrame(dt, steppedT.current)
+    },
+    pause() {
+      pausedRef.current = true
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    },
+    resume() {
+      pausedRef.current = false
+      lastFrameRef.current = 0
+      startTimeRef.current = 0
+      rafRef.current = requestAnimationFrame(tick)
+    },
+  })
+  // Keep resume closure fresh
+  controlRef.current.resume = () => {
+    pausedRef.current = false
+    lastFrameRef.current = 0
+    startTimeRef.current = 0
+    rafRef.current = requestAnimationFrame(tick)
+  }
+
+  return { outputsRef, timingRef: localTimingRef, controlRef }
 }

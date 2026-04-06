@@ -50,6 +50,7 @@ import ScopeModule from './modules/display/ScopeModule.jsx'
 import MonitorModule from './modules/display/MonitorModule.jsx'
 import OutputModule from './modules/display/OutputModule.jsx'
 import ConsoleModule from './modules/display/ConsoleModule.jsx'
+import RecorderModule from './modules/display/RecorderModule.jsx'
 
 import PatchModule from './modules/utility/PatchModule.jsx'
 import PowerModule from './modules/utility/PowerModule.jsx'
@@ -109,6 +110,7 @@ export const MODULE_DEFS = {
   monitor:   { component: MonitorModule,      hp: 12, u: 3, category: 'display',    label: 'Monitor',     description: '2-channel signal display with a larger canvas than scope. Split or overlay modes for dual-input comparison. 128-sample history buffer for scrolling traces. Pen input controls drawing style. Pass-through outputs let you monitor a signal without breaking the chain.' },
   output:    { component: OutputModule,       hp: 16, u: 3, category: 'display',    label: 'Output',      description: '4-layer compositing display as the final render destination. Inputs a, b, c, and d are layered with background brightness controlled by knob and CV. Pen input styles the rendering. No outputs, making it a terminal module. 128-sample per-channel history for signal monitoring.' },
   console:   { component: ConsoleModule,     hp: 48, u: 3, category: 'display',    label: 'Console',     description: '4-channel mixer with integrated display canvas. Per-channel level fader, send 1/2 knobs, and mute toggle for each input. 2 send/return buses with enable and return level controls. Master strip with level, sends, background, and on/off. Opacity-based mixing across 10 input jacks and 3 output jacks.' },
+  recorder:  { component: RecorderModule,   hp: 20, u: 3, category: 'display',    label: 'Recorder',    description: 'Video export module with realtime and offline rendering modes. Records patch output to WebM video at 720p to 4K resolution. 7 aspect ratios (1:1, 3:5, 4:5, 9:16, 16:9, 5:3, 5:4) and 30 or 60fps. Offline mode steps frame-by-frame with fixed timing to guarantee smooth output even from heavy patches. 4 compositing inputs with pen and background control.' },
 
   // Utility
   patch:     { component: PatchModule,        hp: 6,  u: 1, category: 'utility',    label: 'Patch',       description: 'Preset manager with dropdown selector for organizing patches. Load, save, and clear buttons for patch management. Save exports the full patch as JSON to the clipboard including connections, enabled modules, and console state. Cable count display shows the current number of active patch connections.' },

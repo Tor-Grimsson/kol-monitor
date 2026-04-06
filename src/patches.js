@@ -776,23 +776,23 @@ export const patches = {
   // Visual: lo-fi gradient, pattern, and wave signals mixed together
   'genLofi': {
     tags: ['showcase', 'generative', 'minimal'],
-    description: 'Gen Lofi 3 outputs mixed together',
+    description: 'Gen Lofi 3 outputs mixed together with dashed pen styling',
     rows: [
       UTIL_ROW,
       { height: '3u', modules: [
-        { type: 'clock', id: 'clk1' },
-        { type: 'generator', id: 'gen1' },
-        { type: 'mixer', id: 'mix1' },
-        { type: 'pen', id: 'pen1' },
-        { type: 'monitor', id: 'mon1' },
+        { type: 'clock', id: 'clk1', state: { bpm: 37 } },
+        { type: 'generator', id: 'gen1', state: { tab: 'gradient', gradSub: 'radial', patternSub: 'dots', waveSub: 'sin', p1: 38, p2: 24, p3: 50, p4: 50, animate: true, speed: 55 } },
+        { type: 'mixer', id: 'mix1', state: { la: 64, lb: 52, lc: 62, ld: 100 } },
+        { type: 'pen', id: 'pen1', state: { thickness: 33, dash: 44, gap: 74, opacity: 72, cap: 'round', lofi: 0 } },
+        { type: 'monitor', id: 'mon1', state: { overlay: true } },
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'gen1', toPort: 'clk' },
+      { fromModuleId: 'clk1', fromPort: 'd4', toModuleId: 'gen1', toPort: 'clk' },
       { fromModuleId: 'gen1', fromPort: 'grad', toModuleId: 'mix1', toPort: 'a' },
       { fromModuleId: 'gen1', fromPort: 'ptrn', toModuleId: 'mix1', toPort: 'b' },
       { fromModuleId: 'gen1', fromPort: 'wave', toModuleId: 'mix1', toPort: 'c' },
-      { fromModuleId: 'mix1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'gen1', fromPort: 'wave', toModuleId: 'mon1', toPort: 'b' },
       { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
     ],
   },
@@ -1002,5 +1002,51 @@ export const patches = {
       UTIL_ROW,
     ],
     connections: [],
+  },
+
+  // --- RECORDER PATCHES ---
+
+  // Spinning wireframe with LFO-modulated rotation and delay echoes → Recorder
+  // Ready-to-record 4-row setup: utilities, control, generators, and recorder output
+  // Clock drives LFO sync and sequencer. Sequencer modulates wireframe shape.
+  // LFO sweeps rotation. Delay adds trailing echoes. Pen styles the output.
+  'filmstrip': {
+    tags: ['recorder', 'geometric', 'motion'],
+    description: 'Animated wireframe with delay echoes, patched to recorder for export.',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk', state: { bpm: 60 } },
+        { type: 'lfo', id: 'lfo', state: { rate: 8, shape: 'sin', depth: 80, offset: 50 } },
+        { type: 'lfo', id: 'lfo2', state: { rate: 20, shape: 'tri', depth: 50, offset: 50 } },
+        { type: 'wireframe', id: 'wire', state: { shape: 0, rx: 50, ry: 50, rz: 50, spd: 35, scl: 60, res: 50, fov: 50 } },
+        { type: 'delay', id: 'dly', state: { time: 30, mix: 70, copies: 40, fb: 0 } },
+        { type: 'pen', id: 'pen', state: { thickness: 25, opacity: 85 } },
+      ]},
+      { height: '3u', modules: [
+        { type: 'lineGen', id: 'line', state: { shape: 'circle', freq: 15, density: 60, speed: 25 } },
+        { type: 'transform', id: 'xfm', state: { scale: 55, rotZ: 10 } },
+        { type: 'recorder', id: 'rec', state: { resolution: '1080', fps: '60', aspect: '16:9', mode: 'rt', duration: 10 } },
+      ]},
+    ],
+    connections: [
+      // Clock syncs LFO
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'lfo', toPort: 'sync' },
+      // LFO modulates wireframe rotation X + Y
+      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'wire', toPort: 'rx' },
+      { fromModuleId: 'lfo2', fromPort: 'out', toModuleId: 'wire', toPort: 'ry' },
+      // LFO2 modulates line circle speed
+      { fromModuleId: 'lfo2', fromPort: 'out', toModuleId: 'line', toPort: 'spd' },
+      // LFO slowly rotates transform
+      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'xfm', toPort: 'rz' },
+      // Wireframe → Delay (trailing echoes) → Recorder channel A
+      { fromModuleId: 'wire', fromPort: 'out', toModuleId: 'dly', toPort: 'in' },
+      { fromModuleId: 'dly', fromPort: 'out', toModuleId: 'rec', toPort: 'a' },
+      // LineGen → Transform → Recorder channel B
+      { fromModuleId: 'line', fromPort: 'out', toModuleId: 'xfm', toPort: 'in' },
+      { fromModuleId: 'xfm', fromPort: 'out', toModuleId: 'rec', toPort: 'b' },
+      // Pen styles the recorder output
+      { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'rec', toPort: 'pen' },
+    ],
   },
 }

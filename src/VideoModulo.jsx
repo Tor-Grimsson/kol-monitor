@@ -6,6 +6,7 @@ import { ModuleRegistryProvider, useModuleRegistry } from './hooks/useModuleRegi
 import { PatchRoutingProvider, usePatchRouting } from './hooks/usePatchRouting.jsx'
 import { CasePowerProvider, useCasePower } from './hooks/useCasePower.jsx'
 import { useRenderLoop } from './hooks/useRenderLoop'
+import { RenderControlProvider } from './hooks/useRenderControl'
 import { useRackState } from './hooks/useRackState'
 import { MODULE_DEFS } from './moduleRegistry'
 import { ROW_WIDTH } from './modules/utility/eurorack'
@@ -51,7 +52,7 @@ function VideoModuloInner() {
   routing.lockedRef.current = cableLocked
   routing.visibilityRef.current = cableVisibility
 
-  useRenderLoop(modulesRef, connectionsRef, power, timingRef)
+  const { controlRef } = useRenderLoop(modulesRef, connectionsRef, power, timingRef)
 
   // Load preset from URL param on mount
   const presetLoadedRef = useRef(false)
@@ -143,6 +144,7 @@ function VideoModuloInner() {
   }, [])
 
   return (
+    <RenderControlProvider value={controlRef}>
     <div className="bg-surface-primary flex relative" style={{ overflow: 'hidden', height: '100vh' }}>
       {sidebarOpen && (
         <div className="sidebar-width flex-shrink-0 border-r border-fg-08 overflow-y-auto" style={{
@@ -233,6 +235,7 @@ function VideoModuloInner() {
         )}
       </div>
     </div>
+    </RenderControlProvider>
   )
 }
 
