@@ -9,7 +9,6 @@ import ContentFilters from '../components/organisms/filters/ContentFilters'
 import CaseRowDialog from '../components/CaseRowDialog'
 import CaseArea from '../components/CaseArea'
 import GridCard from '../components/atoms/GridCard'
-import ModulePreview from '../components/ModulePreview'
 import CaseHpDialog from '../components/CaseHpDialog'
 import usePersistedState from '../hooks/usePersistedState'
 
@@ -42,7 +41,6 @@ export default function CreatePage() {
   const [editingName, setEditingName] = useState(false)
   const titleRef = useRef(null)
   const [view, setView] = useState('case')
-  const [moduleView, setModuleView] = useState('list')
   const [addingRow, setAddingRow] = useState(false)
   const [showHpPicker, setShowHpPicker] = useState(false)
   const [showCase, setShowCase] = useState(true)
@@ -216,8 +214,13 @@ export default function CreatePage() {
             { value: 'modules', label: 'Modules' },
           ]}
           defaultViewMode="case"
+          layoutOptions={view === 'modules' ? [
+            { value: 'list', label: 'List' },
+            { value: 'grid', label: 'Grid' },
+          ] : undefined}
+          defaultLayout="list"
           onFilterChange={(filters, mode) => { if (mode !== view) setView(mode) }}
-          renderItem={(items) => {
+          renderItem={(items, viewMode, layout) => {
             if (view === 'case') {
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
@@ -238,62 +241,40 @@ export default function CreatePage() {
               )
             }
 
-            // Sub-toggle for list/grid
-            const subToggle = (
-              <div className="flex items-center justify-end gap-4 mb-4">
-                {['list', 'grid'].map(v => (
-                  <span
-                    key={v}
-                    onClick={() => setModuleView(v)}
-                    className={`kol-helper-xs cursor-pointer select-none ${moduleView === v ? 'text-fg-96' : 'text-fg-32 hover:text-fg-48'}`}
-                    style={{ textTransform: 'uppercase', letterSpacing: 1 }}
-                  >{v}</span>
-                ))}
-              </div>
-            )
-
-            // Grid view — GridCards with module preview
-            if (moduleView === 'grid') {
+            if (layout === 'grid') {
               return (
-                <div>
-                  {subToggle}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
                   {items.map(m => (
                     <div key={m.type} onPointerDown={(e) => handleModuleDragStart(m.type, e)}>
                       <GridCard
                         title={m.label}
                         detail={`${m.hp}HP ${m.u}U — ${m.category}`}
-                        preview={<ModulePreview moduleType={m.type} />}
+                        preview={<img src={`/previews/modules/${m.type}.png`} alt={m.label} />}
                         onClick={() => addModule(m.type)}
                       />
                     </div>
                   ))}
-                  </div>
                 </div>
               )
             }
 
-            // List view — 4-column compact cards
             return (
-              <div>
-                {subToggle}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {items.map(m => (
-                  <div
-                    key={m.type}
-                    onPointerDown={(e) => handleModuleDragStart(m.type, e)}
-                    className="flex items-center justify-between px-3 cursor-pointer hover:bg-fg-04 rounded border border-fg-04 transition-colors select-none"
-                    style={{ height: 36 }}
-                  >
-                    <span className="kol-helper-xs text-fg-64">{m.label}</span>
-                    <span
-                      onClick={(e) => { e.stopPropagation(); addModule(m.type) }}
-                      className="cursor-pointer"
-                      style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#c0392b', flexShrink: 0 }}
+                  <div key={m.type} onPointerDown={(e) => handleModuleDragStart(m.type, e)}>
+                    <GridCard
+                      variant="list"
+                      title={m.label}
+                      action={
+                        <span
+                          onClick={(e) => { e.stopPropagation(); addModule(m.type) }}
+                          className="cursor-pointer"
+                          style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#c0392b', flexShrink: 0 }}
+                        />
+                      }
                     />
                   </div>
                 ))}
-                </div>
               </div>
             )
           }}

@@ -20,7 +20,7 @@ function stopLoop() {
 }
 
 // Hook: registers a draw function and handles canvas resize
-export function useCanvasLoop(canvasRef, drawFn) {
+export function useCanvasLoop(canvasRef, drawFn, enabledRef) {
   const drawRef = useRef(drawFn)
   drawRef.current = drawFn
 
@@ -39,7 +39,7 @@ export function useCanvasLoop(canvasRef, drawFn) {
 
   // Register draw callback
   useEffect(() => {
-    const cb = () => drawRef.current()
+    const cb = () => { if (!enabledRef || enabledRef.current) drawRef.current() }
     drawCallbacks.add(cb)
     startLoop()
     return () => {

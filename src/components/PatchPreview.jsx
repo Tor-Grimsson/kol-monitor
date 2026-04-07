@@ -17,8 +17,8 @@ function PreviewSlot({ mod }) {
   const aspectDiv = u === 1 ? 12 : 4
   return (
     <div style={{
-      width: hpToPx(mod.hp),
-      aspectRatio: `${mod.hp * aspectDiv} / ${TOTAL_HP}`,
+      width: hpToPx(def.hp),
+      aspectRatio: `${def.hp * aspectDiv} / ${TOTAL_HP}`,
       flexShrink: 0,
       overflow: 'hidden',
     }}>

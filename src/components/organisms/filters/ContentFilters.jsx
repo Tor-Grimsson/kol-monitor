@@ -30,6 +30,8 @@ const ContentFilters = ({
   renderItem,
   viewModeOptions,
   defaultViewMode = 'list',
+  layoutOptions,
+  defaultLayout = 'grid',
   onFilterChange,
   mutuallyExclusiveFilters = [],
   customFilterKeys = [],
@@ -40,6 +42,7 @@ const ContentFilters = ({
   const [activeFilters, setActiveFilters] = useState(new Set())
   const [isExpanded, setIsExpanded] = useState(false)
   const [viewMode, setViewMode] = useState(defaultViewMode)
+  const [layout, setLayout] = useState(defaultLayout)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
   const searchRef = useRef(null)
@@ -249,9 +252,23 @@ const ContentFilters = ({
         </>
       )}
 
+      {/* Layout toggle */}
+      {layoutOptions && (
+        <div className="flex items-center justify-end gap-4 mt-4">
+          {layoutOptions.map(opt => (
+            <span
+              key={opt.value}
+              onClick={() => setLayout(opt.value)}
+              className={`kol-helper-xs cursor-pointer select-none ${layout === opt.value ? 'text-fg-96' : 'text-fg-32 hover:text-fg-48'}`}
+              style={{ textTransform: 'uppercase', letterSpacing: 1 }}
+            >{opt.label}</span>
+          ))}
+        </div>
+      )}
+
       {/* Render filtered items */}
       <div className="mt-8" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-        {renderItem(filteredItems, viewMode)}
+        {renderItem(filteredItems, viewMode, layout)}
       </div>
     </div>
   )

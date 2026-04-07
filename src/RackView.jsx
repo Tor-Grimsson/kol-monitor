@@ -59,10 +59,12 @@ const RackRowContent = memo(function RackRowContent({ row, editMode, onSendToWor
 
 export default memo(function RackView({ rows, editMode, onSendToWorkbench, rowRefs }) {
   return (
+    <div data-rack-view>
     <Case>
       {rows.map(row => (
         <RackRowContent key={row.id} row={row} editMode={editMode} onSendToWorkbench={onSendToWorkbench} rowRefs={rowRefs} />
       ))}
     </Case>
+    </div>
   )
 })

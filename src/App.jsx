@@ -8,6 +8,7 @@ import ModuleDetailPage from './pages/ModuleDetailPage.jsx'
 import PatchDetailPage from './pages/PatchDetailPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import CreatePage from './pages/CreatePage.jsx'
+import DevCapturePage from './pages/DevCapturePage.jsx'
 
 const ModuleDesign = lazy(() => import('./pages/ModuleDesign.jsx'))
 
@@ -28,6 +29,7 @@ function App() {
             <Route path="/create" element={<CreatePage />} />
           </Route>
           <Route path="/design" element={<ModuleDesign />} />
+          <Route path="/dev/capture" element={<DevCapturePage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

@@ -6,6 +6,24 @@ import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const DEFAULT_COLOR = '#e74c3c'
 
+// Shared jack animation loop — single rAF, throttled to ~15fps, dirty-checked
+const jackCallbacks = new Set()
+let jackRafId = null
+let jackFrame = 0
+function jackTick() {
+  jackFrame++
+  if (jackFrame % 4 === 0) {
+    for (const cb of jackCallbacks) cb()
+  }
+  jackRafId = requestAnimationFrame(jackTick)
+}
+function startJackLoop() {
+  if (jackRafId == null) jackRafId = requestAnimationFrame(jackTick)
+}
+function stopJackLoop() {
+  if (jackRafId != null) { cancelAnimationFrame(jackRafId); jackRafId = null }
+}
+
 export default function JackSocket({
   type = 'out',
   port,
@@ -36,11 +54,11 @@ export default function JackSocket({
     return () => routing?.registerJack(jackId, null)
   }, [routing, jackId])
 
-  // Animate ring glow proportional to signal value
+  // Animate ring glow proportional to signal value (shared rAF, ~15fps, dirty-checked)
   useEffect(() => {
     if (!signalRef || !ringRef.current) return
-    let raf
-    const tick = () => {
+    let prevNorm = -1
+    const cb = () => {
       const signal = signalRef.current
       let val = 0
       if (!signal) val = 0
@@ -48,6 +66,8 @@ export default function JackSocket({
       else if (signal.type === 'color') { const c = signal.value; val = (c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722) * 100 }
       else if (signal.type === 'points') val = signal.value?.length > 0 ? 80 : 0
       const norm = Math.min(1, val / 100)
+      if (norm === prevNorm) return
+      prevNorm = norm
       const ring = ringRef.current
       if (ring) {
         const alpha = Math.round(norm * 255).toString(16).padStart(2, '0')
@@ -56,10 +76,13 @@ export default function JackSocket({
           ? `0 0 ${2 + norm * 6}px ${catColor}${alpha}`
           : 'inset 0 1px 2px rgba(0,0,0,0.5)'
       }
-      raf = requestAnimationFrame(tick)
     }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
+    jackCallbacks.add(cb)
+    startJackLoop()
+    return () => {
+      jackCallbacks.delete(cb)
+      if (jackCallbacks.size === 0) stopJackLoop()
+    }
   }, [signalRef, catColor])
 
   const handlePointerDown = useCallback((e) => {

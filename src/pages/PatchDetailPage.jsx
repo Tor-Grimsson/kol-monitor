@@ -1,14 +1,14 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { patches } from '../patches'
 import Divider from '../components/atoms/Divider'
 import Button from '../components/atoms/Button'
-import BlankPanel from '../modules/utility/BlankPanel'
-import { TOTAL_HP } from '../modules/utility/eurorack'
 
 export default function PatchDetailPage() {
   const { patchName } = useParams()
   const navigate = useNavigate()
   const patch = patches[patchName]
+  const [fullView, setFullView] = useState(false)
 
   if (!patch) {
     return (
@@ -25,19 +25,36 @@ export default function PatchDetailPage() {
   const rackUrl = `/rack/patch/${patchName.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`
 
   return (
-    <div style={{ padding: '48px 48px', paddingTop: 48, overflow: 'hidden', minHeight: '100vh' }} className="bg-surface-primary">
+    <div style={{ padding: '48px 48px', paddingTop: 48, overflow: 'hidden', height: '100vh', display: 'flex', flexDirection: 'column' }} className="bg-surface-primary">
       <h1 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>{title}</h1>
       <p className="text-fg-48 kol-text-sm" style={{ marginBottom: 40 }}>View <span className="patch-link" onClick={() => navigate(rackUrl)}>[{title}]</span> in Rack</p>
 
       <Divider className="mb-6" />
 
-      <div style={{ display: 'flex', gap: 48 }}>
-        <div style={{ pointerEvents: 'none', width: 6 * 16 * 2, height: (6 * 16 * 2) * TOTAL_HP / (6 * 4), overflow: 'hidden', flexShrink: 0 }}>
-          <div style={{ width: 6 * 16, aspectRatio: `${6 * 4} / ${TOTAL_HP}`, overflow: 'hidden', transform: 'scale(2)', transformOrigin: 'top left' }}>
-            <BlankPanel />
+      <div style={{ display: 'flex', gap: 48, flex: 1, minHeight: 0 }}>
+        {/* Image container — 50% width, full content height, clipped */}
+        <div
+          onClick={() => setFullView(true)}
+          className="bg-surface-tertiary"
+          style={{ flex: '0 0 50%', overflow: 'hidden', position: 'relative', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4 }}
+        >
+          <img
+            src={`/previews/patches/${patchName}.png`}
+            alt={title}
+            style={{ maxWidth: 'none', height: '100%', width: 'auto' }}
+          />
+          <div className="patch-preview-overlay" style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: 0, transition: 'opacity 0.2s',
+          }}>
+            <span className="kol-helper-xs text-fg-64">Click to expand</span>
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingTop: 4, paddingBottom: 4 }}>
+
+        {/* Info column */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingTop: 4, paddingBottom: 4 }}>
           <div>
             <h2 className="text-fg-64 kol-helper-s" style={{ marginBottom: 16 }}>Description</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -62,13 +79,37 @@ export default function PatchDetailPage() {
       <Divider className="my-6" />
 
       <div style={{ display: 'flex', gap: 12 }}>
-        <Button variant="secondary" size="sm" onClick={() => navigate('/library')}>
+        <Button variant="secondary" size="sm" onClick={() => navigate(-1)}>
           Back
         </Button>
         <Button variant="secondary" size="sm" onClick={() => navigate('/rack', { state: { preset: patchName } })}>
           Load in Rack
         </Button>
       </div>
+
+      {/* Fullscreen image overlay */}
+      {fullView && (
+        <div
+          onClick={() => setFullView(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            background: 'rgba(0,0,0,0.9)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+          }}
+        >
+          <span
+            onClick={(e) => { e.stopPropagation(); setFullView(false) }}
+            className="text-fg-48 hover:text-fg-96"
+            style={{ position: 'absolute', top: 24, right: 24, cursor: 'pointer', fontSize: 20, lineHeight: 1 }}
+          >&times;</span>
+          <img
+            src={`/previews/patches/${patchName}.png`}
+            alt={title}
+            style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
+          />
+        </div>
+      )}
     </div>
   )
 }

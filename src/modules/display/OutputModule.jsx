@@ -139,6 +139,12 @@ export default function OutputModule({ id = 'out1', preview }) {
     const w = canvas.width, h = canvas.height
     if (!w || !h) return
 
+    if (!enabledRef.current) {
+      ctx.fillStyle = 'rgba(8,8,8,1)'
+      ctx.fillRect(0, 0, w, h)
+      return
+    }
+
     const bgVal = bgInRef.current?.type === 'scalar' ? bgInRef.current.value : bgRef.current
     const g = Math.round((bgVal / 100) * 255)
     ctx.fillStyle = `rgb(${g},${g},${g})`

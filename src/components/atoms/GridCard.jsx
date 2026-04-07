@@ -2,8 +2,22 @@
  * GridCard — A4-ratio card for grids.
  * Preview area on top (clipped), label + detail at bottom.
  * Supports expanded state (2x2) with detail content.
+ * variant="list" renders a compact 36px row.
  */
-export default function GridCard({ title, detail, preview, expanded, expandedContent, onClick }) {
+export default function GridCard({ title, detail, preview, expanded, expandedContent, onClick, variant, action, previewFit = 'natural' }) {
+  if (variant === 'list') {
+    return (
+      <div
+        onClick={onClick}
+        className="flex items-center justify-between px-3 cursor-pointer hover:bg-fg-04 rounded border border-fg-04 transition-colors select-none"
+        style={{ height: 36 }}
+      >
+        <span className="kol-helper-xs text-fg-64">{title}</span>
+        {action || (detail && <span className="kol-helper-xxs text-fg-32" style={{ textTransform: 'capitalize' }}>{detail}</span>)}
+      </div>
+    )
+  }
+
   return (
     <div
       onClick={onClick}
@@ -25,7 +39,7 @@ export default function GridCard({ title, detail, preview, expanded, expandedCon
         minHeight: 0,
         minWidth: 0,
       }}>
-        <div style={{ position: 'absolute', top: 0, right: expanded ? 0 : undefined, left: expanded ? undefined : 0 }}>
+        <div className={`gridcard-preview gridcard-preview--${previewFit}`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
           {preview}
         </div>
       </div>

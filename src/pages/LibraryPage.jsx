@@ -7,7 +7,6 @@ import PatchCard from '../components/atoms/PatchCard'
 import PageHeader from '../components/PageHeader'
 import usePersistedState from '../hooks/usePersistedState'
 import ContentFilters from '../components/organisms/filters/ContentFilters'
-import ModulePreview from '../components/ModulePreview'
 import GridCard from '../components/atoms/GridCard'
 
 const PRESET_NAMES = Object.keys(patches).filter(k => k !== 'ref' && k !== 'empty')
@@ -40,11 +39,33 @@ const PATCH_FILTER_GROUPS = [
   { label: 'Tags', key: 'tags', values: PATCH_TAGS },
 ]
 
+const VIEW_MODE_OPTIONS = [
+  { value: 'modules', label: 'Modules' },
+  { value: 'patches', label: 'Patches' },
+]
+
+const LAYOUT_OPTIONS = [
+  { value: 'list', label: 'List' },
+  { value: 'grid', label: 'Grid' },
+]
+
+function computeHiddenSet(items, expandedIdx) {
+  if (expandedIdx < 0) return new Set()
+  const hiddenSet = new Set()
+  const blockCol = Math.floor((expandedIdx % 6) / 2)
+  const blockRow = Math.floor(Math.floor(expandedIdx / 6) / 2)
+  const base = blockRow * 12 + blockCol * 2
+  ;[base, base + 1, base + 6, base + 7].forEach(i => {
+    if (i !== expandedIdx && i < items.length) hiddenSet.add(i)
+  })
+  return hiddenSet
+}
+
 export default function LibraryPage() {
   const navigate = useNavigate()
   const [tab, setTab] = usePersistedState('library-tab', 'modules')
-  const [expandedModule, setExpandedModule] = useState(null)
-  const [expandedPatch, setExpandedPatch] = useState(null)
+  const [expandedModule, setExpandedModule] = usePersistedState('library-expanded-module', null)
+  const [expandedPatch, setExpandedPatch] = usePersistedState('library-expanded-patch', null)
 
   return (
     <div style={{ padding: '48px 48px', overflow: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column' }} className="bg-surface-primary">
@@ -59,60 +80,63 @@ export default function LibraryPage() {
             items={allModules}
             title={`All Modules`}
             totalCount={allModules.length}
-            viewModeOptions={[
-              { value: 'modules', label: 'Modules' },
-              { value: 'patches', label: 'Patches' },
-            ]}
+            viewModeOptions={VIEW_MODE_OPTIONS}
             defaultViewMode="modules"
+            layoutOptions={LAYOUT_OPTIONS}
+            defaultLayout="grid"
             onFilterChange={(filters, mode) => { if (mode !== tab) setTab(mode) }}
             filterGroups={MODULE_FILTER_GROUPS}
             mutuallyExclusiveFilters={['category', 'u_label']}
-            renderItem={(items) => {
-              // Find which 2x2 block the expanded card belongs to
-              const expandedIdx = items.findIndex(m => m.type === expandedModule)
-              let hiddenSet = new Set()
-              if (expandedIdx >= 0) {
-                const blockCol = Math.floor((expandedIdx % 6) / 2) // 0, 1, or 2
-                const blockRow = Math.floor(Math.floor(expandedIdx / 6) / 2)
-                // The 4 indices in this 2x2 block
-                const base = blockRow * 12 + blockCol * 2
-                ;[base, base + 1, base + 6, base + 7].forEach(i => {
-                  if (i !== expandedIdx && i < items.length) hiddenSet.add(i)
-                })
+            renderItem={(items, viewMode, layout) => {
+              if (layout === 'list') {
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                    {items.map(m => (
+                      <GridCard key={m.type} variant="list" title={m.label} detail={m.category} onClick={() => navigate(`/rack/preset/${m.type}`)} />
+                    ))}
+                  </div>
+                )
               }
+
+              const expandedIdx = items.findIndex(m => m.type === expandedModule)
+              const hiddenSet = computeHiddenSet(items, expandedIdx)
               return (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
-                {items.map((m, idx) => {
-                  if (hiddenSet.has(idx)) return null
-                  const isExpanded = expandedModule === m.type
-                  return (
-                    <GridCard
-                      key={m.type}
-                      title={m.label}
-                      detail={`${m.hp}HP ${m.u}U — ${m.category}`}
-                      expanded={isExpanded}
-                      preview={<ModulePreview moduleType={m.type} />}
-                      onClick={() => setExpandedModule(isExpanded ? null : m.type)}
-                      expandedContent={
-                        <>
-                          <div>
-                            <h2 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>{m.label}</h2>
-                            <p className="text-fg-48 kol-helper-xs" style={{ marginBottom: 16, textTransform: 'capitalize' }}>{m.hp}HP — {m.u}U — {m.category}</p>
-                            <p className="text-fg-48 kol-helper-xxs" style={{ lineHeight: 1.6 }}>
-                              {m.description || 'No description yet.'}
-                            </p>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-                            <div className="text-fg-48 kol-helper-xs" style={{ textTransform: 'capitalize' }}>Category: {m.category}</div>
-                            <div className="text-fg-48 kol-helper-xs">Width: {m.hp}HP</div>
-                            <div className="text-fg-48 kol-helper-xs">Height: {m.u}U</div>
-                          </div>
-                        </>
-                      }
-                    />
-                  )
-                })}
-              </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
+                  {items.map((m, idx) => {
+                    if (hiddenSet.has(idx)) return null
+                    const isExpanded = expandedModule === m.type
+                    return (
+                      <GridCard
+                        key={m.type}
+                        title={m.label}
+                        detail={`${m.hp}HP ${m.u}U — ${m.category}`}
+                        expanded={isExpanded}
+                        preview={<img src={`/previews/modules/${m.type}.png`} alt={m.label} />}
+                        onClick={() => setExpandedModule(isExpanded ? null : m.type)}
+                        expandedContent={
+                          <>
+                            <div>
+                              <h2 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>{m.label}</h2>
+                              <p className="text-fg-48 kol-helper-xs" style={{ marginBottom: 16, textTransform: 'capitalize' }}>{m.hp}HP — {m.u}U — {m.category}</p>
+                              <p className="text-fg-48 kol-helper-xxs" style={{ lineHeight: 1.6 }}>
+                                {m.description || 'No description yet.'}
+                              </p>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
+                              <div className="text-fg-48 kol-helper-xs" style={{ textTransform: 'capitalize' }}>Category: {m.category}</div>
+                              <div className="text-fg-48 kol-helper-xs">Width: {m.hp}HP</div>
+                              <div className="text-fg-48 kol-helper-xs">Height: {m.u}U</div>
+                              <span
+                                className="patch-link kol-helper-s"
+                                onClick={(e) => { e.stopPropagation(); navigate(`/library/${m.type}`) }}
+                              >Details</span>
+                            </div>
+                          </>
+                        }
+                      />
+                    )
+                  })}
+                </div>
               )
             }}
           />
@@ -124,23 +148,24 @@ export default function LibraryPage() {
             title={`All Patches`}
             totalCount={allPatches.length}
             filterGroups={PATCH_FILTER_GROUPS}
-            viewModeOptions={[
-              { value: 'modules', label: 'Modules' },
-              { value: 'patches', label: 'Patches' },
-            ]}
+            viewModeOptions={VIEW_MODE_OPTIONS}
             defaultViewMode="patches"
+            layoutOptions={LAYOUT_OPTIONS}
+            defaultLayout="grid"
             onFilterChange={(filters, mode) => { if (mode !== tab) setTab(mode) }}
-            renderItem={(items) => {
-              const expandedIdx = items.findIndex(p => p.name === expandedPatch)
-              let hiddenSet = new Set()
-              if (expandedIdx >= 0) {
-                const blockCol = Math.floor((expandedIdx % 6) / 2)
-                const blockRow = Math.floor(Math.floor(expandedIdx / 6) / 2)
-                const base = blockRow * 12 + blockCol * 2
-                ;[base, base + 1, base + 6, base + 7].forEach(i => {
-                  if (i !== expandedIdx && i < items.length) hiddenSet.add(i)
-                })
+            renderItem={(items, viewMode, layout) => {
+              if (layout === 'list') {
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                    {items.map(p => (
+                      <GridCard key={p.name} variant="list" title={p.title} detail={p.detail} onClick={() => navigate(`/rack/patch/${p.name}`)} />
+                    ))}
+                  </div>
+                )
               }
+
+              const expandedIdx = items.findIndex(p => p.name === expandedPatch)
+              const hiddenSet = computeHiddenSet(items, expandedIdx)
               return (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
                   {items.map((p, idx) => {
@@ -151,6 +176,8 @@ export default function LibraryPage() {
                         key={p.name}
                         title={p.title}
                         detail={p.detail}
+                        previewFit="compact"
+                        preview={<img src={`/previews/patches/${p.name}.png`} alt={p.title} />}
                         expanded={isExpanded}
                         onClick={() => setExpandedPatch(isExpanded ? null : p.name)}
                         expandedContent={
@@ -164,6 +191,10 @@ export default function LibraryPage() {
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
                               {p.tags.length > 0 && <div className="text-fg-48 kol-helper-xs">Tags: {p.tags.join(', ')}</div>}
+                              <span
+                                className="patch-link kol-helper-s"
+                                onClick={(e) => { e.stopPropagation(); navigate(`/library/patch/${p.name}`) }}
+                              >Details</span>
                               <span
                                 className="patch-link kol-helper-s"
                                 onClick={(e) => { e.stopPropagation(); navigate(`/rack/patch/${p.name}`) }}

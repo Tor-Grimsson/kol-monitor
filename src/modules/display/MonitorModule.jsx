@@ -126,6 +126,8 @@ export default function MonitorModule({ id = 'mon1', preview }) {
     ctx.fillStyle = 'rgba(0,0,0,0.15)'
     for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1)
 
+    if (!enabledRef.current) return
+
     const hasB = inputBRef.current != null
     const wi = writeIdxRef.current
     const p = penRef.current

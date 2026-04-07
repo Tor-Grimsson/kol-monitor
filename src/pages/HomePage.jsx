@@ -46,26 +46,49 @@ export default function HomePage() {
             { value: 'saved', label: 'Saved' },
           ]}
           defaultViewMode="recent"
-          renderItem={(items, viewMode) => (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
-              {viewMode === 'recent' ? (
-                <GridCard
-                  title="Untitled"
-                  detail="7U — power, perf, patch"
-                  onClick={() => navigate('/create')}
-                />
-              ) : (
-                items.map(p => (
+          layoutOptions={[
+            { value: 'list', label: 'List' },
+            { value: 'grid', label: 'Grid' },
+          ]}
+          defaultLayout="grid"
+          renderItem={(items, viewMode, layout) => {
+            if (layout === 'list') {
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                  {viewMode === 'recent' ? (
+                    <GridCard variant="list" title="Untitled" detail="7U — power, perf, patch" onClick={() => navigate('/create')} />
+                  ) : (
+                    items.map(p => (
+                      <GridCard key={p.name} variant="list" title={p.title} detail={p.detail} onClick={() => navigate(`/rack/preset/${p.name}`)} />
+                    ))
+                  )}
+                </div>
+              )
+            }
+
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
+                {viewMode === 'recent' ? (
                   <GridCard
-                    key={p.name}
-                    title={p.title}
-                    detail={p.detail}
-                    onClick={() => navigate(`/rack/preset/${p.name}`)}
+                    title="Untitled"
+                    detail="7U — power, perf, patch"
+                    onClick={() => navigate('/create')}
                   />
-                ))
-              )}
-            </div>
-          )}
+                ) : (
+                  items.map(p => (
+                    <GridCard
+                      key={p.name}
+                      title={p.title}
+                      detail={p.detail}
+                      previewFit="compact"
+                      preview={<img src={`/previews/patches/${p.name}.png`} alt={p.title} />}
+                      onClick={() => navigate(`/rack/preset/${p.name}`)}
+                    />
+                  ))
+                )}
+              </div>
+            )
+          }}
         />
       </div>
 

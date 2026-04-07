@@ -99,46 +99,52 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
 
     if (!powerRef.current) {
       outputsRef.current.clear()
-    } else {
-      for (const id of sorted) {
-        const mod = modules.get(id)
-        if (!mod) continue
+      return 0
+    }
 
-        if (mod.enabledRef && !mod.enabledRef.current) {
-          outputsRef.current.delete(id)
-          continue
+    let enabledCount = 0
+    for (const id of sorted) {
+      const mod = modules.get(id)
+      if (!mod) continue
+
+      if (mod.enabledRef && !mod.enabledRef.current) {
+        outputsRef.current.delete(id)
+        continue
+      }
+
+      enabledCount++
+
+      const inputs = {}
+      for (const portName of Object.keys(mod.inputs)) {
+        inputs[portName] = null
+      }
+
+      const modConns = connIndex.get(id) || EMPTY_CONNS
+      for (const conn of modConns) {
+        const source = delayed.has(conn.fromModuleId) && !outputsRef.current.has(conn.fromModuleId)
+          ? prevOutputsRef.current.get(conn.fromModuleId)
+          : outputsRef.current.get(conn.fromModuleId)
+
+        if (source && conn.toPort in inputs) {
+          inputs[conn.toPort] = source[conn.fromPort] || null
         }
+      }
 
-        const inputs = {}
-        for (const portName of Object.keys(mod.inputs)) {
-          inputs[portName] = null
-        }
-
-        const modConns = connIndex.get(id) || EMPTY_CONNS
-        for (const conn of modConns) {
-          const source = delayed.has(conn.fromModuleId) && !outputsRef.current.has(conn.fromModuleId)
-            ? prevOutputsRef.current.get(conn.fromModuleId)
-            : outputsRef.current.get(conn.fromModuleId)
-
-          if (source && conn.toPort in inputs) {
-            inputs[conn.toPort] = source[conn.fromPort] || null
-          }
-        }
-
-        const result = mod.process(inputs, dt, t)
-        if (result) {
-          outputsRef.current.set(id, result)
-          mod.lastOutputs = result
-        }
+      const result = mod.process(inputs, dt, t)
+      if (result) {
+        outputsRef.current.set(id, result)
+        mod.lastOutputs = result
       }
     }
 
-    // Swap output buffers (no allocation)
-    const prev = prevOutputsRef.current
-    prev.clear()
-    for (const [k, v] of outputsRef.current) prev.set(k, v)
+    // Skip buffer swap when nothing processed
+    if (enabledCount > 0) {
+      const prev = prevOutputsRef.current
+      prev.clear()
+      for (const [k, v] of outputsRef.current) prev.set(k, v)
+    }
 
-    return graphCacheRef.current?.sorted?.length || 0
+    return enabledCount
   }
 
   const tick = useCallback((now) => {
@@ -158,9 +164,11 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
 
     const frameDt = dt * 1000
     const fpsAcc = fpsAccRef.current
+    if (!fpsAcc.lastSample) fpsAcc.lastSample = now
     fpsAcc.frames++
-    if (now - fpsAcc.lastSample >= 1000) {
-      fpsAcc.fps = fpsAcc.frames
+    const elapsed = now - fpsAcc.lastSample
+    if (elapsed >= 1000) {
+      fpsAcc.fps = Math.round(fpsAcc.frames * 1000 / elapsed)
       fpsAcc.frames = 0
       fpsAcc.lastSample = now
     }
@@ -171,10 +179,6 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
       timingRef.current.fps = fpsAcc.fps
       timingRef.current.moduleCount = moduleCount
       timingRef.current.frameCount = localTimingRef.current.frameCount
-    }
-
-    if (localTimingRef.current.frameCount % 60 === 0) {
-      console.debug(`[VM] eval: ${evalMs.toFixed(2)}ms (${moduleCount} modules)`)
     }
 
     rafRef.current = requestAnimationFrame(tick)

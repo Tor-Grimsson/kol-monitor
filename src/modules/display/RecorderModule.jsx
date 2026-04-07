@@ -8,6 +8,8 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { useRenderControl } from '../../hooks/useRenderControl'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
+import { setupLiveRecording, startLiveRecording, finalizeLiveRecording } from './recordLive'
+import { startOfflineRecording } from './recordOffline'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -37,137 +39,133 @@ function computeDimensions(resolution, aspect) {
   return { width: res, height: Math.round(res * ah / aw) }
 }
 
-function detectCodec() {
-  if (typeof MediaRecorder === 'undefined') return null
-  if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) return 'video/webm;codecs=vp9'
-  if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) return 'video/webm;codecs=vp8'
-  if (MediaRecorder.isTypeSupported('video/webm')) return 'video/webm'
-  return null
-}
-
 function RecorderPanel({
   canvasRef, enabled, onToggle, id, connected,
   inputRefs, penConnected, penRef, bgConnected, bgInRef,
   resolution, setResolution, fps, setFps, aspect, setAspect,
   mode, setMode, duration, setDuration,
+  fileName, setFileName,
   status, progress, blobUrl, fileSize,
   onRecord, onStop, onClear,
 }) {
   const isActive = status === 'recording' || status === 'rendering'
-  const aspectStyle = (() => {
-    const { aw, ah } = parseAspect(aspect)
-    return { aspectRatio: `${aw} / ${ah}` }
-  })()
 
   return (
     <Module label="Rec" enabled={enabled} onToggle={onToggle}>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 4 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
-        {/* Preview canvas */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
-          <canvas
-            ref={canvasRef}
-            width={240}
-            height={135}
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              borderRadius: 2,
-              border: '1px solid rgba(255,255,255,0.06)',
-              ...aspectStyle,
-            }}
-          />
-        </div>
+        {/* 1. Canvas — fills available space */}
+        <canvas
+          ref={canvasRef}
+          width={240}
+          height={140}
+          style={{
+            flex: 1,
+            width: '100%',
+            minHeight: 0,
+            borderRadius: 2,
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}
+        />
 
-        {/* Settings row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <Selector value={resolution} options={RES_OPTIONS} onChange={setResolution} />
-          <Selector value={fps} options={FPS_OPTIONS} onChange={setFps} />
-          <Selector value={aspect} options={ASPECT_OPTIONS} onChange={setAspect} />
-        </div>
+        {/* 2. Settings — fixed middle section, overflow hidden */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '4px 0', overflow: 'hidden' }}>
 
-        {/* Duration + mode */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          <Knob value={duration} onChange={setDuration} min={1} max={60} label="dur" size="sm" />
-          <FlipToggle
-            value={mode === 'offline'}
-            onChange={(v) => setMode(v ? 'offline' : 'rt')}
-            labelA="live"
-            labelB="rndr"
-            variant="horizontal"
-          />
-        </div>
-
-        {/* Transport */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <button
-            onClick={onRecord}
-            disabled={isActive}
-            className="kol-helper-xxxs"
-            style={{
-              background: isActive ? 'rgba(231,76,60,0.9)' : 'rgba(231,76,60,0.4)',
-              color: '#fff', border: 'none', borderRadius: 2,
-              padding: '2px 8px', cursor: isActive ? 'default' : 'pointer', minWidth: 36,
-            }}
-          >
-            {status === 'rendering' ? 'RENDER' : 'REC'}
-          </button>
-          <button
-            onClick={isActive ? onStop : onClear}
-            className="kol-helper-xxxs"
-            style={{
-              background: 'rgba(255,255,255,0.1)',
-              color: (isActive || status === 'done') ? '#fff' : 'rgba(255,255,255,0.3)',
-              border: 'none', borderRadius: 2,
-              padding: '2px 8px',
-              cursor: (isActive || status === 'done') ? 'pointer' : 'default', minWidth: 36,
-            }}
-          >
-            {isActive ? 'STOP' : status === 'done' ? 'CLR' : 'STOP'}
-          </button>
-          {blobUrl && (
-            <a
-              href={blobUrl}
-              download={`kol-${resolution}p-${fps}fps-${aspect.replace(':', 'x')}.webm`}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <input
+              type="text"
+              value={fileName}
+              onChange={(e) => setFileName(e.target.value)}
+              placeholder="filename"
               className="kol-helper-xxxs"
               style={{
-                background: 'rgba(46,204,113,0.4)', color: '#fff',
-                borderRadius: 2, padding: '2px 8px', textDecoration: 'none',
-                minWidth: 36, textAlign: 'center',
+                flex: 1, background: 'rgba(255,255,255,0.06)', color: '#fff',
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: 2,
+                padding: '2px 4px', outline: 'none', minWidth: 0,
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <Selector value={resolution} options={RES_OPTIONS} onChange={setResolution} />
+            <Selector value={fps} options={FPS_OPTIONS} onChange={setFps} />
+            <Selector value={aspect} options={ASPECT_OPTIONS} onChange={setAspect} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <Knob value={duration} onChange={setDuration} min={1} max={60} label="dur" size="sm" variant="row" />
+            <FlipToggle
+              value={mode === 'offline'}
+              onChange={(v) => setMode(v ? 'offline' : 'rt')}
+              labelA="live"
+              labelB="rndr"
+              variant="horizontal"
+            />
+            <button
+              onClick={onRecord}
+              disabled={isActive}
+              className="kol-helper-xxxs"
+              style={{
+                background: isActive ? 'rgba(231,76,60,0.9)' : 'rgba(231,76,60,0.4)',
+                color: '#fff', border: 'none', borderRadius: 2,
+                padding: '2px 8px', cursor: isActive ? 'default' : 'pointer', minWidth: 36,
               }}
             >
-              SAVE
-            </a>
+              {status === 'rendering' ? 'RENDER' : 'REC'}
+            </button>
+            <button
+              onClick={isActive ? onStop : onClear}
+              className="kol-helper-xxxs"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                color: (isActive || status === 'done') ? '#fff' : 'rgba(255,255,255,0.3)',
+                border: 'none', borderRadius: 2,
+                padding: '2px 8px',
+                cursor: (isActive || status === 'done') ? 'pointer' : 'default', minWidth: 36,
+              }}
+            >
+              {isActive ? 'STOP' : status === 'done' ? 'CLR' : 'STOP'}
+            </button>
+            {blobUrl && (
+              <a
+                href={blobUrl}
+                download={`${fileName || 'kol'}-${mode === 'offline' ? 'render' : 'realtime'}.webm`}
+                className="kol-helper-xxxs"
+                style={{
+                  background: 'rgba(46,204,113,0.4)', color: '#fff',
+                  borderRadius: 2, padding: '2px 8px', textDecoration: 'none',
+                  minWidth: 36, textAlign: 'center',
+                }}
+              >
+                SAVE
+              </a>
+            )}
+            {status === 'done' && fileSize != null && (
+              <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                {(fileSize / 1024 / 1024).toFixed(1)}MB
+              </span>
+            )}
+          </div>
+
+          {isActive && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{
+                  width: `${Math.round(progress * 100)}%`, height: '100%',
+                  background: status === 'rendering' ? 'rgba(231,76,60,0.8)' : 'rgba(46,204,113,0.6)',
+                  transition: 'width 0.1s',
+                }} />
+              </div>
+              <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.5)', minWidth: 28, textAlign: 'right' }}>
+                {Math.round(progress * 100)}%
+              </span>
+            </div>
           )}
+
         </div>
 
-        {/* Progress bar */}
-        {isActive && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-              <div style={{
-                width: `${Math.round(progress * 100)}%`, height: '100%',
-                background: status === 'rendering' ? 'rgba(231,76,60,0.8)' : 'rgba(46,204,113,0.6)',
-                transition: 'width 0.1s',
-              }} />
-            </div>
-            <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.5)', minWidth: 28, textAlign: 'right' }}>
-              {Math.round(progress * 100)}%
-            </span>
-          </div>
-        )}
-
-        {/* File size */}
-        {status === 'done' && fileSize != null && (
-          <div className="kol-helper-xxxs" style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
-            {(fileSize / 1024 / 1024).toFixed(1)}MB
-          </div>
-        )}
-
-        <Divider />
-
-        {/* Input jacks */}
-        <div style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 6 }}>
+        {/* 3. Jacks — pinned to bottom */}
+        <div style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 6, padding: '4px 0' }}>
           <LabeledJack type="in" port="bg" moduleId={id} active={bgConnected} signalRef={bgInRef} label="cv" size="sm" />
           {CHANNELS.map(ch => (
             <LabeledJack
@@ -179,6 +177,7 @@ function RecorderPanel({
           ))}
           <LabeledJack type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
         </div>
+
       </div>
     </Module>
   )
@@ -195,6 +194,7 @@ export default function RecorderModule({ id = 'rec1', preview }) {
       resolution="1080" setResolution={() => {}} fps="60" setFps={() => {}}
       aspect="16:9" setAspect={() => {}} mode="rt" setMode={() => {}}
       duration={10} setDuration={() => {}}
+      fileName="kol" setFileName={() => {}}
       status="idle" progress={0} blobUrl={null} fileSize={null}
       onRecord={() => {}} onStop={() => {}} onClear={() => {}}
     />
@@ -213,6 +213,7 @@ export default function RecorderModule({ id = 'rec1', preview }) {
   const [aspect, setAspectState] = useState('16:9')
   const [mode, setModeState] = useState('rt')
   const [duration, setDurationState] = useState(10)
+  const [fileName, setFileName] = useState('kol')
 
   const resolutionRef = useRef(resolution)
   const fpsRef = useRef(fps)
@@ -259,7 +260,7 @@ export default function RecorderModule({ id = 'rec1', preview }) {
   const bgConnected = cp.has('bg')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { resolution, fps, aspect, mode, duration }
+  saveStateRef.current = { resolution, fps, aspect, mode, duration, fileName }
 
   // Module registration
   useModule({
@@ -342,7 +343,42 @@ export default function RecorderModule({ id = 'rec1', preview }) {
     const ctx = canvas.getContext('2d')
     const w = canvas.width, h = canvas.height
     if (!w || !h) return
-    drawFrame(ctx, w, h, false)
+
+    if (enabledRef.current) {
+      drawFrame(ctx, w, h, false)
+    } else {
+      ctx.fillStyle = 'rgba(8,8,8,1)'
+      ctx.fillRect(0, 0, w, h)
+    }
+
+    // Aspect ratio crop overlay
+    const { aw, ah } = parseAspect(aspectRef.current)
+    const canvasRatio = w / h
+    const targetRatio = aw / ah
+    let cropW, cropH
+    if (canvasRatio > targetRatio) {
+      cropH = h
+      cropW = h * targetRatio
+    } else {
+      cropW = w
+      cropH = w / targetRatio
+    }
+    const cx = (w - cropW) / 2
+    const cy = (h - cropH) / 2
+
+    // Dim outside crop
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'
+    ctx.fillRect(0, 0, cx, h)
+    ctx.fillRect(cx + cropW, 0, w - cx - cropW, h)
+    ctx.fillRect(cx, 0, cropW, cy)
+    ctx.fillRect(cx, cy + cropH, cropW, h - cy - cropH)
+
+    // Dashed crop border
+    ctx.setLineDash([4, 3])
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(cx + 0.5, cy + 0.5, cropW - 1, cropH - 1)
+    ctx.setLineDash([])
 
     // Realtime recording: draw to recording canvas — captureStream auto-captures
     if (isRecordingRef.current && modeRef.current === 'rt') {
@@ -358,74 +394,6 @@ export default function RecorderModule({ id = 'rec1', preview }) {
   })
 
   // --- Recording infrastructure ---
-
-  function setupRecording() {
-    const codec = detectCodec()
-    if (!codec) {
-      console.error('[Recorder] No supported WebM codec found')
-      return null
-    }
-
-    const { width, height } = computeDimensions(resolutionRef.current, aspectRef.current)
-
-    let rc = recCanvasRef.current
-    if (!rc) {
-      rc = document.createElement('canvas')
-      rc.style.cssText = 'visibility:hidden;position:absolute;left:-9999px;top:-9999px'
-      document.body.appendChild(rc)
-      recCanvasRef.current = rc
-    }
-    rc.width = width
-    rc.height = height
-
-    // Draw one frame so captureStream has content
-    drawFrame(rc.getContext('2d'), width, height, true)
-
-    // Auto-capture at target fps — no manual requestFrame() needed
-    const targetFps = Number(fpsRef.current)
-    const stream = rc.captureStream(targetFps)
-
-    const bitrate = BITRATES[Number(resolutionRef.current)] || 15_000_000
-    const recorder = new MediaRecorder(stream, { mimeType: codec, videoBitsPerSecond: bitrate })
-
-    chunksRef.current = []
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunksRef.current.push(e.data)
-    }
-
-    mediaRecorderRef.current = recorder
-    return recorder
-  }
-
-  function finalizeRecording() {
-    return new Promise((resolve) => {
-      const recorder = mediaRecorderRef.current
-      if (!recorder || recorder.state !== 'recording') {
-        isRecordingRef.current = false
-        setStatus(chunksRef.current.length > 0 ? 'done' : 'idle')
-        resolve()
-        return
-      }
-
-      recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType })
-        const url = URL.createObjectURL(blob)
-
-        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
-        blobUrlRef.current = url
-
-        setBlobUrl(url)
-        setFileSize(blob.size)
-        setStatus('done')
-        setProgress(1)
-        isRecordingRef.current = false
-        mediaRecorderRef.current = null
-        resolve()
-      }
-
-      recorder.stop()
-    })
-  }
 
   function clearRecording() {
     if (progressIntervalRef.current) {
@@ -445,101 +413,34 @@ export default function RecorderModule({ id = 'rec1', preview }) {
     chunksRef.current = []
   }
 
-  function startRealtimeRecording() {
-    const recorder = setupRecording()
+  const refs = { recCanvasRef, mediaRecorderRef, chunksRef, isRecordingRef, stopRequestedRef, blobUrlRef, progressIntervalRef, resolutionRef, aspectRef, fpsRef, durationRef }
+  const stateFns = { setStatus, setProgress, setBlobUrl, setFileSize }
+
+  function doStartLive() {
+    const recorder = setupLiveRecording({ ...refs, drawFrame, computeDimensions })
     if (!recorder) return
-
-    isRecordingRef.current = true
-    stopRequestedRef.current = false
-    setStatus('recording')
-    setProgress(0)
-
-    recorder.start(1000)
-
-    const targetMs = durationRef.current * 1000
-    const startTime = performance.now()
-    progressIntervalRef.current = setInterval(() => {
-      if (stopRequestedRef.current || !isRecordingRef.current) {
-        clearInterval(progressIntervalRef.current)
-        progressIntervalRef.current = null
-        return
-      }
-      const elapsed = performance.now() - startTime
-      setProgress(Math.min(1, elapsed / targetMs))
-      if (elapsed >= targetMs) {
-        clearInterval(progressIntervalRef.current)
-        progressIntervalRef.current = null
-        finalizeRecording()
-      }
-    }, 100)
+    const finalize = () => finalizeLiveRecording({ ...refs, ...stateFns })
+    startLiveRecording({ recorder, ...refs, ...stateFns, finalize })
   }
 
-  async function startOfflineRecording() {
-    const recorder = setupRecording()
-    if (!recorder) return
-    if (!renderControl?.current) {
-      console.error('[Recorder] No render control available')
-      return
-    }
-
-    isRecordingRef.current = true
-    stopRequestedRef.current = false
-    setStatus('rendering')
-    setProgress(0)
-
-    recorder.start(1000)
-
-    const control = renderControl.current
-    control.pause()
-
-    const targetFps = Number(fpsRef.current)
-    const fixedDt = 1 / targetFps
-    const frameInterval = 1000 / targetFps
-    const totalFrames = Math.round(durationRef.current * targetFps)
-    const rc = recCanvasRef.current
-    const rctx = rc.getContext('2d')
-
-    // Step one frame per interval — paced at target fps so MediaRecorder
-    // sees correct wall-clock timing between frames
-    for (let i = 0; i < totalFrames; i++) {
-      if (stopRequestedRef.current) break
-
-      const frameStart = performance.now()
-
-      try {
-        control.stepFrame(fixedDt)
-        drawFrame(rctx, rc.width, rc.height, true)
-      } catch (e) {
-        console.error('[Recorder] offline frame error:', e)
-        break
-      }
-
-      if (i % 10 === 0) setProgress(i / totalFrames)
-
-      // Wait remainder of frame interval so timestamps are correct
-      const elapsed = performance.now() - frameStart
-      const delay = Math.max(1, frameInterval - elapsed)
-      await new Promise(r => setTimeout(r, delay))
-    }
-
-    control.resume()
-    await finalizeRecording()
+  function doStartOffline() {
+    startOfflineRecording({ renderControl, drawFrame, computeDimensions, ...refs, ...stateFns })
   }
 
   const onRecord = useCallback(() => {
     if (isRecordingRef.current) return
     clearRecording()
     if (modeRef.current === 'offline') {
-      startOfflineRecording()
+      doStartOffline()
     } else {
-      startRealtimeRecording()
+      doStartLive()
     }
   }, [])
 
   const onStop = useCallback(() => {
     stopRequestedRef.current = true
-    if (mediaRecorderRef.current?.state === 'recording') {
-      finalizeRecording()
+    if (modeRef.current === 'rt' && mediaRecorderRef.current?.state === 'recording') {
+      finalizeLiveRecording({ ...refs, ...stateFns })
     }
   }, [])
 
@@ -568,6 +469,7 @@ export default function RecorderModule({ id = 'rec1', preview }) {
     aspect={aspect} setAspect={setAspect}
     mode={mode} setMode={setMode}
     duration={duration} setDuration={setDuration}
+    fileName={fileName} setFileName={setFileName}
     status={status} progress={progress}
     blobUrl={blobUrl} fileSize={fileSize}
     onRecord={onRecord} onStop={onStop} onClear={onClear}
