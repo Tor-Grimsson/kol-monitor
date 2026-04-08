@@ -4,7 +4,7 @@
 import { PEN_DEFAULTS } from '../../hooks/signals'
 
 const SCOPE_COLOR = '#2ecc71'
-const WIRE_COLOR = '#3498db'
+const WIRE_COLOR = '#ffffff'
 const REF_COLOR = 'rgba(255,255,255,0.06)'
 
 function penColor(p, fallback) {
@@ -146,7 +146,7 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
       : penColor(p, 'strokeWidth' in signal ? '#ffffff' : WIRE_COLOR)
 
     // Fill — trace closed shapes from edges
-    if (signal.fill) {
+    if (signal.fill || p?.fill) {
       ctx.fillStyle = color
       let prevTo = -1
       for (let e = 0; e < signal.edges.length; e++) {

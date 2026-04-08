@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-previews": "node scripts/generate-previews.js"
+    "generate-previews": "node scripts/generate-previews.js",
+    "generate-videos": "node scripts/generate-videos.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",

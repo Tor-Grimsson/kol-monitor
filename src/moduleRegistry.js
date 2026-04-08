@@ -26,6 +26,7 @@ import ReverbModule from './modules/math/ReverbModule.jsx'
 import MixerModule from './modules/math/MixerModule.jsx'
 import MathsModule from './modules/math/MathsModule.jsx'
 import TransformModule from './modules/math/TransformModule.jsx'
+import KaleidoscopeModule from './modules/math/KaleidoscopeModule.jsx'
 import FilterModule from './modules/math/FilterModule.jsx'
 import MagnetoModule from './modules/math/MagnetoModule.jsx'
 import S2VModule from './modules/math/S2VModule.jsx'
@@ -118,13 +119,14 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'trig', signal: 'scalar', description: 'Trigger captures current input' },
     { type: 'output', name: 'out', signal: 'scalar', description: 'Held value with optional slew' },
   ] },
-  pen:       { component: PenModule,          hp: 6,  u: 3, category: 'control',    label: 'Pen',         description: 'Controls the draw style consumed by display modules. Thickness ranges from 0.5 to 10 pixels with dash, gap, and opacity parameters. Cap style selects round, square, or butt line endings. Lofi toggle and 5 CV inputs for animated pen modulation. Outputs a pen object that shapes how points and edges are rendered.', controls: [
+  pen:       { component: PenModule,          hp: 6,  u: 3, category: 'control',    label: 'Pen',         description: 'Controls the draw style consumed by display modules. Thickness ranges from 0.5 to 10 pixels with dash, gap, and opacity parameters. Cap style selects round, square, or butt line endings. Fill toggle forces closed shape filling on all connected displays. Lofi knob and 4 CV inputs for animated pen modulation. Outputs a pen object that shapes how points and edges are rendered.', controls: [
     { type: 'selector', name: 'Cap', options: 'round, square, butt', description: 'Line cap style' },
     { type: 'knob', name: 'Thickness', range: '0.5–10 px', description: 'Stroke width' },
     { type: 'knob', name: 'Dash', range: '0–20 px', description: 'Dash length' },
     { type: 'knob', name: 'Gap', range: '0–20 px', description: 'Gap between dashes' },
     { type: 'knob', name: 'Opacity', range: '0–100%', description: 'Stroke opacity' },
     { type: 'knob', name: 'Lofi', range: '0–100', description: 'Lo-fi effect amount' },
+    { type: 'toggle', name: 'Fill', description: 'Fill closed shapes on connected displays' },
     { type: 'input', name: 'clr', signal: 'color', description: 'Stroke color override' },
     { type: 'output', name: 'out', signal: 'pen', description: 'Pen style object for display modules' },
   ] },
@@ -257,6 +259,27 @@ export const MODULE_DEFS = {
     { type: 'output', name: 'out', signal: 'points', description: 'Combined dry + wet with head colors' },
     { type: 'output', name: 'clk1–4', signal: 'scalar', description: 'Per-head clock outputs' },
   ] },
+  kaleidoscope: { component: KaleidoscopeModule, hp: 10, u: 3, category: 'math', label: 'Kaleido', description: 'Kaleidoscope mirror for points geometry. Replicates input shapes radially with alternating reflections. Segments knob sets 2-32 copies around center. Rotation, zoom, and radial offset shape the pattern. Animate toggle spins continuously with clock-resettable phase. Fold adjusts wedge angle. 3 CV inputs for dynamic modulation.', controls: [
+    { type: 'knob', name: 'Seg', range: '2–16', description: 'Number of radial copies' },
+    { type: 'knob', name: 'Rot', range: '0–360°', description: 'Base rotation angle' },
+    { type: 'knob', name: 'Zm', range: '0.1–3×', description: 'Source zoom before mirroring' },
+    { type: 'knob', name: 'Ofs', range: '–0.5–0.5', description: 'Bipolar radial offset from center' },
+    { type: 'knob', name: 'Opa', range: '0–100%', description: 'Output opacity' },
+    { type: 'knob', name: 'Spd', range: '0–2 rad/s', description: 'Auto-rotation speed' },
+    { type: 'knob', name: 'Fold', range: '0.5–1.5×', description: 'Wedge angle multiplier' },
+    { type: 'toggle', name: 'Mir', description: 'Alternating segment mirror' },
+    { type: 'toggle', name: 'Cut', description: 'Clip source to wedge angle' },
+    { type: 'toggle', name: 'Fil', description: 'Fill shapes instead of stroke' },
+    { type: 'toggle', name: 'Ani', description: 'Enable continuous rotation' },
+    { type: 'input', name: 'in', signal: 'points', description: 'Source geometry' },
+    { type: 'input', name: 'pen', signal: 'pen', description: 'Stroke style pass-through' },
+    { type: 'input', name: 'clr', signal: 'color', description: 'Color override' },
+    { type: 'input', name: 'clk', signal: 'scalar', description: 'Animation phase reset' },
+    { type: 'input', name: 'segCV', signal: 'scalar', description: 'Segments CV' },
+    { type: 'input', name: 'rotCV', signal: 'scalar', description: 'Rotation CV' },
+    { type: 'input', name: 'zmCV', signal: 'scalar', description: 'Zoom CV' },
+    { type: 'output', name: 'out', signal: 'points', description: 'Kaleidoscoped geometry' },
+  ] },
   s2v:       { component: S2VModule,         hp: 8,  u: 1, category: 'math',       label: 'S2V',         description: 'Converts scalar signals into visual points geometry. 5 display modes: bar, gauge, plot, meter, and scatter. Accepts 4 scalar inputs and generates a combined points output. Bridges the gap between CV signals and the visual display pipeline.', controls: [
     { type: 'selector', name: 'Mode', options: 'bar, gauge, plot, meter, scatter', description: 'Visualization type' },
     { type: 'input', name: 'a–d', signal: 'scalar', description: '4 scalar inputs' },
@@ -351,11 +374,13 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'str', signal: 'scalar', description: 'Stroke width 0.5–5' },
     { type: 'output', name: 'out', signal: 'points', description: 'Concentric FM circles' },
   ] },
-  generator: { component: GeneratorModule,    hp: 10, u: 3, category: 'generators', label: 'Gen Lofi',    description: 'Lo-fi texture generator sampling a 16x16 grid. 3 algorithms run simultaneously: gradient (linear/radial/conic), pattern (stripes/dots/checker), and wave (sin/saw/tri/sqr). Each algorithm has its own dedicated output jack. Animation syncs to clock input for tempo-locked textures.', controls: [
+  generator: { component: GeneratorModule,    hp: 10, u: 3, category: 'generators', label: 'Gen Lofi',    description: 'Lo-fi texture generator sampling a 16x16 grid. 3 algorithms run simultaneously: gradient (linear/radial/conic), pattern (stripes/dots/checker), and wave (sin/saw/tri/sqr). Each algorithm has its own dedicated output jack. Hue knob with CV input controls output color. Animation syncs to clock input for tempo-locked textures.', controls: [
     { type: 'selector', name: 'Tab', options: 'gradient, pattern, wave', description: 'Sub-type editing tab' },
     { type: 'knob', name: 'p1–p4', range: '0–100', description: 'Per-mode parameters with CV' },
+    { type: 'knob', name: 'Hue', range: '0–360°', description: 'Output color hue with CV' },
     { type: 'knob', name: 'Rate', range: '0–100', description: 'Animation speed with CV' },
     { type: 'toggle', name: 'Animate', description: 'Enable animation' },
+    { type: 'input', name: 'hue', signal: 'scalar', description: 'Hue CV modulation' },
     { type: 'input', name: 'clk', signal: 'scalar', description: 'Reset animation phase' },
     { type: 'output', name: 'grad', signal: 'points', description: 'Gradient output' },
     { type: 'output', name: 'ptrn', signal: 'points', description: 'Pattern output' },

@@ -191,6 +191,8 @@ export default function LineGenModule({ id = 'line1', init, preview }) {
 
       const { pts, edges: edgeList } = generate(shapeRef.current, f, d, t * s, t * s)
       const out = points(pts, edgeList)
+      out.aspectLock = true
+      out.color = { r: 1, g: 1, b: 1 }
       outRef.current = out
       return { out }
     },

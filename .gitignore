@@ -28,6 +28,7 @@ a_torg
 src/components-mirrors
 docs
 LLM_RULES.md
+public/videos
 
 # Playwright
 /test-results/

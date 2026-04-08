@@ -50,7 +50,7 @@ export const patches = {
       { height: '3u', modules: [
         { type: 'transform', id: 'xform1' }, { type: 'maths', id: 'maths1' }, { type: 'filter', id: 'filt1' },
         { type: 'radialGen', id: 'radial1' }, { type: 'modGen', id: 'modgen1' }, { type: 'monitor', id: 'mon1' },
-        { type: 'magneto', id: 'mag1' },
+        { type: 'magneto', id: 'mag1' }, { type: 'kaleidoscope', id: 'kal1' },
       ]},
       { height: '3u', modules: [
         { type: 'generator', id: 'gen1' }, { type: 'generator2', id: 'gen2' }, { type: 'dither', id: 'dith1' },
@@ -774,15 +774,15 @@ export const patches = {
   // Visual: lo-fi gradient, pattern, and wave signals mixed together
   'genLofi': {
     tags: ['showcase', 'generative', 'minimal'],
-    description: 'Gen Lofi 3 outputs mixed together with dashed pen styling',
+    description: 'Gen Lofi 3 outputs mixed with dashed pen and hue-shifted color',
     rows: [
       UTIL_ROW,
       { height: '3u', modules: [
         { type: 'clock', id: 'clk1', state: { bpm: 37 } },
-        { type: 'generator', id: 'gen1', state: { tab: 'gradient', gradSub: 'radial', patternSub: 'dots', waveSub: 'sin', p1: 38, p2: 24, p3: 50, p4: 50, animate: true, speed: 55 } },
-        { type: 'mixer', id: 'mix1', state: { la: 64, lb: 52, lc: 62, ld: 100 } },
-        { type: 'pen', id: 'pen1', state: { thickness: 33, dash: 44, gap: 74, opacity: 72, cap: 'round', lofi: 0 } },
-        { type: 'monitor', id: 'mon1', state: { overlay: true } },
+        { type: 'generator', id: 'gen1', state: { tab: 'gradient', gradSub: 'radial', patternSub: 'dots', waveSub: 'sin', p1: 38, p2: 24, p3: 50, p4: 50, hue: 43, animate: true, speed: 55 } },
+        { type: 'mixer', id: 'mix1', state: { la: 73, lb: 100, lc: 100, ld: 100 } },
+        { type: 'pen', id: 'pen1', state: { thickness: 6, dash: 29, gap: 53, opacity: 100, cap: 'round', lofi: 0 } },
+        { type: 'monitor', id: 'mon1' },
       ]},
     ],
     connections: [
@@ -793,6 +793,7 @@ export const patches = {
       { fromModuleId: 'gen1', fromPort: 'wave', toModuleId: 'mon1', toPort: 'b' },
       { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
     ],
+    on: ['clk1', 'gen1', 'mix1', 'pen1', 'mon1'],
   },
 
   // Gen Hifi → Monitor with color output
@@ -1046,5 +1047,30 @@ export const patches = {
       // Pen styles the recorder output
       { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'rec', toPort: 'pen' },
     ],
+  },
+
+  // RadialGen triangle → Kaleidoscope with cut + animate → Monitor
+  // Visual: triangle shape spinning through 32 kaleidoscope segments
+  'kaleidoscope': {
+    tags: ['showcase', 'geometric', 'mirror'],
+    description: 'RadialGen triangle through Kaleidoscope mirror with cut and auto-rotation',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1', state: { bpm: 74 } },
+        { type: 'lfo', id: 'lfo1', state: { rate: 0, depth: 100, offset: 45, shape: 'saw' } },
+        { type: 'radialGen', id: 'rad1', state: { shape: 'triangle', radius: 80, amplitude: 50, frequency: 3, resolution: 4, scale: 35, rotate: 0, lfoAmount: 0, lfoFrequency: 20, lfoWaveType: 'sine', lfoSync: false, strokeWidth: 40, mirrorX: false, mirrorY: false, fill: false, grid: false, aspectLock: true } },
+        { type: 'kaleidoscope', id: 'kal1', state: { seg: 32, rot: 26, zm: 78, ofs: 17, spd: 25, fold: 50, opa: 100, mir: false, ani: true, cut: true, fil: false } },
+        { type: 'pen', id: 'pen1', state: { thickness: 15, dash: 0, gap: 0, opacity: 100, cap: 'round', lofi: 0 } },
+        { type: 'monitor', id: 'mon1' },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'rad1', fromPort: 'out', toModuleId: 'kal1', toPort: 'in' },
+      { fromModuleId: 'kal1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+      { fromModuleId: 'clk1', fromPort: 'd8', toModuleId: 'lfo1', toPort: 'sync' },
+    ],
+    on: ['clk1', 'lfo1', 'rad1', 'kal1', 'pen1', 'mon1'],
   },
 }

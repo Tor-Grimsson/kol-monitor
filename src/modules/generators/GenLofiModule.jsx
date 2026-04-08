@@ -137,13 +137,20 @@ function generateGrid(mode, subType, p1, p2, p3, p4, t) {
 
 // --- UI ---
 
+function hslToRgb(h, s, l) {
+  h /= 360; s /= 100; l /= 100
+  const a = s * Math.min(l, 1 - l)
+  const f = (n) => { const k = (n + h * 12) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)) }
+  return { r: f(0), g: f(8), b: f(4) }
+}
+
 function GeneratorPanel({
-  tab, gradSub, patternSub, waveSub, p1, p2, p3, p4, animate, speed, enabled, onToggle, id,
+  tab, gradSub, patternSub, waveSub, p1, p2, p3, p4, hue, animate, speed, enabled, onToggle, id,
   onTabChange, onGradSubChange, onPatternSubChange, onWaveSubChange,
-  onP1Change, onP2Change, onP3Change, onP4Change,
+  onP1Change, onP2Change, onP3Change, onP4Change, onHueChange,
   onAnimateChange, onSpeedChange,
   p1Conn, p1Ref, p2Conn, p2Ref, p3Conn, p3Ref, p4Conn, p4Ref,
-  spdConn, spdCvRef, clkConn, clkCvRef,
+  hueConn, hueCvRef, spdConn, spdCvRef, clkConn, clkCvRef,
   gradOutRef, patternOutRef, waveOutRef,
 }) {
   const subs = SUB_ITEMS[tab] || []
@@ -201,8 +208,9 @@ function GeneratorPanel({
           {animate && <CvKnob port="spd" moduleId={id} active={spdConn} signalRef={spdCvRef} value={speed} onChange={onSpeedChange} label="rate" direction="vertical" />}
         </div>
 
-        {/* Toggle */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+        {/* Hue + toggle */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
+          <CvKnob port="hue" moduleId={id} active={hueConn} signalRef={hueCvRef} value={hue} onChange={onHueChange} label="hue" />
           <Toggle value={animate} onChange={onAnimateChange} label="ani" size="sm" horizontal />
         </div>
 
@@ -224,14 +232,14 @@ function GeneratorPanel({
 
 export default function GeneratorModule({ id = 'gen1', init, preview }) {
   if (preview) return <GeneratorPanel
-    tab="gradient" gradSub="linear" patternSub="stripes" waveSub="sin" p1={50} p2={50} p3={50} p4={50} animate={true} speed={50}
+    tab="gradient" gradSub="linear" patternSub="stripes" waveSub="sin" p1={50} p2={50} p3={50} p4={50} hue={58} animate={true} speed={50}
     enabled={false} onToggle={() => {}} id={id}
     onTabChange={() => {}} onGradSubChange={() => {}} onPatternSubChange={() => {}} onWaveSubChange={() => {}}
-    onP1Change={() => {}} onP2Change={() => {}} onP3Change={() => {}} onP4Change={() => {}}
+    onP1Change={() => {}} onP2Change={() => {}} onP3Change={() => {}} onP4Change={() => {}} onHueChange={() => {}}
     onAnimateChange={() => {}} onSpeedChange={() => {}}
     p1Conn={false} p1Ref={{ current: null }} p2Conn={false} p2Ref={{ current: null }}
     p3Conn={false} p3Ref={{ current: null }} p4Conn={false} p4Ref={{ current: null }}
-    spdConn={false} spdCvRef={{ current: null }} clkConn={false} clkCvRef={{ current: null }}
+    hueConn={false} hueCvRef={{ current: null }} spdConn={false} spdCvRef={{ current: null }} clkConn={false} clkCvRef={{ current: null }}
     gradOutRef={{ current: null }} patternOutRef={{ current: null }} waveOutRef={{ current: null }}
   />
 
@@ -243,15 +251,18 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
   const [p2, setP2] = useState(init?.p2 ?? 50)
   const [p3, setP3] = useState(init?.p3 ?? 50)
   const [p4, setP4] = useState(init?.p4 ?? 50)
+  const [hue, setHue] = useState(init?.hue ?? 58)
   const [animate, setAnimate] = useState(init?.animate ?? true)
   const [speed, setSpeed] = useState(init?.speed ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
+  const hueRef = useRef(58)
   const animateRef = useRef(true)
   const speedRef = useRef(50)
   const animTimeRef = useRef(0)
+  const hueCvRef = useRef(null)
   const spdCvRef = useRef(null)
   const clkCvRef = useRef(null)
   const prevClkRef = useRef(false)
@@ -271,6 +282,7 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
   const waveOutRef = useRef(null)
 
   enabledRef.current = enabled
+  hueRef.current = hue
   animateRef.current = animate
   speedRef.current = speed
   gradSubRef.current = gradSub
@@ -285,16 +297,17 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
   const p2Conn = cp.has('p2')
   const p3Conn = cp.has('p3')
   const p4Conn = cp.has('p4')
+  const hueConn = cp.has('hue')
   const spdConn = cp.has('spd')
   const clkConn = cp.has('clk')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { tab, gradSub, patternSub, waveSub, p1, p2, p3, p4, animate, speed }
+  saveStateRef.current = { tab, gradSub, patternSub, waveSub, p1, p2, p3, p4, hue, animate, speed }
 
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { p1: { type: 'scalar' }, p2: { type: 'scalar' }, p3: { type: 'scalar' }, p4: { type: 'scalar' }, spd: { type: 'scalar' }, clk: { type: 'scalar' } },
+    inputs: { p1: { type: 'scalar' }, p2: { type: 'scalar' }, p3: { type: 'scalar' }, p4: { type: 'scalar' }, hue: { type: 'scalar' }, spd: { type: 'scalar' }, clk: { type: 'scalar' } },
     outputs: { grad: { type: 'points' }, ptrn: { type: 'points' }, wave: { type: 'points' } },
     process: (inputs, dt, t) => {
       if (!enabledRef.current) {
@@ -311,6 +324,7 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
       const v3 = inputs.p3 ? readScalar(inputs.p3) : p3Ref.current
       const v4 = inputs.p4 ? readScalar(inputs.p4) : p4Ref.current
 
+      hueCvRef.current = inputs.hue
       spdCvRef.current = inputs.spd
       clkCvRef.current = inputs.clk
       const clkHigh = readScalar(inputs.clk) > 50
@@ -321,10 +335,14 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
       if (animateRef.current) animTimeRef.current += dt * (vSpeed / 50)
       const at = animTimeRef.current
 
+      const vHue = inputs.hue ? readScalar(inputs.hue) : hueRef.current
+      const outColor = hslToRgb((vHue / 100) * 360, 70, 60)
+
       const makeOut = (mode, sub) => {
         const grid = generateGrid(mode, sub, v1, v2, v3, v4, at)
         const p = points(grid.pts, grid.edges)
         p.aspectFill = true; p.fill = false
+        p.color = outColor
         return p
       }
 
@@ -341,12 +359,12 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
 
   return <GeneratorPanel
     tab={tab} gradSub={gradSub} patternSub={patternSub} waveSub={waveSub}
-    p1={p1} p2={p2} p3={p3} p4={p4} animate={animate} speed={speed}
+    p1={p1} p2={p2} p3={p3} p4={p4} hue={hue} animate={animate} speed={speed}
     enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id}
     onTabChange={setTab} onGradSubChange={setGradSub} onPatternSubChange={setPatternSub} onWaveSubChange={setWaveSub}
-    onP1Change={setP1} onP2Change={setP2} onP3Change={setP3} onP4Change={setP4}
+    onP1Change={setP1} onP2Change={setP2} onP3Change={setP3} onP4Change={setP4} onHueChange={setHue}
     onAnimateChange={setAnimate} onSpeedChange={setSpeed}
-    spdConn={spdConn} spdCvRef={spdCvRef} clkConn={clkConn} clkCvRef={clkCvRef}
+    hueConn={hueConn} hueCvRef={hueCvRef} spdConn={spdConn} spdCvRef={spdCvRef} clkConn={clkConn} clkCvRef={clkCvRef}
     p1Conn={p1Conn} p1Ref={p1CvRef} p2Conn={p2Conn} p2Ref={p2CvRef}
     p3Conn={p3Conn} p3Ref={p3CvRef} p4Conn={p4Conn} p4Ref={p4CvRef}
     gradOutRef={gradOutRef} patternOutRef={patternOutRef} waveOutRef={waveOutRef}

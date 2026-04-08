@@ -17,6 +17,11 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const MODULES_DIR = join(ROOT, 'public/previews/modules')
 const PATCHES_DIR = join(ROOT, 'public/previews/patches')
 
+// --only flag: capture a single module and/or patch by name
+// Usage: yarn generate-previews --only kaleidoscope
+const onlyIdx = process.argv.indexOf('--only')
+const ONLY = onlyIdx !== -1 ? process.argv[onlyIdx + 1] : null
+
 async function startDevServer() {
   const server = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], {
     cwd: ROOT,
@@ -71,7 +76,12 @@ async function main() {
     console.log(`Found ${moduleTypes.length} modules, ${patchNames.length} patches`)
 
     // --- Capture modules via DevCapturePage ---
-    for (const type of moduleTypes) {
+    const filteredModules = ONLY ? moduleTypes.filter(t => t === ONLY) : moduleTypes
+    const filteredPatches = ONLY ? patchNames.filter(n => n === ONLY) : patchNames
+
+    if (ONLY) console.log(`Filtering to: ${ONLY} (${filteredModules.length} modules, ${filteredPatches.length} patches)`)
+
+    for (const type of filteredModules) {
       const out = join(MODULES_DIR, `${type}.png`)
       process.stdout.write(`  module: ${type}...`)
       try {
@@ -87,7 +97,7 @@ async function main() {
     }
 
     // --- Capture patches from actual rack page ---
-    for (const name of patchNames) {
+    for (const name of filteredPatches) {
       const out = join(PATCHES_DIR, `${name}.png`)
       process.stdout.write(`  patch: ${name}...`)
       try {

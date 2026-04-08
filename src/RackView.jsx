@@ -16,6 +16,7 @@ const ModuleSlot = memo(function ModuleSlot({ mod, editMode, onSendToWorkbench }
   const editCtx = editMode ? { editMode: true, onRemove: () => onSendToWorkbench(mod.id), hp: mod.hp } : null
   return (
     <div
+      data-module-id={mod.id}
       style={{
         width: hpToPx(mod.hp),
         aspectRatio: `${mod.hp * aspectDiv} / ${TOTAL_HP}`,

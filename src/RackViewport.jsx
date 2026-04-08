@@ -110,15 +110,15 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
         const vh = cr.height
         const p = 24
         const targets = {
-          7: { x: cr.left + p, y: cr.top + p },
+          7: { x: cr.left, y: cr.top + p },
           8: { x: cr.left + (vw - rect.width) / 2, y: cr.top + p },
-          9: { x: cr.left + vw - p - rect.width, y: cr.top + p },
-          4: { x: cr.left + p, y: cr.top + (vh - rect.height) / 2 },
+          9: { x: cr.left + vw - p * 2 - rect.width, y: cr.top + p },
+          4: { x: cr.left, y: cr.top + (vh - rect.height) / 2 },
           5: { x: cr.left + (vw - rect.width) / 2, y: cr.top + (vh - rect.height) / 2 },
-          6: { x: cr.left + vw - p - rect.width, y: cr.top + (vh - rect.height) / 2 },
-          1: { x: cr.left + p, y: cr.top + vh - p - rect.height },
+          6: { x: cr.left + vw - p * 2 - rect.width, y: cr.top + (vh - rect.height) / 2 },
+          1: { x: cr.left, y: cr.top + vh - p - rect.height },
           2: { x: cr.left + (vw - rect.width) / 2, y: cr.top + vh - p - rect.height },
-          3: { x: cr.left + vw - p - rect.width, y: cr.top + vh - p - rect.height },
+          3: { x: cr.left + vw - p * 2 - rect.width, y: cr.top + vh - p - rect.height },
         }
         const t = targets[e.key]
         const dx = (t.x - rect.left) / zoom
@@ -149,7 +149,7 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
       const rect = el.getBoundingClientRect()
       const cr = outer.getBoundingClientRect()
       const p = 24
-      const dx = (cr.left + p - rect.left) / zoom
+      const dx = (cr.left - rect.left) / zoom
       const dy = (cr.top + p - rect.top) / zoom
       setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }))
     }))

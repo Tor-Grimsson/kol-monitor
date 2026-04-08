@@ -9,11 +9,12 @@ import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import IconSelect from '../controls/IconSelect'
+import Toggle from '../controls/Toggle'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const CAPS = ['round', 'square', 'butt']
 
-function PenPanel({ thickness, dash, gap, opacity, cap, lofi, enabled, onToggle, onThicknessChange, onDashChange, onGapChange, onOpacityChange, onCapChange, onLofiChange, id, thkConn, thkInRef, dshConn, dshInRef, gapConn, gapInRef, opConn, opInRef, colorConn, colorInRef, outRef }) {
+function PenPanel({ thickness, dash, gap, opacity, cap, lofi, fill, enabled, onToggle, onThicknessChange, onDashChange, onGapChange, onOpacityChange, onCapChange, onLofiChange, onFillChange, id, thkConn, thkInRef, dshConn, dshInRef, gapConn, gapInRef, opConn, opInRef, colorConn, colorInRef, outRef }) {
   const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
 
   return (
@@ -43,7 +44,10 @@ function PenPanel({ thickness, dash, gap, opacity, cap, lofi, enabled, onToggle,
           <LabeledJack type="in" port="op" moduleId={id} active={opConn} signalRef={opInRef} label="in" size="sm" />
           <Knob value={opacity} onChange={onOpacityChange} label="op" />
         </div>
-        <Knob value={lofi} onChange={onLofiChange} label="lofi" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%' }}>
+          <Knob value={lofi} onChange={onLofiChange} label="lofi" />
+          <Toggle value={fill} onChange={onFillChange} label="FILL" size="sm" />
+        </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <LabeledJack type="in" port="clr" moduleId={id} active={colorConn} signalRef={colorInRef} label="color" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
@@ -54,7 +58,7 @@ function PenPanel({ thickness, dash, gap, opacity, cap, lofi, enabled, onToggle,
 }
 
 export default function PenModule({ id = 'pen1', init, preview }) {
-  if (preview) return <PenPanel thickness={15} dash={0} gap={0} opacity={100} cap="round" lofi={0} enabled={false} onToggle={() => {}} onThicknessChange={() => {}} onDashChange={() => {}} onGapChange={() => {}} onOpacityChange={() => {}} onCapChange={() => {}} onLofiChange={() => {}} id={id} thkConn={false} thkInRef={{ current: null }} dshConn={false} dshInRef={{ current: null }} gapConn={false} gapInRef={{ current: null }} opConn={false} opInRef={{ current: null }} colorConn={false} colorInRef={{ current: null }} outRef={{ current: null }} />
+  if (preview) return <PenPanel thickness={15} dash={0} gap={0} opacity={100} cap="round" lofi={0} fill={false} enabled={false} onToggle={() => {}} onThicknessChange={() => {}} onDashChange={() => {}} onGapChange={() => {}} onOpacityChange={() => {}} onCapChange={() => {}} onLofiChange={() => {}} onFillChange={() => {}} id={id} thkConn={false} thkInRef={{ current: null }} dshConn={false} dshInRef={{ current: null }} gapConn={false} gapInRef={{ current: null }} opConn={false} opInRef={{ current: null }} colorConn={false} colorInRef={{ current: null }} outRef={{ current: null }} />
 
   const [thickness, setThickness] = useState(init?.thickness ?? 15)  // 0-100 maps to 0.5-10
   const [dash, setDash] = useState(init?.dash ?? 0)
@@ -62,6 +66,7 @@ export default function PenModule({ id = 'pen1', init, preview }) {
   const [opacity, setOpacity] = useState(init?.opacity ?? 100)
   const [cap, setCap] = useState(init?.cap ?? 'round')
   const [lofi, setLofi] = useState(init?.lofi ?? 0)
+  const [fill, setFill] = useState(init?.fill ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
@@ -72,6 +77,7 @@ export default function PenModule({ id = 'pen1', init, preview }) {
   const opRef = useRef(100)
   const capRef = useRef('round')
   const lofiRef = useRef(0)
+  const fillRef = useRef(false)
   const outRef = useRef(null)
   const thkInRef = useRef(null)
   const dshInRef = useRef(null)
@@ -86,6 +92,7 @@ export default function PenModule({ id = 'pen1', init, preview }) {
   opRef.current = opacity
   capRef.current = cap
   lofiRef.current = lofi
+  fillRef.current = fill
 
   const thkConn = cp.has('tk')
   const dshConn = cp.has('ds')
@@ -94,7 +101,7 @@ export default function PenModule({ id = 'pen1', init, preview }) {
   const colorConn = cp.has('clr')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { thickness, dash, gap, opacity, cap, lofi }
+  saveStateRef.current = { thickness, dash, gap, opacity, cap, lofi, fill }
 
   useModule({
     id,
@@ -128,11 +135,12 @@ export default function PenModule({ id = 'pen1', init, preview }) {
         cap: capRef.current,
         lofi: lofiRef.current,
         color: inputs.clr?.type === 'color' ? inputs.clr.value : null,
+        fill: fillRef.current,
       })
       outRef.current = out
       return { out }
     },
   })
 
-  return <PenPanel thickness={thickness} dash={dash} gap={gap} opacity={opacity} cap={cap} lofi={lofi} enabled={enabled} onToggle={() => setEnabled(!enabled)} onThicknessChange={setThickness} onDashChange={setDash} onGapChange={setGap} onOpacityChange={setOpacity} onCapChange={setCap} onLofiChange={setLofi} id={id} thkConn={thkConn} thkInRef={thkInRef} dshConn={dshConn} dshInRef={dshInRef} gapConn={gapConn} gapInRef={gapInRef} opConn={opConn} opInRef={opInRef} colorConn={colorConn} colorInRef={colorInRef} outRef={outRef} />
+  return <PenPanel thickness={thickness} dash={dash} gap={gap} opacity={opacity} cap={cap} lofi={lofi} fill={fill} enabled={enabled} onToggle={() => setEnabled(!enabled)} onThicknessChange={setThickness} onDashChange={setDash} onGapChange={setGap} onOpacityChange={setOpacity} onCapChange={setCap} onLofiChange={setLofi} onFillChange={setFill} id={id} thkConn={thkConn} thkInRef={thkInRef} dshConn={dshConn} dshInRef={dshInRef} gapConn={gapConn} gapInRef={gapInRef} opConn={opConn} opInRef={opInRef} colorConn={colorConn} colorInRef={colorInRef} outRef={outRef} />
 }
