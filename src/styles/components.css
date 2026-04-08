@@ -203,6 +203,10 @@
   text-decoration: underline;
 }
 
+.module-detail-code-link:hover {
+  color: #facc15;
+}
+
 .library-search:hover {
   background-color: color-mix(in srgb, var(--kol-surface-on-primary) 20%, transparent);
 }

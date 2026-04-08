@@ -1,10 +1,17 @@
 // Module wrapper — front panel with header pinned at top
 // Header (label + power dot) is managed here, children render below
 
+import { createContext, useContext } from 'react'
 import { MODULE_PADDING } from './eurorack'
 import ModuleHeader from '../controls/ModuleHeader'
 
+export const ModuleEditContext = createContext(null)
+
 export default function Module({ children, className = 'bg-surface-secondary', label, enabled, onToggle, u = 3 }) {
+  const editCtx = useContext(ModuleEditContext)
+  const editMode = editCtx?.editMode
+  const onRemove = editCtx?.onRemove
+  const hp = editCtx?.hp
   return (
     <div
       className={className}
@@ -19,7 +26,7 @@ export default function Module({ children, className = 'bg-surface-secondary', l
     >
       {label && (
         <div style={{ flexShrink: 0, padding: `0 4px ${u === 1 ? 8 : 16}px` }}>
-          <ModuleHeader label={label} enabled={enabled} onToggle={onToggle} />
+          <ModuleHeader label={label} enabled={enabled} onToggle={onToggle} editMode={editMode} onRemove={onRemove} hp={hp} />
         </div>
       )}
       <div style={{ flex: 1, overflow: 'hidden', padding: '0 4px', minHeight: 0 }}>

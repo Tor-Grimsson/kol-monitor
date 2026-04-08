@@ -124,8 +124,10 @@ export function useRackState() {
   const addModule = useCallback((type, rowId) => {
     const def = MODULE_DEFS[type]
     if (!def) return
+    const targetHeight = (def.u || 3) === 1 ? '1u' : '3u'
     setRows(prev => prev.map(row => {
       if (row.id !== rowId) return row
+      if (row.height !== targetHeight) return row
       const offset = findFreeOffset(row.modules, def.hp)
       if (offset === null) return row
       const mod = { type, id: uid(type), hp: def.hp, offset }

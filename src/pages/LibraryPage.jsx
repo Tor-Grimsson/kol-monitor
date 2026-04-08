@@ -92,7 +92,7 @@ export default function LibraryPage() {
                 return (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {items.map(m => (
-                      <GridCard key={m.type} variant="list" title={m.label} detail={m.category} onClick={() => navigate(`/rack/preset/${m.type}`)} />
+                      <GridCard key={m.type} variant="list" title={m.label} detail={m.category} onClick={() => navigate(`/library/${m.type}`)} />
                     ))}
                   </div>
                 )
@@ -126,10 +126,9 @@ export default function LibraryPage() {
                               <div className="text-fg-48 kol-helper-xs" style={{ textTransform: 'capitalize' }}>Category: {m.category}</div>
                               <div className="text-fg-48 kol-helper-xs">Width: {m.hp}HP</div>
                               <div className="text-fg-48 kol-helper-xs">Height: {m.u}U</div>
-                              <span
-                                className="patch-link kol-helper-s"
+                              <Button variant="secondary" size="sm" style={{ alignSelf: 'flex-start', background: 'var(--kol-surface-primary)', marginTop: 16 }}
                                 onClick={(e) => { e.stopPropagation(); navigate(`/library/${m.type}`) }}
-                              >Details</span>
+                              >Details</Button>
                             </div>
                           </>
                         }
@@ -191,14 +190,14 @@ export default function LibraryPage() {
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
                               {p.tags.length > 0 && <div className="text-fg-48 kol-helper-xs">Tags: {p.tags.join(', ')}</div>}
-                              <span
-                                className="patch-link kol-helper-s"
-                                onClick={(e) => { e.stopPropagation(); navigate(`/library/patch/${p.name}`) }}
-                              >Details</span>
-                              <span
-                                className="patch-link kol-helper-s"
-                                onClick={(e) => { e.stopPropagation(); navigate(`/rack/patch/${p.name}`) }}
-                              >Open in Rack</span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                                <Button variant="secondary" size="sm" style={{ background: 'var(--kol-surface-primary)' }}
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/library/patch/${p.name}`) }}
+                                >Details</Button>
+                                <Button variant="secondary" size="sm" style={{ background: 'var(--kol-surface-primary)' }}
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/rack/patch/${p.name}`) }}
+                                >Open in Rack</Button>
+                              </div>
                             </div>
                           </>
                         }

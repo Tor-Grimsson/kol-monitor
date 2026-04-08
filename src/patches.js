@@ -108,20 +108,22 @@ export const patches = {
   // Maths slews the logic output so transitions are smooth, not hard cuts
   'morph': {
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [
+        ...UTIL_ROW.modules,
+        { type: 'logic', id: 'xor' },
+        { type: 'logic', id: 'and' },
+        { type: 'scaleOfs', id: 'scl', state: { scale: 80, offset: 70 } },
+        { type: 'switch', id: 'sw' },
+      ]},
       { height: '3u', modules: [
         { type: 'clock', id: 'clk', state: { bpm: 90, division: 3 } },
         { type: 'lfo', id: 'lfo', state: { rate: 15, shape: 'sqr', depth: 100, offset: 50 } },
-        { type: 'logic', id: 'xor' },
-        { type: 'logic', id: 'and' },
         { type: 'maths', id: 'slew', state: { rise: 60, fall: 30 } },
-        { type: 'scaleOfs', id: 'scl', state: { scale: 80, offset: 70 } },
+        { type: 'pen', id: 'pen', state: { thickness: 35, dash: 10, gap: 8, opacity: 90 } },
       ]},
       { height: '3u', modules: [
         { type: 'lineGen', id: 'gen1', state: { shape: 'lissa', freq: 45, density: 60, speed: 30 } },
         { type: 'lineGen', id: 'gen2', state: { shape: 'spiral', freq: 20, density: 40, speed: 55 } },
-        { type: 'switch', id: 'sw' },
-        { type: 'pen', id: 'pen', state: { thickness: 35, dash: 10, gap: 8, opacity: 90 } },
         { type: 'monitor', id: 'mon' },
         { type: 'output', id: 'out' },
       ]},
@@ -322,11 +324,10 @@ export const patches = {
   // Visual: wireframe snaps between quantized orientations on each beat
   'seq-geo': {
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'quantizer', id: 'qt' }] },
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'sequencer', id: 'seq' },
-        { type: 'quantizer', id: 'qt' },
         { type: 'wireframe', id: 'wire' },
         { type: 'monitor', id: 'mon' },
       ]},
@@ -346,12 +347,9 @@ export const patches = {
   // Visual: smoothly cycling through the color spectrum
   'color-cycle': {
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'mult', id: 'mult' }, { type: 'scaleOfs', id: 'scl' }, { type: 'attenuator', id: 'att' }] },
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo' },
-        { type: 'mult', id: 'mult' },
-        { type: 'scaleOfs', id: 'scl' },
-        { type: 'attenuator', id: 'att' },
         { type: 'rgb', id: 'rgb' },
         { type: 'output', id: 'out' },
       ]},
@@ -371,13 +369,11 @@ export const patches = {
   // Visual: color changes in smooth steps, like a palette cycling slowly
   'color-steps': {
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'mult', id: 'mult' }, { type: 'scaleOfs', id: 'scl' }] },
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'sequencer', id: 'seq' },
         { type: 'maths', id: 'slew' },
-        { type: 'mult', id: 'mult' },
-        { type: 'scaleOfs', id: 'scl' },
         { type: 'rgb', id: 'rgb' },
         { type: 'output', id: 'out' },
       ]},
@@ -402,12 +398,12 @@ export const patches = {
         { type: 'noise', id: 'n1' },
         { type: 'noise', id: 'n2' },
         { type: 'noise', id: 'n3' },
-      ]},
-      { height: '3u', modules: [
-        { type: 'clock', id: 'clk' },
         { type: 'sampleHold', id: 'sh1' },
         { type: 'sampleHold', id: 'sh2' },
         { type: 'sampleHold', id: 'sh3' },
+      ]},
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk' },
         { type: 'rgb', id: 'rgb' },
         { type: 'output', id: 'out' },
       ]},
@@ -430,11 +426,9 @@ export const patches = {
   // Visual: complex color mixing from independent signal sources
   'matrix': {
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'ramp', id: 'ramp' }, { type: 'noise', id: 'noise' }] },
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo' },
-        { type: 'ramp', id: 'ramp' },
-        { type: 'noise', id: 'noise' },
         { type: 'smx3', id: 'smx' },
         { type: 'output', id: 'out' },
       ]},
@@ -453,11 +447,10 @@ export const patches = {
   // Visual: envelope triggered by logic pattern, scope shows the rhythm
   'rhythm': {
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'logic', id: 'log' }] },
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
         { type: 'clockDiv', id: 'div' },
-        { type: 'logic', id: 'log' },
         { type: 'envelope', id: 'env' },
         { type: 'monitor', id: 'mon' },
       ]},
@@ -501,11 +494,10 @@ export const patches = {
   // Visual: scope shows interference pattern between two frequencies
   'metallic': {
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'ringMod', id: 'ring' }] },
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo1' },
         { type: 'lfo', id: 'lfo2' },
-        { type: 'ringMod', id: 'ring' },
         { type: 'monitor', id: 'mon' },
       ]},
     ],
@@ -539,9 +531,8 @@ export const patches = {
   // Visual: smooth drifting color from reverb-smeared noise
   'wash': {
     rows: [
-      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'noise', id: 'noise' }] },
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'noise', id: 'noise' }, { type: 'reverb', id: 'verb' }] },
       { height: '3u', modules: [
-        { type: 'reverb', id: 'verb' },
         { type: 'rgb', id: 'rgb' },
         { type: 'output', id: 'out' },
       ]},
@@ -559,9 +550,8 @@ export const patches = {
   // Visual: ramp folded into complex waveform, changing over time
   'solarize': {
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'ramp', id: 'ramp' }] },
       { height: '3u', modules: [
-        { type: 'ramp', id: 'ramp' },
         { type: 'lfo', id: 'lfo' },
         { type: 'waveshaper', id: 'wshp' },
         { type: 'monitor', id: 'mon' },
@@ -579,11 +569,9 @@ export const patches = {
   // Visual: scope shows a random staircase pattern that changes per beat
   'staircase': {
     rows: [
-      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'noise', id: 'noise' }] },
+      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'noise', id: 'noise' }, { type: 'sampleHold', id: 'sh' }, { type: 'quantizer', id: 'qt' }] },
       { height: '3u', modules: [
         { type: 'clock', id: 'clk' },
-        { type: 'sampleHold', id: 'sh' },
-        { type: 'quantizer', id: 'qt' },
         { type: 'monitor', id: 'mon' },
       ]},
     ],

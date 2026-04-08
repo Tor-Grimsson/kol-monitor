@@ -19,36 +19,61 @@ const CATEGORY_LABELS = {
   utility: 'Utility',
 }
 
-function ModuleCard({ type, hp, u, onClick }) {
+function ModuleCard({ type, hp, u, selected, rows, onSelect, onAddToRow }) {
   const def = MODULE_DEFS[type]
   if (!def) return null
-  const Comp = def.component
   const aspectDiv = u === 1 ? 12 : 4
+  const targetHeight = u === 1 ? '1u' : '3u'
+  const compatibleRows = rows?.filter(r => r.height === targetHeight) || []
+
   return (
     <div
-      onClick={onClick}
+      onClick={() => onSelect(selected ? null : type)}
       style={{
         width: hpToPx(hp),
         aspectRatio: `${hp * aspectDiv} / ${TOTAL_HP}`,
         flexShrink: 0,
         overflow: 'hidden',
         cursor: 'pointer',
-        opacity: 0.8,
+        opacity: selected ? 1 : 0.8,
         transition: 'opacity 0.15s',
+        position: 'relative',
       }}
       onMouseEnter={e => { e.currentTarget.style.opacity = 1 }}
-      onMouseLeave={e => { e.currentTarget.style.opacity = 0.8 }}
+      onMouseLeave={e => { if (!selected) e.currentTarget.style.opacity = 0.8 }}
     >
-      <Comp id={`preview_${type}`} preview />
+      <img src={`/previews/modules/${type}.png`} alt={def.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      {selected && (
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+          }}
+        >
+          {compatibleRows.map(row => (
+            <span
+              key={row.id}
+              className="text-fg-48 hover:text-fg-96 kol-helper-xxs cursor-pointer"
+              onPointerDown={(e) => { e.stopPropagation(); onAddToRow(type, row.id); onSelect(null) }}
+            >Row {rows.indexOf(row) + 1}</span>
+          ))}
+          {compatibleRows.length === 0 && (
+            <span className="text-fg-32 kol-helper-xxs">No {targetHeight.toUpperCase()} row</span>
+          )}
+        </div>
+      )}
     </div>
   )
 }
 
-export default function Workbench({ modules, onReturn, onAddModule }) {
+export default function Workbench({ modules, rows, onReturn, onAddModule, onAddRow, onRemoveRow, onSetRowHeight }) {
   const [height, setHeight] = useState(DEFAULT_HEIGHT)
   const [tab, setTab] = useState('workbench')
   const [category, setCategory] = useState(null)
   const [uFilter, setUFilter] = useState(null)
+  const [selectedType, setSelectedType] = useState(null)
   const dragging = useRef(false)
 
   const handleDragStart = useCallback((e) => {
@@ -76,7 +101,7 @@ export default function Workbench({ modules, onReturn, onAddModule }) {
   ).filter(m => uFilter === null || m.u === uFilter)
 
   return (
-    <div className="border-t border-fg-08 bg-surface-primary" style={{ flexShrink: 0 }}>
+    <div data-workbench className="border-t border-fg-08 bg-surface-primary" style={{ flexShrink: 0, position: 'relative', zIndex: 60 }}>
       {/* Drag handle */}
       <div
         onPointerDown={handleDragStart}
@@ -95,6 +120,10 @@ export default function Workbench({ modules, onReturn, onAddModule }) {
             onClick={(e) => { e.stopPropagation(); setTab('library') }}
             className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'library' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
           >Library</span>
+          <span
+            onClick={(e) => { e.stopPropagation(); setTab('case') }}
+            className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'case' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+          >Case</span>
         </div>
 
         <Divider />
@@ -102,7 +131,7 @@ export default function Workbench({ modules, onReturn, onAddModule }) {
         <div className="flex" style={{ flex: 1, minHeight: 0 }}>
         {/* Category filters (library only) */}
         {tab === 'library' && (
-          <div className="flex flex-col gap-1 pr-4 shrink-0">
+          <div className="flex flex-col gap-1 pr-4 shrink-0" style={{ paddingTop: 12 }}>
             <div className="flex gap-2">
               <span
                 onClick={() => setUFilter(uFilter === 3 ? null : 3)}
@@ -129,7 +158,7 @@ export default function Workbench({ modules, onReturn, onAddModule }) {
         )}
 
         {/* Modules */}
-        <div className="flex items-start gap-1 flex-1" style={{ paddingTop: 12, overflow: 'auto', flexWrap: 'wrap' }}>
+        <div className="flex items-start gap-1 flex-1" style={{ paddingTop: 12, overflowX: 'auto', overflowY: 'hidden', flexWrap: 'nowrap' }}>
         {tab === 'workbench' && modules.length === 0 && (
           <div style={{
             width: hpToPx(8),
@@ -182,9 +211,45 @@ export default function Workbench({ modules, onReturn, onAddModule }) {
             type={mod.type}
             hp={mod.hp}
             u={mod.u}
-            onClick={() => onAddModule?.(mod.type)}
+            selected={selectedType === mod.type}
+            rows={rows}
+            onSelect={setSelectedType}
+            onAddToRow={(type, rowId) => onAddModule?.(type, rowId)}
           />
         ))}
+
+        {tab === 'case' && (
+          <div style={{ paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {rows?.map((row, i) => (
+              <div key={row.id} className="flex items-center gap-4" style={{ height: 28 }}>
+                <span className="kol-helper-xs text-fg-64" style={{ width: 48 }}>Row {i + 1}</span>
+                <span
+                  onClick={() => onSetRowHeight?.(row.id, row.height === '1u' ? '3u' : '1u')}
+                  className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+                >[{row.height.toUpperCase()}]</span>
+                <span className="kol-helper-xs text-fg-32">
+                  {row.modules.reduce((s, m) => s + m.hp, 0)}hp
+                </span>
+                {rows.length > 1 && (
+                  <span
+                    onClick={() => onRemoveRow?.(row.id)}
+                    className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+                  >x</span>
+                )}
+              </div>
+            ))}
+            <div className="flex gap-4" style={{ marginTop: 4 }}>
+              <span
+                onClick={() => onAddRow?.('3u')}
+                className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+              >+ 3U row</span>
+              <span
+                onClick={() => onAddRow?.('1u')}
+                className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+              >+ 1U row</span>
+            </div>
+          </div>
+        )}
         </div>
         </div>
       </div>

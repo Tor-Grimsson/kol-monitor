@@ -4,7 +4,7 @@
 import { useCasePower } from '../../hooks/useCasePower.jsx'
 import Toggle from './Toggle'
 
-export default function ModuleHeader({ label, enabled, onToggle }) {
+export default function ModuleHeader({ label, enabled, onToggle, editMode, onRemove }) {
   const { power } = useCasePower()
   const isOn = power && enabled
 
@@ -15,9 +15,21 @@ export default function ModuleHeader({ label, enabled, onToggle }) {
         color: 'rgba(255,255,255,0.5)',
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
+        flex: 1,
       }}>
         {label}
       </span>
+      {editMode && onRemove && (
+        <div
+          onClick={(e) => { e.stopPropagation(); onRemove() }}
+          title="Send module to workbench"
+          style={{
+            width: 8, height: 8, borderRadius: '50%',
+            backgroundColor: '#facc15',
+            cursor: 'pointer', flexShrink: 0,
+          }}
+        />
+      )}
     </div>
   )
 }

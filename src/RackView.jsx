@@ -5,6 +5,7 @@ import { ModuleInitContext } from './hooks/useModuleEnabled'
 import { MODULE_DEFS } from './moduleRegistry'
 import { TOTAL_HP, hpToPx } from './modules/utility/eurorack'
 import Case, { RackRow } from './modules/utility/Case.jsx'
+import { ModuleEditContext } from './modules/utility/Module.jsx'
 
 const ModuleSlot = memo(function ModuleSlot({ mod, editMode, onSendToWorkbench }) {
   const def = MODULE_DEFS[mod.type]
@@ -12,6 +13,7 @@ const ModuleSlot = memo(function ModuleSlot({ mod, editMode, onSendToWorkbench }
   const Comp = def.component
   const u = def.u || 3
   const aspectDiv = u === 1 ? 12 : 4
+  const editCtx = editMode ? { editMode: true, onRemove: () => onSendToWorkbench(mod.id), hp: mod.hp } : null
   return (
     <div
       style={{
@@ -22,18 +24,11 @@ const ModuleSlot = memo(function ModuleSlot({ mod, editMode, onSendToWorkbench }
         position: 'relative',
       }}
     >
-      {editMode && (
-        <div
-          onClick={() => onSendToWorkbench(mod.id)}
-          style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: 12,
-            zIndex: 15, cursor: 'pointer',
-          }}
-        />
-      )}
-      <ModuleInitContext.Provider value={mod.state}>
-        <Comp id={mod.id} init={mod.state} />
-      </ModuleInitContext.Provider>
+      <ModuleEditContext.Provider value={editCtx}>
+        <ModuleInitContext.Provider value={mod.state}>
+          <Comp id={mod.id} init={mod.state} />
+        </ModuleInitContext.Provider>
+      </ModuleEditContext.Provider>
     </div>
   )
 })

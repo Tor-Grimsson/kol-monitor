@@ -9,7 +9,7 @@ export default function GridCard({ title, detail, preview, expanded, expandedCon
     return (
       <div
         onClick={onClick}
-        className="flex items-center justify-between px-3 cursor-pointer hover:bg-fg-04 rounded border border-fg-04 transition-colors select-none"
+        className="flex items-center justify-between px-3 cursor-pointer bg-surface-tertiary hover:bg-fg-04 rounded border border-fg-04 transition-colors select-none"
         style={{ height: 36 }}
       >
         <span className="kol-helper-xs text-fg-64">{title}</span>

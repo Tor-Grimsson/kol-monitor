@@ -131,6 +131,7 @@ function VideoModuloInner() {
     const el = rackOuterRef.current
     if (!el) return
     const onWheel = (e) => {
+      if (e.target.closest('[data-workbench]')) return
       e.preventDefault()
       if (viewLockedRef.current) return
       if (e.altKey) {
@@ -222,13 +223,21 @@ function VideoModuloInner() {
           <div style={{ position: 'fixed', bottom: 0, left: sidebarOpen ? 'calc(var(--sidebar-width) + 48px)' : 48, right: 0, zIndex: 50 }}>
             <Workbench
               modules={rack.workbench}
+              rows={rack.rows}
               onReturn={rack.returnFromWorkbench}
-              onAddModule={(type) => {
-                const def = MODULE_DEFS[type]
-                if (!def) return
-                const targetHeight = (def.u || 3) === 1 ? '1u' : '3u'
-                const row = rack.rows.find(r => r.height === targetHeight)
-                if (row) rack.addModule(type, row.id)
+              onAddRow={rack.addRow}
+              onRemoveRow={rack.removeRow}
+              onSetRowHeight={rack.setRowHeight}
+              onAddModule={(type, rowId) => {
+                if (rowId) {
+                  rack.addModule(type, rowId)
+                } else {
+                  const def = MODULE_DEFS[type]
+                  if (!def) return
+                  const targetHeight = (def.u || 3) === 1 ? '1u' : '3u'
+                  const row = rack.rows.find(r => r.height === targetHeight)
+                  if (row) rack.addModule(type, row.id)
+                }
               }}
             />
           </div>

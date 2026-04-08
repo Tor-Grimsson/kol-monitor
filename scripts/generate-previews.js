@@ -106,8 +106,11 @@ async function main() {
           if (rack) { rack.style.zoom = '1'; rack.style.transform = 'none'; rack.style.width = 'auto' }
           const rackView = document.querySelector('[data-rack-view]')
           if (rackView) { rackView.style.padding = '24px 0' }
+          // Force cable re-render after zoom reset by triggering scroll on rack container
+          const rackContainer = document.querySelector('[data-rack-view]')?.parentElement
+          if (rackContainer) rackContainer.dispatchEvent(new Event('scroll'))
         })
-        await new Promise(r => setTimeout(r, 100))
+        await new Promise(r => setTimeout(r, 500))
 
         const el = await page.$('[data-rack-view]')
         await el.screenshot({ path: out, type: 'png', omitBackground: true })
