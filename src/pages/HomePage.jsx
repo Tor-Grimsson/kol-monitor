@@ -94,7 +94,7 @@ export default function HomePage() {
         />
       </div>
 
-      <Button variant="secondary" size="sm" onClick={() => navigate('/rack/patch/empty')} style={{ marginTop: 48, alignSelf: 'flex-start' }}>
+      <Button variant="secondary" size="sm" onClick={() => navigate('/create')} style={{ marginTop: 48, alignSelf: 'flex-start' }}>
         New Rack
       </Button>
     </div>

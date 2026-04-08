@@ -145,14 +145,14 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
     const outer = rackOuterRef.current
     if (!el || !outer) return
     initialSnapRef.current = true
-    requestAnimationFrame(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const rect = el.getBoundingClientRect()
       const cr = outer.getBoundingClientRect()
       const p = 24
       const dx = (cr.left + p - rect.left) / zoom
       const dy = (cr.top + p - rect.top) / zoom
       setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }))
-    })
+    }))
   })
 
   return (
