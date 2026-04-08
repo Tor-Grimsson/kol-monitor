@@ -3,29 +3,14 @@
 
 import { useEffect } from 'react'
 
-export function useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom, setPanOffset, setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden }) {
+// VideoModulo-specific keybindings (sidebar, edit, mute, cables, shortcuts, display)
+// Viewport keybindings (space, zoom, snap) are handled by RackViewport
+export function useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden }) {
   useEffect(() => {
     const noInput = (e) => !e.target.closest('input, textarea')
 
     const onKeyDown = (e) => {
-      // Space: grab cursor for pan
-      if (e.code === 'Space' && !e.repeat && noInput(e)) {
-        e.preventDefault()
-        spaceDown.current = true
-        if (rackOuterRef.current) rackOuterRef.current.style.cursor = 'grab'
-      }
-
-      // Alt: zoom cursor
-      if (e.key === 'Alt' && !e.repeat) {
-        if (rackOuterRef.current) rackOuterRef.current.style.cursor = 'zoom-in'
-      }
-
       const mod = e.metaKey || e.ctrlKey
-
-      // Zoom in/out/reset
-      if ((mod || noInput(e)) && (e.key === '=' || e.key === '+')) { e.preventDefault(); setZoom(z => Math.min(2, z + 0.1)) }
-      if ((mod || noInput(e)) && e.key === '-') { e.preventDefault(); setZoom(z => Math.max(0.5, z - 0.1)) }
-      if ((mod || noInput(e)) && e.key === '0') { e.preventDefault(); setZoom(1); setPanOffset({ x: 0, y: 0 }) }
 
       // Sidebar
       if ((mod || noInput(e)) && e.key === 'h') { e.preventDefault(); setSidebarOpen(s => !s) }
@@ -50,42 +35,9 @@ export function useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom
 
       // Clear display — hide all UI controls
       if (noInput(e) && !mod && e.key === 'd') { e.preventDefault(); setDisplayHidden(v => !v) }
-
-      // Snap view: 7 8 9 = top, 4 5 6 = middle, 1 2 3 = bottom (numpad layout)
-      if (noInput(e) && !mod && '123456789'.includes(e.key)) {
-        e.preventDefault()
-        const el = rackRef.current
-        if (!el) return
-        const rect = el.getBoundingClientRect()
-        const vw = window.innerWidth
-        const vh = window.innerHeight
-        const p = 48
-        const sl = 24 // nav sidebar offset
-        const targets = {
-          7: { x: p + sl, y: p },
-          8: { x: (vw - rect.width) / 2, y: p },
-          9: { x: vw - p - rect.width, y: p },
-          4: { x: p + sl, y: (vh - rect.height) / 2 },
-          5: { x: (vw - rect.width) / 2, y: (vh - rect.height) / 2 },
-          6: { x: vw - p - rect.width, y: (vh - rect.height) / 2 },
-          1: { x: p + sl, y: vh - p - rect.height },
-          2: { x: (vw - rect.width) / 2, y: vh - p - rect.height },
-          3: { x: vw - p - rect.width, y: vh - p - rect.height },
-        }
-        const t = targets[e.key]
-        const dx = (t.x - rect.left) / zoom
-        const dy = (t.y - rect.top) / zoom
-        setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }))
-      }
-    }
-
-    const onKeyUp = (e) => {
-      if (e.code === 'Space') { spaceDown.current = false; if (rackOuterRef.current) rackOuterRef.current.style.cursor = '' }
-      if (e.key === 'Alt') { if (rackOuterRef.current) rackOuterRef.current.style.cursor = '' }
     }
 
     window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
-    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
-  }, [zoom])
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 }

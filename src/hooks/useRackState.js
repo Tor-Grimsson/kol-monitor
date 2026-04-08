@@ -190,6 +190,21 @@ export function useRackState() {
     ))
   }, [])
 
+  const moveModule = useCallback((rowIdx, modId, newOffset) => {
+    const snapped = Math.round(newOffset / 2) * 2
+    setRows(prev => prev.map((row, ri) => {
+      if (ri !== rowIdx) return row
+      const mod = row.modules.find(m => m.id === modId)
+      if (!mod) return row
+      const others = row.modules.filter(m => m.id !== modId)
+      const clamped = Math.max(0, Math.min(TOTAL_HP - mod.hp, snapped))
+      const end = clamped + mod.hp
+      const overlaps = others.some(m => clamped < m.offset + m.hp && end > m.offset)
+      if (overlaps) return row
+      return { ...row, modules: row.modules.map(m => m.id === modId ? { ...m, offset: clamped } : m) }
+    }))
+  }, [])
+
   // Load a preset: builds rows from preset definition
   const loadPreset = useCallback((preset) => {
     if (!preset || !preset.rows) return
@@ -208,17 +223,27 @@ export function useRackState() {
     setWorkbench([])
   }, [])
 
+  const resetRack = useCallback(() => {
+    setRows([
+      { id: `row${rowCounter++}`, height: '1u', modules: [] },
+      { id: `row${rowCounter++}`, height: '3u', modules: [] },
+    ])
+    setWorkbench([])
+  }, [])
+
   return useMemo(() => ({
     rows,
     workbench,
     editMode,
     setEditMode,
     loadPreset,
+    resetRack,
     addModule,
+    moveModule,
     sendToWorkbench,
     returnFromWorkbench,
     addRow,
     removeRow,
     setRowHeight,
-  }), [rows, workbench, editMode, setEditMode, loadPreset, addModule, sendToWorkbench, returnFromWorkbench, addRow, removeRow, setRowHeight])
+  }), [rows, workbench, editMode, setEditMode, loadPreset, resetRack, addModule, moveModule, sendToWorkbench, returnFromWorkbench, addRow, removeRow, setRowHeight])
 }

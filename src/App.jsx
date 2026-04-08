@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AppLayout from './components/AppLayout'
+import { RackProvider } from './hooks/useRackContext.jsx'
 import VideoModulo from './VideoModulo.jsx'
 import HomePage from './pages/HomePage.jsx'
 import LibraryPage from './pages/LibraryPage.jsx'
@@ -19,14 +20,16 @@ function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/rack" element={<VideoModulo />} />
-            <Route path="/rack/preset/:presetName" element={<VideoModulo />} />
-            <Route path="/rack/patch/:presetName" element={<VideoModulo />} />
+            <Route element={<RackProvider />}>
+              <Route path="/rack" element={<VideoModulo />} />
+              <Route path="/rack/preset/:presetName" element={<VideoModulo />} />
+              <Route path="/rack/patch/:presetName" element={<VideoModulo />} />
+              <Route path="/create" element={<CreatePage />} />
+            </Route>
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/library/:moduleType" element={<ModuleDetailPage />} />
             <Route path="/library/patch/:patchName" element={<PatchDetailPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/create" element={<CreatePage />} />
           </Route>
           <Route path="/design" element={<ModuleDesign />} />
           <Route path="/dev/capture" element={<DevCapturePage />} />

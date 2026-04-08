@@ -129,7 +129,7 @@ export default function ModuleDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Divider />
             <div style={{ display: 'flex', gap: 12 }}>
-              <Button variant="secondary" size="sm" onClick={() => navigate(-1)}>
+              <Button variant="secondary" size="sm" onClick={() => navigate('/library', { state: { expandedModule: moduleType } })}>
                 Back
               </Button>
               {sourceKey && (

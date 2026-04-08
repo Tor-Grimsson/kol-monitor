@@ -1,38 +1,28 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useNavHidden } from './components/AppLayout'
 import usePersistedState from './hooks/usePersistedState'
-import { ModuleRegistryProvider, useModuleRegistry } from './hooks/useModuleRegistry.jsx'
-import { PatchRoutingProvider, usePatchRouting } from './hooks/usePatchRouting.jsx'
-import { CasePowerProvider, useCasePower } from './hooks/useCasePower.jsx'
-import { useRenderLoop } from './hooks/useRenderLoop'
-import { RenderControlProvider } from './hooks/useRenderControl'
-import { useRackState } from './hooks/useRackState'
-import { MODULE_DEFS } from './moduleRegistry'
-import { ROW_WIDTH } from './modules/utility/eurorack'
-import PatchCableOverlay from './modules/utility/PatchCableOverlay.jsx'
+import { usePatchRouting } from './hooks/usePatchRouting.jsx'
+import { useCasePower } from './hooks/useCasePower.jsx'
+import { useRack } from './hooks/useRackContext.jsx'
 import { useKeybindings } from './hooks/useKeybindings'
-import RackView from './RackView.jsx'
+import { patches } from './patches'
+import { ROW_WIDTH } from './modules/utility/eurorack'
+import RackViewport from './RackViewport.jsx'
 import ModuloSidebar from './ModuloSidebar.jsx'
-import Workbench from './Workbench.jsx'
-import { patches } from './patches.js'
 import ShortcutsOverlay from './ShortcutsOverlay.jsx'
 import Icon from './icons/Icon.jsx'
 
-const BASE_WIDTH = ROW_WIDTH + 52  // row + side panels (24+24) + padding (2+2)
+const BASE_WIDTH = ROW_WIDTH + 52
 
 function VideoModuloInner() {
   const { presetName } = useParams()
-  const { modulesRef } = useModuleRegistry()
+  const navigate = useNavigate()
   const routing = usePatchRouting()
-  const { connectionsRef } = routing
-  const rackRef = useRef(null)
-  const rowRefs = useRef({})
-  const rackOuterRef = useRef(null)
-  const rack = useRackState()
-  const { power, timingRef, toggleAll } = useCasePower()
-  const [zoom, setZoom] = usePersistedState('rack-zoom', 1)
+  const { toggleAll } = useCasePower()
+  const rack = useRack()
   const nav = useNavHidden()
+  const [zoom, setZoom] = usePersistedState('rack-zoom', 1)
   const [sidebarOpen, setSidebarOpenRaw] = useState(false)
   const sidebarOpenRef = useRef(false)
   const setSidebarOpen = useCallback((v) => {
@@ -49,103 +39,39 @@ function VideoModuloInner() {
   const [cableVisibility, setCableVisibility] = usePersistedState('rack-cableVis', 'trans')
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [displayHidden, setDisplayHidden] = usePersistedState('rack-displayHidden', true)
-  routing.lockedRef.current = cableLocked
-  routing.visibilityRef.current = cableVisibility
 
-  const { controlRef } = useRenderLoop(modulesRef, connectionsRef, power, timingRef)
+  const rackRef2 = useRef(rack)
+  rackRef2.current = rack
+  const rackOuterRef = useRef(null)
 
-  // Load preset from URL param on mount
-  const presetLoadedRef = useRef(false)
+  useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden })
+
+  // Load preset from URL param on mount, or init if bare /rack
+  const presetLoadedRef = useRef(null)
   useEffect(() => {
-    if (!presetName || presetLoadedRef.current) return
-    // Support kebab-case URLs: radial-showcase → radialShowcase
+    const key = presetName || '__init__'
+    if (presetLoadedRef.current === key) return
+    presetLoadedRef.current = key
     let p
     if (presetName === 'custom') {
       try { p = JSON.parse(sessionStorage.getItem('customPatch')) } catch {}
-    } else {
+    } else if (presetName) {
       const key = presetName.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
       p = patches[key] || patches[presetName]
+    } else {
+      // Only load init if rack has no modules (fresh or after reset)
+      const hasModules = rack.rows.some(r => r.modules.length > 0)
+      if (hasModules) return
+      p = patches.init
     }
     if (!p) return
-    presetLoadedRef.current = true
     requestAnimationFrame(() => {
       rack.loadPreset(p)
       if (p.connections) routing.loadPatch(p.connections)
     })
   }, [presetName, rack, routing])
 
-  const rackRef2 = useRef(rack)
-  rackRef2.current = rack
-
-  // Snap to position 7 (top-left) on mount
-  const initialSnapRef = useRef(false)
-  useEffect(() => {
-    if (initialSnapRef.current) return
-    const el = rackRef.current
-    if (!el) return
-    initialSnapRef.current = true
-    requestAnimationFrame(() => {
-      const rect = el.getBoundingClientRect()
-      const p = 48
-      const dx = (p + 24 - rect.left) / zoom
-      const dy = (p - rect.top) / zoom
-      setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }))
-    })
-  })
-
-  // Spacebar + drag to pan
-  const spaceDown = useRef(false)
-  const [panOffset, setPanOffset] = usePersistedState('rack-pan', { x: 0, y: 0 })
-  const panStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
-
-  useKeybindings({ rackOuterRef, rackRef, spaceDown, zoom, setZoom, setPanOffset, setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden })
-
-  const panOffsetRef = useRef(panOffset)
-  panOffsetRef.current = panOffset
-
-  const handlePanDown = useCallback((e) => {
-    if (!spaceDown.current) return
-    e.preventDefault()
-    const el = rackOuterRef.current
-    const po = panOffsetRef.current
-    panStart.current = { x: e.clientX, y: e.clientY, ox: po.x, oy: po.y }
-    el.style.cursor = 'grabbing'
-
-    const onMove = (e) => {
-      setPanOffset({
-        x: panStart.current.ox + (e.clientX - panStart.current.x),
-        y: panStart.current.oy + (e.clientY - panStart.current.y),
-      })
-    }
-    const onUp = () => {
-      el.style.cursor = spaceDown.current ? 'grab' : ''
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup', onUp)
-    }
-    window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup', onUp)
-  }, [])
-
-  // Wheel/trackpad pans the canvas
-  useEffect(() => {
-    const el = rackOuterRef.current
-    if (!el) return
-    const onWheel = (e) => {
-      if (e.target.closest('[data-workbench]')) return
-      e.preventDefault()
-      if (viewLockedRef.current) return
-      if (e.altKey) {
-        setZoom(z => Math.min(2, Math.max(0.5, z - e.deltaY * 0.002)))
-      } else {
-        setPanOffset(prev => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }))
-      }
-    }
-    el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
-  }, [])
-
   return (
-    <RenderControlProvider value={controlRef}>
     <div className="bg-surface-primary flex relative" style={{ overflow: 'hidden', height: '100vh' }}>
       {sidebarOpen && (
         <div className="sidebar-width flex-shrink-0 border-r border-fg-08 overflow-y-auto" style={{
@@ -184,7 +110,6 @@ function VideoModuloInner() {
         </button>
       )}
 
-      {/* Cable controls — bottom left (hidden when sidebar open or display hidden) */}
       {!sidebarOpen && !displayHidden && <div className="fixed z-50 select-none" style={{ bottom: 16, left: 60, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, transition: 'left 0.15s' }}>
         <div className="kol-helper-xs text-fg-48" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           [Cables
@@ -199,7 +124,6 @@ function VideoModuloInner() {
 
       {showShortcuts && <ShortcutsOverlay onClose={() => setShowShortcuts(false)} />}
 
-      {/* Lock — bottom right */}
       {!displayHidden && <button
         onClick={() => setViewLocked(v => { viewLockedRef.current = !v; return !v })}
         className="fixed z-50 kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
@@ -208,54 +132,11 @@ function VideoModuloInner() {
         [{viewLocked ? 'Locked' : 'Lock'}]
       </button>}
 
-      <div ref={rackOuterRef} onPointerDown={handlePanDown} className="flex-1 relative" style={{ minHeight: '100vh', overflow: 'hidden', display: 'grid', placeItems: 'center', marginLeft: sidebarOpen ? 'var(--sidebar-width)' : 0 }}>
-        <div ref={rackRef} className="relative" style={{ zoom, width: BASE_WIDTH, transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}>
-          <PatchCableOverlay containerRef={rackRef} cableVisibility={cableVisibility} cableLocked={cableLocked} onCableUnlock={() => setCableLocked(false)} />
-          <RackView
-            rows={rack.rows}
-            editMode={rack.editMode}
-            onSendToWorkbench={rack.sendToWorkbench}
-            rowRefs={rowRefs}
-          />
-        </div>
-
-        {rack.editMode && (
-          <div style={{ position: 'fixed', bottom: 0, left: sidebarOpen ? 'calc(var(--sidebar-width) + 48px)' : 48, right: 0, zIndex: 50 }}>
-            <Workbench
-              modules={rack.workbench}
-              rows={rack.rows}
-              onReturn={rack.returnFromWorkbench}
-              onAddRow={rack.addRow}
-              onRemoveRow={rack.removeRow}
-              onSetRowHeight={rack.setRowHeight}
-              onAddModule={(type, rowId) => {
-                if (rowId) {
-                  rack.addModule(type, rowId)
-                } else {
-                  const def = MODULE_DEFS[type]
-                  if (!def) return
-                  const targetHeight = (def.u || 3) === 1 ? '1u' : '3u'
-                  const row = rack.rows.find(r => r.height === targetHeight)
-                  if (row) rack.addModule(type, row.id)
-                }
-              }}
-            />
-          </div>
-        )}
-      </div>
+      <RackViewport style={{ minHeight: '100vh', marginLeft: sidebarOpen ? 'var(--sidebar-width)' : 0 }} onEditCase={() => navigate('/create?from=rack')} />
     </div>
-    </RenderControlProvider>
   )
 }
 
 export default function VideoModulo() {
-  return (
-    <ModuleRegistryProvider>
-      <PatchRoutingProvider initialConnections={patches.ref.connections}>
-        <CasePowerProvider>
-          <VideoModuloInner />
-        </CasePowerProvider>
-      </PatchRoutingProvider>
-    </ModuleRegistryProvider>
-  )
+  return <VideoModuloInner />
 }

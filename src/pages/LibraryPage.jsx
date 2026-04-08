@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { MODULE_DEFS } from '../moduleRegistry'
 import { patches } from '../patches'
 import Button from '../components/atoms/Button'
@@ -63,9 +63,10 @@ function computeHiddenSet(items, expandedIdx) {
 
 export default function LibraryPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [tab, setTab] = usePersistedState('library-tab', 'modules')
-  const [expandedModule, setExpandedModule] = usePersistedState('library-expanded-module', null)
-  const [expandedPatch, setExpandedPatch] = usePersistedState('library-expanded-patch', null)
+  const [expandedModule, setExpandedModule] = useState(location.state?.expandedModule || null)
+  const [expandedPatch, setExpandedPatch] = useState(location.state?.expandedPatch || null)
 
   return (
     <div style={{ padding: '48px 48px', overflow: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column' }} className="bg-surface-primary">

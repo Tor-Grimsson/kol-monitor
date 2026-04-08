@@ -68,7 +68,7 @@ function ModuleCard({ type, hp, u, selected, rows, onSelect, onAddToRow }) {
   )
 }
 
-export default function Workbench({ modules, rows, onReturn, onAddModule, onAddRow, onRemoveRow, onSetRowHeight }) {
+export default function Workbench({ modules, rows, onReturn, onAddModule, onAddRow, onRemoveRow, onSetRowHeight, onEditCase }) {
   const [height, setHeight] = useState(DEFAULT_HEIGHT)
   const [tab, setTab] = useState('workbench')
   const [category, setCategory] = useState(null)
@@ -112,6 +112,7 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
       {/* Tabs + Content */}
       <div className="p-4" style={{ height }}>
         <div className="flex items-center gap-4 mb-3">
+          <div style={{ flex: 1, display: 'flex', gap: 16 }}>
           <span
             onClick={(e) => { e.stopPropagation(); setTab('workbench') }}
             className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'workbench' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
@@ -124,6 +125,13 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
             onClick={(e) => { e.stopPropagation(); setTab('case') }}
             className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'case' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
           >Case</span>
+          </div>
+          {onEditCase && (
+            <span
+              onClick={(e) => { e.stopPropagation(); onEditCase() }}
+              className="kol-helper-xs uppercase select-none cursor-pointer text-fg-32 hover:text-fg-48"
+            >Edit</span>
+          )}
         </div>
 
         <Divider />

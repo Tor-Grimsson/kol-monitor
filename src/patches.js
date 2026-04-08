@@ -30,7 +30,7 @@ export const patches = {
     console: [{ id: 'con1', muteA: false, muteB: true, muteC: true, muteD: true, masterOn: true, send1On: true, send2On: true }],
   },
 
-  empty: { rows: [{ height: '1u', modules: [] }, { height: '3u', modules: [] }, { height: '3u', modules: [] }], connections: [] },
+  empty: { rows: [{ height: '1u', modules: [...UTIL_ROW.modules] }, { height: '3u', modules: [] }, { height: '3u', modules: [] }], connections: [] },
 
   init: {
     rows: [
@@ -63,7 +63,22 @@ export const patches = {
         { type: 'svg', id: 'svg1' }, { type: 's2v', id: 's2v1' }, { type: 'v2s', id: 'v2s1' },
       ]},
     ],
-    connections: [],
+    connections: [
+      { fromModuleId: 'con1', fromPort: 'snd1', toModuleId: 'verb1', toPort: 'in' },
+      { fromModuleId: 'verb1', fromPort: 'out', toModuleId: 'con1', toPort: 'rtn1' },
+      { fromModuleId: 'dith1', fromPort: 'out', toModuleId: 'con1', toPort: 'a' },
+      { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'dith1', toPort: 'clr' },
+      { fromModuleId: 'gen2', fromPort: 'out', toModuleId: 'dith1', toPort: 'in' },
+      { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'con1', toPort: 'b' },
+      { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
+      { fromModuleId: 'joy1', fromPort: 'z', toModuleId: 'wire1', toPort: 'rz' },
+      { fromModuleId: 'joy1', fromPort: 'y', toModuleId: 'wire1', toPort: 'rx' },
+      { fromModuleId: 'joy1', fromPort: 'x', toModuleId: 'wire1', toPort: 'ry' },
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'seq1', toPort: 'clock' },
+      { fromModuleId: 'seq1', fromPort: 'out', toModuleId: 'wire1', toPort: 'clk' },
+      { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'dith1', toPort: 'clk' },
+      { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'gen2', toPort: 'clk' },
+    ],
   },
 
   // --- LINEGEN PATCHES ---

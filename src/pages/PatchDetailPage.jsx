@@ -82,7 +82,7 @@ export default function PatchDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Divider />
             <div style={{ display: 'flex', gap: 12 }}>
-              <Button variant="secondary" size="sm" onClick={() => navigate(-1)}>
+              <Button variant="secondary" size="sm" onClick={() => navigate('/library', { state: { expandedPatch: patchName } })}>
                 Back
               </Button>
               <Button variant="secondary" size="sm" onClick={() => navigate(rackUrl)}>

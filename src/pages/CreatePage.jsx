@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MODULE_DEFS, CATEGORIES } from '../moduleRegistry'
 import Button from '../components/atoms/Button'
 import Divider from '../components/atoms/Divider'
@@ -7,22 +7,12 @@ import Icon from '../components/icons/Icon'
 import PageHeader from '../components/PageHeader'
 import ContentFilters from '../components/organisms/filters/ContentFilters'
 import CaseRowDialog from '../components/CaseRowDialog'
-import CaseArea from '../components/CaseArea'
+import RackViewport from '../RackViewport.jsx'
 import GridCard from '../components/atoms/GridCard'
 import CaseHpDialog from '../components/CaseHpDialog'
 import usePersistedState from '../hooks/usePersistedState'
-
-const TOTAL_HP = 104
-
-function findFreeOffset(modules, hp) {
-  const sorted = [...modules].sort((a, b) => a.offset - b.offset)
-  let pos = 0
-  for (const m of sorted) {
-    if (pos + hp <= m.offset) return pos
-    pos = m.offset + m.hp
-  }
-  return pos + hp <= TOTAL_HP ? pos : null
-}
+import { useRack } from '../hooks/useRackContext.jsx'
+import { usePatchRouting } from '../hooks/usePatchRouting.jsx'
 
 const allModules = Object.entries(MODULE_DEFS).map(([type, def]) => ({
   type, ...def,
@@ -65,33 +55,28 @@ export default function CreatePage() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
+  const rack = useRack()
+  const routing = usePatchRouting()
+  const [searchParams] = useSearchParams()
+  const resetDone = useRef(false)
+  useEffect(() => {
+    if (resetDone.current) return
+    resetDone.current = true
+    if (searchParams.get('from') !== 'rack') {
+      rack.resetRack()
+      routing.loadPatch([])
+    }
+  }, [])
+  const rows = rack.rows
   const [caseHp, setCaseHp] = usePersistedState('caseHp', 104)
-  const [rows, setRows] = usePersistedState('rows', [
-    { height: '1u', modules: [] },
-    { height: '3u', modules: [] },
-  ])
-  const idRef = useRef(10)
 
   const addModule = (type) => {
     const def = MODULE_DEFS[type]
     if (!def) return
     const targetHeight = def.u === 1 ? '1u' : '3u'
-    const newId = `${type}${++idRef.current}`
-    setRows(prev => {
-      const updated = prev.map(r => ({ ...r, modules: [...r.modules] }))
-      const row = updated.find(r => {
-        if (r.height !== targetHeight) return false
-        return findFreeOffset(r.modules, def.hp) !== null
-      })
-      if (!row) return prev
-      const offset = findFreeOffset(row.modules, def.hp)
-      if (offset === null) return prev
-      row.modules.push({ type, id: newId, hp: def.hp, offset })
-      return updated
-    })
-    setLastInserted(newId)
+    const row = rows.find(r => r.height === targetHeight)
+    if (row) rack.addModule(type, row.id)
     setView('case')
-    setTimeout(() => setLastInserted(null), 600)
   }
 
   const handleModuleDragStart = (type, e) => {
@@ -122,46 +107,26 @@ export default function CreatePage() {
   }
 
   const moveModule = (rowIdx, modId, newOffset) => {
-    const snapped = Math.round(newOffset / 2) * 2
-    setRows(prev => prev.map((r, ri) => {
-      if (ri !== rowIdx) return r
-      const mod = r.modules.find(m => m.id === modId)
-      if (!mod) return r
-      const others = r.modules.filter(m => m.id !== modId)
-      const clamped = Math.max(0, Math.min(TOTAL_HP - mod.hp, snapped))
-      const end = clamped + mod.hp
-      const overlaps = others.some(m => clamped < m.offset + m.hp && end > m.offset)
-      if (overlaps) return r
-      return { ...r, modules: r.modules.map(m => m.id === modId ? { ...m, offset: clamped } : m) }
-    }))
+    rack.moveModule(rowIdx, modId, newOffset)
   }
 
   const removeModule = (rowIdx, modIdx) => {
-    setRows(prev => prev.map((r, ri) =>
-      ri === rowIdx ? { ...r, modules: r.modules.filter((_, mi) => mi !== modIdx) } : r
-    ))
+    const row = rows[rowIdx]
+    if (!row) return
+    const mod = row.modules[modIdx]
+    if (mod) rack.sendToWorkbench(mod.id)
   }
 
   const totalModules = rows.reduce((s, r) => s + r.modules.length, 0)
   const totalU = rows.reduce((s, r) => s + (r.height === '1u' ? 1 : 3), 0)
 
-  const openInRack = () => {
-    const patch = {
-      rows: rows.map(r => ({
-        height: r.height,
-        modules: r.modules.map(m => ({ type: m.type, id: m.id })),
-      })),
-      connections: [],
-    }
-    sessionStorage.setItem('customPatch', JSON.stringify(patch))
-    navigate('/rack/preset/custom')
-  }
+  const openInRack = () => navigate('/rack')
 
   return (
     <div
       className="bg-surface-primary"
       style={{
-        padding: '48px 48px', minHeight: '100vh',
+        padding: '48px 48px', height: '100vh', overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
         backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
         backgroundSize: '24px 24px',
@@ -227,16 +192,16 @@ export default function CreatePage() {
                   {addingRow && (
                     <CaseRowDialog
                       rows={rows}
-                      onAddRow={(height) => setRows(prev => [...prev, { height, modules: [] }])}
-                      onToggleRowHeight={(ri) => setRows(prev => prev.map((r, i) => i === ri ? { ...r, height: r.height === '1u' ? '3u' : '1u' } : r))}
-                      onRemoveRow={(ri) => setRows(prev => prev.filter((_, i) => i !== ri))}
+                      onAddRow={(height) => rack.addRow(height)}
+                      onToggleRowHeight={(ri) => { const row = rows[ri]; if (row) rack.setRowHeight(row.id, row.height === '1u' ? '3u' : '1u') }}
+                      onRemoveRow={(ri) => { const row = rows[ri]; if (row) rack.removeRow(row.id) }}
                     />
                   )}
                   {showHpPicker && (
                     <CaseHpDialog caseHp={caseHp} onSetHp={setCaseHp} />
                   )}
                   {(addingRow || showHpPicker) && <Divider className="mb-4" />}
-                  {showCase && <CaseArea rows={rows} zoom={caseZoom} onZoomChange={setCaseZoom} lastInserted={lastInserted} onMoveModule={moveModule} />}
+                  {showCase && <RackViewport style={{ flex: 1, margin: '0 -48px' }} editMode={false} />}
                 </div>
               )
             }
@@ -301,6 +266,7 @@ export default function CreatePage() {
           />
           <span className="kol-helper-xs text-fg-32">%</span>
           <span onClick={() => setCaseZoom(z => Math.min(2, z + 0.1))} className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none">+</span>
+          <span onClick={() => navigate('/rack')} className="kol-helper-xs text-fg-48 module-detail-code-link cursor-pointer select-none" style={{ marginLeft: 16 }}>[Open in Rack]</span>
         </div>
         <div className="flex items-center gap-1">
         <button

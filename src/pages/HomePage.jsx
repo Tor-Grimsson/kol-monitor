@@ -56,7 +56,7 @@ export default function HomePage() {
               return (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                   {viewMode === 'recent' ? (
-                    <GridCard variant="list" title="Untitled" detail="7U — power, perf, patch" onClick={() => navigate('/create')} />
+                    <GridCard variant="list" title="Empty 7U" detail="7U — power, perf, patch" onClick={() => navigate('/rack/patch/empty')} />
                   ) : (
                     items.map(p => (
                       <GridCard key={p.name} variant="list" title={p.title} detail={p.detail} onClick={() => navigate(`/rack/preset/${p.name}`)} />
@@ -70,9 +70,11 @@ export default function HomePage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
                 {viewMode === 'recent' ? (
                   <GridCard
-                    title="Untitled"
+                    title="Empty 7U"
                     detail="7U — power, perf, patch"
-                    onClick={() => navigate('/create')}
+                    previewFit="compact"
+                    preview={<img src="/previews/patches/empty.png" alt="Empty 7U" />}
+                    onClick={() => navigate('/rack/patch/empty')}
                   />
                 ) : (
                   items.map(p => (
@@ -92,7 +94,7 @@ export default function HomePage() {
         />
       </div>
 
-      <Button variant="secondary" size="sm" onClick={() => navigate('/create')} style={{ marginTop: 48, alignSelf: 'flex-start' }}>
+      <Button variant="secondary" size="sm" onClick={() => navigate('/rack/patch/empty')} style={{ marginTop: 48, alignSelf: 'flex-start' }}>
         New Rack
       </Button>
     </div>
