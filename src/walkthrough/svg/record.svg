@@ -1,0 +1,25 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Recorder module frame -->
+<rect x="50" y="40" width="140" height="160" rx="2" stroke="currentColor" stroke-width="1"/>
+<!-- Preview screen -->
+<rect x="62" y="52" width="116" height="70" rx="2" stroke="currentColor" stroke-width="1" stroke-opacity="0.3"/>
+<!-- Aspect ratio crop marks (dashed) -->
+<rect x="78" y="56" width="84" height="62" rx="2" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" stroke-opacity="0.3"/>
+<!-- Record button -->
+<circle cx="90" cy="148" r="10" stroke="currentColor" stroke-width="1"/>
+<circle cx="90" cy="148" r="5" fill="currentColor"/>
+<!-- Stop button -->
+<rect x="115" y="141" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1"/>
+<!-- Save/download arrow -->
+<line x1="150" y1="142" x2="150" y2="156" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+<path d="M145 152L150 157L155 152" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- File icon below -->
+<rect x="90" y="178" width="24" height="16" rx="2" stroke="currentColor" stroke-width="1" stroke-opacity="0.4"/>
+<text x="94" y="190" font-size="6" fill="currentColor" opacity="0.4" font-family="monospace">.webm</text>
+<!-- Arrow to converted file -->
+<line x1="118" y1="186" x2="130" y2="186" stroke="currentColor" stroke-width="1" stroke-opacity="0.3" stroke-linecap="round"/>
+<path d="M127 183L131 186L127 189" stroke="currentColor" stroke-width="1" stroke-opacity="0.3" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- Converted file -->
+<rect x="134" y="178" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1" stroke-opacity="0.4"/>
+<text x="137" y="190" font-size="6" fill="currentColor" opacity="0.4" font-family="monospace">.mp4</text>
+</svg>

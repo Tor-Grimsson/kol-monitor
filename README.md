@@ -1,8 +1,8 @@
-# Video Modulo
+# Monitor
 
-Eurorack-inspired modular video synthesis environment. Part of the Kolkrabbi Apparat suite.
+Monitor is a browser-based modular video synthesizer built on the language of eurorack. Where eurorack uses voltage as its universal medium, Monitor uses pure math — parametric equations and trigonometry generate geometry instead of pushing pixels. Its rack engine, Video Modulo, runs fifty modules across five categories (control, math, generators, display, utility) connected through virtual patch cables, evaluated in topological order, and rendered at 60fps on Canvas2D. No WebGL, no shaders, no pixel buffers — just `Math.sin`, `Math.cos`, and a well-sorted render loop.
 
-**Live:** https://kol-monitor-six.vercel.app/
+**Live:** https://monitor.kolkrabbi.io
 
 ## Getting Started
 

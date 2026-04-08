@@ -1,0 +1,21 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Module A -->
+<rect x="30" y="60" width="60" height="120" rx="2" stroke="currentColor" stroke-width="1"/>
+<!-- Module A output jack -->
+<circle cx="60" cy="150" r="6" stroke="currentColor" stroke-width="1"/>
+<circle cx="60" cy="150" r="2.5" fill="currentColor"/>
+<!-- Module A knobs -->
+<circle cx="50" cy="90" r="5" stroke="currentColor" stroke-width="1"/>
+<circle cx="70" cy="90" r="5" stroke="currentColor" stroke-width="1"/>
+<circle cx="60" cy="110" r="5" stroke="currentColor" stroke-width="1"/>
+<!-- Module B -->
+<rect x="150" y="60" width="60" height="120" rx="2" stroke="currentColor" stroke-width="1"/>
+<!-- Module B input jack -->
+<circle cx="180" cy="100" r="6" stroke="currentColor" stroke-width="1"/>
+<circle cx="180" cy="100" r="2.5" fill="currentColor"/>
+<!-- Module B knobs -->
+<circle cx="170" cy="140" r="5" stroke="currentColor" stroke-width="1"/>
+<circle cx="190" cy="140" r="5" stroke="currentColor" stroke-width="1"/>
+<!-- Cable curve connecting output to input -->
+<path d="M66 150C100 150 100 100 174 100" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+</svg>

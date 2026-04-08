@@ -1,0 +1,23 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Rack case outline -->
+<rect x="40" y="30" width="160" height="170" rx="2" stroke="currentColor" stroke-width="1"/>
+<!-- Row dividers: 1U top (30px), 3U mid (65px), 3U bottom (65px) -->
+<line x1="40" y1="60" x2="200" y2="60" stroke="currentColor" stroke-width="1" stroke-opacity="0.3"/>
+<line x1="40" y1="130" x2="200" y2="130" stroke="currentColor" stroke-width="1" stroke-opacity="0.3"/>
+<!-- 1U row modules (short) -->
+<rect x="52" y="36" width="20" height="18" rx="2" stroke="currentColor" stroke-width="1"/>
+<rect x="78" y="36" width="20" height="18" rx="2" stroke="currentColor" stroke-width="1"/>
+<rect x="104" y="36" width="20" height="18" rx="2" stroke="currentColor" stroke-width="1"/>
+<!-- 3U row 1 modules (tall) -->
+<rect x="52" y="68" width="28" height="54" rx="2" stroke="currentColor" stroke-width="1"/>
+<rect x="88" y="68" width="28" height="54" rx="2" stroke="currentColor" stroke-width="1"/>
+<!-- Module being placed in 3U row 1 (dashed) -->
+<rect x="124" y="68" width="40" height="54" rx="2" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3"/>
+<!-- Arrow down indicating placement -->
+<line x1="144" y1="38" x2="144" y2="58" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+<path d="M138 52L144 58L150 52" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- 3U row 2 empty -->
+<!-- Plus icon bottom right -->
+<line x1="188" y1="183" x2="188" y2="193" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+<line x1="183" y1="188" x2="193" y2="188" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+</svg>

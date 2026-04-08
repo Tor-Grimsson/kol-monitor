@@ -140,7 +140,7 @@ export default function CreatePage() {
           onChange={e => setCaseName(e.target.value)}
           readOnly={!editingName}
           className="bg-transparent outline-none text-fg-96 kol-heading-sm"
-          style={{ width: `${caseName.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', borderBottom: editingName ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent' }}
+          style={{ width: `${caseName.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', boxShadow: editingName ? 'inset 0 -1px 0 rgba(255,255,255,0.12)' : 'none', caretColor: editingName ? 'auto' : 'transparent', pointerEvents: editingName ? 'auto' : 'none' }}
         />
       </h1>
       <p style={{ marginBottom: 40 }}>
@@ -152,7 +152,7 @@ export default function CreatePage() {
           onKeyDown={e => { if (e.key === 'Enter') setEditingName(false) }}
           readOnly={!editingName}
           className="bg-transparent outline-none text-fg-48 kol-text-sm"
-          style={{ width: `${caseDescription.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', borderBottom: editingName ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent' }}
+          style={{ width: `${caseDescription.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', boxShadow: editingName ? 'inset 0 -1px 0 rgba(255,255,255,0.12)' : 'none', caretColor: editingName ? 'auto' : 'transparent', pointerEvents: editingName ? 'auto' : 'none' }}
         />
       </p>
 
@@ -166,7 +166,18 @@ export default function CreatePage() {
           showCountOnlyWhenFiltering
           headerActions={
             <button
-              onClick={() => { setEditingName(true); requestAnimationFrame(() => { titleRef.current?.focus(); titleRef.current?.select() }) }}
+              onPointerDown={(e) => {
+                e.preventDefault()
+                setEditingName(prev => {
+                  if (prev) {
+                    titleRef.current?.blur()
+                    window.getSelection()?.removeAllRanges()
+                    return false
+                  }
+                  requestAnimationFrame(() => { titleRef.current?.focus(); titleRef.current?.select() })
+                  return true
+                })
+              }}
               className="p-2 hover:bg-container-secondary rounded-sm transition-colors leading-none"
               aria-label="Rename case"
               title="Rename case"

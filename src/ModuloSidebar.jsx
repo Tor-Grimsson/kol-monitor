@@ -4,14 +4,15 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CATEGORIES, getModulesByCategory, MODULE_DEFS } from './moduleRegistry'
 import { patches } from './patches'
-import Icon from './components/icons/Icon'
-import RackIcon from './icons/Icon'
+import { savePatchFile, loadPatchFile } from './hooks/usePatchFile.js'
+import { useModuleRegistry } from './hooks/useModuleRegistry.jsx'
+import Icon from './icons/Icon'
 import Logomark from './components/atoms/Logomark'
 
 const NAV_ITEMS = [
-  { icon: 'library', path: '/library', label: 'Library' },
-  { icon: 'settings-01', path: '/settings', label: 'Settings' },
-  { icon: 'plus', path: '/create', label: 'Create' },
+  { icon: 'nav-library', path: '/library', label: 'Library' },
+  { icon: 'nav-settings', path: '/settings', label: 'Settings' },
+  { icon: 'nav-create', path: '/create', label: 'Create' },
 ]
 
 function NavIcons() {
@@ -44,6 +45,7 @@ const CATEGORY_LABELS = {
 }
 
 export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoomFit, onHide, cableVisibility, onCableVisibility, cableLocked, onCableLocked }) {
+  const { modulesRef } = useModuleRegistry()
   const [openCats, setOpenCats] = useState(() => new Set(CATEGORIES))
   const [zoomInput, setZoomInput] = useState(() => String(Math.round((zoom || 1) * 100)))
   const [presetHeight, setPresetHeight] = useState(264)
@@ -177,7 +179,30 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
         <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: -4, width: 24, height: 1, backgroundColor: 'rgba(255,255,255,0.15)', pointerEvents: 'none' }} />
       </div>
       <div className="p-4" style={{ height: presetHeight, overflowY: 'auto' }}>
-        <div className="kol-helper-xs text-fg-48 mb-3 uppercase">Presets</div>
+        <div className="flex items-center justify-between mb-3">
+          <span className="kol-helper-xs text-fg-48 uppercase">Presets</span>
+          <div className="flex gap-2">
+            <span
+              onClick={() => {
+                const caseName = sessionStorage.getItem('caseName')?.replace(/^"|"$/g, '') || 'Untitled'
+                const desc = sessionStorage.getItem('caseDescription')?.replace(/^"|"$/g, '') || ''
+                savePatchFile(rack, routing?.connections || [], modulesRef, caseName, desc || undefined)
+              }}
+              className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+            >[Export]</span>
+            <span
+              onClick={async () => {
+                const patch = await loadPatchFile()
+                if (!patch) return
+                if (patch.name) sessionStorage.setItem('caseName', JSON.stringify(patch.name))
+                if (patch.description) sessionStorage.setItem('caseDescription', JSON.stringify(patch.description))
+                if (patch.rows) rack.loadPreset(patch)
+                if (patch.connections) routing?.loadPatch(patch.connections)
+              }}
+              className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+            >[Import]</span>
+          </div>
+        </div>
         <div className="flex flex-col gap-0.5">
           {Object.keys(patches).map(name => {
             const p = patches[name]
@@ -211,10 +236,10 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
         <div className="kol-helper-xs text-fg-48" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           [Cables
           <span onClick={() => onCableLocked?.(!cableLocked)} className="hover:text-fg-96 cursor-pointer" style={{ color: cableLocked ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
-            <RackIcon name={cableLocked ? 'cable-lock' : 'cable-unlock'} size={14} />
+            <Icon name={cableLocked ? 'cable-lock' : 'cable-unlock'} size={14} />
           </span>
           <span onClick={() => onCableVisibility?.(cableVisibility === 'on' ? 'off' : cableVisibility === 'off' ? 'trans' : 'on')} className="hover:text-fg-96 cursor-pointer" style={{ color: cableVisibility === 'off' ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
-            <RackIcon name={cableVisibility === 'on' ? 'cable-on' : cableVisibility === 'off' ? 'cable-off' : 'cable-trans'} size={14} />
+            <Icon name={cableVisibility === 'on' ? 'cable-on' : cableVisibility === 'off' ? 'cable-off' : 'cable-trans'} size={14} />
           </span>]
         </div>
       </div>

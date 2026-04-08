@@ -1,15 +1,15 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import Icon from './icons/Icon'
+import Icon from '../icons/Icon'
 import Logomark from './atoms/Logomark'
 
 const NAV_ITEMS = [
-  { icon: 'library', path: '/library', label: 'Library' },
-  { icon: 'layout-01', path: '/rack', label: 'Rack' },
-  { icon: 'plus', path: '/create', label: 'Create' },
+  { icon: 'nav-library', path: '/library', label: 'Library' },
+  { icon: 'nav-rack', path: '/rack', label: 'Rack' },
+  { icon: 'nav-create', path: '/create', label: 'Create' },
 ]
 
 const BOTTOM_ITEMS = [
-  { icon: 'settings-01', path: '/settings', label: 'Settings' },
+  { icon: 'nav-settings', path: '/settings', label: 'Settings' },
 ]
 
 export default function NavSidebar({ hidden = false }) {
@@ -31,7 +31,7 @@ export default function NavSidebar({ hidden = false }) {
       <div
         onClick={() => navigate('/')}
         style={{ cursor: 'pointer', marginBottom: 16, paddingTop: 4 }}
-        title="Video Modulo"
+        title="Monitor"
       >
         <Logomark svgUrl="/svg/favicon-01.svg" size={20} />
       </div>

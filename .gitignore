@@ -27,6 +27,7 @@ a_torg
 .claude
 src/components-mirrors
 docs
+LLM_RULES.md
 
 # Playwright
 /test-results/

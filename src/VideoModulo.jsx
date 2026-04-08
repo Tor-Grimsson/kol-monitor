@@ -46,6 +46,11 @@ function VideoModuloInner() {
 
   useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden })
 
+  // Reset nav visibility when leaving rack
+  const navRef = useRef(nav)
+  navRef.current = nav
+  useEffect(() => () => navRef.current?.setNavHidden(false), [])
+
   // Load preset from URL param on mount, or init if bare /rack
   const presetLoadedRef = useRef(null)
   useEffect(() => {
