@@ -83,14 +83,14 @@ function WaveshaperPanel({ mode, amount, symmetry, smooth, smoothFold, enabled, 
 
 const NULL_REF = { current: null }
 
-export default function WaveshaperModule({ id = 'wshp1', preview }) {
+export default function WaveshaperModule({ id = 'wshp1', init, preview }) {
   if (preview) return <WaveshaperPanel mode="exp" amount={50} symmetry={50} smooth={0} smoothFold={false} enabled={false} onToggle={() => {}} onModeChange={() => {}} onAmountChange={() => {}} onSymmetryChange={() => {}} onSmoothChange={() => {}} onSmoothFoldChange={() => {}} id={id} inConnected={false} inRef={NULL_REF} amtCvConn={false} amtCvRef={NULL_REF} symCvConn={false} symCvRef={NULL_REF} smCvConn={false} smCvRef={NULL_REF} outRef={NULL_REF} />
 
-  const [mode, setMode] = useState('exp')
-  const [amount, setAmount] = useState(50)
-  const [symmetry, setSymmetry] = useState(50)
-  const [smooth, setSmooth] = useState(0)
-  const [smoothFold, setSmoothFold] = useState(false)
+  const [mode, setMode] = useState(init?.mode ?? 'exp')
+  const [amount, setAmount] = useState(init?.amount ?? 50)
+  const [symmetry, setSymmetry] = useState(init?.symmetry ?? 50)
+  const [smooth, setSmooth] = useState(init?.smooth ?? 0)
+  const [smoothFold, setSmoothFold] = useState(init?.smoothFold ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
@@ -176,9 +176,11 @@ export default function WaveshaperModule({ id = 'wshp1', preview }) {
         return { out }
       }
 
-      // Scalar: shape the value
+      // Scalar: map signed [-100, 100] to [0, 1] for the shaper, then back
       if (input.type === 'scalar') {
-        const out = scalar(mix(input.value / 100) * 100)
+        const normalized = (input.value + 100) / 200
+        const shaped = mix(normalized)
+        const out = scalar(shaped * 200 - 100)
         outRef.current = out
         return { out }
       }

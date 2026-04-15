@@ -54,15 +54,15 @@ function ReverbPanel({ size, decay, mix, freeze, bypass, bypassFx, enabled, onTo
   )
 }
 
-export default function ReverbModule({ id = 'verb1', preview }) {
+export default function ReverbModule({ id = 'verb1', init, preview }) {
   if (preview) return <ReverbPanel size={50} decay={50} mix={50} freeze={false} bypass={false} bypassFx={false} enabled={false} onToggle={() => {}} onSizeChange={() => {}} onDecayChange={() => {}} onMixChange={() => {}} onFreezeChange={() => {}} onBypassChange={() => {}} onBypassFxChange={() => {}} id={id} sizeCvConn={false} sizeCvRef={{ current: null }} decayCvConn={false} decayCvRef={{ current: null }} inConnected={false} inRef={{ current: null }} outRef={{ current: null }} />
 
-  const [size, setSize] = useState(50)
-  const [decay, setDecay] = useState(50)
-  const [mix, setMix] = useState(50)
-  const [freeze, setFreeze] = useState(false)
-  const [bypass, setBypass] = useState(false)
-  const [bypassFx, setBypassFx] = useState(false)
+  const [size, setSize] = useState(init?.size ?? 50)
+  const [decay, setDecay] = useState(init?.decay ?? 50)
+  const [mix, setMix] = useState(init?.mix ?? 50)
+  const [freeze, setFreeze] = useState(init?.freeze ?? false)
+  const [bypass, setBypass] = useState(init?.bypass ?? false)
+  const [bypassFx, setBypassFx] = useState(init?.bypassFx ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 

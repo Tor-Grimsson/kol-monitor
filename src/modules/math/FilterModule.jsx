@@ -46,12 +46,12 @@ function FilterPanel({ mode, cutoff, resonance, enabled, onToggle, onModeChange,
 
 const NULL_REF = { current: null }
 
-export default function FilterModule({ id = 'filt1', preview }) {
+export default function FilterModule({ id = 'filt1', init, preview }) {
   if (preview) return <FilterPanel mode="lp" cutoff={50} resonance={0} enabled={false} onToggle={() => {}} onModeChange={() => {}} onCutoffChange={() => {}} onResonanceChange={() => {}} id={id} inConn={false} inRef={NULL_REF} cutCvConn={false} cutCvRef={NULL_REF} resCvConn={false} resCvRef={NULL_REF} outRef={NULL_REF} />
 
-  const [mode, setMode] = useState('lp')
-  const [cutoff, setCutoff] = useState(50)
-  const [resonance, setResonance] = useState(0)
+  const [mode, setMode] = useState(init?.mode ?? 'lp')
+  const [cutoff, setCutoff] = useState(init?.cutoff ?? 50)
+  const [resonance, setResonance] = useState(init?.resonance ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
@@ -133,7 +133,7 @@ export default function FilterModule({ id = 'filt1', preview }) {
         const s = svf(v, lpRef.current, bpRef.current)
         lpRef.current = s.lp
         bpRef.current = s.bp
-        const out = scalar(Math.max(0, Math.min(100, pick(s) * 100)))
+        const out = scalar(pick(s) * 100)
         outRef.current = out
         return { out }
       }

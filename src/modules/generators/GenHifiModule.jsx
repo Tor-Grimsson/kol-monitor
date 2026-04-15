@@ -545,7 +545,7 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
       clkRef.current = inputs.clk
 
       // Clock: reset LFO phase on rising edge
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       if (clkHigh && !prevClkRef.current) lfoPhaseRef.current = 0
       prevClkRef.current = clkHigh
 

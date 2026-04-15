@@ -47,10 +47,10 @@ function LogicPanel({ mode, enabled, onToggle, onModeChange, id, aConnected, aIn
   )
 }
 
-export default function LogicModule({ id = 'logic1', preview }) {
+export default function LogicModule({ id = 'logic1', init, preview }) {
   if (preview) return <LogicPanel mode="and" enabled={false} onToggle={() => {}} onModeChange={() => {}} id={id} aConnected={false} aInRef={{ current: null }} bConnected={false} bInRef={{ current: null }} outputRef={{ current: null }} />
 
-  const [mode, setMode] = useState('and')
+  const [mode, setMode] = useState(init?.mode ?? 'and')
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
@@ -79,8 +79,8 @@ export default function LogicModule({ id = 'logic1', preview }) {
       aInRef.current = inputs.a
       bInRef.current = inputs.b
 
-      const aHigh = readScalar(inputs.a) > 50
-      const bHigh = readScalar(inputs.b) > 50
+      const aHigh = readScalar(inputs.a) > 0
+      const bHigh = readScalar(inputs.b) > 0
       const result = logic(modeRef.current, aHigh, bHigh)
       const out = scalar(result ? 100 : 0)
       outputRef.current = out

@@ -19,7 +19,7 @@ function ScaleOffsetPanel({ scale, offset, enabled, onToggle, onScaleChange, onO
       }}>
 
         <Knob value={scale} onChange={onScaleChange} min={0} max={200} label="scl" variant="row-right" />
-        <Knob value={offset} onChange={onOffsetChange} min={0} max={100} label="ofs" variant="row-right" />
+        <Knob value={offset} onChange={onOffsetChange} label="ofs" variant="row-right" bipolar />
 
         <div style={{ display: 'flex', gap: 8 }}>
           <LabeledJack type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
@@ -30,16 +30,16 @@ function ScaleOffsetPanel({ scale, offset, enabled, onToggle, onScaleChange, onO
   )
 }
 
-export default function ScaleOffsetModule({ id = 'sco1', preview }) {
-  if (preview) return <ScaleOffsetPanel scale={100} offset={50} enabled={false} onToggle={() => {}} onScaleChange={() => {}} onOffsetChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outputRef={{ current: null }} />
+export default function ScaleOffsetModule({ id = 'sco1', init, preview }) {
+  if (preview) return <ScaleOffsetPanel scale={100} offset={0} enabled={false} onToggle={() => {}} onScaleChange={() => {}} onOffsetChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outputRef={{ current: null }} />
 
-  const [scale, setScale] = useState(100)
-  const [offset, setOffset] = useState(50)
+  const [scale, setScale] = useState(init?.scale ?? 100)
+  const [offset, setOffset] = useState(init?.offset ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
   const scaleRef = useRef(100)
-  const offsetRef = useRef(50)
+  const offsetRef = useRef(0)
   const enabledRef = useRef(true)
   const outputRef = useRef(null)
   const inRef = useRef(null)
@@ -63,7 +63,7 @@ export default function ScaleOffsetModule({ id = 'sco1', preview }) {
       inRef.current = inputs.in
 
       const val = readScalar(inputs.in)
-      const out = scalar(val * (scaleRef.current / 100) + offsetRef.current - 50)
+      const out = scalar(val * (scaleRef.current / 100) + offsetRef.current)
       outputRef.current = out
       return { out }
     },

@@ -56,18 +56,18 @@ function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr,
   )
 }
 
-export default function RGBOscillatorModule({ id = 'rgb1', preview }) {
+export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
   if (preview) return <RGBOscillatorPanel rRate={30} gRate={50} bRate={70} rOsc={false} gOsc={false} bOsc={false} rClr={false} gClr={false} bClr={false} enabled={false} onToggle={() => {}} onRRateChange={() => {}} onGRateChange={() => {}} onBRateChange={() => {}} onROscChange={() => {}} onGOscChange={() => {}} onBOscChange={() => {}} onRClrChange={() => {}} onGClrChange={() => {}} onBClrChange={() => {}} id={id} rConn={false} rInRef={{ current: null }} gConn={false} gInRef={{ current: null }} bConn={false} bInRef={{ current: null }} clkConn={false} clkRef={{ current: null }} rOutRef={{ current: null }} gOutRef={{ current: null }} bOutRef={{ current: null }} outRef={{ current: null }} />
 
-  const [rRate, setRRate] = useState(30)
-  const [gRate, setGRate] = useState(50)
-  const [bRate, setBRate] = useState(70)
-  const [rOsc, setROsc] = useState(true)
-  const [gOsc, setGOsc] = useState(true)
-  const [bOsc, setBOsc] = useState(true)
-  const [rClr, setRClr] = useState(false)
-  const [gClr, setGClr] = useState(false)
-  const [bClr, setBClr] = useState(false)
+  const [rRate, setRRate] = useState(init?.rRate ?? 30)
+  const [gRate, setGRate] = useState(init?.gRate ?? 50)
+  const [bRate, setBRate] = useState(init?.bRate ?? 70)
+  const [rOsc, setROsc] = useState(init?.rOsc ?? true)
+  const [gOsc, setGOsc] = useState(init?.gOsc ?? true)
+  const [bOsc, setBOsc] = useState(init?.bOsc ?? true)
+  const [rClr, setRClr] = useState(init?.rClr ?? false)
+  const [gClr, setGClr] = useState(init?.gClr ?? false)
+  const [bClr, setBClr] = useState(init?.bClr ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
@@ -134,7 +134,7 @@ export default function RGBOscillatorModule({ id = 'rgb1', preview }) {
       clkRef.current = inputs.clk
 
       // Clock sync: reset phase on rising edge
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       if (clkHigh && !prevClkRef.current) {
         phaseOffsetRef.current = t
       }

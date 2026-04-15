@@ -12,6 +12,7 @@ import ComparatorModule from './modules/control/ComparatorModule.jsx'
 import SampleHoldModule from './modules/control/SampleHoldModule.jsx'
 import PenModule from './modules/control/PenModule.jsx'
 import JoystickModule from './modules/control/JoystickModule.jsx'
+import ExpressionModule from './modules/control/ExpressionModule.jsx'
 
 import MultModule from './modules/math/MultModule.jsx'
 import AttenuatorModule from './modules/math/AttenuatorModule.jsx'
@@ -19,6 +20,7 @@ import VCAModule from './modules/math/VCAModule.jsx'
 import SwitchModule from './modules/math/SwitchModule.jsx'
 import QuantizerModule from './modules/math/QuantizerModule.jsx'
 import ScaleOffsetModule from './modules/math/ScaleOffsetModule.jsx'
+import WindowModule from './modules/math/WindowModule.jsx'
 import RingModModule from './modules/math/RingModModule.jsx'
 import WaveshaperModule from './modules/math/WaveshaperModule.jsx'
 import DelayModule from './modules/math/DelayModule.jsx'
@@ -48,6 +50,7 @@ import SVGModule from './modules/generators/SVGModule.jsx'
 import LifeModule from './modules/generators/LifeModule.jsx'
 
 import ScopeModule from './modules/display/ScopeModule.jsx'
+import OscilloscopeModule from './modules/display/OscilloscopeModule.jsx'
 import MonitorModule from './modules/display/MonitorModule.jsx'
 import OutputModule from './modules/display/OutputModule.jsx'
 import ConsoleModule from './modules/display/ConsoleModule.jsx'
@@ -136,6 +139,13 @@ export const MODULE_DEFS = {
     { type: 'output', name: 'y', signal: 'scalar', description: 'Vertical position 0–100' },
     { type: 'output', name: 'z', signal: 'scalar', description: 'Z slider value 0–100' },
   ] },
+  expression:{ component: ExpressionModule,   hp: 20, u: 1, category: 'control',    label: 'Expr',        description: 'Dual expression generator. Each row takes a math expression evaluated per frame as a signal source. Helpers: wave(x), saw(x), tri(x), pulse(x,w), bell(x), step(x,n), rand(), ease(x,c), exp(x), log(x). Variables: t (seconds), f (frame), PI, PHI. CV inputs a and b are available by name inside the expression for cross-modulation. Clock input resets the time reference on rising edge.', controls: [
+    { type: 'input', name: 'a', signal: 'scalar', description: 'CV input referenced as `a` in expressions' },
+    { type: 'input', name: 'b', signal: 'scalar', description: 'CV input referenced as `b` in expressions' },
+    { type: 'input', name: 'clk', signal: 'scalar', description: 'Clock reset — t and f return to 0 on rising edge' },
+    { type: 'output', name: 'out1', signal: 'scalar', description: 'Expression 1 evaluated each frame, clamped to -100 to +100' },
+    { type: 'output', name: 'out2', signal: 'scalar', description: 'Expression 2 evaluated each frame, clamped to -100 to +100' },
+  ] },
 
   // Math
   mult:      { component: MultModule,         hp: 8,  u: 1, category: 'math',       label: 'Mult',        description: 'Dual 1-to-4 signal splitter for distributing signals to multiple destinations. Input 2 is normalled from Input 1 when unpatched. Provides 8 buffered outputs total (1a-1d, 2a-2d). Essential utility for sending one signal to several modules without signal loss.', controls: [
@@ -158,9 +168,9 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'cv2', signal: 'scalar', description: 'VCA 2 control voltage' },
     { type: 'output', name: 'out2', signal: 'scalar', description: 'in2 × (cv2 / 100)' },
   ] },
-  switch:    { component: SwitchModule,       hp: 10, u: 1, category: 'math',       label: 'Switch',      description: 'Dual CV-controlled A/B signal switch. When CV exceeds 50, output selects input B; otherwise it selects input A. Works with any signal type including scalars, colors, and points. Useful for alternating between two sources rhythmically or conditionally.', controls: [
-    { type: 'input', name: 'a1', signal: 'any', description: 'Switch 1 input A (CV ≤ 50)' },
-    { type: 'input', name: 'b1', signal: 'any', description: 'Switch 1 input B (CV > 50)' },
+  switch:    { component: SwitchModule,       hp: 10, u: 1, category: 'math',       label: 'Switch',      description: 'Dual CV-controlled A/B signal switch. When CV is positive (> 0), output selects input B; otherwise it selects input A. Works with any signal type including scalars, colors, and points. Useful for alternating between two sources rhythmically or conditionally.', controls: [
+    { type: 'input', name: 'a1', signal: 'any', description: 'Switch 1 input A (CV ≤ 0)' },
+    { type: 'input', name: 'b1', signal: 'any', description: 'Switch 1 input B (CV > 0)' },
     { type: 'input', name: 'cv1', signal: 'scalar', description: 'Switch 1 selector' },
     { type: 'output', name: 'out1', signal: 'any', description: 'Switch 1 selected output' },
     { type: 'input', name: 'a2', signal: 'any', description: 'Switch 2 input A' },
@@ -173,11 +183,18 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'in', signal: 'scalar', description: 'Continuous signal input' },
     { type: 'output', name: 'out', signal: 'scalar', description: 'Quantized output' },
   ] },
-  scaleOfs:  { component: ScaleOffsetModule,  hp: 4,  u: 1, category: 'math',       label: 'Scale/Ofs',   description: 'Scales and offsets an input signal to map it into a new range. Scale knob goes from 0 to 200% for attenuation or amplification. Offset knob ranges from -50 to +50 to shift the signal up or down. Essential for conditioning CV signals before they reach a destination module.', controls: [
+  scaleOfs:  { component: ScaleOffsetModule,  hp: 4,  u: 1, category: 'math',       label: 'Scale/Ofs',   description: 'Scales and offsets an input signal to map it into a new range. Scale knob goes from 0 to 200% for attenuation or amplification. Offset knob is bipolar (-100 to +100) to shift the signal up or down. Essential for conditioning CV signals before they reach a destination module.', controls: [
     { type: 'knob', name: 'Scale', range: '0–200%', description: 'Signal multiplier' },
-    { type: 'knob', name: 'Offset', range: '-50 to +50', description: 'DC offset shift' },
+    { type: 'knob', name: 'Offset', range: '-100 to +100', description: 'DC offset shift' },
     { type: 'input', name: 'in', signal: 'scalar', description: 'Signal input' },
     { type: 'output', name: 'out', signal: 'scalar', description: 'Scaled and offset output' },
+  ] },
+  window:    { component: WindowModule,       hp: 8,  u: 1, category: 'math',       label: 'Window',      description: 'Clips an input signal to a window between lo and hi bounds, re-zeros so the lower bound becomes zero, then applies a DC offset. Useful for carving a specific range out of a signal and placing it at a new position in the output space. lo/hi/ofs are all bipolar (-100 to +100); swapping lo > hi is normalized internally.', controls: [
+    { type: 'knob', name: 'lo', range: '-100 to +100', description: 'Window lower bound' },
+    { type: 'knob', name: 'hi', range: '-100 to +100', description: 'Window upper bound' },
+    { type: 'knob', name: 'ofs', range: '-100 to +100', description: 'Output offset after re-zero' },
+    { type: 'input', name: 'in', signal: 'scalar', description: 'Signal input' },
+    { type: 'output', name: 'out', signal: 'scalar', description: 'Clipped and offset output' },
   ] },
   ringMod:   { component: RingModModule,      hp: 6,  u: 1, category: 'math',       label: 'Ring Mod',    description: 'Ring modulator that multiplies two input signals together. Depth knob blends between dry input and the modulated result. Depth is CV-controllable for dynamic wet/dry animation. Creates sum-and-difference interactions between two signal sources.', controls: [
     { type: 'knob', name: 'Depth', range: '0–100%', description: 'Dry/wet blend' },
@@ -438,6 +455,21 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'pen', signal: 'pen', description: 'Trace drawing style' },
     { type: 'output', name: 'a', signal: 'any', description: 'Pass-through of input A' },
     { type: 'output', name: 'b', signal: 'any', description: 'Pass-through of input B' },
+  ] },
+  oscilloscope:{ component: OscilloscopeModule, hp: 28, u: 3, category: 'display',   label: 'Scope+',      description: 'Expression-driven oscilloscope. Owns its signal source so it can sample forward in time and render the future curve before the playhead reaches it. Red dashed reference lines mark Min/Max; actual min/mid/max of the curve are labeled in gray. Expression text input with Examples and Reference dropdowns for quick insertion of waves, functions, variables, curves, range presets, and speed variants. Fit auto-ranges Min/Max to the curve extents. Polarity button toggles between unipolar (0..100) and bipolar (-100..100) display. CV inputs a and b are available as variables inside the expression. Clock input resets time on rising edge.', controls: [
+    { type: 'input', name: 'a', signal: 'scalar', description: 'CV input referenced as `a` in expression' },
+    { type: 'input', name: 'b', signal: 'scalar', description: 'CV input referenced as `b` in expression' },
+    { type: 'input', name: 'clk', signal: 'scalar', description: 'Clock reset — t returns to 0 on rising edge' },
+    { type: 'output', name: 'out', signal: 'scalar', description: 'Evaluated expression, clamped to -100 to +100' },
+    { type: 'text', name: 'expression', description: 'Math expression compiled and evaluated per frame. Default `wave(t)`.' },
+    { type: 'dropdown', name: 'Ex', description: 'Examples — 21 ready-made expressions. Selecting replaces the expression.' },
+    { type: 'dropdown', name: 'Ref', description: 'Reference — Waves, Functions, Variables, Curves, Range, Speed, Tips. Selecting replaces the expression.' },
+    { type: 'button', name: 'Fit', description: 'Auto-range Min/Max to the curve extents' },
+    { type: 'button', name: 'Polarity', description: 'Toggle UNI (0..100) vs bipolar (-100..100) display' },
+    { type: 'button', name: 'Reset', description: 'Reset Min/Max/Sec/Ofs to defaults (0/100/5/0)' },
+    { type: 'numeric', name: 'Min/Max', range: 'any', description: 'Vertical range of the display; also the clamp for the output' },
+    { type: 'numeric', name: 'Sec', description: 'Duration of the display window in seconds' },
+    { type: 'numeric', name: 'Ofs', description: 'Time offset (pan) for the display' },
   ] },
   monitor:   { component: MonitorModule,      hp: 12, u: 3, category: 'display',    label: 'Monitor',     description: '2-channel signal display with a larger canvas than scope. Split or overlay modes for dual-input comparison. 128-sample history buffer for scrolling traces. Pen input controls drawing style. Pass-through outputs let you monitor a signal without breaking the chain.', controls: [
     { type: 'toggle', name: 'Split/Overlay', description: 'Side-by-side or stacked display' },

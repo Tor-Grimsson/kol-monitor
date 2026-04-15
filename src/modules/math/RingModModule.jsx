@@ -35,10 +35,10 @@ function RingModPanel({ depth, enabled, onToggle, onDepthChange, id, aConnected,
   )
 }
 
-export default function RingModModule({ id = 'ring1', preview }) {
+export default function RingModModule({ id = 'ring1', init, preview }) {
   if (preview) return <RingModPanel depth={100} enabled={false} onToggle={() => {}} onDepthChange={() => {}} id={id} aConnected={false} aRef={{ current: null }} bConnected={false} bRef={{ current: null }} depthCvConn={false} depthCvRef={{ current: null }} outRef={{ current: null }} />
 
-  const [depth, setDepth] = useState(100)
+  const [depth, setDepth] = useState(init?.depth ?? 100)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 

@@ -166,19 +166,19 @@ function WireframePanel({ shape, rxVal, ryVal, rzVal, speed, scale, resolution, 
   )
 }
 
-export default function WireframeModule({ id = 'wire1', preview }) {
+export default function WireframeModule({ id = 'wire1', init, preview }) {
   if (preview) return <WireframePanel shape="cube" rxVal={50} ryVal={50} rzVal={50} speed={50} scale={50} resolution={50} fov={50} animate={false} grid={false} enabled={false} onToggle={() => {}} onShapeChange={() => {}} onRxChange={() => {}} onRyChange={() => {}} onRzChange={() => {}} onSpeedChange={() => {}} onScaleChange={() => {}} onResolutionChange={() => {}} onFovChange={() => {}} onAnimateChange={() => {}} onGridChange={() => {}} onReset={() => {}} id={id} rxConn={false} rxRef={{ current: null }} ryConn={false} ryRef={{ current: null }} rzConn={false} rzRef={{ current: null }} spdConn={false} spdRef={{ current: null }} sclConn={false} sclRef={{ current: null }} resConn={false} resRef={{ current: null }} fovConn={false} fovRef={{ current: null }} clrConn={false} clrRef={{ current: null }} clkConn={false} clkRef={{ current: null }} outRef={{ current: null }} />
 
-  const [shape, setShape] = useState('cube')
-  const [rxVal, setRxVal] = useState(50)
-  const [ryVal, setRyVal] = useState(50)
-  const [rzVal, setRzVal] = useState(50)
-  const [animate, setAnimate] = useState(false)
-  const [grid, setGrid] = useState(false)
-  const [speed, setSpeed] = useState(50)
-  const [scale, setScale] = useState(50)
-  const [resolution, setResolution] = useState(50)
-  const [fov, setFov] = useState(50)
+  const [shape, setShape] = useState(init?.shape ?? 'cube')
+  const [rxVal, setRxVal] = useState(init?.rxVal ?? 50)
+  const [ryVal, setRyVal] = useState(init?.ryVal ?? 50)
+  const [rzVal, setRzVal] = useState(init?.rzVal ?? 50)
+  const [animate, setAnimate] = useState(init?.animate ?? false)
+  const [grid, setGrid] = useState(init?.grid ?? false)
+  const [speed, setSpeed] = useState(init?.speed ?? 50)
+  const [scale, setScale] = useState(init?.scale ?? 50)
+  const [resolution, setResolution] = useState(init?.resolution ?? 50)
+  const [fov, setFov] = useState(init?.fov ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
@@ -256,7 +256,7 @@ export default function WireframeModule({ id = 'wire1', preview }) {
       fovCvRef.current = inputs.fov
       clkCvRef.current = inputs.clk
 
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       if (clkHigh && !prevClkRef.current) rotRef.current = { x: 0, y: 0, z: 0 }
       prevClkRef.current = clkHigh
 

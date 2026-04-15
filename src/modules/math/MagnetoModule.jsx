@@ -425,7 +425,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       const ofsCV = readScalar(inputs.ofsCV) / 100   // 0-1, playhead offset
 
       // CLK syncs playheads — rising edge resets phase
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       if (clkHigh && !prevClkRef.current) tapPhaseRef.current = 0
       prevClkRef.current = clkHigh
 

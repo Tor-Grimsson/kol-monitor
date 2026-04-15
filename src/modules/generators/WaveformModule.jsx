@@ -59,13 +59,13 @@ function WaveformPanel({ freq, amp, speed, shape, enabled, onToggle, onFreqChang
   )
 }
 
-export default function WaveformModule({ id = 'wave1', preview }) {
+export default function WaveformModule({ id = 'wave1', init, preview }) {
   if (preview) return <WaveformPanel freq={20} amp={100} speed={50} shape="sin" enabled={false} onToggle={() => {}} onFreqChange={() => {}} onAmpChange={() => {}} onSpeedChange={() => {}} onShapeChange={() => {}} id={id} freqConn={false} freqInRef={{ current: null }} ampConn={false} ampInRef={{ current: null }} spdConn={false} spdInRef={{ current: null }} clkConn={false} clkInRef={{ current: null }} outRef={{ current: null }} />
 
-  const [freq, setFreq] = useState(20)
-  const [amp, setAmp] = useState(100)
-  const [speed, setSpeed] = useState(50)
-  const [shape, setShape] = useState('sin')
+  const [freq, setFreq] = useState(init?.freq ?? 20)
+  const [amp, setAmp] = useState(init?.amp ?? 100)
+  const [speed, setSpeed] = useState(init?.speed ?? 50)
+  const [shape, setShape] = useState(init?.shape ?? 'sin')
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
@@ -114,7 +114,7 @@ export default function WaveformModule({ id = 'wave1', preview }) {
       clkInRef.current = inputs.clk
 
       // Clock: reset phase on rising edge
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       if (clkHigh && !prevClkRef.current) phaseRef.current = 0
       prevClkRef.current = clkHigh
 

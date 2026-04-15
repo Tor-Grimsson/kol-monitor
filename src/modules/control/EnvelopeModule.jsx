@@ -90,12 +90,12 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
       gateInRef.current = inputs.gate
       clkInRef.current = inputs.clk
 
-      const gateOn = readScalar(inputs.gate) > 50
+      const gateOn = readScalar(inputs.gate) > 0
       const wasOn = prevGateRef.current
       prevGateRef.current = gateOn
 
       // Clock: retrigger on rising edge
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       if (clkHigh && !prevClkRef.current) stageRef.current = STAGES.ATTACK
       prevClkRef.current = clkHigh
 

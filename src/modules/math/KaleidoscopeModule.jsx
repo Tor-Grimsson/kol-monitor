@@ -248,7 +248,7 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
       }
 
       // Clock rising edge resets animation phase
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       if (clkHigh && !prevClkRef.current) animPhaseRef.current = 0
       prevClkRef.current = clkHigh
 

@@ -4,9 +4,11 @@ import { useRef, useCallback } from 'react'
 
 const SIZES = { sm: 24, md: 32, lg: 40, xl: 64 }
 
-export default function Knob({ value, onChange, min = 0, max = 100, label, variant = 'column', bipolar = false, labelMinWidth, size: sizeProp = 'sm' }) {
+export default function Knob({ value, onChange, min, max, label, variant = 'column', bipolar = false, labelMinWidth, size: sizeProp = 'sm' }) {
   const size = SIZES[sizeProp] || SIZES.sm
-  const angle = ((value - min) / (max - min)) * 270 - 135
+  const effMin = min ?? (bipolar ? -100 : 0)
+  const effMax = max ?? 100
+  const angle = ((value - effMin) / (effMax - effMin)) * 270 - 135
   const r = size / 2
   const ir = r * 0.56
 
@@ -14,11 +16,11 @@ export default function Knob({ value, onChange, min = 0, max = 100, label, varia
     e.preventDefault()
     const startY = e.clientY
     const startVal = value
-    const range = max - min
+    const range = effMax - effMin
 
     const handleMove = (e) => {
       const delta = (startY - e.clientY) * (range / 200)
-      const next = Math.round(Math.max(min, Math.min(max, startVal + delta)))
+      const next = Math.round(Math.max(effMin, Math.min(effMax, startVal + delta)))
       onChange(next)
     }
     const handleUp = () => {
@@ -27,11 +29,14 @@ export default function Knob({ value, onChange, min = 0, max = 100, label, varia
     }
     window.addEventListener('pointermove', handleMove)
     window.addEventListener('pointerup', handleUp)
-  }, [value, min, max, onChange])
+  }, [value, effMin, effMax, onChange])
 
   const knobSvg = (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <circle cx={r} cy={r} r={r * 0.75} fill="rgba(30,30,30,0.9)" stroke="rgba(180,175,165,0.3)" strokeWidth="1" />
+      {bipolar && (
+        <line x1={r} y1={r - r * 0.9} x2={r} y2={r - r * 0.72} stroke="rgba(255,255,255,0.35)" strokeWidth="1" strokeLinecap="round" />
+      )}
       <line
         x1={r} y1={r}
         x2={r + ir * Math.cos((angle - 90) * Math.PI / 180)}

@@ -29,10 +29,10 @@ function QuantizerPanel({ steps, enabled, onToggle, onStepsChange, id, inConnect
   )
 }
 
-export default function QuantizerModule({ id = 'quant1', preview }) {
+export default function QuantizerModule({ id = 'quant1', init, preview }) {
   if (preview) return <QuantizerPanel steps={8} enabled={false} onToggle={() => {}} onStepsChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} outputRef={{ current: null }} />
 
-  const [steps, setSteps] = useState(8)
+  const [steps, setSteps] = useState(init?.steps ?? 8)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 

@@ -29,10 +29,10 @@ function SampleHoldPanel({ smooth, enabled, onToggle, onSmoothChange, id, inConn
   )
 }
 
-export default function SampleHoldModule({ id = 'sh1', preview }) {
+export default function SampleHoldModule({ id = 'sh1', init, preview }) {
   if (preview) return <SampleHoldPanel smooth={0} enabled={false} onToggle={() => {}} onSmoothChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} trigConnected={false} trigRef={{ current: null }} outRef={{ current: null }} />
 
-  const [smooth, setSmooth] = useState(0)
+  const [smooth, setSmooth] = useState(init?.smooth ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 

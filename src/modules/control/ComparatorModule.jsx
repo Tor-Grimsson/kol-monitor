@@ -31,10 +31,10 @@ function ComparatorPanel({ threshold, enabled, onToggle, onThresholdChange, id, 
   )
 }
 
-export default function ComparatorModule({ id = 'cmp1', preview }) {
+export default function ComparatorModule({ id = 'cmp1', init, preview }) {
   if (preview) return <ComparatorPanel threshold={50} enabled={false} onToggle={() => {}} onThresholdChange={() => {}} id={id} inConnected={false} inRef={{ current: null }} thrCvConn={false} thrCvRef={{ current: null }} outputRef={{ current: null }} />
 
-  const [threshold, setThreshold] = useState(50)
+  const [threshold, setThreshold] = useState(init?.threshold ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 

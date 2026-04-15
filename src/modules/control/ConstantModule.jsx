@@ -37,10 +37,10 @@ function ConstantPanel({ value, enabled, onToggle, onValueChange, id, outputRef 
   )
 }
 
-export default function ConstantModule({ id = 'const1', preview }) {
+export default function ConstantModule({ id = 'const1', init, preview }) {
   if (preview) return <ConstantPanel value={50} enabled={false} onToggle={() => {}} onValueChange={() => {}} id={id} outputRef={{ current: null }} />
 
-  const [value, setValue] = useState(50)
+  const [value, setValue] = useState(init?.value ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
   const valueRef = useRef(50)
   const enabledRef = useRef(true)

@@ -58,11 +58,11 @@ const NULL_REF = { current: null }
 const NULL_REFS = { a: NULL_REF, b: NULL_REF, c: NULL_REF, d: NULL_REF }
 const NO_CONNS = { a: false, b: false, c: false, d: false }
 
-export default function AttenuatorModule({ id = 'atten1', preview }) {
+export default function AttenuatorModule({ id = 'atten1', init, preview }) {
   if (preview) return <AttenPanel levels={[0,0,0,0]} modes={[false,false,false,false]} enabled={false} onToggle={NOOP} onLevelChange={NOOP} onModeChange={NOOP} id={id} inConns={NO_CONNS} inRefs={NULL_REFS} outRefs={NULL_REFS} />
 
-  const [levels, setLevels] = useState([0, 0, 0, 0])
-  const [modes, setModes] = useState([false, false, false, false]) // false = uni, true = bipolar
+  const [levels, setLevels] = useState(init?.levels ?? [0, 0, 0, 0])
+  const [modes, setModes] = useState(init?.modes ?? [false, false, false, false]) // false = uni, true = bipolar
   const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
   const cp = useConnectedPorts(id)
@@ -108,24 +108,21 @@ export default function AttenuatorModule({ id = 'atten1', preview }) {
 
       const chs = ['a', 'b', 'c', 'd']
       const results = {}
-      let cascade = 0
+      let prevOut = 100 // first channel: normalled to max rail
 
       for (let i = 0; i < 4; i++) {
         const ch = chs[i]
         inRefsObj[ch].current = inputs[ch]
-        // Normalled to max (100) when unpatched — lets knob act as constant CV source
-        const input = inputs[ch] ? readScalar(inputs[ch]) : 100
+        // Daisy-chain normal: patched input wins; else inherit previous channel's output
+        const input = inputs[ch] ? readScalar(inputs[ch]) : prevOut
         const lvl = levelsRef.current[i] / 100
         const bipolar = modesRef.current[i]
         const scaled = bipolar ? input * (lvl * 2 - 1) : input * lvl
 
-        cascade += scaled
-        const out = scalar(cascade)
+        const out = scalar(scaled)
         outRefsObj[ch].current = out
         results[ch] = out
-
-        // If output is patched, reset cascade
-        if (outConns[ch]) cascade = 0
+        prevOut = scaled
       }
 
       return results

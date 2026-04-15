@@ -48,14 +48,14 @@ function MonitorPanel({ canvasRef, overlay, onOverlayChange, enabled, onToggle, 
   )
 }
 
-export default function MonitorModule({ id = 'mon1', preview }) {
+export default function MonitorModule({ id = 'mon1', init, preview }) {
   if (preview) return <MonitorPanel canvasRef={{ current: null }} overlay={false} onOverlayChange={() => {}} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={{ current: null }} bConnected={false} inputBRef={{ current: null }} penConnected={false} penRef={{ current: null }} outARef={{ current: null }} outBRef={{ current: null }} />
 
   const canvasRef = useRef(null)
   const inputARef = useRef(null)
   const inputBRef = useRef(null)
   const penRef = useRef(null)
-  const [overlay, setOverlay] = useState(false)
+  const [overlay, setOverlay] = useState(init?.overlay ?? false)
   const overlayRef = useRef(false)
   const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)

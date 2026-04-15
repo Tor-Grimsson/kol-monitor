@@ -327,7 +327,7 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
       hueCvRef.current = inputs.hue
       spdCvRef.current = inputs.spd
       clkCvRef.current = inputs.clk
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       if (clkHigh && !prevClkRef.current) animTimeRef.current = 0
       prevClkRef.current = clkHigh
 

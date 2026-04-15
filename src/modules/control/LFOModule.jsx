@@ -13,13 +13,14 @@ import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['sin', 'saw', 'tri', 'sqr']
 
+// waveFn returns a bipolar value in [-1, +1]
 function waveFn(phase, shape) {
   const p = phase % 1
   switch (shape) {
-    case 'sin': return (Math.sin(p * Math.PI * 2) + 1) / 2
-    case 'saw': return p
-    case 'tri': return p < 0.5 ? p * 2 : 2 - p * 2
-    case 'sqr': return p < 0.5 ? 1 : 0
+    case 'sin': return Math.sin(p * Math.PI * 2)
+    case 'saw': return p * 2 - 1
+    case 'tri': return p < 0.5 ? p * 4 - 1 : 3 - p * 4
+    case 'sqr': return p < 0.5 ? 1 : -1
     default: return 0
   }
 }
@@ -37,7 +38,7 @@ function LFOPanel({ rate, depth, offset, shape, enabled, onToggle, onRateChange,
         ]} />
         <Knob value={rate} onChange={onRateChange} label="rate" />
         <Knob value={depth} onChange={onDepthChange} label="dep" />
-        <Knob value={offset} onChange={onOffsetChange} label="ofs" />
+        <Knob value={offset} onChange={onOffsetChange} label="ofs" bipolar />
         <div style={{ display: 'flex', gap: 8 }}>
           <LabeledJack type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncInRef} label="sync" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
@@ -52,14 +53,14 @@ export default function LFOModule({ id = 'lfo1', init, preview }) {
 
   const [rate, setRate] = useState(init?.rate ?? 10)     // maps to 0.1-20 Hz
   const [depth, setDepth] = useState(init?.depth ?? 100)
-  const [offset, setOffset] = useState(init?.offset ?? 50)
+  const [offset, setOffset] = useState(init?.offset ?? 0)
   const [shape, setShape] = useState(init?.shape ?? 'sin')
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
   const rateRef = useRef(10)
   const depthRef = useRef(100)
-  const offsetRef = useRef(50)
+  const offsetRef = useRef(0)
   const shapeRef = useRef('sin')
   const enabledRef = useRef(true)
   const phaseRef = useRef(0)
@@ -97,8 +98,9 @@ export default function LFOModule({ id = 'lfo1', init, preview }) {
       const hz = 0.1 + (rateRef.current / 100) * 19.9
       phaseRef.current += dt * hz
 
+      // raw is bipolar [-1, 1]; depth scales amplitude; offset shifts DC
       const raw = waveFn(phaseRef.current, shapeRef.current)
-      const val = raw * depthRef.current + (100 - depthRef.current) * (offsetRef.current / 100)
+      const val = raw * depthRef.current + offsetRef.current
       const out = scalar(val)
       outRef.current = out
       return { out }

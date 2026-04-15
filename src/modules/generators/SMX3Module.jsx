@@ -60,18 +60,18 @@ function SMX3Panel({ k11, k12, k13, k21, k22, k23, k31, k32, k33, enabled, onTog
   )
 }
 
-export default function SMX3Module({ id = 'smx1', preview }) {
+export default function SMX3Module({ id = 'smx1', init, preview }) {
   if (preview) return <SMX3Panel k11={50} k12={50} k13={50} k21={50} k22={50} k23={50} k31={50} k32={50} k33={50} enabled={false} onToggle={() => {}} onK11={() => {}} onK12={() => {}} onK13={() => {}} onK21={() => {}} onK22={() => {}} onK23={() => {}} onK31={() => {}} onK32={() => {}} onK33={() => {}} id={id} aConnected={false} aRef={{ current: null }} bConnected={false} bRef={{ current: null }} cConnected={false} cRef={{ current: null }} rOutRef={{ current: null }} gOutRef={{ current: null }} bOutRef={{ current: null }} colorOutRef={{ current: null }} />
 
-  const [k11, setK11] = useState(50)
-  const [k12, setK12] = useState(50)
-  const [k13, setK13] = useState(50)
-  const [k21, setK21] = useState(50)
-  const [k22, setK22] = useState(50)
-  const [k23, setK23] = useState(50)
-  const [k31, setK31] = useState(50)
-  const [k32, setK32] = useState(50)
-  const [k33, setK33] = useState(50)
+  const [k11, setK11] = useState(init?.k11 ?? 50)
+  const [k12, setK12] = useState(init?.k12 ?? 50)
+  const [k13, setK13] = useState(init?.k13 ?? 50)
+  const [k21, setK21] = useState(init?.k21 ?? 50)
+  const [k22, setK22] = useState(init?.k22 ?? 50)
+  const [k23, setK23] = useState(init?.k23 ?? 50)
+  const [k31, setK31] = useState(init?.k31 ?? 50)
+  const [k32, setK32] = useState(init?.k32 ?? 50)
+  const [k33, setK33] = useState(init?.k33 ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 

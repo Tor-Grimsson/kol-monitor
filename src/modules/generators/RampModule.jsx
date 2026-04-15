@@ -38,11 +38,11 @@ function RampPanel({ rate, shape, enabled, onToggle, onRateChange, onShapeChange
   )
 }
 
-export default function RampModule({ id = 'ramp1', preview }) {
+export default function RampModule({ id = 'ramp1', init, preview }) {
   if (preview) return <RampPanel rate={20} shape="up" enabled={false} onToggle={() => {}} onRateChange={() => {}} onShapeChange={() => {}} id={id} rateCvConn={false} rateCvRef={{ current: null }} syncConnected={false} syncRef={{ current: null }} outRef={{ current: null }} />
 
-  const [rate, setRate] = useState(20)
-  const [shape, setShape] = useState('up')
+  const [rate, setRate] = useState(init?.rate ?? 20)
+  const [shape, setShape] = useState(init?.shape ?? 'up')
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 

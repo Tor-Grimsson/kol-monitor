@@ -13,6 +13,7 @@ import { startOfflineRecording } from './recordOffline'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
+import TextInput from '../controls/TextInput'
 import Selector from '../controls/Selector'
 import FlipToggle from '../controls/FlipToggle'
 import Divider from '../../components/atoms/Divider'
@@ -72,18 +73,7 @@ function RecorderPanel({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '4px 0', overflow: 'hidden' }}>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            <input
-              type="text"
-              value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
-              placeholder="filename"
-              className="kol-helper-xxxs"
-              style={{
-                flex: 1, background: 'rgba(255,255,255,0.06)', color: '#fff',
-                border: '1px solid rgba(255,255,255,0.1)', borderRadius: 2,
-                padding: '2px 4px', outline: 'none', minWidth: 0,
-              }}
-            />
+            <TextInput value={fileName} onChange={setFileName} placeholder="filename" mono={false} />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -183,7 +173,7 @@ function RecorderPanel({
   )
 }
 
-export default function RecorderModule({ id = 'rec1', preview }) {
+export default function RecorderModule({ id = 'rec1', init, preview }) {
   if (preview) {
     const dummyInputRefs = { current: { a: null, b: null, c: null, d: null } }
     return <RecorderPanel
@@ -208,12 +198,12 @@ export default function RecorderModule({ id = 'rec1', preview }) {
   const renderControl = useRenderControl()
 
   // Settings state + refs (refs avoid stale closures in recording callbacks)
-  const [resolution, setResolutionState] = useState('1080')
-  const [fps, setFpsState] = useState('60')
-  const [aspect, setAspectState] = useState('16:9')
-  const [mode, setModeState] = useState('rt')
-  const [duration, setDurationState] = useState(10)
-  const [fileName, setFileName] = useState('kol')
+  const [resolution, setResolutionState] = useState(init?.resolution ?? '1080')
+  const [fps, setFpsState] = useState(init?.fps ?? '60')
+  const [aspect, setAspectState] = useState(init?.aspect ?? '16:9')
+  const [mode, setModeState] = useState(init?.mode ?? 'rt')
+  const [duration, setDurationState] = useState(init?.duration ?? 10)
+  const [fileName, setFileName] = useState(init?.fileName ?? 'kol')
 
   const resolutionRef = useRef(resolution)
   const fpsRef = useRef(fps)

@@ -79,8 +79,8 @@ export default function SwitchModule({ id = 'sw1', preview }) {
       a1Ref.current = inputs.a1; b1Ref.current = inputs.b1; cv1Ref.current = inputs.cv1
       a2Ref.current = inputs.a2; b2Ref.current = inputs.b2; cv2Ref.current = inputs.cv2
 
-      const o1 = readScalar(inputs.cv1) > 50 ? inputs.b1 : inputs.a1
-      const o2 = readScalar(inputs.cv2) > 50 ? inputs.b2 : inputs.a2
+      const o1 = readScalar(inputs.cv1) > 0 ? inputs.b1 : inputs.a1
+      const o2 = readScalar(inputs.cv2) > 0 ? inputs.b2 : inputs.a2
       out1Ref.current = o1; out2Ref.current = o2
       return { out1: o1 || null, out2: o2 || null }
     },

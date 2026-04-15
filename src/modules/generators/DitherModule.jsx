@@ -871,7 +871,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
       // Clock: reset animation phase on rising edge
       spdCvRef.current = inputs.spd
       clkCvRef.current = inputs.clk
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       if (clkHigh && !prevClkRef.current) animTimeRef.current = 0
       prevClkRef.current = clkHigh
 

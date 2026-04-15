@@ -128,9 +128,9 @@ function MathsPanel({
 
 const N = { current: null }
 
-export default function MathsModule({ id = 'maths1', preview }) {
+export default function MathsModule({ id = 'maths1', init, preview }) {
   if (preview) return <MathsPanel
-    rise1={50} fall1={50} cycle1={false} vari1={50} rise2={50} fall2={50} cycle2={false} vari2={50} atten1={50} atten2={50} atten3={50} atten4={50}
+    rise1={50} fall1={50} cycle1={false} vari1={50} rise2={50} fall2={50} cycle2={false} vari2={50} atten1={0} atten2={0} atten3={0} atten4={0}
     enabled={false} onToggle={() => {}}
     onRise1={() => {}} onFall1={() => {}} onCycle1={() => {}} onVari1={() => {}} onRise2={() => {}} onFall2={() => {}} onCycle2={() => {}} onVari2={() => {}} onAtten1={() => {}} onAtten2={() => {}} onAtten3={() => {}} onAtten4={() => {}}
     id={id}
@@ -145,18 +145,18 @@ export default function MathsModule({ id = 'maths1', preview }) {
     sumRef={N} orRef={N} invRef={N}
   />
 
-  const [rise1, setRise1] = useState(50)
-  const [fall1, setFall1] = useState(50)
-  const [cycle1, setCycle1] = useState(false)
-  const [vari1, setVari1] = useState(50)
-  const [rise2, setRise2] = useState(50)
-  const [fall2, setFall2] = useState(50)
-  const [cycle2, setCycle2] = useState(false)
-  const [vari2, setVari2] = useState(50)
-  const [atten1, setAtten1] = useState(50)
-  const [atten2, setAtten2] = useState(50)
-  const [atten3, setAtten3] = useState(50)
-  const [atten4, setAtten4] = useState(50)
+  const [rise1, setRise1] = useState(init?.rise1 ?? 50)
+  const [fall1, setFall1] = useState(init?.fall1 ?? 50)
+  const [cycle1, setCycle1] = useState(init?.cycle1 ?? false)
+  const [vari1, setVari1] = useState(init?.vari1 ?? 50)
+  const [rise2, setRise2] = useState(init?.rise2 ?? 50)
+  const [fall2, setFall2] = useState(init?.fall2 ?? 50)
+  const [cycle2, setCycle2] = useState(init?.cycle2 ?? false)
+  const [vari2, setVari2] = useState(init?.vari2 ?? 50)
+  const [atten1, setAtten1] = useState(init?.atten1 ?? 0)
+  const [atten2, setAtten2] = useState(init?.atten2 ?? 0)
+  const [atten3, setAtten3] = useState(init?.atten3 ?? 0)
+  const [atten4, setAtten4] = useState(init?.atten4 ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
   // LED state: refs written at 60fps, synced to state at ~10fps for display
   const ledRefs = useRef({ eor1: false, eoc1: false, eor2: false, eoc2: false, or: false, inv: false })
@@ -177,7 +177,7 @@ export default function MathsModule({ id = 'maths1', preview }) {
   const enabledRef = useRef(true)
   const rise1Ref = useRef(50), fall1Ref = useRef(50), cycle1Ref = useRef(false), vari1Ref = useRef(50)
   const rise2Ref = useRef(50), fall2Ref = useRef(50), cycle2Ref = useRef(false), vari2Ref = useRef(50)
-  const atten1Ref = useRef(50), atten2Ref = useRef(50), atten3Ref = useRef(50), atten4Ref = useRef(50)
+  const atten1Ref = useRef(0), atten2Ref = useRef(0), atten3Ref = useRef(0), atten4Ref = useRef(0)
   const cur1Ref = useRef(0), cur2Ref = useRef(0)
   const phase1Ref = useRef('idle'), phase2Ref = useRef('idle')
   const prevTrig1Ref = useRef(false), prevTrig2Ref = useRef(false)
@@ -238,7 +238,7 @@ export default function MathsModule({ id = 'maths1', preview }) {
       in2Ref.current = inputs.in2; in3Ref.current = inputs.in3
 
       function processChannel(trigIn, sigIn, cycIn, riseCVIn, fallCVIn, bothCVIn, curRef, phaseRef, prevTrigRef, eorTimerRef, eocTimerRef, riseKnob, fallKnob, cycleRef, variKnob) {
-        const trigHigh = readScalar(trigIn) > 50
+        const trigHigh = readScalar(trigIn) > 0
         if (trigHigh && !prevTrigRef.current) {
           phaseRef.current = 'rising'
           curRef.current = 0
@@ -246,13 +246,13 @@ export default function MathsModule({ id = 'maths1', preview }) {
         prevTrigRef.current = trigHigh
 
         // Cycle or cycle input: start rising if idle
-        const shouldCycle = cycleRef.current || (cycIn && readScalar(cycIn) > 50)
+        const shouldCycle = cycleRef.current || (cycIn && readScalar(cycIn) > 0)
         if (shouldCycle && phaseRef.current === 'idle') {
           phaseRef.current = 'rising'
         }
 
-        // CV modulation of rates
-        const bothMod = bothCVIn ? (readScalar(bothCVIn) / 50 - 1) : 0
+        // CV modulation of rates — CVs are signed [-100, 100], normalize to [-1, 1] multiplier
+        const bothMod = bothCVIn ? readScalar(bothCVIn) / 100 : 0
         const riseRate = Math.max(0.001, (0.01 + (riseKnob / 100) * 2) * (1 + bothMod + (riseCVIn ? (readScalar(riseCVIn) / 100) : 0)))
         const fallRate = Math.max(0.001, (0.01 + (fallKnob / 100) * 2) * (1 + bothMod + (fallCVIn ? (readScalar(fallCVIn) / 100) : 0)))
 
@@ -279,7 +279,7 @@ export default function MathsModule({ id = 'maths1', preview }) {
           if (curRef.current <= 0) {
             curRef.current = 0
             eocTimerRef.current = EOC_DURATION
-            const shouldCycle = cycleRef.current || (cycIn && readScalar(cycIn) > 50)
+            const shouldCycle = cycleRef.current || (cycIn && readScalar(cycIn) > 0)
             phaseRef.current = shouldCycle ? 'rising' : 'idle'
           }
         } else if (sigIn) {
@@ -296,19 +296,19 @@ export default function MathsModule({ id = 'maths1', preview }) {
       const ch1 = processChannel(inputs.trig1, inputs.sig1, inputs.cyc1, inputs.rCV1, inputs.fCV1, inputs.bCV1, cur1Ref, phase1Ref, prevTrig1Ref, eor1TimerRef, eoc1TimerRef, rise1Ref.current, fall1Ref.current, cycle1Ref, vari1Ref.current)
       const ch4 = processChannel(inputs.trig2, inputs.sig2, inputs.cyc2, inputs.rCV2, inputs.fCV2, inputs.bCV2, cur2Ref, phase2Ref, prevTrig2Ref, eor2TimerRef, eoc2TimerRef, rise2Ref.current, fall2Ref.current, cycle2Ref, vari2Ref.current)
 
-      // Channels 2+3: attenuverters (bipolar: 0=invert, 50=zero, 100=unity)
-      const ch1atten = ch1.val * ((atten1Ref.current / 50) - 1)
-      const ch2val = readScalar(inputs.in2) * ((atten2Ref.current / 50) - 1)
-      const ch3val = readScalar(inputs.in3) * ((atten3Ref.current / 50) - 1)
-      const ch4atten = ch4.val * ((atten4Ref.current / 50) - 1)
-      const o2ch = scalar(Math.max(0, Math.min(100, 50 + ch2val)))
-      const o3ch = scalar(Math.max(0, Math.min(100, 50 + ch3val)))
+      // Channels 2+3: attenuverters (bipolar signed knob: -100=invert, 0=zero, +100=unity)
+      const ch1atten = ch1.val * (atten1Ref.current / 100)
+      const ch2val = readScalar(inputs.in2) * (atten2Ref.current / 100)
+      const ch3val = readScalar(inputs.in3) * (atten3Ref.current / 100)
+      const ch4atten = ch4.val * (atten4Ref.current / 100)
+      const o2ch = scalar(ch2val)
+      const o3ch = scalar(ch3val)
       out2chRef.current = o2ch; out3chRef.current = o3ch
 
-      // Bus outputs
-      const sumVal = Math.max(0, Math.min(100, ch1atten + ch2val + ch3val + ch4atten))
+      // Bus outputs — scalar() clamps to [-100, 100]
+      const sumVal = ch1atten + ch2val + ch3val + ch4atten
       const orVal = Math.max(Math.abs(ch1atten), Math.max(Math.abs(ch2val), Math.max(Math.abs(ch3val), Math.abs(ch4atten))))
-      const invVal = 100 - sumVal
+      const invVal = -sumVal
 
       const o1 = scalar(ch1.val), er1 = scalar(ch1.eor), ec1 = scalar(ch1.eoc)
       const o4 = scalar(ch4.val), er4 = scalar(ch4.eor), ec4 = scalar(ch4.eoc)

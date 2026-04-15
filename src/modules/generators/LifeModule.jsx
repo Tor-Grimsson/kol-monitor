@@ -352,7 +352,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
       }
 
       // RST trigger
-      const rstHigh = readScalar(inputs.rst) > 50
+      const rstHigh = readScalar(inputs.rst) > 0
       if (rstHigh && !prevRstRef.current) needsSeedRef.current = 'density'
       prevRstRef.current = rstHigh
 
@@ -386,7 +386,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
       }
 
       // CLK: external tick
-      const clkHigh = readScalar(inputs.clk) > 50
+      const clkHigh = readScalar(inputs.clk) > 0
       let doStep = false
       if (inputs.clk) {
         if (clkHigh && !prevClkRef.current) doStep = true

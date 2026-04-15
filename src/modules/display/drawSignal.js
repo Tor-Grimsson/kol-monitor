@@ -28,33 +28,39 @@ function resetPen(ctx) {
 }
 
 // Scalar: rolling oscilloscope trace from ring buffer
-export function drawScalar(ctx, history, writeIdx, bufLen, x, y, w, h, p) {
-  // Center reference line
+// bipolar=true renders with zero at middle: val=+100 at top, val=-100 at bottom
+// bipolar=false renders unipolar: val=0 at bottom, val=100 at top
+export function drawScalar(ctx, history, writeIdx, bufLen, x, y, w, h, p, bipolar = false) {
+  // Reference line (zero axis) — middle for bipolar, bottom for unipolar
+  const zeroY = bipolar ? y + h / 2 : y + h
   ctx.strokeStyle = REF_COLOR
   ctx.lineWidth = 1
   ctx.beginPath()
-  ctx.moveTo(x, y + h / 2)
-  ctx.lineTo(x + w, y + h / 2)
+  ctx.moveTo(x, zeroY)
+  ctx.lineTo(x + w, zeroY)
   ctx.stroke()
 
-  // Trace
+  // Trace — writeIdx points to the NEXT write slot (= oldest data);
+  // iterate from there to render oldest→newest across x.
   applyPen(ctx, p)
   ctx.strokeStyle = penColor(p, SCOPE_COLOR)
   ctx.beginPath()
   let started = false
   for (let i = 0; i < bufLen; i++) {
-    const idx = (writeIdx + 1 + i) % bufLen
+    const idx = (writeIdx + i) % bufLen
     const val = history[idx]
     const px = x + (i / (bufLen - 1)) * w
-    const py = y + h - (val / 100) * h
+    const py = bipolar
+      ? y + h / 2 - (val / 100) * (h / 2)
+      : y + h - (val / 100) * h
     if (!started) { ctx.moveTo(px, py); started = true }
     else ctx.lineTo(px, py)
   }
   ctx.stroke()
   resetPen(ctx)
 
-  // Current value readout
-  const current = history[writeIdx]
+  // Current value readout = newest sample (just-written = writeIdx - 1)
+  const current = history[(writeIdx - 1 + bufLen) % bufLen]
   if (current !== undefined) {
     ctx.fillStyle = 'rgba(255,255,255,0.5)'
     ctx.font = '9px monospace'
@@ -267,13 +273,14 @@ function drawPointsLofi(ctx, signal, x, y, w, h, p) {
 }
 
 // Dispatch: auto-detect signal type and draw with pen style
-export function drawSignal(ctx, signal, x, y, w, h, history, writeIdx, bufLen, penSignal) {
+// bipolar: render scalar traces with zero at middle (val=-100 bottom, val=+100 top)
+export function drawSignal(ctx, signal, x, y, w, h, history, writeIdx, bufLen, penSignal, bipolar = false) {
   if (!signal) return
   const p = penSignal?.type === 'pen' ? penSignal.value : PEN_DEFAULTS
   const lo = p.lofi > 50
   if (signal.type === 'scalar') {
     if (lo) drawScalarLofi(ctx, signal, x, y, w, h, p)
-    else drawScalar(ctx, history, writeIdx, bufLen, x, y, w, h, p)
+    else drawScalar(ctx, history, writeIdx, bufLen, x, y, w, h, p, bipolar)
   }
   else if (signal.type === 'color') drawColor(ctx, signal, x, y, w, h, p)
   else if (signal.type === 'points') {

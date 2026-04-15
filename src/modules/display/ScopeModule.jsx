@@ -15,7 +15,7 @@ import { drawSignal } from './drawSignal'
 
 const BUF_LEN = 128
 
-function ScopePanel({ canvasRef, overlay, onOverlayChange, enabled, onToggle, id, aConnected, inputARef, bConnected, inputBRef, penConnected, penRef, outARef, outBRef }) {
+function ScopePanel({ canvasRef, overlay, onOverlayChange, bipolar, onBipolarChange, enabled, onToggle, id, aConnected, inputARef, bConnected, inputBRef, penConnected, penRef, outARef, outBRef }) {
   return (
     <Module label="Scope" enabled={enabled} onToggle={onToggle} u={1}>
       <div style={{ display: 'flex', height: '100%', gap: 6, alignItems: 'center' }}>
@@ -34,7 +34,10 @@ function ScopePanel({ canvasRef, overlay, onOverlayChange, enabled, onToggle, id
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
           <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} />
-          <FlipToggle value={overlay} onChange={onOverlayChange} labelA="spl" labelB="ovr" />
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
+            <FlipToggle value={overlay} onChange={onOverlayChange} labelA="spl" labelB="ovr" />
+            <FlipToggle value={!bipolar} onChange={(v) => onBipolarChange(!v)} labelA="uni" labelB="-/+" />
+          </div>
         </div>
       </div>
     </Module>
@@ -43,12 +46,14 @@ function ScopePanel({ canvasRef, overlay, onOverlayChange, enabled, onToggle, id
 
 const NULL_REF = { current: null }
 
-export default function ScopeModule({ id = 'scope1', preview }) {
-  if (preview) return <ScopePanel canvasRef={NULL_REF} overlay={false} onOverlayChange={() => {}} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={NULL_REF} bConnected={false} inputBRef={NULL_REF} penConnected={false} penRef={NULL_REF} outARef={NULL_REF} outBRef={NULL_REF} />
+export default function ScopeModule({ id = 'scope1', init, preview }) {
+  if (preview) return <ScopePanel canvasRef={NULL_REF} overlay={false} onOverlayChange={() => {}} bipolar={false} onBipolarChange={() => {}} enabled={false} onToggle={() => {}} id={id} aConnected={false} inputARef={NULL_REF} bConnected={false} inputBRef={NULL_REF} penConnected={false} penRef={NULL_REF} outARef={NULL_REF} outBRef={NULL_REF} />
 
   const canvasRef = useRef(null)
-  const [overlay, setOverlay] = useState(false)
+  const [overlay, setOverlay] = useState(init?.overlay ?? false)
+  const [bipolar, setBipolar] = useState(init?.bipolar ?? false)
   const overlayRef = useRef(false)
+  const bipolarRef = useRef(false)
   const inputARef = useRef(null)
   const inputBRef = useRef(null)
   const penRef = useRef(null)
@@ -57,6 +62,7 @@ export default function ScopeModule({ id = 'scope1', preview }) {
   const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   overlayRef.current = overlay
+  bipolarRef.current = bipolar
   enabledRef.current = enabled
   const cp = useConnectedPorts(id)
 
@@ -69,7 +75,7 @@ export default function ScopeModule({ id = 'scope1', preview }) {
   const writeIdxRef = useRef(0)
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { overlay }
+  saveStateRef.current = { overlay, bipolar }
 
   useModule({
     id,
@@ -115,18 +121,19 @@ export default function ScopeModule({ id = 'scope1', preview }) {
     const wi = writeIdxRef.current
     const p = penRef.current
     const ovr = overlayRef.current
+    const bip = bipolarRef.current
 
     if (hasB && !ovr) {
       const aw = Math.floor(w / 2)
-      drawSignal(ctx, inputARef.current, 0, 0, aw, h, historyA.current, wi, BUF_LEN, p)
+      drawSignal(ctx, inputARef.current, 0, 0, aw, h, historyA.current, wi, BUF_LEN, p, bip)
       ctx.fillStyle = 'rgba(40,40,40,0.5)'
       ctx.fillRect(aw, 0, 1, h)
-      drawSignal(ctx, inputBRef.current, aw + 1, 0, Math.ceil(w / 2) - 1, h, historyB.current, wi, BUF_LEN, p)
+      drawSignal(ctx, inputBRef.current, aw + 1, 0, Math.ceil(w / 2) - 1, h, historyB.current, wi, BUF_LEN, p, bip)
     } else {
-      drawSignal(ctx, inputARef.current, 0, 0, w, h, historyA.current, wi, BUF_LEN, p)
-      if (hasB) drawSignal(ctx, inputBRef.current, 0, 0, w, h, historyB.current, wi, BUF_LEN, p)
+      drawSignal(ctx, inputARef.current, 0, 0, w, h, historyA.current, wi, BUF_LEN, p, bip)
+      if (hasB) drawSignal(ctx, inputBRef.current, 0, 0, w, h, historyB.current, wi, BUF_LEN, p, bip)
     }
   })
 
-  return <ScopePanel canvasRef={canvasRef} overlay={overlay} onOverlayChange={setOverlay} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
+  return <ScopePanel canvasRef={canvasRef} overlay={overlay} onOverlayChange={setOverlay} bipolar={bipolar} onBipolarChange={setBipolar} enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id} aConnected={aConnected} inputARef={inputARef} bConnected={bConnected} inputBRef={inputBRef} penConnected={penConnected} penRef={penRef} outARef={outARef} outBRef={outBRef} />
 }

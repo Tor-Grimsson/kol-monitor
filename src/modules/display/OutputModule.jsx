@@ -60,14 +60,14 @@ function OutputPanel({ canvasRef, bg, enabled, onToggle, onBgChange, id, connect
   )
 }
 
-export default function OutputModule({ id = 'out1', preview }) {
+export default function OutputModule({ id = 'out1', init, preview }) {
   if (preview) {
     const dummyInputRefs = { current: { a: null, b: null, c: null, d: null } }
     return <OutputPanel canvasRef={{ current: null }} bg={0} enabled={false} onToggle={() => {}} onBgChange={() => {}} id={id} connected={{ a: false, b: false, c: false, d: false }} inputRefs={dummyInputRefs} penConnected={false} penRef={{ current: null }} bgConnected={false} bgInRef={{ current: null }} />
   }
 
   const canvasRef = useRef(null)
-  const [bg, setBg] = useState(0)
+  const [bg, setBg] = useState(init?.bg ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   enabledRef.current = enabled

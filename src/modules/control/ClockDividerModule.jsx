@@ -81,14 +81,14 @@ export default function ClockDividerModule({ id = 'cdiv1', preview }) {
       rstRef.current = inputs.rst
 
       // Rotate: shift division assignment on rising edge
-      const rotHigh = readScalar(inputs.rot) > 50
+      const rotHigh = readScalar(inputs.rot) > 0
       if (rotHigh && !prevRotRef.current) {
         rotationRef.current = (rotationRef.current + 1) % DIVS.length
       }
       prevRotRef.current = rotHigh
 
       // Reset: return to default assignment on rising edge
-      const rstHigh = readScalar(inputs.rst) > 50
+      const rstHigh = readScalar(inputs.rst) > 0
       if (rstHigh && !prevRstRef.current) {
         rotationRef.current = 0
         DIVS.forEach(d => { divCounts.current[d] = 0 })
@@ -99,7 +99,7 @@ export default function ClockDividerModule({ id = 'cdiv1', preview }) {
       DIVS.forEach(d => { divTimers.current[d] = Math.max(0, divTimers.current[d] - dt) })
 
       // Clock rising edge
-      const clkHigh = readScalar(inputs.in) > 50
+      const clkHigh = readScalar(inputs.in) > 0
       if (clkHigh && !prevClkRef.current) {
         DIVS.forEach(d => {
           divCounts.current[d]++

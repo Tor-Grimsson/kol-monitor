@@ -43,13 +43,13 @@ function MixerPanel({ la, lb, lc, ld, enabled, onToggle, onLaChange, onLbChange,
   )
 }
 
-export default function MixerModule({ id = 'mix1', preview }) {
+export default function MixerModule({ id = 'mix1', init, preview }) {
   if (preview) return <MixerPanel la={100} lb={100} lc={100} ld={100} enabled={false} onToggle={() => {}} onLaChange={() => {}} onLbChange={() => {}} onLcChange={() => {}} onLdChange={() => {}} id={id} aConnected={false} aRef={{ current: null }} bConnected={false} bRef={{ current: null }} cConnected={false} cRef={{ current: null }} dConnected={false} dRef={{ current: null }} outRef={{ current: null }} />
 
-  const [la, setLa] = useState(100)
-  const [lb, setLb] = useState(100)
-  const [lc, setLc] = useState(100)
-  const [ld, setLd] = useState(100)
+  const [la, setLa] = useState(init?.la ?? 100)
+  const [lb, setLb] = useState(init?.lb ?? 100)
+  const [lc, setLc] = useState(init?.lc ?? 100)
+  const [ld, setLd] = useState(init?.ld ?? 100)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 

@@ -82,7 +82,7 @@ function NoisePanel({
 const NOOP = () => {}
 const NULL_REF = { current: null }
 
-export default function NoiseModule({ id = 'noise1', preview }) {
+export default function NoiseModule({ id = 'noise1', init, preview }) {
   if (preview) return <NoisePanel
     rate={50} slewTime={50} randomMode={false} trackMode={false} enabled={false}
     onToggle={NOOP} onRateChange={NOOP} onSlewTimeChange={NOOP} onRandomModeChange={NOOP} onTrackModeChange={NOOP}
@@ -92,10 +92,10 @@ export default function NoiseModule({ id = 'noise1', preview }) {
     pinkRef={NULL_REF} whiteRef={NULL_REF} pulseRef={NULL_REF} holdRef={NULL_REF} slewRef={NULL_REF}
   />
 
-  const [rate, setRate] = useState(50)
-  const [slewTime, setSlewTime] = useState(50)
-  const [randomMode, setRandomMode] = useState(false)
-  const [trackMode, setTrackMode] = useState(false)
+  const [rate, setRate] = useState(init?.rate ?? 50)
+  const [slewTime, setSlewTime] = useState(init?.slewTime ?? 50)
+  const [randomMode, setRandomMode] = useState(init?.randomMode ?? false)
+  const [trackMode, setTrackMode] = useState(init?.trackMode ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
   const [clockPulse, setClockPulse] = useState(false)
   const [randomActive, setRandomActive] = useState(false)
@@ -194,7 +194,7 @@ export default function NoiseModule({ id = 'noise1', preview }) {
 
       // External clock overrides
       if (inputs.clkIn) {
-        gate = readScalar(inputs.clkIn) > 50
+        gate = readScalar(inputs.clkIn) > 0
       }
 
       gateRef.current = gate
@@ -214,7 +214,7 @@ export default function NoiseModule({ id = 'noise1', preview }) {
 
       // --- Sample & Hold ---
       // Trigger: external trig input, or normalled from internal clock rising edge
-      const trigSrc = inputs.trigIn ? readScalar(inputs.trigIn) > 50 : gate
+      const trigSrc = inputs.trigIn ? readScalar(inputs.trigIn) > 0 : gate
       const trigRise = trigSrc && !prevGateRef.current
       prevGateRef.current = trigSrc
 
