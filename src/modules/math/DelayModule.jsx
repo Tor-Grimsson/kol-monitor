@@ -6,7 +6,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, readScalar, points } from '../../hooks/signals'
+import { scalar, readScalar, readCv, points } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -92,9 +92,9 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
     inputs: {
       in: { type: 'any' },
       tCV: { type: 'scalar' },
-      mCV: { type: 'scalar' },
+      mCV: { type: 'scalar', cv: 'attenuate' },
       cCV: { type: 'scalar' },
-      fCV: { type: 'scalar' },
+      fCV: { type: 'scalar', cv: 'attenuate' },
     },
     outputs: { out: { type: 'any' } },
     process: (inputs) => {
@@ -106,10 +106,10 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
       fbInRef.current = inputs.fCV
 
       const buf = bufferRef.current
-      const t = inputs.tCV ? readScalar(inputs.tCV) : timeRef.current
-      const m = inputs.mCV ? readScalar(inputs.mCV) : mixRef.current
-      const c = inputs.cCV ? readScalar(inputs.cCV) : copiesRef.current
-      const f = inputs.fCV ? readScalar(inputs.fCV) : fbRef.current
+      const t = readCv(inputs.tCV, timeRef.current)
+      const m = readCv(inputs.mCV, mixRef.current, 'attenuate')
+      const c = readCv(inputs.cCV, copiesRef.current)
+      const f = readCv(inputs.fCV, fbRef.current, 'attenuate')
       const delayFrames = Math.max(1, Math.round(1 + (t / 100) * (BUF_SIZE - 1)))
       const wet = m / 100
       const numCopies = Math.max(1, Math.round(1 + (c / 100) * 5))

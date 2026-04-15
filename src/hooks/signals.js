@@ -44,3 +44,16 @@ export function readScalar(signal) {
 export function isSignal(v) {
   return v != null && typeof v === 'object' && 'type' in v && 'value' in v
 }
+
+// Merge a CV input with its paired knob value.
+// Returns 0-100 in knob-units so callers can apply their own scale/map after.
+// - offset (default): clamp(knob + (cv - 50)) — CV bipolar around 50, knob is base
+// - attenuate:        (knob / 100) * cv — knob scales how much CV passes
+// - replace:          cv — CV wins, knob ignored
+export function readCv(cvSignal, knobValue, mode = 'offset') {
+  if (!cvSignal) return knobValue
+  const cv = readScalar(cvSignal)
+  if (mode === 'attenuate') return (knobValue / 100) * cv
+  if (mode === 'replace') return cv
+  return clamp(knobValue + (cv - 50), 0, 100)
+}

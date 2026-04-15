@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -257,10 +257,10 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
         animPhaseRef.current += dt * (spdRef.current / 50)
       }
 
-      // Read params — CV overrides knob
-      const segRaw = inputs.segCV ? readScalar(inputs.segCV) : segRef.current
-      const rotRaw = inputs.rotCV ? readScalar(inputs.rotCV) : rotRef.current
-      const zmRaw = inputs.zmCV ? readScalar(inputs.zmCV) : zmRef.current
+      // Read params — CV merged with knob (offset default)
+      const segRaw = readCv(inputs.segCV, segRef.current)
+      const rotRaw = readCv(inputs.rotCV, rotRef.current)
+      const zmRaw = readCv(inputs.zmCV, zmRef.current)
 
       // Map 0-100 knob ranges to internal values
       const segments = Math.max(2, Math.round(2 + (segRaw / 100) * 14))

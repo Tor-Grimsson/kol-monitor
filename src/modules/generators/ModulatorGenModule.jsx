@@ -5,7 +5,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -208,9 +208,9 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      int: { type: 'scalar' }, frq: { type: 'scalar' }, sep: { type: 'scalar' },
+      int: { type: 'scalar', cv: 'attenuate' }, frq: { type: 'scalar' }, sep: { type: 'scalar' },
       scl: { type: 'scalar' }, cir: { type: 'scalar' }, res: { type: 'scalar' },
-      brt: { type: 'scalar' }, bam: { type: 'scalar' }, spd: { type: 'scalar' },
+      brt: { type: 'scalar' }, bam: { type: 'scalar', cv: 'attenuate' }, spd: { type: 'scalar' },
       str: { type: 'scalar' },
     },
     outputs: { out: { type: 'points' } },
@@ -229,17 +229,16 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
       spdCvRef.current = inputs.spd
       strInRef.current = inputs.str
 
-      // Read knob or CV
-      const int = inputs.int ? readScalar(inputs.int) : intensityRef.current
-      const frq = inputs.frq ? readScalar(inputs.frq) : frequencyRef.current
-      const sep = inputs.sep ? readScalar(inputs.sep) : separationRef.current
-      const scl = inputs.scl ? readScalar(inputs.scl) : scaleRef.current
-      const cir = inputs.cir ? Math.max(1, Math.round(1 + (readScalar(inputs.cir) / 100) * 7)) : Math.max(1, Math.round(1 + (circlesRef.current / 100) * 7))
-      const brt = inputs.brt ? 1 + (readScalar(inputs.brt) / 100) * 9 : 1 + (breathTimeRef.current / 100) * 9
-      const bam = inputs.bam ? readScalar(inputs.bam) : breathAmpRef.current
-      const spd = inputs.spd ? readScalar(inputs.spd) / 50 : speedRef.current / 50
+      const int = readCv(inputs.int, intensityRef.current, 'attenuate')
+      const frq = readCv(inputs.frq, frequencyRef.current)
+      const sep = readCv(inputs.sep, separationRef.current)
+      const scl = readCv(inputs.scl, scaleRef.current)
+      const cir = Math.max(1, Math.round(1 + (readCv(inputs.cir, circlesRef.current) / 100) * 7))
+      const brt = 1 + (readCv(inputs.brt, breathTimeRef.current) / 100) * 9
+      const bam = readCv(inputs.bam, breathAmpRef.current, 'attenuate')
+      const spd = readCv(inputs.spd, speedRef.current) / 50
       const str = inputs.str ? 0.5 + (readScalar(inputs.str) / 100) * 4.5 : 1.5
-      const numPts = Math.round(24 + ((inputs.res ? readScalar(inputs.res) : resolutionRef.current) / 100) * 156) // 24-180
+      const numPts = Math.round(24 + (readCv(inputs.res, resolutionRef.current) / 100) * 156) // 24-180
 
       // Internal breath oscillator (replaces GSAP)
       if (!freezeRef.current) {

@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, readScalar } from '../../hooks/signals'
+import { scalar, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import { ModuleRow } from '../utility/ModuleLayout'
 import JackSocket from '../utility/JackSocket'
@@ -63,7 +63,7 @@ export default function ComparatorModule({ id = 'cmp1', preview }) {
       inRef.current = inputs.in
       thrCvRef.current = inputs.thrCV
 
-      const thr = inputs.thrCV ? readScalar(inputs.thrCV) : threshRef.current
+      const thr = readCv(inputs.thrCV, threshRef.current)
       const out = scalar(readScalar(inputs.in) > thr ? 100 : 0)
       outputRef.current = out
       return { out }

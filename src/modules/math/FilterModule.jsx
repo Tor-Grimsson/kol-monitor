@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, color, points, readScalar } from '../../hooks/signals'
+import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
@@ -102,8 +102,8 @@ export default function FilterModule({ id = 'filt1', preview }) {
       const input = inputs.in
       if (!input) { outRef.current = null; return { out: null } }
 
-      const cut = (inputs.cutCV ? readScalar(inputs.cutCV) : cutoffRef.current) / 100
-      const res = (inputs.resCV ? readScalar(inputs.resCV) : resonanceRef.current) / 100
+      const cut = readCv(inputs.cutCV, cutoffRef.current) / 100
+      const res = readCv(inputs.resCV, resonanceRef.current) / 100
       const f = Math.max(0.001, cut * 0.5) // frequency coefficient
       const q = 1 - res * 0.95 // damping (lower = more resonance)
       const m = modeRef.current

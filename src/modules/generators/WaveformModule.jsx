@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -101,7 +101,7 @@ export default function WaveformModule({ id = 'wave1', preview }) {
     stateRef: saveStateRef,
     inputs: {
       freq: { type: 'scalar' },
-      amp: { type: 'scalar' },
+      amp: { type: 'scalar', cv: 'attenuate' },
       spd: { type: 'scalar' },
       clk: { type: 'scalar' },
     },
@@ -118,16 +118,9 @@ export default function WaveformModule({ id = 'wave1', preview }) {
       if (clkHigh && !prevClkRef.current) phaseRef.current = 0
       prevClkRef.current = clkHigh
 
-      // CV modulates knob value: knob + (cv / 100) * knob range
-      const f = inputs.freq
-        ? 0.5 + (readScalar(inputs.freq) / 100) * 9.5
-        : 0.5 + (freqRef.current / 100) * 9.5
-      const a = inputs.amp
-        ? readScalar(inputs.amp) / 100
-        : ampRef.current / 100
-      const rate = inputs.spd
-        ? readScalar(inputs.spd) / 50
-        : speedRef.current / 50
+      const f = 0.5 + (readCv(inputs.freq, freqRef.current) / 100) * 9.5
+      const a = readCv(inputs.amp, ampRef.current, 'attenuate') / 100
+      const rate = readCv(inputs.spd, speedRef.current) / 50
 
       phaseRef.current += dt * rate
 

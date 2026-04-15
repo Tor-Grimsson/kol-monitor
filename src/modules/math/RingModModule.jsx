@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, readScalar } from '../../hooks/signals'
+import { scalar, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
@@ -62,7 +62,7 @@ export default function RingModModule({ id = 'ring1', preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { a: { type: 'scalar' }, b: { type: 'scalar' }, depthCV: { type: 'scalar' } },
+    inputs: { a: { type: 'scalar' }, b: { type: 'scalar' }, depthCV: { type: 'scalar', cv: 'attenuate' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
@@ -72,7 +72,7 @@ export default function RingModModule({ id = 'ring1', preview }) {
 
       const aVal = readScalar(inputs.a)
       const bVal = readScalar(inputs.b)
-      const d = (inputs.depthCV ? readScalar(inputs.depthCV) : depthRef.current) / 100
+      const d = readCv(inputs.depthCV, depthRef.current, 'attenuate') / 100
       const wet = aVal * bVal / 100
       const out = scalar(aVal * (1 - d) + wet * d)
       outRef.current = out

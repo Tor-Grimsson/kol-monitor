@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, color, points, readScalar } from '../../hooks/signals'
+import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import ModuleLayout, { ModuleControls, ModuleRow, ModuleJacks } from '../utility/ModuleLayout'
 import Divider from '../../components/atoms/Divider'
@@ -110,8 +110,8 @@ export default function ReverbModule({ id = 'verb1', preview }) {
       const buf = bufferRef.current
       const len = buf.length
       const input = inputs.in
-      const sizeScale = (inputs.sizeCV ? readScalar(inputs.sizeCV) : sizeRef.current) / 100
-      const decayAmt = (inputs.decayCV ? readScalar(inputs.decayCV) : decayRef.current) / 100
+      const sizeScale = readCv(inputs.sizeCV, sizeRef.current) / 100
+      const decayAmt = readCv(inputs.decayCV, decayRef.current) / 100
       const wet = mixRef.current / 100
 
       // Write current signal to buffer (unless frozen)

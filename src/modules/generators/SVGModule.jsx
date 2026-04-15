@@ -4,7 +4,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
@@ -463,7 +463,7 @@ export default function SVGModule({ id = 'svg1', init, preview }) {
       }
 
       const parsed = parsedRef.current
-      const s = (inputs.scl ? readScalar(inputs.scl) : scaleRef.current) / 50
+      const s = readCv(inputs.scl, scaleRef.current) / 50
 
       // Scale vertices around center (0.5, 0.5) — output as {x,y} objects for drawSignal
       const scaled = parsed.vertices.map(([x, y]) => ({

@@ -5,7 +5,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -310,12 +310,12 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
     stateRef: saveStateRef,
     inputs: {
       rad: { type: 'scalar' },
-      amp: { type: 'scalar' },
+      amp: { type: 'scalar', cv: 'attenuate' },
       frq: { type: 'scalar' },
       res: { type: 'scalar' },
       scl: { type: 'scalar' },
       rot: { type: 'scalar' },
-      lfoAmt: { type: 'scalar' },
+      lfoAmt: { type: 'scalar', cv: 'attenuate' },
       lfoFrq: { type: 'scalar' },
       str: { type: 'scalar' },
     },
@@ -334,16 +334,15 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
       lfoFrqInRef.current = inputs.lfoFrq
       strInRef.current = inputs.str
 
-      // Read knob or CV — knob is 0-100, CV overrides
-      const rad = inputs.rad ? readScalar(inputs.rad) : radiusRef.current
-      const amp = inputs.amp ? readScalar(inputs.amp) : amplitudeRef.current
-      const frqKnob = inputs.frq ? readScalar(inputs.frq) : frequencyRef.current
-      const resKnob = inputs.res ? readScalar(inputs.res) : resolutionRef.current
-      const scl = inputs.scl ? readScalar(inputs.scl) : scaleRef.current
-      const rot = inputs.rot ? readScalar(inputs.rot) : rotateRef.current
-      const lfoAmt = inputs.lfoAmt ? readScalar(inputs.lfoAmt) / 10 : lfoAmountRef.current / 10
-      const lfoFrq = inputs.lfoFrq ? readScalar(inputs.lfoFrq) / 8.3 : lfoFrequencyRef.current / 8.3
-      const str = inputs.str ? readScalar(inputs.str) : strokeWidthRef.current
+      const rad = readCv(inputs.rad, radiusRef.current)
+      const amp = readCv(inputs.amp, amplitudeRef.current, 'attenuate')
+      const frqKnob = readCv(inputs.frq, frequencyRef.current)
+      const resKnob = readCv(inputs.res, resolutionRef.current)
+      const scl = readCv(inputs.scl, scaleRef.current)
+      const rot = readCv(inputs.rot, rotateRef.current)
+      const lfoAmt = readCv(inputs.lfoAmt, lfoAmountRef.current, 'attenuate') / 10
+      const lfoFrq = readCv(inputs.lfoFrq, lfoFrequencyRef.current) / 8.3
+      const str = readCv(inputs.str, strokeWidthRef.current)
 
       // Map 0-100 knobs to actual ranges
       const freq = Math.max(1, Math.round(1 + (frqKnob / 100) * 11))

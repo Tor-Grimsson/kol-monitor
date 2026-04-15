@@ -5,7 +5,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -185,9 +185,9 @@ export default function LineGenModule({ id = 'line1', init, preview }) {
       densInRef.current = inputs.dens
       spdInRef.current = inputs.spd
 
-      const f = inputs.freq ? readScalar(inputs.freq) : freqRef.current
-      const d = inputs.dens ? readScalar(inputs.dens) : densityRef.current
-      const s = inputs.spd ? readScalar(inputs.spd) / 50 : speedRef.current / 50
+      const f = readCv(inputs.freq, freqRef.current)
+      const d = readCv(inputs.dens, densityRef.current)
+      const s = readCv(inputs.spd, speedRef.current) / 50
 
       const { pts, edges: edgeList } = generate(shapeRef.current, f, d, t * s, t * s)
       const out = points(pts, edgeList)

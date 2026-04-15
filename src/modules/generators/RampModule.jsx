@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, readScalar } from '../../hooks/signals'
+import { scalar, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import { ModuleRow } from '../utility/ModuleLayout'
 import JackSocket from '../utility/JackSocket'
@@ -82,7 +82,7 @@ export default function RampModule({ id = 'ramp1', preview }) {
       prevSyncRef.current = syncHigh
 
       // Hz: map knob 0-100 to 0.1-10
-      const rateVal = inputs.rateCV ? readScalar(inputs.rateCV) : rateRef.current
+      const rateVal = readCv(inputs.rateCV, rateRef.current)
       const hz = 0.1 + (rateVal / 100) * 9.9
       phaseRef.current = (phaseRef.current + dt * hz) % 1
 

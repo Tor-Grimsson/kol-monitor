@@ -5,7 +5,7 @@
 import React, { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, color, points, readScalar } from '../../hooks/signals'
+import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -533,7 +533,7 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { p1: { type: 'scalar' }, p2: { type: 'scalar' }, p3: { type: 'scalar' }, p4: { type: 'scalar' }, spd: { type: 'scalar' }, clk: { type: 'scalar' }, amp: { type: 'scalar' }, dty: { type: 'scalar' }, ofs: { type: 'scalar' } },
+    inputs: { p1: { type: 'scalar' }, p2: { type: 'scalar' }, p3: { type: 'scalar' }, p4: { type: 'scalar' }, spd: { type: 'scalar' }, clk: { type: 'scalar' }, amp: { type: 'scalar', cv: 'attenuate' }, dty: { type: 'scalar' }, ofs: { type: 'scalar' } },
     outputs: { out: { type: 'points' }, color: { type: 'color' }, scalar: { type: 'scalar' }, lfo: { type: 'scalar' } },
     process: (inputs, dt, t) => {
       if (!enabledRef.current) { pointsOutRef.current = null; colorOutRef.current = null; scalarOutRef.current = null; return { out: null, color: null, scalar: null } }
@@ -549,13 +549,13 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
       if (clkHigh && !prevClkRef.current) lfoPhaseRef.current = 0
       prevClkRef.current = clkHigh
 
-      const v1 = inputs.p1 ? readScalar(inputs.p1) : p1Ref.current
-      let v2 = inputs.p2 ? readScalar(inputs.p2) : p2Ref.current
-      const v3 = inputs.p3 ? readScalar(inputs.p3) : p3Ref.current
-      const v4 = inputs.p4 ? readScalar(inputs.p4) : p4Ref.current
+      const v1 = readCv(inputs.p1, p1Ref.current)
+      let v2 = readCv(inputs.p2, p2Ref.current)
+      const v3 = readCv(inputs.p3, p3Ref.current)
+      const v4 = readCv(inputs.p4, p4Ref.current)
 
       // SPD base value
-      const spdKnob = inputs.spd ? readScalar(inputs.spd) : speedRef.current
+      const spdKnob = readCv(inputs.spd, speedRef.current)
 
       // Internal LFO → modulates v2 (SPD knob)
       if (lfoOnRef.current) {
@@ -575,9 +575,9 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
       ampCvRef.current = inputs.amp
       dtyCvRef.current = inputs.dty
       ofsCvRef.current = inputs.ofs
-      const ampVal = inputs.amp ? readScalar(inputs.amp) : ampRef.current
-      const dtyVal = inputs.dty ? readScalar(inputs.dty) : dutyRef.current
-      const ofsVal = inputs.ofs ? readScalar(inputs.ofs) : offsetRef.current
+      const ampVal = readCv(inputs.amp, ampRef.current, 'attenuate')
+      const dtyVal = readCv(inputs.dty, dutyRef.current)
+      const ofsVal = readCv(inputs.ofs, offsetRef.current)
       const geom = generate(geoModeRef.current, geoSubRef.current, v1, v2, v3, v4, animTimeRef.current, animateRef.current, spdVal, oscillateRef.current, ampVal, dtyVal, ofsVal)
       const pOut = points(geom.pts, geom.edges)
       pOut.aspectFill = true

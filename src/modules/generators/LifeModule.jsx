@@ -6,7 +6,7 @@ import { useState, useRef } from 'react'
 import { useCanvasLoop } from '../../hooks/useCanvasLoop'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -338,10 +338,10 @@ export default function LifeModule({ id = 'life1', init, preview }) {
       rstCvRef.current = inputs.rst
       clrCvRef.current = inputs.clr
 
-      const vDensity = (inputs.dns ? readScalar(inputs.dns) : densityRef.current) / 100
-      const vSize = 8 + Math.round(((inputs.sz ? readScalar(inputs.sz) : sizeRef.current) / 100) * 248)
-      const vSpeed = (inputs.spd ? readScalar(inputs.spd) : speedRef.current) / 50
-      const vRule = getRule(inputs.rule ? readScalar(inputs.rule) : ruleRef.current)
+      const vDensity = readCv(inputs.dns, densityRef.current) / 100
+      const vSize = 8 + Math.round((readCv(inputs.sz, sizeRef.current) / 100) * 248)
+      const vSpeed = readCv(inputs.spd, speedRef.current) / 50
+      const vRule = getRule(readCv(inputs.rule, ruleRef.current))
 
       // Color input
       if (inputs.clr?.type === 'color') {

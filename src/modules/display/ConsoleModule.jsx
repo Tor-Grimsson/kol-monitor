@@ -5,7 +5,7 @@ import { useRef, useState } from 'react'
 import { useCanvasLoop } from '../../hooks/useCanvasLoop'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { readScalar } from '../../hooks/signals'
+import { readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -293,7 +293,8 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
       return
     }
 
-    const bgVal = bgInRef.current?.type === 'scalar' ? bgInRef.current.value : bgRef.current
+    const bgCv = bgInRef.current?.type === 'scalar' ? bgInRef.current : null
+    const bgVal = readCv(bgCv, bgRef.current)
     const g = Math.round((bgVal / 100) * 255)
     ctx.fillStyle = `rgb(${g},${g},${g})`
     ctx.fillRect(0, 0, w, h)

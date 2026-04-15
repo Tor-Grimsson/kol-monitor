@@ -3,8 +3,19 @@
 
 import { useRef, useEffect, useCallback } from 'react'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
+import { useModuleRegistry } from '../../hooks/useModuleRegistry.jsx'
 
 const DEFAULT_COLOR = '#e74c3c'
+
+// Read CSS var once, lazily — keeps --kol-cv-attenuate as the single source of truth
+let _cvAttenuateHex = null
+function getCvAttenuateColor() {
+  if (_cvAttenuateHex) return _cvAttenuateHex
+  if (typeof window === 'undefined') return '#497DA2'
+  const v = getComputedStyle(document.documentElement).getPropertyValue('--kol-cv-attenuate').trim()
+  _cvAttenuateHex = v || '#497DA2'
+  return _cvAttenuateHex
+}
 
 // Shared jack animation loop — single rAF, throttled to ~15fps, dirty-checked
 const jackCallbacks = new Set()
@@ -37,6 +48,7 @@ export default function JackSocket({
   bg,
 }) {
   const routing = usePatchRouting()
+  const registry = useModuleRegistry()
   const ref = useRef(null)
   const ringRef = useRef(null)
   const jackId = `${moduleId}:${type === 'out' ? 'out' : 'in'}:${port}`
@@ -46,7 +58,11 @@ export default function JackSocket({
     && routing?.pendingOutput?.moduleId === moduleId
   const hasPending = !!routing?.pendingOutput
   const isConnected = active || (type === 'out' && routing?.connections?.some(c => c.fromModuleId === moduleId && c.fromPort === port))
-  const catColor = DEFAULT_COLOR
+
+  const cvMode = type === 'in'
+    ? registry?.modulesRef?.current?.get(moduleId)?.inputs?.[port]?.cv
+    : null
+  const catColor = cvMode === 'attenuate' ? getCvAttenuateColor() : DEFAULT_COLOR
 
   // Register jack element for hit testing
   useEffect(() => {

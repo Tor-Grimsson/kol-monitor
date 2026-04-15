@@ -5,7 +5,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
@@ -129,12 +129,12 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
         return { out: null }
       }
 
-      const tx = ((inputs.x ? readScalar(inputs.x) : posXRef.current) - 50) / 50
-      const ty = ((inputs.y ? readScalar(inputs.y) : posYRef.current) - 50) / 50
-      const s = (inputs.s ? readScalar(inputs.s) : scaleRef.current) / 50
-      const ax = (inputs.rx ? readScalar(inputs.rx) : rotXRef.current) / 100 * Math.PI * 2
-      const ay = (inputs.ry ? readScalar(inputs.ry) : rotYRef.current) / 100 * Math.PI * 2
-      const az = (inputs.rz ? readScalar(inputs.rz) : rotZRef.current) / 100 * Math.PI * 2
+      const tx = (readCv(inputs.x, posXRef.current) - 50) / 50
+      const ty = (readCv(inputs.y, posYRef.current) - 50) / 50
+      const s = readCv(inputs.s, scaleRef.current) / 50
+      const ax = readCv(inputs.rx, rotXRef.current) / 100 * Math.PI * 2
+      const ay = readCv(inputs.ry, rotYRef.current) / 100 * Math.PI * 2
+      const az = readCv(inputs.rz, rotZRef.current) / 100 * Math.PI * 2
 
       const cosX = Math.cos(ax), sinX = Math.sin(ax)
       const cosY = Math.cos(ay), sinY = Math.sin(ay)

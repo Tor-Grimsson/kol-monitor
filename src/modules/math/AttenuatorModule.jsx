@@ -23,7 +23,7 @@ function AttenPanel({ levels, modes, enabled, onToggle, onLevelChange, onModeCha
           <div key={ch} style={{ display: 'contents' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
               <div style={{ position: 'relative', height: 30, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'visible' }}>
-                <FlipToggle value={modes[i]} onChange={(v) => onModeChange(i, v)} labelA="uni" labelB="-/+" />
+                <FlipToggle value={!modes[i]} onChange={(v) => onModeChange(i, !v)} labelA="uni" labelB="-/+" />
               </div>
               <Knob value={levels[i]} onChange={(v) => onLevelChange(i, v)} label={ch} />
             </div>
@@ -59,16 +59,16 @@ const NULL_REFS = { a: NULL_REF, b: NULL_REF, c: NULL_REF, d: NULL_REF }
 const NO_CONNS = { a: false, b: false, c: false, d: false }
 
 export default function AttenuatorModule({ id = 'atten1', preview }) {
-  if (preview) return <AttenPanel levels={[100,100,100,100]} modes={[false,false,false,false]} enabled={false} onToggle={NOOP} onLevelChange={NOOP} onModeChange={NOOP} id={id} inConns={NO_CONNS} inRefs={NULL_REFS} outRefs={NULL_REFS} />
+  if (preview) return <AttenPanel levels={[0,0,0,0]} modes={[false,false,false,false]} enabled={false} onToggle={NOOP} onLevelChange={NOOP} onModeChange={NOOP} id={id} inConns={NO_CONNS} inRefs={NULL_REFS} outRefs={NULL_REFS} />
 
-  const [levels, setLevels] = useState([100, 100, 100, 100])
+  const [levels, setLevels] = useState([0, 0, 0, 0])
   const [modes, setModes] = useState([false, false, false, false]) // false = uni, true = bipolar
   const [enabled, setEnabled] = useModuleEnabled()
   const routing = usePatchRouting()
   const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
-  const levelsRef = useRef([100, 100, 100, 100])
+  const levelsRef = useRef([0, 0, 0, 0])
   const modesRef = useRef([false, false, false, false])
   const inRefsObj = { a: useRef(null), b: useRef(null), c: useRef(null), d: useRef(null) }
   const outRefsObj = { a: useRef(null), b: useRef(null), c: useRef(null), d: useRef(null) }
@@ -113,7 +113,8 @@ export default function AttenuatorModule({ id = 'atten1', preview }) {
       for (let i = 0; i < 4; i++) {
         const ch = chs[i]
         inRefsObj[ch].current = inputs[ch]
-        const input = readScalar(inputs[ch])
+        // Normalled to max (100) when unpatched — lets knob act as constant CV source
+        const input = inputs[ch] ? readScalar(inputs[ch]) : 100
         const lvl = levelsRef.current[i] / 100
         const bipolar = modesRef.current[i]
         const scaled = bipolar ? input * (lvl * 2 - 1) : input * lvl

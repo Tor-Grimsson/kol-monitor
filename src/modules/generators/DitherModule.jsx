@@ -5,7 +5,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, points, readScalar } from '../../hooks/signals'
+import { scalar, points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -843,7 +843,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     inputs: {
       in: { type: 'scalar' }, clr: { type: 'color' }, clk: { type: 'scalar' }, spd: { type: 'scalar' },
       size: { type: 'scalar' }, gap: { type: 'scalar' }, scl: { type: 'scalar' },
-      ctr: { type: 'scalar' }, ang: { type: 'scalar' }, int: { type: 'scalar' },
+      ctr: { type: 'scalar' }, ang: { type: 'scalar' }, int: { type: 'scalar', cv: 'attenuate' },
     },
     outputs: { out: { type: 'points' }, dns: { type: 'scalar' }, color: { type: 'color' } },
     process: (inputs, dt, t) => {
@@ -862,13 +862,12 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
       inSigRef.current = inputs.in
       clrSigRef.current = inputs.clr
 
-      // Read values (CV overrides knob)
-      const vSize = inputs.size ? readScalar(inputs.size) : cellCountRef.current
-      const vGap = inputs.gap ? readScalar(inputs.gap) : gapValRef.current
-      const vScale = inputs.scl ? readScalar(inputs.scl) : scaleValRef.current
-      const vContrast = inputs.ctr ? readScalar(inputs.ctr) : contrastValRef.current
-      const vAngle = inputs.ang ? readScalar(inputs.ang) : angleValRef.current
-      const vIntensity = inputs.int ? readScalar(inputs.int) : intensityValRef.current
+      const vSize = readCv(inputs.size, cellCountRef.current)
+      const vGap = readCv(inputs.gap, gapValRef.current)
+      const vScale = readCv(inputs.scl, scaleValRef.current)
+      const vContrast = readCv(inputs.ctr, contrastValRef.current)
+      const vAngle = readCv(inputs.ang, angleValRef.current)
+      const vIntensity = readCv(inputs.int, intensityValRef.current, 'attenuate')
       // Clock: reset animation phase on rising edge
       spdCvRef.current = inputs.spd
       clkCvRef.current = inputs.clk
@@ -877,7 +876,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
       prevClkRef.current = clkHigh
 
       // Animation time with speed control
-      const vSpeed = inputs.spd ? readScalar(inputs.spd) : speedRef.current
+      const vSpeed = readCv(inputs.spd, speedRef.current)
       if (animateRef.current) animTimeRef.current += dt * (vSpeed / 50)
 
       const geom = generateDither(

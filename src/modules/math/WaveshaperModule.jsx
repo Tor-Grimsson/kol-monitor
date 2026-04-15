@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, color, points, readScalar } from '../../hooks/signals'
+import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../controls/LabeledJack'
@@ -124,7 +124,7 @@ export default function WaveshaperModule({ id = 'wshp1', preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { in: { type: 'any' }, amtCV: { type: 'scalar' }, symCV: { type: 'scalar' }, smCV: { type: 'scalar' } },
+    inputs: { in: { type: 'any' }, amtCV: { type: 'scalar', cv: 'attenuate' }, symCV: { type: 'scalar' }, smCV: { type: 'scalar', cv: 'attenuate' } },
     outputs: { out: { type: 'any' } },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
@@ -136,9 +136,9 @@ export default function WaveshaperModule({ id = 'wshp1', preview }) {
       const input = inputs.in
       if (!input) { outRef.current = null; return { out: null } }
 
-      const amt = (inputs.amtCV ? readScalar(inputs.amtCV) : amountRef.current) / 100
-      const sym = (inputs.symCV ? readScalar(inputs.symCV) : symmetryRef.current) / 100
-      const smo = (inputs.smCV ? readScalar(inputs.smCV) : smoothRef.current) / 100
+      const amt = readCv(inputs.amtCV, amountRef.current, 'attenuate') / 100
+      const sym = readCv(inputs.symCV, symmetryRef.current) / 100
+      const smo = readCv(inputs.smCV, smoothRef.current, 'attenuate') / 100
       const shaper = makeShaper(modeRef.current, sym)
       const fold = smoothFoldRef.current
 

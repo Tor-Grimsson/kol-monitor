@@ -194,7 +194,9 @@ export default function SequencerModule({ id = 'seq1', preview }) {
       lenCvRef.current = inputs.lenCV
       gateTimerRef.current = Math.max(0, gateTimerRef.current - dt)
 
-      const len = inputs.lenCV ? Math.max(1, Math.round(1 + (readScalar(inputs.lenCV) / 100) * 31)) : lengthRef.current
+      const len = inputs.lenCV
+        ? Math.max(1, Math.min(32, Math.round(lengthRef.current + (readScalar(inputs.lenCV) - 50) / 100 * 31)))
+        : lengthRef.current
       const clockHigh = readScalar(inputs.clock) > 50
       const resetHigh = readScalar(inputs.reset) > 50
 

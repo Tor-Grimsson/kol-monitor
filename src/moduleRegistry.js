@@ -109,7 +109,7 @@ export const MODULE_DEFS = {
   ] },
   comparator:{ component: ComparatorModule,   hp: 6,  u: 1, category: 'control',    label: 'Comparator',  description: 'Compares an input signal against an adjustable threshold. Outputs a gate of 100 when the input exceeds the threshold, 0 otherwise. Threshold is CV-controllable for dynamic comparison. Converts continuous signals into binary gates for logic and triggering.', controls: [
     { type: 'knob', name: 'Threshold', range: '0–100', description: 'Comparison threshold' },
-    { type: 'input', name: 'thrCV', signal: 'scalar', description: 'CV overrides threshold knob' },
+    { type: 'input', name: 'thrCV', signal: 'scalar', description: 'CV for threshold (offset around knob)' },
     { type: 'input', name: 'in', signal: 'scalar', description: 'Signal to compare' },
     { type: 'output', name: 'out', signal: 'scalar', description: 'Gate: 100 when input > threshold' },
   ] },

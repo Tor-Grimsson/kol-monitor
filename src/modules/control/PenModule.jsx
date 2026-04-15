@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { pen, readScalar } from '../../hooks/signals'
+import { pen, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -122,10 +122,10 @@ export default function PenModule({ id = 'pen1', init, preview }) {
       opInRef.current = inputs.op
       colorInRef.current = inputs.clr
 
-      const t = inputs.tk ? readScalar(inputs.tk) : thkRef.current
-      const d = inputs.ds ? readScalar(inputs.ds) : dshRef.current
-      const g = inputs.gp ? readScalar(inputs.gp) : gapRef.current
-      const o = inputs.op ? readScalar(inputs.op) : opRef.current
+      const t = readCv(inputs.tk, thkRef.current)
+      const d = readCv(inputs.ds, dshRef.current)
+      const g = readCv(inputs.gp, gapRef.current)
+      const o = readCv(inputs.op, opRef.current)
 
       const out = pen({
         thickness: 0.5 + (t / 100) * 9.5,

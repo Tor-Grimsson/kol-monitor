@@ -5,7 +5,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -319,10 +319,10 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
       p3CvRef.current = inputs.p3
       p4CvRef.current = inputs.p4
 
-      const v1 = inputs.p1 ? readScalar(inputs.p1) : p1Ref.current
-      const v2 = inputs.p2 ? readScalar(inputs.p2) : p2Ref.current
-      const v3 = inputs.p3 ? readScalar(inputs.p3) : p3Ref.current
-      const v4 = inputs.p4 ? readScalar(inputs.p4) : p4Ref.current
+      const v1 = readCv(inputs.p1, p1Ref.current)
+      const v2 = readCv(inputs.p2, p2Ref.current)
+      const v3 = readCv(inputs.p3, p3Ref.current)
+      const v4 = readCv(inputs.p4, p4Ref.current)
 
       hueCvRef.current = inputs.hue
       spdCvRef.current = inputs.spd
@@ -331,11 +331,11 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
       if (clkHigh && !prevClkRef.current) animTimeRef.current = 0
       prevClkRef.current = clkHigh
 
-      const vSpeed = inputs.spd ? readScalar(inputs.spd) : speedRef.current
+      const vSpeed = readCv(inputs.spd, speedRef.current)
       if (animateRef.current) animTimeRef.current += dt * (vSpeed / 50)
       const at = animTimeRef.current
 
-      const vHue = inputs.hue ? readScalar(inputs.hue) : hueRef.current
+      const vHue = readCv(inputs.hue, hueRef.current)
       const outColor = hslToRgb((vHue / 100) * 360, 70, 60)
 
       const makeOut = (mode, sub) => {

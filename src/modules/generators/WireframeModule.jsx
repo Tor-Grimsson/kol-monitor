@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { points, readScalar } from '../../hooks/signals'
+import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -260,20 +260,20 @@ export default function WireframeModule({ id = 'wire1', preview }) {
       if (clkHigh && !prevClkRef.current) rotRef.current = { x: 0, y: 0, z: 0 }
       prevClkRef.current = clkHigh
 
-      const rate = (inputs.spd ? readScalar(inputs.spd) : speedRef.current) / 50
+      const rate = readCv(inputs.spd, speedRef.current) / 50
       if (animateRef.current) {
         rotRef.current.x += dt * rate * 0.7
         rotRef.current.y += dt * rate
         rotRef.current.z += dt * rate * 0.3
       }
 
-      const rx = ((inputs.rx ? readScalar(inputs.rx) : rxValRef.current) - 50) / 50 * Math.PI + rotRef.current.x
-      const ry = ((inputs.ry ? readScalar(inputs.ry) : ryValRef.current) - 50) / 50 * Math.PI + rotRef.current.y
-      const rz = ((inputs.rz ? readScalar(inputs.rz) : rzValRef.current) - 50) / 50 * Math.PI + rotRef.current.z
+      const rx = (readCv(inputs.rx, rxValRef.current) - 50) / 50 * Math.PI + rotRef.current.x
+      const ry = (readCv(inputs.ry, ryValRef.current) - 50) / 50 * Math.PI + rotRef.current.y
+      const rz = (readCv(inputs.rz, rzValRef.current) - 50) / 50 * Math.PI + rotRef.current.z
 
-      const s = (inputs.scl ? readScalar(inputs.scl) : scaleRef.current) / 50
-      const res = Math.round(8 + ((inputs.res ? readScalar(inputs.res) : resRef.current) / 100) * 56)
-      const f = 1 + ((inputs.fov ? readScalar(inputs.fov) : fovRef.current) / 100) * 5
+      const s = readCv(inputs.scl, scaleRef.current) / 50
+      const res = Math.round(8 + (readCv(inputs.res, resRef.current) / 100) * 56)
+      const f = 1 + (readCv(inputs.fov, fovRef.current) / 100) * 5
 
       const geomKey = shapeRef.current + ':' + res
       if (geomKey !== geomKeyRef.current) {
