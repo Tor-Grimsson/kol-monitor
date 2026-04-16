@@ -45,6 +45,7 @@ function RecorderPanel({
   inputRefs, penConnected, penRef, bgConnected, bgInRef,
   resolution, setResolution, fps, setFps, aspect, setAspect,
   mode, setMode, duration, setDuration,
+  trails, setTrails,
   fileName, setFileName,
   status, progress, blobUrl, fileSize,
   onRecord, onStop, onClear,
@@ -84,6 +85,7 @@ function RecorderPanel({
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <Knob value={duration} onChange={setDuration} min={1} max={60} label="dur" size="sm" variant="row" />
+            <Knob value={trails} onChange={setTrails} label="trails" size="sm" variant="row" />
             <FlipToggle
               value={mode === 'offline'}
               onChange={(v) => setMode(v ? 'offline' : 'rt')}
@@ -184,6 +186,7 @@ export default function RecorderModule({ id = 'rec1', init, preview }) {
       resolution="1080" setResolution={() => {}} fps="60" setFps={() => {}}
       aspect="16:9" setAspect={() => {}} mode="rt" setMode={() => {}}
       duration={10} setDuration={() => {}}
+      trails={0} setTrails={() => {}}
       fileName="kol" setFileName={() => {}}
       status="idle" progress={0} blobUrl={null} fileSize={null}
       onRecord={() => {}} onStop={() => {}} onClear={() => {}}
@@ -203,6 +206,7 @@ export default function RecorderModule({ id = 'rec1', init, preview }) {
   const [aspect, setAspectState] = useState(init?.aspect ?? '16:9')
   const [mode, setModeState] = useState(init?.mode ?? 'rt')
   const [duration, setDurationState] = useState(init?.duration ?? 10)
+  const [trails, setTrails] = useState(init?.trails ?? 0)
   const [fileName, setFileName] = useState(init?.fileName ?? 'kol')
 
   const resolutionRef = useRef(resolution)
@@ -210,6 +214,8 @@ export default function RecorderModule({ id = 'rec1', init, preview }) {
   const aspectRef = useRef(aspect)
   const modeRef = useRef(mode)
   const durationRef = useRef(duration)
+  const trailsRef = useRef(0)
+  trailsRef.current = trails
 
   const setResolution = (v) => { resolutionRef.current = v; setResolutionState(v) }
   const setFps = (v) => { fpsRef.current = v; setFpsState(v) }
@@ -250,7 +256,7 @@ export default function RecorderModule({ id = 'rec1', init, preview }) {
   const bgConnected = cp.has('bg')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { resolution, fps, aspect, mode, duration, fileName }
+  saveStateRef.current = { resolution, fps, aspect, mode, duration, trails, fileName }
 
   // Module registration
   useModule({
@@ -290,8 +296,9 @@ export default function RecorderModule({ id = 'rec1', init, preview }) {
   function drawFrame(ctx, canvasW, canvasH, hiRes) {
     const bgVal = bgInRef.current?.type === 'scalar' ? bgInRef.current.value : bgKnobRef.current
     const g = Math.round((bgVal / 100) * 255)
+    const a = 1 - Math.pow(trailsRef.current / 100, 0.3)
 
-    ctx.fillStyle = `rgb(${g},${g},${g})`
+    ctx.fillStyle = `rgba(${g},${g},${g},${a})`
     ctx.fillRect(0, 0, canvasW, canvasH)
 
     // Aspect-fill: scale square content to cover the canvas, center and clip
@@ -459,6 +466,7 @@ export default function RecorderModule({ id = 'rec1', init, preview }) {
     aspect={aspect} setAspect={setAspect}
     mode={mode} setMode={setMode}
     duration={duration} setDuration={setDuration}
+    trails={trails} setTrails={setTrails}
     fileName={fileName} setFileName={setFileName}
     status={status} progress={progress}
     blobUrl={blobUrl} fileSize={fileSize}

@@ -15,7 +15,7 @@ import { drawSignal } from './drawSignal'
 const BUF_LEN = 128
 const CHANNELS = ['a', 'b', 'c', 'd']
 
-function OutputPanel({ canvasRef, bg, enabled, onToggle, onBgChange, id, connected, inputRefs, penConnected, penRef, bgConnected, bgInRef }) {
+function OutputPanel({ canvasRef, bg, trails, enabled, onToggle, onBgChange, onTrailsChange, id, connected, inputRefs, penConnected, penRef, bgConnected, bgInRef }) {
   return (
     <Module label="Out" enabled={enabled} onToggle={onToggle}>
       <div style={{
@@ -40,6 +40,7 @@ function OutputPanel({ canvasRef, bg, enabled, onToggle, onBgChange, id, connect
         <div style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 6 }}>
           <LabeledJack type="in" port="bg" moduleId={id} active={bgConnected} signalRef={bgInRef} label="cv" size="sm" />
           <Knob value={bg} onChange={onBgChange} label="bg" />
+          <Knob value={trails} onChange={onTrailsChange} label="trails" />
           <Divider variant="vertical" className="py-1.5" />
           {CHANNELS.map(ch => (
             <LabeledJack
@@ -63,11 +64,12 @@ function OutputPanel({ canvasRef, bg, enabled, onToggle, onBgChange, id, connect
 export default function OutputModule({ id = 'out1', init, preview }) {
   if (preview) {
     const dummyInputRefs = { current: { a: null, b: null, c: null, d: null } }
-    return <OutputPanel canvasRef={{ current: null }} bg={0} enabled={false} onToggle={() => {}} onBgChange={() => {}} id={id} connected={{ a: false, b: false, c: false, d: false }} inputRefs={dummyInputRefs} penConnected={false} penRef={{ current: null }} bgConnected={false} bgInRef={{ current: null }} />
+    return <OutputPanel canvasRef={{ current: null }} bg={0} trails={0} enabled={false} onToggle={() => {}} onBgChange={() => {}} onTrailsChange={() => {}} id={id} connected={{ a: false, b: false, c: false, d: false }} inputRefs={dummyInputRefs} penConnected={false} penRef={{ current: null }} bgConnected={false} bgInRef={{ current: null }} />
   }
 
   const canvasRef = useRef(null)
   const [bg, setBg] = useState(init?.bg ?? 0)
+  const [trails, setTrails] = useState(init?.trails ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)
   enabledRef.current = enabled
@@ -75,6 +77,8 @@ export default function OutputModule({ id = 'out1', init, preview }) {
 
   const bgRef = useRef(0)
   bgRef.current = bg
+  const trailsRef = useRef(0)
+  trailsRef.current = trails
 
   const inputRefs = useRef({ a: null, b: null, c: null, d: null })
   const penRef = useRef(null)
@@ -96,7 +100,7 @@ export default function OutputModule({ id = 'out1', init, preview }) {
   const bgConnected = cp.has('bg')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { bg }
+  saveStateRef.current = { bg, trails }
 
   useModule({
     id,
@@ -147,7 +151,8 @@ export default function OutputModule({ id = 'out1', init, preview }) {
 
     const bgVal = bgInRef.current?.type === 'scalar' ? bgInRef.current.value : bgRef.current
     const g = Math.round((bgVal / 100) * 255)
-    ctx.fillStyle = `rgb(${g},${g},${g})`
+    const a = 1 - Math.pow(trailsRef.current / 100, 0.3)
+    ctx.fillStyle = `rgba(${g},${g},${g},${a})`
     ctx.fillRect(0, 0, w, h)
 
     const wi = writeIdxRef.current
@@ -159,5 +164,5 @@ export default function OutputModule({ id = 'out1', init, preview }) {
     }
   })
 
-  return <OutputPanel canvasRef={canvasRef} bg={bg} enabled={enabled} onToggle={() => setEnabled(!enabled)} onBgChange={setBg} id={id} connected={connected} inputRefs={inputRefs} penConnected={penConnected} penRef={penRef} bgConnected={bgConnected} bgInRef={bgInRef} />
+  return <OutputPanel canvasRef={canvasRef} bg={bg} trails={trails} enabled={enabled} onToggle={() => setEnabled(!enabled)} onBgChange={setBg} onTrailsChange={setTrails} id={id} connected={connected} inputRefs={inputRefs} penConnected={penConnected} penRef={penRef} bgConnected={bgConnected} bgInRef={bgInRef} />
 }
