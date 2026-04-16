@@ -226,9 +226,9 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
       pen: { type: 'pen' },
       clr: { type: 'color' },
       clk: { type: 'scalar' },
-      segCV: { type: 'scalar' },
-      rotCV: { type: 'scalar' },
-      zmCV: { type: 'scalar' },
+      segCV: { type: 'scalar', cv: 'offset' },
+      rotCV: { type: 'scalar', cv: 'offset' },
+      zmCV: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out: { type: 'points' } },
     process: (inputs, dt) => {

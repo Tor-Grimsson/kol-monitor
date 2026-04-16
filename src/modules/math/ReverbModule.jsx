@@ -98,7 +98,7 @@ export default function ReverbModule({ id = 'verb1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { in: { type: 'any' }, sizeCV: { type: 'scalar' }, decayCV: { type: 'scalar' } },
+    inputs: { in: { type: 'any' }, sizeCV: { type: 'scalar', cv: 'offset' }, decayCV: { type: 'scalar', cv: 'offset' } },
     outputs: { out: { type: 'any' } },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }

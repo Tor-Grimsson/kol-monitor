@@ -185,7 +185,7 @@ export default function SequencerModule({ id = 'seq1', preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { clock: { type: 'scalar' }, reset: { type: 'scalar' }, lenCV: { type: 'scalar' } },
+    inputs: { clock: { type: 'scalar' }, reset: { type: 'scalar' }, lenCV: { type: 'scalar', cv: 'offset' } },
     outputs: { out: { type: 'scalar' }, gate: { type: 'scalar' } },
     process: (inputs, dt) => {
       if (!enabledRef.current) { outRef.current = null; gateOutRef.current = null; return { out: null, gate: null } }

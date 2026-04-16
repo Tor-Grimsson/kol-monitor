@@ -265,7 +265,7 @@ export default function RecorderModule({ id = 'rec1', init, preview }) {
     inputs: {
       a: { type: 'any' }, b: { type: 'any' },
       c: { type: 'any' }, d: { type: 'any' },
-      pen: { type: 'pen' }, bg: { type: 'scalar' },
+      pen: { type: 'pen' }, bg: { type: 'scalar', cv: 'offset' },
     },
     outputs: {},
     process: (inputs) => {

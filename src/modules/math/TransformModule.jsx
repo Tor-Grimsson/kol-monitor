@@ -106,12 +106,12 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
     stateRef: saveStateRef,
     inputs: {
       in: { type: 'points' },
-      x: { type: 'scalar' },
-      y: { type: 'scalar' },
-      s: { type: 'scalar' },
-      rx: { type: 'scalar' },
-      ry: { type: 'scalar' },
-      rz: { type: 'scalar' },
+      x: { type: 'scalar', cv: 'offset' },
+      y: { type: 'scalar', cv: 'offset' },
+      s: { type: 'scalar', cv: 'offset' },
+      rx: { type: 'scalar', cv: 'offset' },
+      ry: { type: 'scalar', cv: 'offset' },
+      rz: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out: { type: 'points' } },
     process: (inputs) => {

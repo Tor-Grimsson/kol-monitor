@@ -453,7 +453,7 @@ export default function SVGModule({ id = 'svg1', init, preview }) {
     inputs: {
       clr: { type: 'color' },
       pen: { type: 'pen' },
-      scl: { type: 'scalar' },
+      scl: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out: { type: 'points' } },
     process: (inputs) => {

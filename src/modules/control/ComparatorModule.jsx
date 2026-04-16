@@ -56,7 +56,7 @@ export default function ComparatorModule({ id = 'cmp1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { in: { type: 'scalar' }, thrCV: { type: 'scalar' } },
+    inputs: { in: { type: 'scalar' }, thrCV: { type: 'scalar', cv: 'offset' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs) => {
       if (!enabledRef.current) { outputRef.current = null; return { out: null } }

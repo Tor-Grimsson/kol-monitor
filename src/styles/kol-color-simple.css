@@ -70,9 +70,13 @@
   --kol-status-on-info: #FFFFFF;
 
   /* ---------------------------------------------------------------------------
-   * CV ROLE (jack color for attenuate-mode CV inputs)
+   * JACK ROLES
+   * - signal-input: primary signal sink (audio/video/clock/gate flowing IN)
+   * - cv-attenuate: CV-input with attenuate semantics (knob scales CV)
+   * - cv-offset (default): no token — uses jack DEFAULT_COLOR
    * --------------------------------------------------------------------------- */
 
+  --kol-signal-input: #66A44C;
   --kol-cv-attenuate: #497DA2;
 
   /* ---------------------------------------------------------------------------

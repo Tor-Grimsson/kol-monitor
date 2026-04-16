@@ -239,9 +239,9 @@ export default function WireframeModule({ id = 'wire1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      rx: { type: 'scalar' }, ry: { type: 'scalar' }, rz: { type: 'scalar' },
-      spd: { type: 'scalar' }, scl: { type: 'scalar' }, res: { type: 'scalar' },
-      fov: { type: 'scalar' }, clr: { type: 'color' }, clk: { type: 'scalar' },
+      rx: { type: 'scalar', cv: 'offset' }, ry: { type: 'scalar', cv: 'offset' }, rz: { type: 'scalar', cv: 'offset' },
+      spd: { type: 'scalar', cv: 'offset' }, scl: { type: 'scalar', cv: 'offset' }, res: { type: 'scalar', cv: 'offset' },
+      fov: { type: 'scalar', cv: 'offset' }, clr: { type: 'color' }, clk: { type: 'scalar' },
     },
     outputs: { out: { type: 'points' } },
     process: (inputs, dt, t) => {

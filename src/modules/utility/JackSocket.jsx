@@ -7,7 +7,7 @@ import { useModuleRegistry } from '../../hooks/useModuleRegistry.jsx'
 
 const DEFAULT_COLOR = '#e74c3c'
 
-// Read CSS var once, lazily — keeps --kol-cv-attenuate as the single source of truth
+// Read CSS vars once, lazily — keeps tokens as single source of truth
 let _cvAttenuateHex = null
 function getCvAttenuateColor() {
   if (_cvAttenuateHex) return _cvAttenuateHex
@@ -15,6 +15,15 @@ function getCvAttenuateColor() {
   const v = getComputedStyle(document.documentElement).getPropertyValue('--kol-cv-attenuate').trim()
   _cvAttenuateHex = v || '#497DA2'
   return _cvAttenuateHex
+}
+
+let _signalInputHex = null
+function getSignalInputColor() {
+  if (_signalInputHex) return _signalInputHex
+  if (typeof window === 'undefined') return '#66A44C'
+  const v = getComputedStyle(document.documentElement).getPropertyValue('--kol-signal-input').trim()
+  _signalInputHex = v || '#66A44C'
+  return _signalInputHex
 }
 
 // Shared jack animation loop — single rAF, throttled to ~15fps, dirty-checked
@@ -62,7 +71,13 @@ export default function JackSocket({
   const cvMode = type === 'in'
     ? registry?.modulesRef?.current?.get(moduleId)?.inputs?.[port]?.cv
     : null
-  const catColor = cvMode === 'attenuate' ? getCvAttenuateColor() : DEFAULT_COLOR
+  // Inputs with no `cv` metadata = primary signal jacks (green)
+  // `cv: 'attenuate'` = blue. `cv: 'offset'` (or any other CV value) and outputs = red default.
+  const catColor = cvMode === 'attenuate'
+    ? getCvAttenuateColor()
+    : type === 'in' && cvMode == null
+      ? getSignalInputColor()
+      : DEFAULT_COLOR
 
   // Register jack element for hit testing
   useEffect(() => {

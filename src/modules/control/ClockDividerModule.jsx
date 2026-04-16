@@ -66,7 +66,7 @@ export default function ClockDividerModule({ id = 'cdiv1', preview }) {
 
   useModule({
     id,
-    inputs: { in: { type: 'scalar' }, rot: { type: 'scalar' }, rst: { type: 'scalar' } },
+    inputs: { in: { type: 'scalar' }, rot: { type: 'scalar', cv: 'offset' }, rst: { type: 'scalar' } },
     outputs,
     process: (inputs, dt) => {
       const result = Object.fromEntries(DIVS.map(d => [`d${d}`, null]))

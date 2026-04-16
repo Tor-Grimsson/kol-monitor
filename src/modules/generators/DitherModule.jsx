@@ -841,9 +841,9 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      in: { type: 'scalar' }, clr: { type: 'color' }, clk: { type: 'scalar' }, spd: { type: 'scalar' },
-      size: { type: 'scalar' }, gap: { type: 'scalar' }, scl: { type: 'scalar' },
-      ctr: { type: 'scalar' }, ang: { type: 'scalar' }, int: { type: 'scalar', cv: 'attenuate' },
+      in: { type: 'scalar' }, clr: { type: 'color' }, clk: { type: 'scalar' }, spd: { type: 'scalar', cv: 'offset' },
+      size: { type: 'scalar', cv: 'offset' }, gap: { type: 'scalar', cv: 'offset' }, scl: { type: 'scalar', cv: 'offset' },
+      ctr: { type: 'scalar', cv: 'offset' }, ang: { type: 'scalar', cv: 'offset' }, int: { type: 'scalar', cv: 'attenuate' },
     },
     outputs: { out: { type: 'points' }, dns: { type: 'scalar' }, color: { type: 'color' } },
     process: (inputs, dt, t) => {

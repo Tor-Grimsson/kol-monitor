@@ -91,9 +91,9 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
     stateRef: saveStateRef,
     inputs: {
       in: { type: 'any' },
-      tCV: { type: 'scalar' },
+      tCV: { type: 'scalar', cv: 'offset' },
       mCV: { type: 'scalar', cv: 'attenuate' },
-      cCV: { type: 'scalar' },
+      cCV: { type: 'scalar', cv: 'offset' },
       fCV: { type: 'scalar', cv: 'attenuate' },
     },
     outputs: { out: { type: 'any' } },

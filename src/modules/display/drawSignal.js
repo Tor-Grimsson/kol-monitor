@@ -169,15 +169,17 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
       if (prevTo !== -1) { ctx.closePath(); ctx.fill() }
     }
 
-    // Stroke
-    ctx.strokeStyle = color
-    ctx.beginPath()
-    for (const [i, j] of signal.edges) {
-      if (i >= pts.length || j >= pts.length) continue
-      ctx.moveTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
-      ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
+    // Stroke — suppressed when pen.fill is on (override: pen.fill flips stroke→fill)
+    if (!p?.fill) {
+      ctx.strokeStyle = color
+      ctx.beginPath()
+      for (const [i, j] of signal.edges) {
+        if (i >= pts.length || j >= pts.length) continue
+        ctx.moveTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
+        ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
+      }
+      ctx.stroke()
     }
-    ctx.stroke()
   } else if (pts && pts.length > 0) {
     ctx.strokeStyle = penColor(p, SCOPE_COLOR)
     ctx.beginPath()
@@ -199,7 +201,10 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
       ctx.strokeStyle = gc
       ctx.fillStyle = gc
       if (g.edges && g.edges.length > 0) {
-        if (g.fill && g.pts.length > 2) {
+        // Pen.fill is an override: forces fill, suppresses stroke
+        const doFill = (g.fill || p?.fill) && g.pts.length > 2
+        const doStroke = g.stroke !== false && !p?.fill
+        if (doFill) {
           ctx.beginPath()
           ctx.moveTo(dx + g.pts[0].x * dw, dy + g.pts[0].y * dh)
           for (let i = 1; i < g.pts.length; i++) {
@@ -208,7 +213,7 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
           ctx.closePath()
           ctx.fill()
         }
-        if (g.stroke !== false) {
+        if (doStroke) {
           ctx.beginPath()
           for (const [i, j] of g.edges) {
             if (i >= g.pts.length || j >= g.pts.length) continue

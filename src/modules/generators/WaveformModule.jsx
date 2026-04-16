@@ -100,9 +100,9 @@ export default function WaveformModule({ id = 'wave1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      freq: { type: 'scalar' },
+      freq: { type: 'scalar', cv: 'offset' },
       amp: { type: 'scalar', cv: 'attenuate' },
-      spd: { type: 'scalar' },
+      spd: { type: 'scalar', cv: 'offset' },
       clk: { type: 'scalar' },
     },
     outputs: { out: { type: 'points' } },

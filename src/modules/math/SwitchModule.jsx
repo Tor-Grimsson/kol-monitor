@@ -67,8 +67,8 @@ export default function SwitchModule({ id = 'sw1', preview }) {
   useModule({
     id,
     inputs: {
-      a1: { type: 'any' }, b1: { type: 'any' }, cv1: { type: 'scalar' },
-      a2: { type: 'any' }, b2: { type: 'any' }, cv2: { type: 'scalar' },
+      a1: { type: 'any' }, b1: { type: 'any' }, cv1: { type: 'scalar', cv: 'offset' },
+      a2: { type: 'any' }, b2: { type: 'any' }, cv2: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out1: { type: 'any' }, out2: { type: 'any' } },
     process: (inputs) => {

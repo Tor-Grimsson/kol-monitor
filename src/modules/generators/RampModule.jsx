@@ -68,7 +68,7 @@ export default function RampModule({ id = 'ramp1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { sync: { type: 'scalar' }, rateCV: { type: 'scalar' } },
+    inputs: { sync: { type: 'scalar' }, rateCV: { type: 'scalar', cv: 'offset' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs, dt) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }

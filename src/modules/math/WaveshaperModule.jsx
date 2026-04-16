@@ -124,7 +124,7 @@ export default function WaveshaperModule({ id = 'wshp1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { in: { type: 'any' }, amtCV: { type: 'scalar', cv: 'attenuate' }, symCV: { type: 'scalar' }, smCV: { type: 'scalar', cv: 'attenuate' } },
+    inputs: { in: { type: 'any' }, amtCV: { type: 'scalar', cv: 'attenuate' }, symCV: { type: 'scalar', cv: 'offset' }, smCV: { type: 'scalar', cv: 'attenuate' } },
     outputs: { out: { type: 'any' } },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }

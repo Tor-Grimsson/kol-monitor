@@ -115,9 +115,9 @@ export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      r: { type: 'scalar' },
-      g: { type: 'scalar' },
-      b: { type: 'scalar' },
+      r: { type: 'scalar', cv: 'offset' },
+      g: { type: 'scalar', cv: 'offset' },
+      b: { type: 'scalar', cv: 'offset' },
       clk: { type: 'scalar' },
     },
     outputs: {

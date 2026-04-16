@@ -91,7 +91,7 @@ export default function FilterModule({ id = 'filt1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { in: { type: 'any' }, cutCV: { type: 'scalar' }, resCV: { type: 'scalar' } },
+    inputs: { in: { type: 'any' }, cutCV: { type: 'scalar', cv: 'offset' }, resCV: { type: 'scalar', cv: 'offset' } },
     outputs: { out: { type: 'any' } },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }

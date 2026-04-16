@@ -174,9 +174,9 @@ export default function LineGenModule({ id = 'line1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      freq: { type: 'scalar' },
-      dens: { type: 'scalar' },
-      spd: { type: 'scalar' },
+      freq: { type: 'scalar', cv: 'offset' },
+      dens: { type: 'scalar', cv: 'offset' },
+      spd: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out: { type: 'points' } },
     process: (inputs, dt, t) => {

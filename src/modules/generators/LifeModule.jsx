@@ -322,8 +322,8 @@ export default function LifeModule({ id = 'life1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      dns: { type: 'scalar' }, sz: { type: 'scalar' }, spd: { type: 'scalar' },
-      rule: { type: 'scalar' }, clk: { type: 'scalar' }, rst: { type: 'scalar' },
+      dns: { type: 'scalar', cv: 'offset' }, sz: { type: 'scalar', cv: 'offset' }, spd: { type: 'scalar', cv: 'offset' },
+      rule: { type: 'scalar', cv: 'offset' }, clk: { type: 'scalar' }, rst: { type: 'scalar' },
       clr: { type: 'color' },
     },
     outputs: { out: { type: 'points' } },

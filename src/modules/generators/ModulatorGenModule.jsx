@@ -208,10 +208,10 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      int: { type: 'scalar', cv: 'attenuate' }, frq: { type: 'scalar' }, sep: { type: 'scalar' },
-      scl: { type: 'scalar' }, cir: { type: 'scalar' }, res: { type: 'scalar' },
-      brt: { type: 'scalar' }, bam: { type: 'scalar', cv: 'attenuate' }, spd: { type: 'scalar' },
-      str: { type: 'scalar' },
+      int: { type: 'scalar', cv: 'attenuate' }, frq: { type: 'scalar', cv: 'offset' }, sep: { type: 'scalar', cv: 'offset' },
+      scl: { type: 'scalar', cv: 'offset' }, cir: { type: 'scalar', cv: 'offset' }, res: { type: 'scalar', cv: 'offset' },
+      brt: { type: 'scalar', cv: 'offset' }, bam: { type: 'scalar', cv: 'attenuate' }, spd: { type: 'scalar', cv: 'offset' },
+      str: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out: { type: 'points' } },
     process: (inputs, dt, t) => {

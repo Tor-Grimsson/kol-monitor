@@ -214,9 +214,9 @@ export default function MathsModule({ id = 'maths1', init, preview }) {
     stateRef: saveStateRef,
     inputs: {
       trig1: { type: 'scalar' }, sig1: { type: 'scalar' }, cyc1: { type: 'scalar' },
-      rCV1: { type: 'scalar' }, fCV1: { type: 'scalar' }, bCV1: { type: 'scalar' },
+      rCV1: { type: 'scalar', cv: 'offset' }, fCV1: { type: 'scalar', cv: 'offset' }, bCV1: { type: 'scalar', cv: 'offset' },
       trig2: { type: 'scalar' }, sig2: { type: 'scalar' }, cyc2: { type: 'scalar' },
-      rCV2: { type: 'scalar' }, fCV2: { type: 'scalar' }, bCV2: { type: 'scalar' },
+      rCV2: { type: 'scalar', cv: 'offset' }, fCV2: { type: 'scalar', cv: 'offset' }, bCV2: { type: 'scalar', cv: 'offset' },
       in2: { type: 'scalar' }, in3: { type: 'scalar' },
     },
     outputs: {

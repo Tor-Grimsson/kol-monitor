@@ -307,7 +307,7 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { p1: { type: 'scalar' }, p2: { type: 'scalar' }, p3: { type: 'scalar' }, p4: { type: 'scalar' }, hue: { type: 'scalar' }, spd: { type: 'scalar' }, clk: { type: 'scalar' } },
+    inputs: { p1: { type: 'scalar', cv: 'offset' }, p2: { type: 'scalar', cv: 'offset' }, p3: { type: 'scalar', cv: 'offset' }, p4: { type: 'scalar', cv: 'offset' }, hue: { type: 'scalar', cv: 'offset' }, spd: { type: 'scalar', cv: 'offset' }, clk: { type: 'scalar' } },
     outputs: { grad: { type: 'points' }, ptrn: { type: 'points' }, wave: { type: 'points' } },
     process: (inputs, dt, t) => {
       if (!enabledRef.current) {

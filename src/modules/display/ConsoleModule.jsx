@@ -222,8 +222,8 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
     inputs: {
       a: { type: 'any' }, b: { type: 'any' }, c: { type: 'any' }, d: { type: 'any' },
       rtn1: { type: 'any' }, rtn2: { type: 'any' },
-      pen: { type: 'pen' }, bgCV: { type: 'scalar' },
-      mstPen: { type: 'pen' }, mstBg: { type: 'scalar' },
+      pen: { type: 'pen' }, bgCV: { type: 'scalar', cv: 'offset' },
+      mstPen: { type: 'pen' }, mstBg: { type: 'scalar', cv: 'offset' },
     },
     outputs: {
       snd1: { type: 'any' }, snd2: { type: 'any' }, out: { type: 'any' },

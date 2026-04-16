@@ -111,7 +111,7 @@ export default function OutputModule({ id = 'out1', init, preview }) {
       c: { type: 'any' },
       d: { type: 'any' },
       pen: { type: 'pen' },
-      bg: { type: 'scalar' },
+      bg: { type: 'scalar', cv: 'offset' },
     },
     outputs: {},
     process: (inputs) => {

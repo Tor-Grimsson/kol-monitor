@@ -62,8 +62,8 @@ export default function VCAModule({ id = 'vca1', preview }) {
   useModule({
     id,
     inputs: {
-      in1: { type: 'scalar' }, cv1: { type: 'scalar' },
-      in2: { type: 'scalar' }, cv2: { type: 'scalar' },
+      in1: { type: 'scalar' }, cv1: { type: 'scalar', cv: 'offset' },
+      in2: { type: 'scalar' }, cv2: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out1: { type: 'scalar' }, out2: { type: 'scalar' } },
     process: (inputs) => {

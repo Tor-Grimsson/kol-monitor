@@ -533,7 +533,7 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { p1: { type: 'scalar' }, p2: { type: 'scalar' }, p3: { type: 'scalar' }, p4: { type: 'scalar' }, spd: { type: 'scalar' }, clk: { type: 'scalar' }, amp: { type: 'scalar', cv: 'attenuate' }, dty: { type: 'scalar' }, ofs: { type: 'scalar' } },
+    inputs: { p1: { type: 'scalar', cv: 'offset' }, p2: { type: 'scalar', cv: 'offset' }, p3: { type: 'scalar', cv: 'offset' }, p4: { type: 'scalar', cv: 'offset' }, spd: { type: 'scalar', cv: 'offset' }, clk: { type: 'scalar' }, amp: { type: 'scalar', cv: 'attenuate' }, dty: { type: 'scalar', cv: 'offset' }, ofs: { type: 'scalar', cv: 'offset' } },
     outputs: { out: { type: 'points' }, color: { type: 'color' }, scalar: { type: 'scalar' }, lfo: { type: 'scalar' } },
     process: (inputs, dt, t) => {
       if (!enabledRef.current) { pointsOutRef.current = null; colorOutRef.current = null; scalarOutRef.current = null; return { out: null, color: null, scalar: null } }

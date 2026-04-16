@@ -98,6 +98,7 @@ function MagnetoPanel({
   fbInf, fbRev, fbFwd, fbPlay, fbPause,
   lowCut, tapeAge, crinkle, wow, spring, heads, pan,
   scl, ofs,
+  transportMode, rev, order, layer,
   enabled, onToggle, id,
   onModeChange, onDryChange, onWetChange, onSpeedPitchChange, onTap,
   onRecLvlChange, onHeadLevelChange, onHeadToggle, onRepeatsChange,
@@ -105,6 +106,7 @@ function MagnetoPanel({
   onLowCutChange, onTapeAgeChange, onCrinkleChange, onWowChange, onSpringChange,
   onHeadsChange, onPanChange,
   onSclChange, onOfsChange,
+  onTransportMode, onHeadTransport, onOrderChange, onLayerChange,
   inConn, inRef, clrConn, clrRef,
   wetRef, dryOutRef,
   clk1Ref, clk2Ref, clk3Ref, clk4Ref,
@@ -183,6 +185,18 @@ function MagnetoPanel({
                       <FlipToggle value={heads} onChange={onHeadsChange} positions={3} />
                     </div>
                   </div>
+                  {/* Layer — head z-order within wet trails */}
+                  <div style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }} title="Head z-order: 1234 / 4321 / alternating">
+                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>layer</span>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
+                        <span className="kol-helper-xxxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>1234</span>
+                        <span className="kol-helper-xxxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>4321</span>
+                        <span className="kol-helper-xxxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>alt</span>
+                      </div>
+                      <FlipToggle value={layer} onChange={onLayerChange} positions={3} />
+                    </div>
+                  </div>
                 </div>
 
                 {/* 4 heads */}
@@ -193,7 +207,7 @@ function MagnetoPanel({
                       <span className="kol-helper-xxxs" style={{ color: '#1a1a1a', lineHeight: 1 }}>1</span>
                     </div>
                     <Toggle value={headOn[0]} onChange={() => onHeadToggle(0)} size="md" />
-                    <IconButton icon="tr-inf" size={24} />
+                    <IconButton icon="tr-inf" active={fbInf} onClick={() => onHeadTransport(0)} disabled={!transportMode} title="Infinite (toggle)" />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                     <Knob value={headLevels[1]} onChange={v => onHeadLevelChange(1, v)} size="lg" />
@@ -201,7 +215,7 @@ function MagnetoPanel({
                       <span className="kol-helper-xxxs" style={{ color: '#1a1a1a', lineHeight: 1 }}>2</span>
                     </div>
                     <Toggle value={headOn[1]} onChange={() => onHeadToggle(1)} size="md" />
-                    <IconButton icon="tr-carets" size={24} />
+                    <IconButton icon="tr-carets" active={rev} onClick={() => onHeadTransport(1)} disabled={!transportMode} title="Reverse (toggle)" />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                     <Knob value={headLevels[2]} onChange={v => onHeadLevelChange(2, v)} size="lg" />
@@ -209,7 +223,7 @@ function MagnetoPanel({
                       <span className="kol-helper-xxxs" style={{ color: '#1a1a1a', lineHeight: 1 }}>3</span>
                     </div>
                     <Toggle value={headOn[2]} onChange={() => onHeadToggle(2)} size="md" />
-                    <IconButton icon="tr-skip" size={24} />
+                    <IconButton icon="tr-skip" momentary onClick={() => onHeadTransport(2)} disabled={!transportMode} title="Restart (trigger)" />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                     <Knob value={headLevels[3]} onChange={v => onHeadLevelChange(3, v)} size="lg" />
@@ -217,7 +231,7 @@ function MagnetoPanel({
                       <span className="kol-helper-xxxs" style={{ color: '#1a1a1a', lineHeight: 1 }}>4</span>
                     </div>
                     <Toggle value={headOn[3]} onChange={() => onHeadToggle(3)} size="md" />
-                    <IconButton icon="tr-pause" size={24} />
+                    <IconButton icon="tr-pause" active={fbPause} onClick={() => onHeadTransport(3)} disabled={!transportMode} title="Pause (toggle)" />
                   </div>
                 </div>
 
@@ -234,6 +248,18 @@ function MagnetoPanel({
                       </div>
                     </div>
                   </div>
+                  {/* Order — controls z-layering of dry vs wet trails */}
+                  <div style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }} title="Layer order: wet on top / mix (tbd) / dry on top (disco)">
+                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>order</span>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      <FlipToggle value={order} onChange={onOrderChange} positions={3} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
+                        <span className="kol-helper-xxxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>wet</span>
+                        <span className="kol-helper-xxxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>mix</span>
+                        <span className="kol-helper-xxxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>dry</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -243,7 +269,7 @@ function MagnetoPanel({
                 <Knob value={tapeAge} onChange={onTapeAgeChange} label="age" size="lg" />
                 <div style={{ position: 'absolute', left: '38%', top: '50%', transform: 'translate(calc(-50% + 18px), calc(-50% + 22px))' }}>
                   <LabeledControl label="transport" labelClass="kol-helper-xxxxs">
-                    <Toggle momentary onChange={onTap} size="md" color="rgba(255,255,255,0.7)" />
+                    <Toggle value={transportMode} onChange={onTransportMode} size="md" color="rgba(255,255,255,0.7)" />
                   </LabeledControl>
                 </div>
                 <Knob value={scl} onChange={onSclChange} label="scl" size="lg" />
@@ -270,17 +296,17 @@ function MagnetoPanel({
         </div>
         {/* BOTTOM — transport strip: clk in → controls → clk4 out */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 8px', flexShrink: 0 }}>
-          <LabeledJack type="in" port="clkB" moduleId={id} label="clk" dim={!cp?.has('clkB')} />
+          <LabeledJack type="in" port="clkB" moduleId={id} label="clk" />
           <LabeledJack type="in" port="recGate" moduleId={id} label="rec" dim={!cp?.has('recGate')} />
           <LabeledJack type="in" port="shift" moduleId={id} label="shft" dim={!cp?.has('shift')} />
-          <LabeledJack type="in" port="inf" moduleId={id} icon="tr-inf" dim={!cp?.has('inf')} />
-          <LabeledJack type="in" port="rev" moduleId={id} icon="tr-carets" dim={!cp?.has('rev')} />
-          <LabeledJack type="in" port="fwd" moduleId={id} icon="tr-skip" dim={!cp?.has('fwd')} />
-          <LabeledJack type="in" port="play" moduleId={id} label="▷" dim={!cp?.has('play')} />
-          <LabeledJack type="in" port="pause" moduleId={id} icon="tr-pause" dim={!cp?.has('pause')} />
-          <LabeledJack type="in" port="tap" moduleId={id} label="tap" dim={!cp?.has('tap')} />
-          <LabeledJack type="in" port="sprng" moduleId={id} label="sprng" dim={!cp?.has('sprng')} />
-          <LabeledJack type="out" port="clk4B" moduleId={id} signalRef={clk4Ref} label="clk4" dim={!cp?.has('clk4B')} />
+          <LabeledJack type="in" port="inf" moduleId={id} icon="tr-inf" />
+          <LabeledJack type="in" port="rev" moduleId={id} icon="tr-carets" />
+          <LabeledJack type="in" port="fwd" moduleId={id} icon="tr-skip" />
+          <LabeledJack type="in" port="play" moduleId={id} label="▷" />
+          <LabeledJack type="in" port="pause" moduleId={id} icon="tr-pause" />
+          <LabeledJack type="in" port="tap" moduleId={id} label="tap" />
+          <LabeledJack type="in" port="sprng" moduleId={id} label="sprng" />
+          <LabeledJack type="out" port="clk4B" moduleId={id} signalRef={clk4Ref} label="clk4" />
         </div>
 
       </div>
@@ -297,6 +323,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
     fbInf={false} fbRev={false} fbFwd={false} fbPlay={true} fbPause={false}
     lowCut={0} tapeAge={0} crinkle={0} wow={0} spring={0}
     scl={50} ofs={0}
+    transportMode={false} rev={false} order={0} layer={0}
     enabled={false} onToggle={() => {}} id={id}
     onModeChange={() => {}} onDryChange={() => {}} onWetChange={() => {}} onSpeedPitchChange={() => {}} onTap={() => {}}
     onRecLvlChange={() => {}} onHeadLevelChange={() => {}} onHeadToggle={() => {}} onRepeatsChange={() => {}}
@@ -304,6 +331,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
     onLowCutChange={() => {}} onTapeAgeChange={() => {}} onCrinkleChange={() => {}} onWowChange={() => {}} onSpringChange={() => {}}
     heads={0} pan={1} onHeadsChange={() => {}} onPanChange={() => {}}
     onSclChange={() => {}} onOfsChange={() => {}}
+    onTransportMode={() => {}} onHeadTransport={() => {}} onOrderChange={() => {}} onLayerChange={() => {}}
     inConn={false} inRef={{ current: null }} clrConn={false} clrRef={{ current: null }}
     wetRef={{ current: null }} dryOutRef={{ current: null }}
     clk1Ref={{ current: null }} clk2Ref={{ current: null }} clk3Ref={{ current: null }} clk4Ref={{ current: null }}
@@ -330,6 +358,10 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   const [pan, setPan] = useState(init?.pan ?? 1) // 0=LRLR 1=center 2=LRRL
   const [scl, setScl] = useState(init?.scl ?? 50) // 50 → 1.0× composite scale
   const [ofs, setOfs] = useState(init?.ofs ?? 0)  // 0 → no playhead offset
+  const [transportMode, setTransportMode] = useState(init?.transportMode ?? false) // off=per-head fb, on=global transport
+  const [rev, setRev] = useState(init?.rev ?? false) // false=forward, true=reverse playback
+  const [order, setOrder] = useState(init?.order ?? 0) // 0=wet on top, 1=mix (TODO), 2=dry on top (disco)
+  const [layer, setLayer] = useState(init?.layer ?? 0) // 0=1234, 1=4321, 2=alt (1,3,2,4) — head z-order within wet
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
@@ -355,12 +387,18 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   const panRef = useRef(1)
   const sclRef = useRef(50)
   const ofsRef = useRef(0)
+  const transportModeRef = useRef(false)
+  const revRef = useRef(false)
+  const orderRef = useRef(0)
+  const layerRef = useRef(0)
 
   const bufferRef = useRef(new Array(BUF_SIZE).fill(null))
   const writeHeadRef = useRef(0)
   const tapPhaseRef = useRef(0)
   const prevClkRef = useRef(false)
   const springAccRef = useRef([0, 0, 0, 0]) // per-head spring velocity
+  // Rising-edge tracking for transport CV gates
+  const prevTransportRef = useRef({ pause: false, play: false, inf: false, rev: false, fwd: false, tap: false })
 
   const inRef = useRef(null)
   const clrRef = useRef(null)
@@ -393,6 +431,10 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   panRef.current = pan
   sclRef.current = scl
   ofsRef.current = ofs
+  transportModeRef.current = transportMode
+  revRef.current = rev
+  orderRef.current = order
+  layerRef.current = layer
 
   const inConn = cp.has('in')
   const clrConn = cp.has('clr')
@@ -401,11 +443,19 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   const handleHeadLevel = (h, v) => setHeadLevels(prev => { const next = [...prev]; next[h] = v; return next })
   const handleHeadToggle = (h) => setHeadOn(prev => { const next = [...prev]; next[h] = !next[h]; return next })
   const handleTap = () => { tapPhaseRef.current = 0 }
-  const handleFbRev = () => { /* reverse buffer read direction */ }
-  const handleFbFwd = () => { /* fast forward */ }
+  const handleFbRev = () => setRev(r => !r)
+  const handleFbFwd = () => { writeHeadRef.current = 0; tapPhaseRef.current = 0 } // RESTART per Strymon
+  const handleTransportMode = () => setTransportMode(m => !m)
+  // Per-head IconButton actions when transportMode is on (per Strymon: head1=inf, 2=rev, 3=restart, 4=pause)
+  const handleHeadTransport = (h) => {
+    if (h === 0) setFbInf(i => !i)
+    else if (h === 1) setRev(r => !r)
+    else if (h === 2) { writeHeadRef.current = 0; tapPhaseRef.current = 0 } // restart
+    else if (h === 3) setFbPause(p => !p)
+  }
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { mode, dry, wet, speedPitch, recLvl, headLevels, headOn, repeats, fbInf, fbPlay, fbPause, lowCut, tapeAge, crinkle, wow, spring, heads, pan, scl, ofs }
+  saveStateRef.current = { mode, dry, wet, speedPitch, recLvl, headLevels, headOn, repeats, fbInf, fbPlay, fbPause, lowCut, tapeAge, crinkle, wow, spring, heads, pan, scl, ofs, transportMode, rev, order, layer }
 
   useModule({
     id,
@@ -414,12 +464,24 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       in: { type: 'any' },
       clr: { type: 'color' },
       clk: { type: 'scalar' },
-      dryCV: { type: 'scalar' },
-      spdCV: { type: 'scalar' },
-      recCV: { type: 'scalar' },
+      dryCV: { type: 'scalar', cv: 'offset' },
+      spdCV: { type: 'scalar', cv: 'offset' },
+      recCV: { type: 'scalar', cv: 'offset' },
       rptCV: { type: 'scalar', cv: 'attenuate' },
-      sclCV: { type: 'scalar' },
-      ofsCV: { type: 'scalar' },
+      sclCV: { type: 'scalar', cv: 'offset' },
+      ofsCV: { type: 'scalar', cv: 'offset' },
+      // Bottom transport strip — rising-edge gates
+      pause: { type: 'scalar' },
+      play: { type: 'scalar' },
+      inf: { type: 'scalar' },
+      rev: { type: 'scalar' },
+      fwd: { type: 'scalar' },
+      tap: { type: 'scalar' },
+      // Bottom strip extras (declared so JackSocket can render; behaviour TODO)
+      recGate: { type: 'scalar' },
+      shift: { type: 'scalar' },
+      sprng: { type: 'scalar', cv: 'offset' },
+      clkB: { type: 'scalar' },
     },
     outputs: { out: { type: 'points' }, wet: { type: 'points' }, dry: { type: 'any' }, clk1: { type: 'scalar' }, clk2: { type: 'scalar' }, clk3: { type: 'scalar' }, clk4: { type: 'scalar' } },
     process: (inputs, dt) => {
@@ -430,7 +492,22 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       }
       inRef.current = inputs.in
       clrRef.current = inputs.clr
-      clkInRef.current = inputs.clk
+      // clkB is a duplicate of clk for cable convenience — pick whichever is patched
+      clkInRef.current = inputs.clk || inputs.clkB
+
+      // Transport CV — rising-edge detection
+      const checkEdge = (port, cb) => {
+        const high = readScalar(inputs[port]) > 0
+        const prev = prevTransportRef.current[port]
+        if (high && !prev) cb()
+        prevTransportRef.current[port] = high
+      }
+      checkEdge('pause', () => setFbPause(p => !p))
+      checkEdge('play', () => setFbPause(false))
+      checkEdge('inf', () => setFbInf(i => !i))
+      checkEdge('rev', () => setRev(r => !r))
+      checkEdge('fwd', () => { writeHeadRef.current = 0; tapPhaseRef.current = 0 }) // restart per Strymon
+      checkEdge('tap', () => { tapPhaseRef.current = 0 })
 
       const input = inputs.in
       const buf = bufferRef.current
@@ -453,7 +530,8 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       prevClkRef.current = clkHigh
 
       // Write to buffer — rec lvl gates recording, independent of dry
-      if (fbPlayRef.current && !fbPauseRef.current && input && rec > 0.01) {
+      // Skip writes when fbInf is true (existing material loops without overwrite)
+      if (fbPlayRef.current && !fbPauseRef.current && !fbInfRef.current && input && rec > 0.01) {
         buf[writeHeadRef.current] = input
         writeHeadRef.current = (writeHeadRef.current + 1) % BUF_SIZE
       }
@@ -480,9 +558,17 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       const hueRate = lowCutRef.current / 100
       tapPhaseRef.current += dt * spd
 
+      // Determine head iteration order based on layer toggle (z-order within wet trails)
+      // 0=1234 (default, head 1 first/back, head 4 last/front)
+      // 1=4321 (reversed)
+      // 2=alt (1,3,2,4 — alternating warm/cool)
+      const HEAD_ORDERS = [[0, 1, 2, 3], [3, 2, 1, 0], [0, 2, 1, 3]]
+      const headOrder = HEAD_ORDERS[layerRef.current] || HEAD_ORDERS[0]
+
       const groups = []
 
-      for (let h = 0; h < NUM_HEADS; h++) {
+      for (let oi = 0; oi < NUM_HEADS; oi++) {
+        const h = headOrder[oi]
         if (!headOnRef.current[h]) continue
         const lvl = headLevelsRef.current[h] / 100
         if (lvl < 0.01) continue
@@ -495,8 +581,9 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
         const doStroke = m === 'echo' || m === 'smpl'
         const wetMix = wetLvlRef.current / 100
 
+        const dirSign = revRef.current ? -1 : 1
         for (let r = 0; r < rpt; r++) {
-          const tapDelay = baseDelay * (r + 1)
+          const tapDelay = baseDelay * (r + 1) * dirSign
           const readPos = ((writeHeadRef.current - 1 - tapDelay) % BUF_SIZE + BUF_SIZE) % BUF_SIZE
           const tap = buf[readPos]
           if (!tap || tap.type !== 'points' || !tap.value) continue
@@ -535,11 +622,30 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       wetOut.groups = groups
       wetRef.current = wetOut
 
-      // Out = dry + wet combined
-      const out = points(dryPts, dryEdges.length > 0 ? dryEdges : null)
+      // Out = dry + wet combined, ordering controlled by order toggle
+      // 0 (wet) = current: dry rendered first (top-level), wet groups on top
+      // 1 (mix) = TODO: interleaved (currently aliased to wet)
+      // 2 (dry/disco) = primary on top: dry pushed as last group, top-level cleared
+      let finalGroups = groups
+      let outValue = dryPts
+      let outEdges = dryEdges.length > 0 ? dryEdges : null
+      if (orderRef.current === 2 && dryPts.length > 0) {
+        const dryColor = inputs.clr?.type === 'color' ? inputs.clr.value : (input.color || null)
+        finalGroups = [...groups, {
+          pts: dryPts,
+          edges: dryEdges.length > 0 ? dryEdges : null,
+          color: dryColor,
+          opacity: dryMix,
+          fill: false,
+          stroke: true,
+        }]
+        outValue = []
+        outEdges = null
+      }
+      const out = points(outValue, outEdges)
       out.strokeWidth = input.strokeWidth ?? 1
       out.opacity = dryMix
-      out.groups = groups
+      out.groups = finalGroups
       if (inputs.clr?.type === 'color') out.color = inputs.clr.value
       else if (input.color) out.color = input.color
 
@@ -576,6 +682,8 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
     onLowCutChange={setLowCut} onTapeAgeChange={setTapeAge} onCrinkleChange={setCrinkle} onWowChange={setWow} onSpringChange={setSpring}
     heads={heads} pan={pan} onHeadsChange={setHeads} onPanChange={setPan}
     onSclChange={setScl} onOfsChange={setOfs}
+    transportMode={transportMode} rev={rev} order={order} layer={layer}
+    onTransportMode={handleTransportMode} onHeadTransport={handleHeadTransport} onOrderChange={setOrder} onLayerChange={setLayer}
     inConn={inConn} inRef={inRef} clrConn={clrConn} clrRef={clrRef}
     wetRef={wetRef} dryOutRef={dryOutRef}
     clk1Ref={clk1Ref} clk2Ref={clk2Ref} clk3Ref={clk3Ref} clk4Ref={clk4Ref}
