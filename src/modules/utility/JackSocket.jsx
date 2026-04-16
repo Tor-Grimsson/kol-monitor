@@ -20,9 +20,9 @@ function getCvAttenuateColor() {
 let _signalInputHex = null
 function getSignalInputColor() {
   if (_signalInputHex) return _signalInputHex
-  if (typeof window === 'undefined') return '#66A44C'
+  if (typeof window === 'undefined') return '#4ade80'
   const v = getComputedStyle(document.documentElement).getPropertyValue('--kol-signal-input').trim()
-  _signalInputHex = v || '#66A44C'
+  _signalInputHex = v || '#4ade80'
   return _signalInputHex
 }
 
@@ -181,7 +181,7 @@ export default function JackSocket({
             width: `${hole}px`,
             height: `${hole}px`,
             borderRadius: '50%',
-            backgroundColor: routing?.visibilityRef?.current !== 'on' && isConnected ? (type === 'out' ? '#e74c3c' : '#f59e0b') : isConnected || isPending ? `${catColor}66` : 'rgba(0,0,0,0.6)',
+            backgroundColor: routing?.visibilityRef?.current !== 'on' && isConnected ? catColor : isConnected || isPending ? `${catColor}66` : 'rgba(0,0,0,0.6)',
             border: type === 'in' ? '1px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.3)',
           }} />
         </div>

@@ -242,7 +242,7 @@ function OscPanel({
 
         {/* 1. Text input + reference dropdowns */}
         <div style={{ paddingBottom: 8, flexShrink: 0, display: 'flex', gap: 4, alignItems: 'center' }}>
-          <TextInput value={expr} onCommit={onExprChange} placeholder="wave(t)" style={{ flex: 1, height: 24 }} />
+          <TextInput value={expr} onCommit={onExprChange} placeholder="empty = passthrough input A" style={{ flex: 1, height: 24 }} />
           <RefDropdown label="Ex" groups={[{ group: 'Examples', items: EXAMPLES }]} onSelect={onExprChange} />
           <RefDropdown label="Ref" groups={REFERENCE_GROUPS} onSelect={onExprChange} />
         </div>
@@ -305,6 +305,11 @@ export default function OscilloscopeModule({ id = 'osc1', init, preview }) {
   const fnRef = useRef(null)
   useEffect(() => { fnRef.current = compile(expr, BUS_KEYS) }, [expr])
 
+  // History buffer for input A — used when expression is empty (passthrough mode)
+  const HIST_LEN = 400
+  const historyARef = useRef(new Float32Array(HIST_LEN))
+  const histWriteIdxRef = useRef(0)
+
   const enabledRef = useRef(true)
   const outRef = useRef(null)
   const aRef = useRef(null)
@@ -353,9 +358,17 @@ export default function OscilloscopeModule({ id = 'osc1', init, preview }) {
       currentTRef.current = relT
       currentBusRef.current = bus
 
+      // Always push input A into history ring — used by passthrough draw when expression is empty
+      const aVal = readScalar(inputs.a)
+      historyARef.current[histWriteIdxRef.current] = aVal
+      histWriteIdxRef.current = (histWriteIdxRef.current + 1) % HIST_LEN
+
       let out = null
       if (fnRef.current) {
         try { out = scalar(fnRef.current(relT, frame, viewRef.current.vmin, viewRef.current.vmax, bus)) } catch { /* silent */ }
+      } else if (inputs.a) {
+        // Empty expression — pass through input A as the output
+        out = scalar(aVal)
       }
       outRef.current = out
       return { out }
@@ -438,7 +451,22 @@ export default function OscilloscopeModule({ id = 'osc1', init, preview }) {
 
     if (!enabledRef.current) return
     const fn = fnRef.current
-    if (!fn) return
+
+    // Empty-expression passthrough: draw input A history as rolling trace
+    if (!fn) {
+      const hist = historyARef.current
+      const wi = histWriteIdxRef.current
+      ctx.strokeStyle = TRACE_COLOR
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      for (let i = 0; i < w; i++) {
+        const histIdx = (wi + Math.floor((i / w) * HIST_LEN)) % HIST_LEN
+        const y = toY(hist[histIdx])
+        i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y)
+      }
+      ctx.stroke()
+      return
+    }
 
     const bus = currentBusRef.current
     // Playhead time: prefer process-provided t; fall back to wall clock so preview/static contexts still animate
