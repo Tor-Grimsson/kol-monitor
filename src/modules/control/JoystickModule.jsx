@@ -12,13 +12,23 @@ import Toggle from '../controls/Toggle'
 function JoystickPanel({ x, y, z, snap, enabled, onToggle, onMove, onZChange, onSnapChange, id, xOutRef, yOutRef, zOutRef }) {
   const sliderRef = useRef(null)
   const padRef = useRef(null)
+  const shiftAxisRef = useRef(null)
 
   const handlePointer = useCallback((e) => {
     const pad = padRef.current
     if (!pad) return
     const rect = pad.getBoundingClientRect()
-    const nx = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
-    const ny = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100))
+    let nx = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
+    let ny = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100))
+    if (e.shiftKey) {
+      if (shiftAxisRef.current == null) {
+        shiftAxisRef.current = Math.abs(nx - 50) >= Math.abs(ny - 50) ? 'x' : 'y'
+      }
+      if (shiftAxisRef.current === 'x') ny = 50
+      else nx = 50
+    } else {
+      shiftAxisRef.current = null
+    }
     onMove(nx, ny)
   }, [onMove])
 
@@ -59,9 +69,9 @@ function JoystickPanel({ x, y, z, snap, enabled, onToggle, onMove, onZChange, on
         {/* XYZ outputs + snap */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
           <Toggle value={snap} onChange={onSnapChange} label="snap" size="sm" horizontal />
-          <LabeledJack type="out" port="x" moduleId={id} signalRef={xOutRef} label="x" labelPosition="right" />
-          <LabeledJack type="out" port="y" moduleId={id} signalRef={yOutRef} label="y" labelPosition="right" />
-          <LabeledJack type="out" port="z" moduleId={id} signalRef={zOutRef} label="z" labelPosition="right" />
+          <LabeledJack type="out" port="y" moduleId={id} signalRef={yOutRef} label="a" labelPosition="right" />
+          <LabeledJack type="out" port="x" moduleId={id} signalRef={xOutRef} label="b" labelPosition="right" />
+          <LabeledJack type="out" port="z" moduleId={id} signalRef={zOutRef} label="c" labelPosition="right" />
         </div>
         {/* XY pad */}
         <div
@@ -141,9 +151,10 @@ export default function JoystickModule({ id = 'joy1', init, preview }) {
     outputs: { x: { type: 'scalar' }, y: { type: 'scalar' }, z: { type: 'scalar' } },
     process: () => {
       if (!enabled) { xOutRef.current = null; yOutRef.current = null; zOutRef.current = null; return { x: null, y: null, z: null } }
-      const xOut = scalar(xRef.current)
-      const yOut = scalar(yRef.current)
-      const zOut = scalar(zRef.current)
+      // Bipolar: center (50 internal) = 0; range -100..+100. Y inverts screen coord so up is positive.
+      const xOut = scalar((xRef.current - 50) * 2)
+      const yOut = scalar((50 - yRef.current) * 2)
+      const zOut = scalar((zRef.current - 50) * 2)
       xOutRef.current = xOut
       yOutRef.current = yOut
       zOutRef.current = zOut

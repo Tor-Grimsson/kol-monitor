@@ -1,6 +1,14 @@
-// Keyboard shortcuts overlay — toggle with 'S'
+// Keyboard shortcuts overlay — toggle with 'S', close with Esc
+
+import { useEffect } from 'react'
 
 export default function ShortcutsOverlay({ onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   return (
     <div
       onClick={onClose}
@@ -10,6 +18,7 @@ export default function ShortcutsOverlay({ onClose }) {
       <div className="text-fg-64 kol-helper-xs bg-surface-primary border border-fg-16" style={{ display: 'grid', gridTemplateColumns: 'auto auto', gap: '10px 62px', padding: 24, borderRadius: 4 }}>
         <span>Shortcuts</span><span className="text-fg-96">S</span>
         <span>Sidebar</span><span className="text-fg-96">H</span>
+        <span>Add module</span><span className="text-fg-96">⌘ K</span>
         <span>Edit mode</span><span className="text-fg-96">E</span>
         <span>Mute all</span><span className="text-fg-96">M</span>
         <span>Lock view</span><span className="text-fg-96">L</span>
@@ -22,6 +31,7 @@ export default function ShortcutsOverlay({ onClose }) {
         <span>Pan (drag)</span><span className="text-fg-96">Space</span>
         <span>Zoom</span><span className="text-fg-96">Alt+Scroll</span>
         <span>Pan</span><span className="text-fg-96">Scroll</span>
+        <span>Joystick axis lock</span><span className="text-fg-96">Shift</span>
       </div>
     </div>
   )

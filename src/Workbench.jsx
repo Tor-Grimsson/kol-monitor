@@ -1,80 +1,29 @@
-// Workbench — bottom panel with two tabs: Workbench (held modules) and Library (module catalog)
+// Workbench — bottom panel with tabs: Library (module catalog), Workbench (held modules), Case
 // Drag top edge to resize
 
-import { useState, useRef, useCallback } from 'react'
-import { MODULE_DEFS, CATEGORIES, getModulesByCategory } from './moduleRegistry'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { MODULE_DEFS } from './moduleRegistry'
 import Divider from './components/atoms/Divider'
+import Icon from './components/icons/Icon'
 import { TOTAL_HP, hpToPx } from './modules/utility/eurorack'
 import Module from './modules/utility/Module'
+import ModuleLibraryGrid from './components/ModuleLibraryGrid'
 
 const DEFAULT_HEIGHT = Math.round(window.innerHeight * 0.3)
 const MIN_HEIGHT = 80
 const MAX_HEIGHT = 600
 
-const CATEGORY_LABELS = {
-  control: 'Control',
-  math: 'Math',
-  generators: 'Generators',
-  display: 'Display',
-  utility: 'Utility',
-}
-
-function ModuleCard({ type, hp, u, selected, rows, onSelect, onAddToRow }) {
-  const def = MODULE_DEFS[type]
-  if (!def) return null
-  const aspectDiv = u === 1 ? 12 : 4
-  const targetHeight = u === 1 ? '1u' : '3u'
-  const compatibleRows = rows?.filter(r => r.height === targetHeight) || []
-
-  return (
-    <div
-      onClick={() => onSelect(selected ? null : type)}
-      style={{
-        width: hpToPx(hp),
-        aspectRatio: `${hp * aspectDiv} / ${TOTAL_HP}`,
-        flexShrink: 0,
-        overflow: 'hidden',
-        cursor: 'pointer',
-        opacity: selected ? 1 : 0.8,
-        transition: 'opacity 0.15s',
-        position: 'relative',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.opacity = 1 }}
-      onMouseLeave={e => { if (!selected) e.currentTarget.style.opacity = 0.8 }}
-    >
-      <img src={`/previews/modules/${type}.png`} alt={def.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      {selected && (
-        <div
-          onClick={e => e.stopPropagation()}
-          style={{
-            position: 'absolute', inset: 0,
-            background: 'rgba(0,0,0,0.85)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-          }}
-        >
-          {compatibleRows.map(row => (
-            <span
-              key={row.id}
-              className="text-fg-48 hover:text-fg-96 kol-helper-xxs cursor-pointer"
-              onPointerDown={(e) => { e.stopPropagation(); onAddToRow(type, row.id); onSelect(null) }}
-            >Row {rows.indexOf(row) + 1}</span>
-          ))}
-          {compatibleRows.length === 0 && (
-            <span className="text-fg-32 kol-helper-xxs">No {targetHeight.toUpperCase()} row</span>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function Workbench({ modules, rows, onReturn, onAddModule, onAddRow, onRemoveRow, onSetRowHeight, onEditCase }) {
   const [height, setHeight] = useState(DEFAULT_HEIGHT)
-  const [tab, setTab] = useState('workbench')
-  const [category, setCategory] = useState(null)
-  const [uFilter, setUFilter] = useState(null)
-  const [selectedType, setSelectedType] = useState(null)
+  const [tab, setTab] = useState('library')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchText, setSearchText] = useState('')
+  const searchRef = useRef(null)
   const dragging = useRef(false)
+
+  useEffect(() => {
+    if (searchOpen && searchRef.current) searchRef.current.focus()
+  }, [searchOpen])
 
   const handleDragStart = useCallback((e) => {
     e.preventDefault()
@@ -95,11 +44,6 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
     window.addEventListener('pointerup', handleUp)
   }, [height])
 
-  const libraryModules = (category
-    ? getModulesByCategory(category)
-    : CATEGORIES.flatMap(c => getModulesByCategory(c))
-  ).filter(m => uFilter === null || m.u === uFilter)
-
   return (
     <div data-workbench className="border-t border-fg-08 bg-surface-primary" style={{ flexShrink: 0, position: 'relative', zIndex: 60 }}>
       {/* Drag handle */}
@@ -112,19 +56,62 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
       {/* Tabs + Content */}
       <div className="p-4" style={{ height }}>
         <div className="flex items-center gap-4 mb-3">
-          <div style={{ flex: 1, display: 'flex', gap: 16 }}>
-          <span
-            onClick={(e) => { e.stopPropagation(); setTab('workbench') }}
-            className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'workbench' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
-          >Workbench</span>
+          <div style={{ flex: 1, display: 'flex', gap: 16, alignItems: 'center' }}>
           <span
             onClick={(e) => { e.stopPropagation(); setTab('library') }}
             className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'library' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
           >Library</span>
           <span
+            onClick={(e) => { e.stopPropagation(); setTab('workbench') }}
+            className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'workbench' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+          >Workbench</span>
+          <span
             onClick={(e) => { e.stopPropagation(); setTab('case') }}
             className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'case' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
           >Case</span>
+          {tab !== 'case' && (
+            <div
+              className="flex items-center rounded-full cursor-pointer"
+              style={{
+                height: 20,
+                width: searchOpen ? 180 : 20,
+                background: searchOpen ? 'var(--kol-opacity-hex-04, rgba(255,255,255,0.04))' : 'transparent',
+                transition: 'width 400ms cubic-bezier(0.16, 1, 0.3, 1), background 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+                overflow: 'hidden',
+                color: searchOpen || searchText ? 'rgba(255,255,255,0.64)' : 'rgba(255,255,255,0.32)',
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (searchOpen) { setSearchOpen(false); setSearchText('') }
+                else setSearchOpen(true)
+              }}
+            >
+              <span
+                className="flex items-center justify-center flex-shrink-0"
+                style={{
+                  width: 20, height: 20,
+                  opacity: searchOpen ? 0 : 1,
+                  transition: 'opacity 200ms',
+                  position: searchOpen ? 'absolute' : 'relative',
+                }}
+              >
+                <Icon name="search-line" size={14} />
+              </span>
+              {searchOpen && (
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={searchText}
+                  onChange={e => setSearchText(e.target.value)}
+                  onClick={e => e.stopPropagation()}
+                  placeholder="Search…"
+                  className="bg-transparent outline-none kol-helper-xxs flex-1 text-fg-80 caret-current px-3"
+                  onBlur={() => { if (!searchText) setSearchOpen(false) }}
+                  onKeyDown={e => { if (e.key === 'Escape') { setSearchOpen(false); setSearchText('') } }}
+                />
+              )}
+            </div>
+          )}
           </div>
           {onEditCase && (
             <span
@@ -136,36 +123,11 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
 
         <Divider />
 
-        <div className="flex" style={{ flex: 1, minHeight: 0 }}>
-        {/* Category filters (library only) */}
         {tab === 'library' && (
-          <div className="flex flex-col gap-1 pr-4 shrink-0" style={{ paddingTop: 12 }}>
-            <div className="flex gap-2">
-              <span
-                onClick={() => setUFilter(uFilter === 3 ? null : 3)}
-                className={`kol-helper-xs select-none cursor-pointer ${uFilter === 3 ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
-              >3U</span>
-              <span
-                onClick={() => setUFilter(uFilter === 1 ? null : 1)}
-                className={`kol-helper-xs select-none cursor-pointer ${uFilter === 1 ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
-              >1U</span>
-            </div>
-            <div className="border-t border-fg-08" />
-            <span
-              onClick={() => setCategory(null)}
-              className={`kol-helper-xs select-none cursor-pointer ${category === null ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
-            >All</span>
-            {CATEGORIES.map(cat => (
-              <span
-                key={cat}
-                onClick={() => setCategory(category === cat ? null : cat)}
-                className={`kol-helper-xs select-none cursor-pointer ${category === cat ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
-              >{CATEGORY_LABELS[cat]}</span>
-            ))}
-          </div>
+          <ModuleLibraryGrid rows={rows} onAddModule={onAddModule} searchText={searchText} />
         )}
 
-        {/* Modules */}
+        {tab !== 'library' && (
         <div className="flex items-start gap-1 flex-1" style={{ paddingTop: 12, overflowX: 'auto', overflowY: 'hidden', flexWrap: 'nowrap' }}>
         {tab === 'workbench' && modules.length === 0 && (
           <div style={{
@@ -186,7 +148,12 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
           </div>
         )}
 
-        {tab === 'workbench' && modules.map(mod => {
+        {tab === 'workbench' && modules.filter(mod => {
+          if (!searchText) return true
+          const q = searchText.toLowerCase()
+          const def = MODULE_DEFS[mod.type]
+          return def?.label?.toLowerCase().includes(q) || mod.type.toLowerCase().includes(q)
+        }).map(mod => {
           const def = MODULE_DEFS[mod.type]
           if (!def) return null
           const Comp = def.component
@@ -212,19 +179,6 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
             </div>
           )
         })}
-
-        {tab === 'library' && libraryModules.map(mod => (
-          <ModuleCard
-            key={mod.type}
-            type={mod.type}
-            hp={mod.hp}
-            u={mod.u}
-            selected={selectedType === mod.type}
-            rows={rows}
-            onSelect={setSelectedType}
-            onAddToRow={(type, rowId) => onAddModule?.(type, rowId)}
-          />
-        ))}
 
         {tab === 'case' && (
           <div style={{ paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -259,7 +213,7 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
           </div>
         )}
         </div>
-        </div>
+        )}
       </div>
     </div>
   )

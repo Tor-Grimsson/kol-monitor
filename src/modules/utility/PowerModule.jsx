@@ -17,7 +17,7 @@ export default function PowerModule({ id = 'power1' }) {
       }}>
 
         {/* Mute all toggle */}
-        <Toggle value={allEnabled} onChange={toggleAll} label="All" size="sm" horizontal />
+        <Toggle value={allEnabled} onChange={toggleAll} label="MUTE" size="sm" horizontal />
 
         {/* Rocker switch housing */}
         <div

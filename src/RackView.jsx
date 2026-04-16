@@ -1,22 +1,74 @@
 // RackView — renders the eurorack case with modules in rows
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { ModuleInitContext } from './hooks/useModuleEnabled'
 import { MODULE_DEFS } from './moduleRegistry'
 import { TOTAL_HP, hpToPx } from './modules/utility/eurorack'
+import { findFreeOffset } from './hooks/useRackState'
 import Case, { RackRow } from './modules/utility/Case.jsx'
 import { ModuleEditContext } from './modules/utility/Module.jsx'
+import IconButton from './modules/controls/IconButton.jsx'
 
-const ModuleSlot = memo(function ModuleSlot({ mod, editMode, onSendToWorkbench }) {
+function ArrowOverlay({ onLeft, onRight, onUp, onDown }) {
+  if (!onLeft && !onRight && !onUp && !onDown) return null
+  const base = { position: 'absolute', zIndex: 3, pointerEvents: 'auto' }
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
+      {onLeft && (
+        <div style={{ ...base, left: 2, top: '50%', transform: 'translateY(-50%)' }}>
+          <IconButton icon="chevron-left" onClick={onLeft} momentary title="Move left" />
+        </div>
+      )}
+      {onRight && (
+        <div style={{ ...base, right: 2, top: '50%', transform: 'translateY(-50%)' }}>
+          <IconButton icon="chevron-right" onClick={onRight} momentary title="Move right" />
+        </div>
+      )}
+      {onUp && (
+        <div style={{ ...base, top: 2, left: '50%', transform: 'translateX(-50%)' }}>
+          <IconButton icon="chevron-up" onClick={onUp} momentary title="Move up" />
+        </div>
+      )}
+      {onDown && (
+        <div style={{ ...base, bottom: 2, left: '50%', transform: 'translateX(-50%)' }}>
+          <IconButton icon="chevron-down" onClick={onDown} momentary title="Move down" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, editMode, onSendToWorkbench, onSwapInRow, onMoveToRow }) {
   const def = MODULE_DEFS[mod.type]
+  const [hovered, setHovered] = useState(false)
   if (!def) return null
   const Comp = def.component
   const u = def.u || 3
   const aspectDiv = u === 1 ? 12 : 4
   const editCtx = editMode ? { editMode: true, onRemove: () => onSendToWorkbench(mod.id), hp: mod.hp } : null
+
+  let arrows = null
+  if (editMode && hovered) {
+    const sorted = [...row.modules].sort((a, b) => a.offset - b.offset)
+    const idx = sorted.findIndex(m => m.id === mod.id)
+    const targetHeight = u === 1 ? '1u' : '3u'
+    const above = rows[rowIdx - 1]
+    const below = rows[rowIdx + 1]
+    const aboveRow = above && above.height === targetHeight && findFreeOffset(above.modules, mod.hp) !== null ? above : null
+    const belowRow = below && below.height === targetHeight && findFreeOffset(below.modules, mod.hp) !== null ? below : null
+    arrows = {
+      onLeft: idx > 0 ? () => onSwapInRow(row.id, mod.id, 'left') : null,
+      onRight: idx >= 0 && idx < sorted.length - 1 ? () => onSwapInRow(row.id, mod.id, 'right') : null,
+      onUp: aboveRow ? () => onMoveToRow(mod.id, aboveRow.id) : null,
+      onDown: belowRow ? () => onMoveToRow(mod.id, belowRow.id) : null,
+    }
+  }
+
   return (
     <div
       data-module-id={mod.id}
+      onMouseEnter={() => editMode && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         width: hpToPx(mod.hp),
         aspectRatio: `${mod.hp * aspectDiv} / ${TOTAL_HP}`,
@@ -30,11 +82,12 @@ const ModuleSlot = memo(function ModuleSlot({ mod, editMode, onSendToWorkbench }
           <Comp id={mod.id} init={mod.state} />
         </ModuleInitContext.Provider>
       </ModuleEditContext.Provider>
+      {arrows && <ArrowOverlay {...arrows} />}
     </div>
   )
 })
 
-const RackRowContent = memo(function RackRowContent({ row, editMode, onSendToWorkbench, rowRefs }) {
+const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, editMode, onSendToWorkbench, onSwapInRow, onMoveToRow, rowRefs }) {
   const sorted = useMemo(() =>
     [...row.modules].sort((a, b) => a.offset - b.offset),
     [row.modules]
@@ -46,19 +99,39 @@ const RackRowContent = memo(function RackRowContent({ row, editMode, onSendToWor
         style={{ display: 'flex', width: '100%', height: '100%', gap: 2, alignItems: 'flex-start' }}
       >
         {sorted.map(mod => (
-          <ModuleSlot key={mod.id} mod={mod} editMode={editMode} onSendToWorkbench={onSendToWorkbench} />
+          <ModuleSlot
+            key={mod.id}
+            mod={mod}
+            row={row}
+            rowIdx={rowIdx}
+            rows={rows}
+            editMode={editMode}
+            onSendToWorkbench={onSendToWorkbench}
+            onSwapInRow={onSwapInRow}
+            onMoveToRow={onMoveToRow}
+          />
         ))}
       </div>
     </RackRow>
   )
 })
 
-export default memo(function RackView({ rows, editMode, onSendToWorkbench, rowRefs }) {
+export default memo(function RackView({ rows, editMode, onSendToWorkbench, onSwapInRow, onMoveToRow, rowRefs }) {
   return (
     <div data-rack-view>
     <Case>
-      {rows.map(row => (
-        <RackRowContent key={row.id} row={row} editMode={editMode} onSendToWorkbench={onSendToWorkbench} rowRefs={rowRefs} />
+      {rows.map((row, rowIdx) => (
+        <RackRowContent
+          key={row.id}
+          row={row}
+          rowIdx={rowIdx}
+          rows={rows}
+          editMode={editMode}
+          onSendToWorkbench={onSendToWorkbench}
+          onSwapInRow={onSwapInRow}
+          onMoveToRow={onMoveToRow}
+          rowRefs={rowRefs}
+        />
       ))}
     </Case>
     </div>

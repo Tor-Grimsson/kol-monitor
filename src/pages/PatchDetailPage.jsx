@@ -39,7 +39,7 @@ export default function PatchDetailPage() {
             <div>
               <h2 className="text-fg-80 kol-helper-s" style={{ marginBottom: 16 }}>Description</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {(patch.description || 'No description yet.').split('. ').filter(Boolean).map((s, i) => (
+                {(patch.description || '').split('. ').filter(Boolean).map((s, i) => (
                   <div key={i} className="text-fg-48 kol-helper-xxs">
                     {s.endsWith('.') ? s : s + '.'}
                   </div>

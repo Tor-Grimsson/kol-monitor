@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MODULE_DEFS, CATEGORIES } from '../moduleRegistry'
 import Button from '../components/atoms/Button'
@@ -40,6 +40,7 @@ export default function CreatePage() {
   const [draggingModule, setDraggingModule] = useState(null)
   const [dragPos, setDragPos] = useState({ x: 0, y: 0 })
   const zoomInputEditing = useRef(false)
+  const justDraggedRef = useRef(false)
 
   useEffect(() => {
     if (!zoomInputEditing.current) setZoomInput(String(Math.round(caseZoom * 100)))
@@ -59,7 +60,7 @@ export default function CreatePage() {
   const routing = usePatchRouting()
   const [searchParams] = useSearchParams()
   const resetDone = useRef(false)
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (resetDone.current) return
     resetDone.current = true
     if (searchParams.get('from') !== 'rack') {
@@ -97,8 +98,10 @@ export default function CreatePage() {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       if (started) {
+        justDraggedRef.current = true
         addModule(type)
         setDraggingModule(null)
+        requestAnimationFrame(() => { justDraggedRef.current = false })
       }
     }
 
@@ -189,13 +192,13 @@ export default function CreatePage() {
             { value: 'case', label: 'Case' },
             { value: 'modules', label: 'Modules' },
           ]}
-          defaultViewMode="case"
+          viewMode={view}
+          onViewModeChange={setView}
           layoutOptions={view === 'modules' ? [
             { value: 'list', label: 'List' },
             { value: 'grid', label: 'Grid' },
           ] : undefined}
           defaultLayout="list"
-          onFilterChange={(filters, mode) => { if (mode !== view) setView(mode) }}
           renderItem={(items, viewMode, layout) => {
             if (view === 'case') {
               return (
@@ -226,7 +229,7 @@ export default function CreatePage() {
                         title={m.label}
                         detail={`${m.hp}HP ${m.u}U — ${m.category}`}
                         preview={<img src={`/previews/modules/${m.type}.png`} alt={m.label} />}
-                        onClick={() => addModule(m.type)}
+                        onClick={() => { if (justDraggedRef.current) return; addModule(m.type) }}
                       />
                     </div>
                   ))}
@@ -243,7 +246,7 @@ export default function CreatePage() {
                       title={m.label}
                       action={
                         <span
-                          onClick={(e) => { e.stopPropagation(); addModule(m.type) }}
+                          onClick={(e) => { e.stopPropagation(); if (justDraggedRef.current) return; addModule(m.type) }}
                           className="cursor-pointer"
                           style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#c0392b', flexShrink: 0 }}
                         />

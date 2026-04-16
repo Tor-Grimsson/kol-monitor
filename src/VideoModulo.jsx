@@ -11,6 +11,7 @@ import { ROW_WIDTH } from './modules/utility/eurorack'
 import RackViewport from './RackViewport.jsx'
 import ModuloSidebar from './ModuloSidebar.jsx'
 import ShortcutsOverlay from './ShortcutsOverlay.jsx'
+import LibrarySearchOverlay from './LibrarySearchOverlay.jsx'
 import Icon from './icons/Icon.jsx'
 
 const BASE_WIDTH = ROW_WIDTH + 52
@@ -38,13 +39,14 @@ function VideoModuloInner() {
   const [cableLocked, setCableLocked] = usePersistedState('rack-cableLocked', false)
   const [cableVisibility, setCableVisibility] = usePersistedState('rack-cableVis', 'trans')
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [showLibrarySearch, setShowLibrarySearch] = useState(false)
   const [displayHidden, setDisplayHidden] = usePersistedState('rack-displayHidden', true)
 
   const rackRef2 = useRef(rack)
   rackRef2.current = rack
   const rackOuterRef = useRef(null)
 
-  useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden })
+  useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden, setShowLibrarySearch })
 
   // Reset nav visibility when leaving rack
   const navRef = useRef(nav)
@@ -129,6 +131,14 @@ function VideoModuloInner() {
 
       {showShortcuts && <ShortcutsOverlay onClose={() => setShowShortcuts(false)} />}
 
+      {showLibrarySearch && (
+        <LibrarySearchOverlay
+          rows={rack.rows}
+          onAddModule={(type, rowId) => rack.addModule(type, rowId)}
+          onClose={() => setShowLibrarySearch(false)}
+        />
+      )}
+
       {!displayHidden && <button
         onClick={() => setViewLocked(v => { viewLockedRef.current = !v; return !v })}
         className="fixed z-50 kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
@@ -137,7 +147,7 @@ function VideoModuloInner() {
         [{viewLocked ? 'Locked' : 'Lock'}]
       </button>}
 
-      <RackViewport style={{ minHeight: '100vh', marginLeft: sidebarOpen ? 'var(--sidebar-width)' : 0 }} onEditCase={() => navigate('/create?from=rack')} />
+      <RackViewport style={{ minHeight: '100vh', marginLeft: sidebarOpen ? 'var(--sidebar-width)' : 0 }} onEditCase={() => navigate('/create?from=rack')} viewLockedRef={viewLockedRef} />
     </div>
   )
 }

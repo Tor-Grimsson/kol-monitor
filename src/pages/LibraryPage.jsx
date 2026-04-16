@@ -186,7 +186,7 @@ export default function LibraryPage() {
                               <h2 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>{p.title}</h2>
                               <p className="text-fg-48 kol-helper-xs" style={{ marginBottom: 16 }}>{p.detail}</p>
                               <p className="text-fg-48 kol-helper-xxs" style={{ lineHeight: 1.6 }}>
-                                {patches[p.name]?.description || 'No description yet.'}
+                                {patches[p.name]?.description || ''}
                               </p>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>

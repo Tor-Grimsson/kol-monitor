@@ -97,7 +97,7 @@ const DEFAULT_ROWS = [
 let rowCounter = 5
 
 // Find first gap in a row that fits the given HP width
-function findFreeOffset(modules, hp) {
+export function findFreeOffset(modules, hp) {
   const sorted = [...modules].sort((a, b) => a.offset - b.offset)
   let pos = 0
   for (const m of sorted) {
@@ -190,6 +190,54 @@ export function useRackState() {
     ))
   }, [])
 
+  // Swap a module with its neighbor in the same row. Preserves surrounding gaps,
+  // collapses the gap between the two swapped modules.
+  const swapInRow = useCallback((rowId, modId, direction) => {
+    setRows(prev => prev.map(row => {
+      if (row.id !== rowId) return row
+      const sorted = [...row.modules].sort((a, b) => a.offset - b.offset)
+      const i = sorted.findIndex(m => m.id === modId)
+      if (i < 0) return row
+      const j = direction === 'left' ? i - 1 : i + 1
+      if (j < 0 || j >= sorted.length) return row
+      const a = sorted[i]
+      const b = sorted[j]
+      const leftmost = Math.min(a.offset, b.offset)
+      const first = direction === 'left' ? a : b
+      const second = direction === 'left' ? b : a
+      const firstNew = { ...first, offset: leftmost }
+      const secondNew = { ...second, offset: leftmost + first.hp }
+      return { ...row, modules: row.modules.map(m => {
+        if (m.id === first.id) return firstNew
+        if (m.id === second.id) return secondNew
+        return m
+      }) }
+    }))
+  }, [])
+
+  // Move a module to another row. Target row must match height and have space.
+  const moveToRow = useCallback((modId, targetRowId) => {
+    setRows(prev => {
+      let mod = null
+      const withoutMod = prev.map(row => {
+        const found = row.modules.find(m => m.id === modId)
+        if (found) mod = found
+        return found ? { ...row, modules: row.modules.filter(m => m.id !== modId) } : row
+      })
+      if (!mod) return prev
+      const targetIdx = withoutMod.findIndex(r => r.id === targetRowId)
+      if (targetIdx < 0) return prev
+      const target = withoutMod[targetIdx]
+      const def = MODULE_DEFS[mod.type]
+      const targetHeight = (def?.u || 3) === 1 ? '1u' : '3u'
+      if (target.height !== targetHeight) return prev
+      const offset = findFreeOffset(target.modules, mod.hp)
+      if (offset === null) return prev
+      withoutMod[targetIdx] = { ...target, modules: [...target.modules, { ...mod, offset }] }
+      return withoutMod
+    })
+  }, [])
+
   const moveModule = useCallback((rowIdx, modId, newOffset) => {
     const snapped = Math.round(newOffset / 2) * 2
     setRows(prev => prev.map((row, ri) => {
@@ -240,10 +288,12 @@ export function useRackState() {
     resetRack,
     addModule,
     moveModule,
+    swapInRow,
+    moveToRow,
     sendToWorkbench,
     returnFromWorkbench,
     addRow,
     removeRow,
     setRowHeight,
-  }), [rows, workbench, editMode, setEditMode, loadPreset, resetRack, addModule, moveModule, sendToWorkbench, returnFromWorkbench, addRow, removeRow, setRowHeight])
+  }), [rows, workbench, editMode, setEditMode, loadPreset, resetRack, addModule, moveModule, swapInRow, moveToRow, sendToWorkbench, returnFromWorkbench, addRow, removeRow, setRowHeight])
 }

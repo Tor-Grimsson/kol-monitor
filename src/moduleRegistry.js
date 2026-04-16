@@ -133,11 +133,11 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'clr', signal: 'color', description: 'Stroke color override' },
     { type: 'output', name: 'out', signal: 'pen', description: 'Pen style object for display modules' },
   ] },
-  joystick:  { component: JoystickModule,    hp: 12, u: 1, category: 'control',    label: 'Joystick',    description: 'Interactive XY touchpad (96x96) with a vertical Z slider for three-axis manual control. Snap-to-center toggle returns the pad to midpoint on release. Outputs 3 independent scalar values (X, Y, Z) ranging from 0 to 100. Ideal for real-time performance control of multiple parameters simultaneously.', controls: [
+  joystick:  { component: JoystickModule,    hp: 12, u: 1, category: 'control',    label: 'Joystick',    description: 'Interactive XY touchpad (96x96) with a vertical slider for three-axis manual control. Snap-to-center returns to midpoint on release. Outputs 3 independent bipolar scalars (A, B, C) centered at 0 in range -100..+100. A = horizontal pad, B = vertical pad (up = positive), C = vertical slider (up = positive). Axis assignment is preference-dependent.', controls: [
     { type: 'toggle', name: 'Snap', description: 'Return to center on release' },
-    { type: 'output', name: 'x', signal: 'scalar', description: 'Horizontal position 0–100' },
-    { type: 'output', name: 'y', signal: 'scalar', description: 'Vertical position 0–100' },
-    { type: 'output', name: 'z', signal: 'scalar', description: 'Z slider value 0–100' },
+    { type: 'output', name: 'a', signal: 'scalar', description: 'Vertical pad, bipolar −100..+100 (up = positive)' },
+    { type: 'output', name: 'b', signal: 'scalar', description: 'Horizontal pad, bipolar −100..+100 (left/right)' },
+    { type: 'output', name: 'c', signal: 'scalar', description: 'Vertical slider, bipolar −100..+100 (up = positive)' },
   ] },
   expression:{ component: ExpressionModule,   hp: 20, u: 1, category: 'control',    label: 'Expr',        description: 'Dual expression generator. Each row takes a math expression evaluated per frame as a signal source. Helpers: wave(x), saw(x), tri(x), pulse(x,w), bell(x), step(x,n), rand(), ease(x,c), exp(x), log(x). Variables: t (seconds), f (frame), PI, PHI. CV inputs a and b are available by name inside the expression for cross-modulation. Clock input resets the time reference on rising edge.', controls: [
     { type: 'input', name: 'a', signal: 'scalar', description: 'CV input referenced as `a` in expressions' },

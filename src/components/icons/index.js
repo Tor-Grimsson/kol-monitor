@@ -55,6 +55,7 @@ export const ICONS = {
     'rotate-right',
     'save',
     'search',
+    'search-line',
     'settings-01',
     'settings-02',
     'share',

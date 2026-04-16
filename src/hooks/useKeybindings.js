@@ -3,14 +3,17 @@
 
 import { useEffect } from 'react'
 
-// VideoModulo-specific keybindings (sidebar, edit, mute, cables, shortcuts, display)
+// VideoModulo-specific keybindings (sidebar, edit, mute, cables, shortcuts, display, library search)
 // Viewport keybindings (space, zoom, snap) are handled by RackViewport
-export function useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden }) {
+export function useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden, setShowLibrarySearch }) {
   useEffect(() => {
     const noInput = (e) => !e.target.closest('input, textarea')
 
     const onKeyDown = (e) => {
       const mod = e.metaKey || e.ctrlKey
+
+      // Library search overlay (Cmd/Ctrl+K) — works regardless of input focus
+      if (mod && e.key === 'k') { e.preventDefault(); setShowLibrarySearch(v => !v); return }
 
       // Sidebar
       if ((mod || noInput(e)) && e.key === 'h') { e.preventDefault(); setSidebarOpen(s => !s) }

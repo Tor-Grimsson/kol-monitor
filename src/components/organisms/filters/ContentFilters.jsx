@@ -29,6 +29,8 @@ const ContentFilters = ({
   filterGroups = [],
   renderItem,
   viewModeOptions,
+  viewMode: viewModeProp,
+  onViewModeChange,
   defaultViewMode = 'list',
   layoutOptions,
   defaultLayout = 'grid',
@@ -41,7 +43,8 @@ const ContentFilters = ({
 }) => {
   const [activeFilters, setActiveFilters] = useState(new Set())
   const [isExpanded, setIsExpanded] = useState(false)
-  const [viewMode, setViewMode] = useState(defaultViewMode)
+  const [internalViewMode, setInternalViewMode] = useState(defaultViewMode)
+  const viewMode = viewModeProp !== undefined ? viewModeProp : internalViewMode
   const [layout, setLayout] = useState(defaultLayout)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -83,7 +86,8 @@ const ContentFilters = ({
   }
 
   const handleViewModeChange = (mode) => {
-    setViewMode(mode)
+    if (onViewModeChange) onViewModeChange(mode)
+    else setInternalViewMode(mode)
     if (onFilterChange) {
       onFilterChange(activeFilters, mode)
     }

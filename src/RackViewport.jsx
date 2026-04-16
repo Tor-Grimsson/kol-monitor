@@ -1,7 +1,7 @@
 // RackViewport — the core rack canvas with pan, zoom, snap, cables, workbench
 // Used by both VideoModulo (full page) and CreatePage (embedded)
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import usePersistedState from './hooks/usePersistedState'
 import { useModuleRegistry } from './hooks/useModuleRegistry.jsx'
 import { usePatchRouting } from './hooks/usePatchRouting.jsx'
@@ -17,7 +17,7 @@ import Workbench from './Workbench.jsx'
 
 const BASE_WIDTH = ROW_WIDTH + 52
 
-export default function RackViewport({ style, onEditCase, editMode: editModeOverride }) {
+export default function RackViewport({ style, onEditCase, editMode: editModeOverride, viewLockedRef: viewLockedRefProp, snapPadding = 48 }) {
   const { modulesRef } = useModuleRegistry()
   const routing = usePatchRouting()
   const { connectionsRef } = routing
@@ -27,8 +27,8 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
   const rack = useRack()
   const { power, timingRef } = useCasePower()
   const [zoom, setZoom] = usePersistedState('rack-zoom', 1)
-  const [viewLocked, setViewLocked] = useState(false)
-  const viewLockedRef = useRef(false)
+  const localLockedRef = useRef(false)
+  const viewLockedRef = viewLockedRefProp || localLockedRef
   const [cableLocked, setCableLocked] = usePersistedState('rack-cableLocked', false)
   const [cableVisibility, setCableVisibility] = usePersistedState('rack-cableVis', 'trans')
   routing.lockedRef.current = cableLocked
@@ -108,17 +108,17 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
         const cr = outer.getBoundingClientRect()
         const vw = cr.width
         const vh = cr.height
-        const p = 24
+        const p = snapPadding
         const targets = {
-          7: { x: cr.left, y: cr.top + p },
+          7: { x: cr.left + p, y: cr.top + p },
           8: { x: cr.left + (vw - rect.width) / 2, y: cr.top + p },
-          9: { x: cr.left + vw - p * 2 - rect.width, y: cr.top + p },
-          4: { x: cr.left, y: cr.top + (vh - rect.height) / 2 },
+          9: { x: cr.left + vw - p - rect.width, y: cr.top + p },
+          4: { x: cr.left + p, y: cr.top + (vh - rect.height) / 2 },
           5: { x: cr.left + (vw - rect.width) / 2, y: cr.top + (vh - rect.height) / 2 },
-          6: { x: cr.left + vw - p * 2 - rect.width, y: cr.top + (vh - rect.height) / 2 },
-          1: { x: cr.left, y: cr.top + vh - p - rect.height },
+          6: { x: cr.left + vw - p - rect.width, y: cr.top + (vh - rect.height) / 2 },
+          1: { x: cr.left + p, y: cr.top + vh - p - rect.height },
           2: { x: cr.left + (vw - rect.width) / 2, y: cr.top + vh - p - rect.height },
-          3: { x: cr.left + vw - p * 2 - rect.width, y: cr.top + vh - p - rect.height },
+          3: { x: cr.left + vw - p - rect.width, y: cr.top + vh - p - rect.height },
         }
         const t = targets[e.key]
         const dx = (t.x - rect.left) / zoom
@@ -148,8 +148,8 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const rect = el.getBoundingClientRect()
       const cr = outer.getBoundingClientRect()
-      const p = 24
-      const dx = (cr.left - rect.left) / zoom
+      const p = snapPadding
+      const dx = (cr.left + p - rect.left) / zoom
       const dy = (cr.top + p - rect.top) / zoom
       setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }))
     }))
@@ -168,6 +168,8 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
             rows={rack.rows}
             editMode={editModeOverride !== undefined ? editModeOverride : rack.editMode}
             onSendToWorkbench={rack.sendToWorkbench}
+            onSwapInRow={rack.swapInRow}
+            onMoveToRow={rack.moveToRow}
             rowRefs={rowRefs}
           />
         </div>
