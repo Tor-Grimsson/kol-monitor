@@ -686,8 +686,8 @@ export const patches = {
       { height: '3u', modules: [
         { type: 'lfo', id: 'lfo', state: { rate: 15, shape: 'sin', depth: 60, offset: 50 } },
         { type: 'wireframe', id: 'wire', state: { shape: 4, rx: 50, ry: 50, rz: 50, spd: 30, scl: 55, res: 50, fov: 50 } },
-        { type: 'magneto', id: 'mag', state: { mode: 'loop', dry: 15, wet: 85, speedPitch: 35, recLvl: 90, headLevels: [90, 75, 60, 40], headOn: [true, true, true, false], repeats: 45, lowCut: 25, crinkle: 20, wow: 15, spring: 10, tapeAge: 5, heads: 0, pan: 0, fbInf: false, fbPlay: true, fbPause: false } },
-        { type: 'pen', id: 'pen', state: { thickness: 20, opacity: 80 } },
+        { type: 'magneto', id: 'mag', state: { mode: 'echo', dry: 15, wet: 85, speedPitch: 35, recLvl: 90, headLevels: [90, 75, 60, 40], headOn: [true, true, true, false], repeats: 45, lowCut: 25, crinkle: 20, wow: 15, spring: 10, tapeAge: 5, heads: 0, pan: 0, fbInf: false, fbPlay: true, fbPause: false } },
+        { type: 'pen', id: 'pen', state: { thickness: 20, opacity: 80, fill: true } },
         { type: 'monitor', id: 'mon' },
       ]},
     ],

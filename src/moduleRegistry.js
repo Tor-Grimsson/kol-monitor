@@ -272,7 +272,7 @@ export const MODULE_DEFS = {
     { type: 'selector', name: 'Heads', options: 'even, triplet, shift', description: 'Delay spacing pattern' },
     { type: 'selector', name: 'Pan', options: 'LRLR, center, LRRL', description: 'Head rotation direction' },
     { type: 'toggle', name: 'Head 1–4', description: 'Per-head enable/disable' },
-    { type: 'selector', name: 'Mode', options: 'echo, loop, sample', description: 'Stroke, fill, or both' },
+    { type: 'selector', name: 'Mode', options: 'echo, slit, smear', description: 'Effect algorithm — echo: per-head multi-tap, slit: vertex slit-scan, smear: dense motion-blur trail' },
     { type: 'input', name: 'in', signal: 'any', description: 'Signal input' },
     { type: 'input', name: 'clr', signal: 'color', description: 'Color for dry output' },
     { type: 'input', name: 'clk', signal: 'scalar', description: 'Clock — modulates speed and resets tap phase' },

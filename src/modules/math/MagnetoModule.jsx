@@ -21,12 +21,32 @@ import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 const BUF_SIZE = 120 // 2 seconds at 60fps
 const NUM_HEADS = 4
 
-const HEAD_COLORS = [
-  { r: 1, g: 0.1, b: 0.1 },    // head 1: red
-  { r: 0.1, g: 1, b: 0.1 },    // head 2: green
-  { r: 0.2, g: 0.2, b: 1 },    // head 3: blue
-  { r: 1, g: 0.85, b: 0.2 },   // head 4: amber
+// Palette presets — selectable via the `palette` toggle (4 colors per palette, one per head)
+const PALETTES = [
+  // 70s — VHS/Vasulka warm, default
+  [
+    { r: 1, g: 0.1, b: 0.1 },     // head 1: red
+    { r: 0.1, g: 1, b: 0.1 },     // head 2: green
+    { r: 0.2, g: 0.2, b: 1 },     // head 3: blue
+    { r: 1, g: 0.85, b: 0.2 },    // head 4: amber
+  ],
+  // neon — punchy CMYK + white
+  [
+    { r: 0.0, g: 1.0, b: 1.0 },   // head 1: cyan
+    { r: 1.0, g: 0.0, b: 1.0 },   // head 2: magenta
+    { r: 1.0, g: 1.0, b: 0.0 },   // head 3: yellow
+    { r: 1.0, g: 1.0, b: 1.0 },   // head 4: white
+  ],
+  // mono — greyscale, 4 brightnesses
+  [
+    { r: 1.0, g: 1.0, b: 1.0 },   // head 1: white
+    { r: 0.7, g: 0.7, b: 0.7 },   // head 2: light grey
+    { r: 0.4, g: 0.4, b: 0.4 },   // head 3: mid grey
+    { r: 0.2, g: 0.2, b: 0.2 },   // head 4: dark grey
+  ],
 ]
+// Backward-compat alias for any code still referencing HEAD_COLORS as the default
+const HEAD_COLORS = PALETTES[0]
 
 // Per-head chromatic offset — like CRT convergence drift
 const HEAD_OFFSETS = [
@@ -98,7 +118,7 @@ function MagnetoPanel({
   fbInf, fbRev, fbFwd, fbPlay, fbPause,
   lowCut, tapeAge, crinkle, wow, spring, heads, pan,
   scl, ofs,
-  transportMode, rev, order, layer,
+  transportMode, rev, order, layer, palette,
   enabled, onToggle, id,
   onModeChange, onDryChange, onWetChange, onSpeedPitchChange, onTap,
   onRecLvlChange, onHeadLevelChange, onHeadToggle, onRepeatsChange,
@@ -106,7 +126,7 @@ function MagnetoPanel({
   onLowCutChange, onTapeAgeChange, onCrinkleChange, onWowChange, onSpringChange,
   onHeadsChange, onPanChange,
   onSclChange, onOfsChange,
-  onTransportMode, onHeadTransport, onOrderChange, onLayerChange,
+  onTransportMode, onHeadTransport, onOrderChange, onLayerChange, onPaletteChange,
   inConn, inRef, clrConn, clrRef,
   wetRef, dryOutRef,
   clk1Ref, clk2Ref, clk3Ref, clk4Ref,
@@ -144,13 +164,27 @@ function MagnetoPanel({
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 16 }}>
                     <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>modes</span>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <Toggle value={true} onChange={() => { const modes = ['echo','loop','smpl']; onModeChange(modes[(modes.indexOf(mode) + 1) % 3]) }} size="md" />
+                      <Toggle value={true} onChange={() => { const modes = ['echo','slit','smear']; onModeChange(modes[(modes.indexOf(mode) + 1) % 3]) }} size="md" />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        {['echo', 'loop', 'smpl'].map(m => (
+                        {['echo', 'slit', 'smear'].map(m => (
                           <span key={m} className="kol-helper-xxxxs" style={{
                             color: mode === m ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)',
                             textTransform: 'uppercase', lineHeight: 1,
                           }}>{m}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 16 }} title="Palette: 70s / neon / mono">
+                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>palette</span>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      <Toggle value={true} onChange={() => onPaletteChange((palette + 1) % 3)} size="md" />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {['70s', 'neon', 'mono'].map((p, i) => (
+                          <span key={p} className="kol-helper-xxxxs" style={{
+                            color: palette === i ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)',
+                            textTransform: 'uppercase', lineHeight: 1,
+                          }}>{p}</span>
                         ))}
                       </div>
                     </div>
@@ -323,7 +357,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
     fbInf={false} fbRev={false} fbFwd={false} fbPlay={true} fbPause={false}
     lowCut={0} tapeAge={0} crinkle={0} wow={0} spring={0}
     scl={50} ofs={0}
-    transportMode={false} rev={false} order={0} layer={0}
+    transportMode={false} rev={false} order={0} layer={0} palette={0}
     enabled={false} onToggle={() => {}} id={id}
     onModeChange={() => {}} onDryChange={() => {}} onWetChange={() => {}} onSpeedPitchChange={() => {}} onTap={() => {}}
     onRecLvlChange={() => {}} onHeadLevelChange={() => {}} onHeadToggle={() => {}} onRepeatsChange={() => {}}
@@ -331,7 +365,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
     onLowCutChange={() => {}} onTapeAgeChange={() => {}} onCrinkleChange={() => {}} onWowChange={() => {}} onSpringChange={() => {}}
     heads={0} pan={1} onHeadsChange={() => {}} onPanChange={() => {}}
     onSclChange={() => {}} onOfsChange={() => {}}
-    onTransportMode={() => {}} onHeadTransport={() => {}} onOrderChange={() => {}} onLayerChange={() => {}}
+    onTransportMode={() => {}} onHeadTransport={() => {}} onOrderChange={() => {}} onLayerChange={() => {}} onPaletteChange={() => {}}
     inConn={false} inRef={{ current: null }} clrConn={false} clrRef={{ current: null }}
     wetRef={{ current: null }} dryOutRef={{ current: null }}
     clk1Ref={{ current: null }} clk2Ref={{ current: null }} clk3Ref={{ current: null }} clk4Ref={{ current: null }}
@@ -362,6 +396,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   const [rev, setRev] = useState(init?.rev ?? false) // false=forward, true=reverse playback
   const [order, setOrder] = useState(init?.order ?? 0) // 0=wet on top, 1=mix (TODO), 2=dry on top (disco)
   const [layer, setLayer] = useState(init?.layer ?? 0) // 0=1234, 1=4321, 2=alt (1,3,2,4) — head z-order within wet
+  const [palette, setPalette] = useState(init?.palette ?? 0) // 0=70s, 1=neon, 2=mono
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
@@ -391,6 +426,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   const revRef = useRef(false)
   const orderRef = useRef(0)
   const layerRef = useRef(0)
+  const paletteRef = useRef(0)
 
   const bufferRef = useRef(new Array(BUF_SIZE).fill(null))
   const writeHeadRef = useRef(0)
@@ -435,6 +471,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   revRef.current = rev
   orderRef.current = order
   layerRef.current = layer
+  paletteRef.current = palette
 
   const inConn = cp.has('in')
   const clrConn = cp.has('clr')
@@ -455,7 +492,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   }
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { mode, dry, wet, speedPitch, recLvl, headLevels, headOn, repeats, fbInf, fbPlay, fbPause, lowCut, tapeAge, crinkle, wow, spring, heads, pan, scl, ofs, transportMode, rev, order, layer }
+  saveStateRef.current = { mode, dry, wet, speedPitch, recLvl, headLevels, headOn, repeats, fbInf, fbPlay, fbPause, lowCut, tapeAge, crinkle, wow, spring, heads, pan, scl, ofs, transportMode, rev, order, layer, palette }
 
   useModule({
     id,
@@ -566,6 +603,9 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       const headOrder = HEAD_ORDERS[layerRef.current] || HEAD_ORDERS[0]
 
       const groups = []
+      const fxMode = modeRef.current
+      const wetMix = wetLvlRef.current / 100
+      const dirSign = revRef.current ? -1 : 1
 
       for (let oi = 0; oi < NUM_HEADS; oi++) {
         const h = headOrder[oi]
@@ -575,44 +615,111 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
 
         const baseDelay = Math.round(headDelays[h] * BUF_SIZE * (2 - spd) * (1 + ofsVal))
         const headSign = panSigns[h]
+        const chroma = HEAD_OFFSETS[h]
 
-        const m = modeRef.current
-        const doFill = m === 'loop' || m === 'smpl'
-        const doStroke = m === 'echo' || m === 'smpl'
-        const wetMix = wetLvlRef.current / 100
+        if (fxMode === 'slit') {
+          // SLIT-SCAN — per-row time-slicing
+          // Output[row r] = past_frame[time(r)].vertices_that_were_at_that_row
+          // Band count fixed at 32 (smooth without fragmentation)
+          // Slit window capped to buffer length so no wrap-repeat
+          // Keep edges if at least one endpoint is in-band (avoids broken wireframes)
+          const NUM_BANDS = 32
+          const slitMax = Math.min(baseDelay * rpt, BUF_SIZE - 2)
+          for (let b = 0; b < NUM_BANDS; b++) {
+            const yMin = b / NUM_BANDS
+            const yMax = (b + 1) / NUM_BANDS
+            const tNorm = b / Math.max(1, NUM_BANDS - 1)
+            // forward: top band (b=0) = oldest; rev flips
+            const delayRatio = revRef.current ? tNorm : (1 - tNorm)
+            const tDelay = Math.round(delayRatio * slitMax)
+            const readPos = ((writeHeadRef.current - 1 - tDelay) % BUF_SIZE + BUF_SIZE) % BUF_SIZE
+            const past = buf[readPos]
+            if (!past || past.type !== 'points' || !past.value) continue
 
-        const dirSign = revRef.current ? -1 : 1
-        for (let r = 0; r < rpt; r++) {
-          const tapDelay = baseDelay * (r + 1) * dirSign
-          const readPos = ((writeHeadRef.current - 1 - tapDelay) % BUF_SIZE + BUF_SIZE) % BUF_SIZE
-          const tap = buf[readPos]
-          if (!tap || tap.type !== 'points' || !tap.value) continue
+            // Build vertex list — keep ALL past vertices (so edges work)
+            // Mark which are in-band; only render edges that touch the band
+            const bandPts = past.value.map(pt => ({ x: pt.x + chroma.x, y: pt.y + chroma.y }))
+            const inBand = new Uint8Array(past.value.length)
+            let anyInBand = false
+            for (let i = 0; i < past.value.length; i++) {
+              if (past.value[i].y >= yMin && past.value[i].y < yMax) {
+                inBand[i] = 1
+                anyInBand = true
+              }
+            }
+            if (!anyInBand) continue
 
-          // Chromatic offset — built-in per-head CRT drift + wow amplifies it
-          const chroma = HEAD_OFFSETS[h]
-          const drift = (1 + wowAmt * 3) * (r + 1)
-          const jx = chroma.x * drift
-          const jy = chroma.y * drift
-          // Subtle rotation — crinkle adds gentle twist per repeat
-          const headRot = crnk * (Math.PI / 24) * (r + 1) * headSign
-          // Subtle scale — spring adds slight zoom per repeat, sclCV scales composite
-          const headScl = (1 - sprng * 0.02 * (r + 1)) * (0.5 + sclVal)
-          // Tape degradation — vertex dropout on later repeats
-          const dropRate = age * 0.3 * (r / rpt)
+            // Keep edges that touch the band (at least one endpoint inside)
+            // — this preserves wireframe continuity at band boundaries
+            const bandEdges = []
+            if (past.edges) {
+              for (const [a, e] of past.edges) {
+                if (inBand[a] || inBand[e]) bandEdges.push([a, e])
+              }
+            }
 
-          const xformed = transformPoints(tap.value, tap.edges, headRot, headScl, jx, jy, dropRate)
-          if (!xformed) continue
+            groups.push({
+              pts: bandPts,
+              edges: bandEdges.length > 0 ? bandEdges : null,
+              color: (PALETTES[paletteRef.current] || PALETTES[0])[h],
+              opacity: lvl * wetMix,
+              fill: false,
+              stroke: true,
+            })
+          }
+        } else if (fxMode === 'smear') {
+          // SMEAR — dense uniform 1-frame taps, low opacity each, single chromatic head
+          // Stacks many faint past-frame copies = continuous motion-blur trail
+          const numSmears = Math.max(2, rpt * 4)
+          for (let s = 0; s < numSmears; s++) {
+            const tapDelay = (s + 1) * dirSign
+            const readPos = ((writeHeadRef.current - 1 - tapDelay) % BUF_SIZE + BUF_SIZE) % BUF_SIZE
+            const past = buf[readPos]
+            if (!past || past.type !== 'points' || !past.value) continue
+            const dropFactor = (1 - s / numSmears)
+            const offsetPts = past.value.map(pt => ({
+              x: pt.x + chroma.x * (s + 1) * 0.3,
+              y: pt.y + chroma.y * (s + 1) * 0.3,
+            }))
+            groups.push({
+              pts: offsetPts,
+              edges: past.edges,
+              color: (PALETTES[paletteRef.current] || PALETTES[0])[h],
+              opacity: dropFactor * lvl * wetMix,
+              fill: false,
+              stroke: true,
+            })
+          }
+        } else {
+          // ECHO (default — also fallback for legacy 'loop'/'smpl' values)
+          // Per-head multi-tap with full tape character
+          for (let r = 0; r < rpt; r++) {
+            const tapDelay = baseDelay * (r + 1) * dirSign
+            const readPos = ((writeHeadRef.current - 1 - tapDelay) % BUF_SIZE + BUF_SIZE) % BUF_SIZE
+            const tap = buf[readPos]
+            if (!tap || tap.type !== 'points' || !tap.value) continue
 
-          const decay = Math.pow(fbInfRef.current ? 0.98 : 0.7, r) * lvl
+            const drift = (1 + wowAmt * 3) * (r + 1)
+            const jx = chroma.x * drift
+            const jy = chroma.y * drift
+            const headRot = crnk * (Math.PI / 24) * (r + 1) * headSign
+            const headScl = (1 - sprng * 0.02 * (r + 1)) * (0.5 + sclVal)
+            const dropRate = age * 0.3 * (r / rpt)
 
-          groups.push({
-            pts: xformed.pts,
-            edges: xformed.edges.length > 0 ? xformed.edges : null,
-            color: HEAD_COLORS[h],
-            opacity: decay * wetMix,
-            fill: doFill,
-            stroke: doStroke,
-          })
+            const xformed = transformPoints(tap.value, tap.edges, headRot, headScl, jx, jy, dropRate)
+            if (!xformed) continue
+
+            const decay = Math.pow(fbInfRef.current ? 0.98 : 0.7, r) * lvl
+
+            groups.push({
+              pts: xformed.pts,
+              edges: xformed.edges.length > 0 ? xformed.edges : null,
+              color: (PALETTES[paletteRef.current] || PALETTES[0])[h],
+              opacity: decay * wetMix,
+              fill: false,
+              stroke: true,
+            })
+          }
         }
       }
 
@@ -682,8 +789,8 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
     onLowCutChange={setLowCut} onTapeAgeChange={setTapeAge} onCrinkleChange={setCrinkle} onWowChange={setWow} onSpringChange={setSpring}
     heads={heads} pan={pan} onHeadsChange={setHeads} onPanChange={setPan}
     onSclChange={setScl} onOfsChange={setOfs}
-    transportMode={transportMode} rev={rev} order={order} layer={layer}
-    onTransportMode={handleTransportMode} onHeadTransport={handleHeadTransport} onOrderChange={setOrder} onLayerChange={setLayer}
+    transportMode={transportMode} rev={rev} order={order} layer={layer} palette={palette}
+    onTransportMode={handleTransportMode} onHeadTransport={handleHeadTransport} onOrderChange={setOrder} onLayerChange={setLayer} onPaletteChange={setPalette}
     inConn={inConn} inRef={inRef} clrConn={clrConn} clrRef={clrRef}
     wetRef={wetRef} dryOutRef={dryOutRef}
     clk1Ref={clk1Ref} clk2Ref={clk2Ref} clk3Ref={clk3Ref} clk4Ref={clk4Ref}
