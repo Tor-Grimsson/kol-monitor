@@ -1,5 +1,5 @@
 import React from 'react'
-import Icon from '../icons/Icon'
+import Icon from '../../icons/Icon'
 
 const SIZE_MAP = {
   sm: { icon: 14, paddingX: 16 },

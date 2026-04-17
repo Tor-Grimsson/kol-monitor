@@ -11,7 +11,7 @@ import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
 import FlipToggle from '../parametric/FlipToggle'
 import Divider from '../../components/atoms/Divider'
-import Icon from '../../components/icons/Icon'
+import Icon from '../../icons/Icon'
 import { usePatchRouting, useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function AttenPanel({ levels, modes, enabled, onToggle, onLevelChange, onModeChange, id, inConns, inRefs, outRefs }) {

@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import Tag from '../../atoms/Tag'
 import Divider from '../../atoms/Divider'
-import Icon from '../../icons/Icon'
+import Icon from '../../../icons/Icon'
 import ViewToggle from '../../molecules/ViewToggle'
 
 /**

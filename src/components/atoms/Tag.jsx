@@ -1,4 +1,4 @@
-import Icon from '../icons/Icon.jsx'
+import Icon from '../../icons/Icon.jsx'
 
 const ICON_SIZES = { sm: 10, md: 12, lg: 14 }
 

@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { MODULE_DEFS } from '../modules/registry'
 import Divider from '../components/atoms/Divider'
-import Icon from '../components/icons/Icon'
+import Icon from '../icons/Icon'
 import { TOTAL_HP, hpToPx } from '../modules/utility/eurorack'
 import Module from '../modules/utility/Module'
 import ModuleLibraryGrid from '../components/ModuleLibraryGrid'
