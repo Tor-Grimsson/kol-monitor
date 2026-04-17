@@ -170,6 +170,14 @@ export default function FilterModule({ id = 'filt1', init, preview }) {
           return { ...pt, y: pick(s) }
         })
         const out = points(filtered, input.edges)
+        // Pass-through upstream groups + signal metadata. Group points are NOT filtered
+        // (they carry their own geometry from the upstream producer).
+        if (input.groups) out.groups = input.groups
+        if (input.strokeWidth != null) out.strokeWidth = input.strokeWidth
+        if (input.color) out.color = input.color
+        if (input.bg) out.bg = input.bg
+        if (input.aspectLock) out.aspectLock = input.aspectLock
+        if (input.aspectFill) out.aspectFill = input.aspectFill
         outRef.current = out
         return { out }
       }

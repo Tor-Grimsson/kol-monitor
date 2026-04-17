@@ -145,6 +145,12 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
         const out = points(allPts, allEdges.length > 0 ? allEdges : null)
         out.strokeWidth = input.strokeWidth ?? 1
         if (input.color) out.color = input.color
+        // Pass-through upstream groups + signal metadata — Delay doesn't transform geometry,
+        // just delays it. Groups (e.g. Magneto's trails) stay visible downstream.
+        if (input.groups) out.groups = input.groups
+        if (input.bg) out.bg = input.bg
+        if (input.aspectLock) out.aspectLock = input.aspectLock
+        if (input.aspectFill) out.aspectFill = input.aspectFill
         outRef.current = out
         return { out }
       }

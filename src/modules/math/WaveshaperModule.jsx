@@ -164,6 +164,14 @@ export default function WaveshaperModule({ id = 'wshp1', init, preview }) {
       if (input.type === 'points') {
         const shaped = input.value.map(pt => ({ ...pt, y: mix(pt.y) }))
         const out = points(shaped, input.edges)
+        // Pass-through upstream groups + signal metadata. Note: group points are NOT
+        // shaped (they carry their own geometry from the upstream producer).
+        if (input.groups) out.groups = input.groups
+        if (input.strokeWidth != null) out.strokeWidth = input.strokeWidth
+        if (input.color) out.color = input.color
+        if (input.bg) out.bg = input.bg
+        if (input.aspectLock) out.aspectLock = input.aspectLock
+        if (input.aspectFill) out.aspectFill = input.aspectFill
         outRef.current = out
         return { out }
       }

@@ -165,6 +165,12 @@ export default function ReverbModule({ id = 'verb1', init, preview }) {
         const out = points(allPts, allEdges.length > 0 ? allEdges : null)
         out.strokeWidth = input.strokeWidth ?? 1
         if (input.color) out.color = input.color
+        // Pass upstream groups through unchanged — Reverb doesn't transform group geometry;
+        // this keeps e.g. Magneto's wet trails visible downstream. Dropped in bypass mode.
+        if (!byp && input.groups) out.groups = input.groups
+        if (input.bg) out.bg = input.bg
+        if (input.aspectLock) out.aspectLock = input.aspectLock
+        if (input.aspectFill) out.aspectFill = input.aspectFill
         outRef.current = out
         return { out }
       }

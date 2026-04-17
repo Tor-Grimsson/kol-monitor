@@ -174,6 +174,12 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
       if (inputs.in.grid) out.grid = inputs.in.grid
       if (inputs.in.aspectLock) out.aspectLock = inputs.in.aspectLock
       if (inputs.in.opacity != null) out.opacity = inputs.in.opacity
+      if (inputs.in.color) out.color = inputs.in.color
+      if (inputs.in.bg) out.bg = inputs.in.bg
+      if (inputs.in.aspectFill) out.aspectFill = inputs.in.aspectFill
+      // Pass-through upstream groups. Note: group points are NOT rotated/translated by
+      // Transform — a later pass could apply the same affine to each group.pts[] if desired.
+      if (inputs.in.groups) out.groups = inputs.in.groups
       outRef.current = out
       return { out }
     },
