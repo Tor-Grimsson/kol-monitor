@@ -121,18 +121,15 @@ export default function JackSocket({
     if (type === 'out') {
       e.preventDefault()
       routing?.selectOutput(moduleId, port)
-    }
-  }, [type, port, moduleId, routing])
-
-  const handleClick = useCallback((e) => {
-    if (routing?.lockedRef?.current) return
-    if (routing?.pendingOutput) return
-    if (type === 'in' && active) {
-      e.stopPropagation()
+    } else if (type === 'in' && active) {
+      // Grab the connected cable at its input end — detach and start pending
+      // drag from the original source. Release on a new input = re-route;
+      // release on empty space or on same input = disconnect.
       e.preventDefault()
-      routing?.removeConnection(moduleId, port)
+      routing?.grabInput(moduleId, port)
     }
-  }, [type, active, routing, moduleId, port])
+  }, [type, port, moduleId, active, routing])
+
 
   const s = size === 'sm' ? 12 : 16
   const hole = size === 'sm' ? 4 : 6
@@ -143,7 +140,6 @@ export default function JackSocket({
       className="inline-flex flex-col items-center gap-0.5 select-none"
       style={{ cursor: type === 'out' ? 'grab' : (hasPending ? 'pointer' : 'default'), touchAction: 'none' }}
       onPointerDown={handlePointerDown}
-      onClick={handleClick}
       title={label || port}
     >
       <div

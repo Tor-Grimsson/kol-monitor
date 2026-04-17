@@ -4,16 +4,22 @@ import { useRef, useCallback } from 'react'
 
 const SIZES = { sm: 24, md: 32, lg: 40, xl: 64 }
 
-export default function Knob({ value, onChange, min, max, label, variant = 'column', bipolar = false, labelMinWidth, size: sizeProp = 'sm' }) {
+export default function Knob({ value, onChange, min, max, label, variant = 'column', bipolar = false, labelMinWidth, size: sizeProp = 'sm', defaultValue }) {
   const size = SIZES[sizeProp] || SIZES.sm
   const effMin = min ?? (bipolar ? -100 : 0)
   const effMax = max ?? 100
+  const effDefault = defaultValue ?? (bipolar ? 0 : 50)
   const angle = ((value - effMin) / (effMax - effMin)) * 270 - 135
   const r = size / 2
   const ir = r * 0.56
 
   const handlePointerDown = useCallback((e) => {
     e.preventDefault()
+    // Alt/Option + click resets to default instead of starting a drag
+    if (e.altKey) {
+      onChange(effDefault)
+      return
+    }
     const startY = e.clientY
     const startVal = value
     const range = effMax - effMin
@@ -29,7 +35,7 @@ export default function Knob({ value, onChange, min, max, label, variant = 'colu
     }
     window.addEventListener('pointermove', handleMove)
     window.addEventListener('pointerup', handleUp)
-  }, [value, effMin, effMax, onChange])
+  }, [value, effMin, effMax, effDefault, onChange])
 
   const knobSvg = (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>

@@ -73,23 +73,29 @@ export function PatchRoutingProvider({ initialConnections, children }) {
           const toPort = parts[1]
           const pending = pendingRef.current
 
-          setConnections(conns => {
-            // Toggle: if already connected to this input, disconnect
-            const existing = conns.findIndex(
-              c => c.toModuleId === toModuleId && c.toPort === toPort
-            )
-            if (existing >= 0) {
-              return conns.filter((_, i) => i !== existing)
-            }
-            return [...conns, {
-              fromModuleId: pending.moduleId,
-              fromPort: pending.port,
-              toModuleId,
-              toPort,
-            }]
-          })
+          // Release on the same input we grabbed from = disconnect (no reconnect).
+          const grabbed = grabbedInputRef.current
+          const sameAsGrabbed = grabbed && grabbed.toModuleId === toModuleId && grabbed.toPort === toPort
+          if (!sameAsGrabbed) {
+            setConnections(conns => {
+              // Toggle: if already connected to this input, disconnect
+              const existing = conns.findIndex(
+                c => c.toModuleId === toModuleId && c.toPort === toPort
+              )
+              if (existing >= 0) {
+                return conns.filter((_, i) => i !== existing)
+              }
+              return [...conns, {
+                fromModuleId: pending.moduleId,
+                fromPort: pending.port,
+                toModuleId,
+                toPort,
+              }]
+            })
+          }
         }
       }
+      grabbedInputRef.current = null
       setPendingOutput(null)
     }
     window.addEventListener('pointerup', handleUp)
@@ -108,6 +114,23 @@ export function PatchRoutingProvider({ initialConnections, children }) {
   const selectOutput = useCallback((moduleId, port) => {
     setPendingOutput({ moduleId, port })
     dragActive.current = true
+  }, [])
+
+  // Grab an existing cable by its input end. Detaches the cable, then starts a
+  // pending drag from the original source output — cable follows mouse so user
+  // can drop on a new input (re-route) or release in empty space (disconnect).
+  // Tracks the origin input so a release on the same jack counts as disconnect.
+  const grabbedInputRef = useRef(null)
+  const grabInput = useCallback((toModuleId, toPort) => {
+    setConnections(conns => {
+      const idx = conns.findIndex(c => c.toModuleId === toModuleId && c.toPort === toPort)
+      if (idx < 0) return conns
+      const c = conns[idx]
+      grabbedInputRef.current = { toModuleId, toPort }
+      setPendingOutput({ moduleId: c.fromModuleId, port: c.fromPort })
+      dragActive.current = true
+      return [...conns.slice(0, idx), ...conns.slice(idx + 1)]
+    })
   }, [])
 
   const removeConnection = useCallback((toModuleId, toPort) => {
@@ -132,9 +155,10 @@ export function PatchRoutingProvider({ initialConnections, children }) {
     visibilityRef,
     registerJack,
     selectOutput,
+    grabInput,
     removeConnection,
     loadPatch,
-  }), [registerJack, selectOutput, removeConnection, loadPatch])
+  }), [registerJack, selectOutput, grabInput, removeConnection, loadPatch])
 
   // Pre-compute per-module connected-input map once per connection change.
   // Replaces N × O(connections) per-module scans with a single O(connections) pass.
