@@ -1,9 +1,9 @@
 // Rack state — manages rows, modules with HP offsets, parked modules, edit mode
 
 import { useState, useCallback, useMemo } from 'react'
-import { MODULE_DEFS } from '../moduleRegistry'
+import { MODULE_DEFS } from '../modules/registry'
 import { TOTAL_HP } from '../modules/utility/eurorack'
-import { patches } from '../patches'
+import { patches } from '../data/patches'
 
 let nextId = 1
 function uid(type) { return `${type}_${nextId++}` }

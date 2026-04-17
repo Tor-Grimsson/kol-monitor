@@ -2,12 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CATEGORIES, getModulesByCategory, MODULE_DEFS } from './moduleRegistry'
-import { patches } from './patches'
-import { savePatchFile, loadPatchFile } from './hooks/usePatchFile.js'
-import { useModuleRegistry } from './hooks/useModuleRegistry.jsx'
-import Icon from './icons/Icon'
-import Logomark from './components/atoms/Logomark'
+import { CATEGORIES, getModulesByCategory, MODULE_DEFS } from '../modules/registry'
+import { patches } from '../data/patches'
+import { savePatchFile, loadPatchFile } from '../hooks/usePatchFile.js'
+import { useModuleRegistry } from '../hooks/useModuleRegistry.jsx'
+import Icon from '../icons/Icon'
+import Logomark from '../components/atoms/Logomark'
 
 const NAV_ITEMS = [
   { icon: 'nav-library', path: '/library', label: 'Library' },

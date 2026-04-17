@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import NavSidebar from './NavSidebar'
-import TouchDeviceOverlay from '../TouchDeviceOverlay'
+import TouchDeviceOverlay from '../overlays/TouchDeviceOverlay'
 
 const NavHiddenContext = createContext(null)
 export const useNavHidden = () => useContext(NavHiddenContext)

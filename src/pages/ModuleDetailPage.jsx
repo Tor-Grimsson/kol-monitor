@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MODULE_DEFS } from '../moduleRegistry'
+import { MODULE_DEFS } from '../modules/registry'
 import Divider from '../components/atoms/Divider'
 import Button from '../components/atoms/Button'
 

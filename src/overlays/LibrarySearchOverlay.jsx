@@ -2,8 +2,8 @@
 // Type to filter; Enter inserts first match into first compatible row with space; Esc closes.
 
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { MODULE_DEFS } from './moduleRegistry'
-import { TOTAL_HP } from './modules/utility/eurorack'
+import { MODULE_DEFS } from '../modules/registry'
+import { TOTAL_HP } from '../modules/utility/eurorack'
 
 function findCompatibleRow(rows, mod) {
   const targetHeight = mod.u === 1 ? '1u' : '3u'

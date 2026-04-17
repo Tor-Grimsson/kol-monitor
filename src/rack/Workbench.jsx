@@ -2,12 +2,12 @@
 // Drag top edge to resize
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MODULE_DEFS } from './moduleRegistry'
-import Divider from './components/atoms/Divider'
-import Icon from './components/icons/Icon'
-import { TOTAL_HP, hpToPx } from './modules/utility/eurorack'
-import Module from './modules/utility/Module'
-import ModuleLibraryGrid from './components/ModuleLibraryGrid'
+import { MODULE_DEFS } from '../modules/registry'
+import Divider from '../components/atoms/Divider'
+import Icon from '../components/icons/Icon'
+import { TOTAL_HP, hpToPx } from '../modules/utility/eurorack'
+import Module from '../modules/utility/Module'
+import ModuleLibraryGrid from '../components/ModuleLibraryGrid'
 
 const DEFAULT_HEIGHT = Math.round(window.innerHeight * 0.3)
 const MIN_HEIGHT = 80

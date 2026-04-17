@@ -6,7 +6,7 @@ import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { useModuleRegistry } from '../../hooks/useModuleRegistry.jsx'
 import { useRack } from '../../hooks/useRackContext.jsx'
 import { savePatchFile, loadPatchFile } from '../../hooks/usePatchFile.js'
-import { patches } from '../../patches.js'
+import { patches } from '../../data/patches.js'
 import Module from './Module'
 
 import Dropdown from '../controls/Dropdown'

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { patches } from '../patches'
+import { patches } from '../data/patches'
 import Button from '../components/atoms/Button'
 import Icon from '../components/icons/Icon'
 import GridCard from '../components/atoms/GridCard'

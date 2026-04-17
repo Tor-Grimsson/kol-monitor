@@ -4,8 +4,8 @@
 import { useSearchParams } from 'react-router-dom'
 import ModulePreview from '../components/ModulePreview'
 import PatchPreview from '../components/PatchPreview'
-import { MODULE_DEFS } from '../moduleRegistry'
-import { patches } from '../patches'
+import { MODULE_DEFS } from '../modules/registry'
+import { patches } from '../data/patches'
 
 export default function DevCapturePage() {
   const [params] = useSearchParams()

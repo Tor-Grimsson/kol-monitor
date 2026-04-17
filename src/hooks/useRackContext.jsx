@@ -6,7 +6,7 @@ import { useRackState } from './useRackState'
 import { ModuleRegistryProvider } from './useModuleRegistry.jsx'
 import { PatchRoutingProvider } from './usePatchRouting.jsx'
 import { CasePowerProvider } from './useCasePower.jsx'
-import { patches } from '../patches.js'
+import { patches } from '../data/patches.js'
 
 const RackContext = createContext(null)
 

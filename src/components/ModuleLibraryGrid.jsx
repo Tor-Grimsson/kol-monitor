@@ -2,7 +2,7 @@
 // Shared by the edit-mode Workbench panel and (later) the Cmd+K overlay.
 
 import { useState, useMemo } from 'react'
-import { MODULE_DEFS, CATEGORIES, getModulesByCategory } from '../moduleRegistry'
+import { MODULE_DEFS, CATEGORIES, getModulesByCategory } from '../modules/registry'
 import { TOTAL_HP, hpToPx } from '../modules/utility/eurorack'
 
 const CATEGORY_LABELS = {

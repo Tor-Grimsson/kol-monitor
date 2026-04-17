@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { patches } from '../patches'
-import { MODULE_DEFS } from '../moduleRegistry'
+import { patches } from '../data/patches'
+import { MODULE_DEFS } from '../modules/registry'
 import Divider from '../components/atoms/Divider'
 import Button from '../components/atoms/Button'
 

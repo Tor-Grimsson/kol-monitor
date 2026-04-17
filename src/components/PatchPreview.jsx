@@ -5,7 +5,7 @@ import { CasePowerProvider } from '../hooks/useCasePower.jsx'
 import { ModuleRegistryProvider } from '../hooks/useModuleRegistry.jsx'
 import { PatchRoutingProvider } from '../hooks/usePatchRouting.jsx'
 import { ModuleInitContext } from '../hooks/useModuleEnabled.js'
-import { MODULE_DEFS } from '../moduleRegistry'
+import { MODULE_DEFS } from '../modules/registry'
 import { TOTAL_HP, hpToPx, ROW_WIDTH } from '../modules/utility/eurorack'
 import Case, { RackRow } from '../modules/utility/Case.jsx'
 

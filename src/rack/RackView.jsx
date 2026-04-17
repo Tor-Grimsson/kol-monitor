@@ -1,13 +1,13 @@
 // RackView — renders the eurorack case with modules in rows
 
 import { memo, useMemo, useState } from 'react'
-import { ModuleInitContext } from './hooks/useModuleEnabled'
-import { MODULE_DEFS } from './moduleRegistry'
-import { TOTAL_HP, hpToPx } from './modules/utility/eurorack'
-import { findFreeOffset } from './hooks/useRackState'
-import Case, { RackRow } from './modules/utility/Case.jsx'
-import { ModuleEditContext } from './modules/utility/Module.jsx'
-import IconButton from './modules/controls/IconButton.jsx'
+import { ModuleInitContext } from '../hooks/useModuleEnabled'
+import { MODULE_DEFS } from '../modules/registry'
+import { TOTAL_HP, hpToPx } from '../modules/utility/eurorack'
+import { findFreeOffset } from '../hooks/useRackState'
+import Case, { RackRow } from '../modules/utility/Case.jsx'
+import { ModuleEditContext } from '../modules/utility/Module.jsx'
+import IconButton from '../modules/controls/IconButton.jsx'
 
 function ArrowOverlay({ onLeft, onRight, onUp, onDown }) {
   if (!onLeft && !onRight && !onUp && !onDown) return null
