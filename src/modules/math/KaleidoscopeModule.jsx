@@ -7,6 +7,7 @@ import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import { sinLut, cosLut } from '../../hooks/trigLut'
+import { newClockSyncState, advanceClockSync } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -168,8 +169,7 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
   const rotCvRef = useRef(null)
   const zmCvRef = useRef(null)
 
-  const animPhaseRef = useRef(0)
-  const prevClkRef = useRef(false)
+  const syncRef = useRef(newClockSyncState())
 
   enabledRef.current = enabled
   segRef.current = seg
@@ -225,14 +225,12 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
         return { out: null }
       }
 
-      // Clock rising edge resets animation phase
-      const clkHigh = readScalar(inputs.clk) > 0
-      if (clkHigh && !prevClkRef.current) animPhaseRef.current = 0
-      prevClkRef.current = clkHigh
-
-      // Animation accumulation
+      // Sync animation phase to clock when patched; free-run at spd knob otherwise.
+      // Fallback rate: spd knob drives rotation cycles. At spd=50, one full rotation
+      // in 2π seconds (baseline). Phase ∈ [0,1) is scaled to radians below.
+      const fallbackHz = (spdRef.current / 50) / (2 * Math.PI)
       if (aniRef.current) {
-        animPhaseRef.current += dt * (spdRef.current / 50)
+        advanceClockSync(syncRef.current, inputs.clk, t, dt, fallbackHz)
       }
 
       // Read params — CV merged with knob (offset default)
@@ -242,7 +240,7 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
 
       // Map 0-100 knob ranges to internal values
       const segments = Math.max(2, Math.round(2 + (segRaw / 100) * 14))
-      const rotation = (rotRaw / 100) * Math.PI * 2 + animPhaseRef.current
+      const rotation = (rotRaw / 100) * Math.PI * 2 + syncRef.current.phase * 2 * Math.PI
       const zoom = 0.1 + (zmRaw / 100) * 2.9
       const offset = ((ofsRef.current - 50) / 50) * 0.5
       const foldVal = 0.5 + (foldRef.current / 100) * 1.0

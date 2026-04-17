@@ -7,6 +7,7 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
 import { sinLut, cosLut } from '../../hooks/trigLut'
+import { newClockSyncState, advanceClockSync } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -478,9 +479,8 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
   const p4CvRef = useRef(null)
   const spdCvRef = useRef(null)
   const clkRef = useRef(null)
-  const prevClkRef = useRef(false)
   const animTimeRef = useRef(0)
-  const lfoPhaseRef = useRef(0)
+  const lfoSyncRef = useRef(newClockSyncState())
   const lfoOutRef = useRef(null)
   const pointsOutRef = useRef(null)
   const colorOutRef = useRef(null)
@@ -545,11 +545,6 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
       spdCvRef.current = inputs.spd
       clkRef.current = inputs.clk
 
-      // Clock: reset LFO phase on rising edge
-      const clkHigh = readScalar(inputs.clk) > 0
-      if (clkHigh && !prevClkRef.current) lfoPhaseRef.current = 0
-      prevClkRef.current = clkHigh
-
       const v1 = readCv(inputs.p1, p1Ref.current)
       let v2 = readCv(inputs.p2, p2Ref.current)
       const v3 = readCv(inputs.p3, p3Ref.current)
@@ -558,12 +553,14 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
       // SPD base value
       const spdKnob = readCv(inputs.spd, speedRef.current)
 
-      // Internal LFO → modulates v2 (SPD knob)
+      // Internal LFO → modulates v2 (SPD knob). When clk patched + ticking, LFO
+      // period locks to clock; otherwise runs at lfoFreq knob rate.
+      advanceClockSync(lfoSyncRef.current, inputs.clk, t, dt, lfoFreqRef.current / 25)
       if (lfoOnRef.current) {
-        lfoPhaseRef.current += dt * (lfoFreqRef.current / 25)
+        const lfoPhase = lfoSyncRef.current.phase
         const lfoVal = oscillateRef.current
-          ? (Math.sin(lfoPhaseRef.current * Math.PI * 2) + 1) / 2
-          : (lfoPhaseRef.current % 1)
+          ? (Math.sin(lfoPhase * Math.PI * 2) + 1) / 2
+          : lfoPhase
         v2 = spdKnob * lfoVal
         lfoOutRef.current = scalar(lfoVal * 100)
       } else {

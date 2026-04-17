@@ -22,8 +22,8 @@ export const patches = {
       { fromModuleId: 'joy1', fromPort: 'y', toModuleId: 'wire1', toPort: 'rx' },
       { fromModuleId: 'joy1', fromPort: 'x', toModuleId: 'wire1', toPort: 'ry' },
       { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'seq1', toPort: 'clock' },
-      { fromModuleId: 'seq1', fromPort: 'out', toModuleId: 'wire1', toPort: 'clk' },
-      { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'dith1', toPort: 'clk' },
+      { fromModuleId: 'seq1', fromPort: 'out', toModuleId: 'wire1', toPort: 'rst' },
+      { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'dith1', toPort: 'rst' },
       { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'gen2', toPort: 'clk' },
     ],
     on: ['joy1', 'clk1', 'seq1', 'wire1', 'mon1', 'gen2', 'dith1', 'con1', 'life1', 'verb1', 'ramp1'],
@@ -75,8 +75,8 @@ export const patches = {
       { fromModuleId: 'joy1', fromPort: 'y', toModuleId: 'wire1', toPort: 'rx' },
       { fromModuleId: 'joy1', fromPort: 'x', toModuleId: 'wire1', toPort: 'ry' },
       { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'seq1', toPort: 'clock' },
-      { fromModuleId: 'seq1', fromPort: 'out', toModuleId: 'wire1', toPort: 'clk' },
-      { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'dith1', toPort: 'clk' },
+      { fromModuleId: 'seq1', fromPort: 'out', toModuleId: 'wire1', toPort: 'rst' },
+      { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'dith1', toPort: 'rst' },
       { fromModuleId: 'ramp1', fromPort: 'out', toModuleId: 'gen2', toPort: 'clk' },
     ],
   },
@@ -717,7 +717,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'clk' },
       { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'rad1', toPort: 'amp' },
       { fromModuleId: 'rad1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
       { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
@@ -740,7 +740,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'clk' },
       { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'modg1', toPort: 'bam' },
       { fromModuleId: 'modg1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
       { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
@@ -763,7 +763,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'clk' },
       { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'wire1', toPort: 'rx' },
       { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'mag1', toPort: 'in' },
       { fromModuleId: 'mag1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
@@ -786,7 +786,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk1', fromPort: 'd4', toModuleId: 'gen1', toPort: 'clk' },
+      { fromModuleId: 'clk1', fromPort: 'd4', toModuleId: 'gen1', toPort: 'rst' },
       { fromModuleId: 'gen1', fromPort: 'grad', toModuleId: 'mix1', toPort: 'a' },
       { fromModuleId: 'gen1', fromPort: 'ptrn', toModuleId: 'mix1', toPort: 'b' },
       { fromModuleId: 'gen1', fromPort: 'wave', toModuleId: 'mix1', toPort: 'c' },
@@ -840,7 +840,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'clk' },
       { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'wire1', toPort: 'rx' },
       { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'con1', toPort: 'a' },
       { fromModuleId: 'line1', fromPort: 'out', toModuleId: 'con1', toPort: 'b' },
@@ -865,7 +865,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'clk' },
       { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'wire1', toPort: 'rz' },
       { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
       { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
@@ -959,7 +959,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'clk' },
       { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'xfm1', toPort: 'rz' },
       { fromModuleId: 'line1', fromPort: 'out', toModuleId: 'xfm1', toPort: 'in' },
       { fromModuleId: 'xfm1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
@@ -1030,7 +1030,7 @@ export const patches = {
     ],
     connections: [
       // Clock syncs LFO
-      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'lfo', toPort: 'sync' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'lfo', toPort: 'clk' },
       // LFO modulates wireframe rotation X + Y
       { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'wire', toPort: 'rx' },
       { fromModuleId: 'lfo2', fromPort: 'out', toModuleId: 'wire', toPort: 'ry' },
@@ -1069,7 +1069,7 @@ export const patches = {
       { fromModuleId: 'rad1', fromPort: 'out', toModuleId: 'kal1', toPort: 'in' },
       { fromModuleId: 'kal1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
       { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
-      { fromModuleId: 'clk1', fromPort: 'd8', toModuleId: 'lfo1', toPort: 'sync' },
+      { fromModuleId: 'clk1', fromPort: 'd8', toModuleId: 'lfo1', toPort: 'clk' },
     ],
     on: ['clk1', 'lfo1', 'rad1', 'kal1', 'pen1', 'mon1'],
   },

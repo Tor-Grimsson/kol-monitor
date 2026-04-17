@@ -4,7 +4,8 @@
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { scalar, readScalar } from '../../hooks/signals'
+import { scalar } from '../../hooks/signals'
+import { newClockSyncState, advanceClockSync } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -40,7 +41,7 @@ function LFOPanel({ rate, depth, offset, shape, enabled, onToggle, onRateChange,
         <Knob value={depth} onChange={onDepthChange} label="dep" />
         <Knob value={offset} onChange={onOffsetChange} label="ofs" bipolar />
         <div style={{ display: 'flex', gap: 8 }}>
-          <LabeledJack type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncInRef} label="sync" />
+          <LabeledJack type="in" port="clk" moduleId={id} active={syncConnected} signalRef={syncInRef} label="clk" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
@@ -63,8 +64,7 @@ export default function LFOModule({ id = 'lfo1', init, preview }) {
   const offsetRef = useRef(0)
   const shapeRef = useRef('sin')
   const enabledRef = useRef(true)
-  const phaseRef = useRef(0)
-  const prevSyncRef = useRef(false)
+  const syncRef = useRef(newClockSyncState())
   const outRef = useRef(null)
   const syncInRef = useRef(null)
 
@@ -74,7 +74,7 @@ export default function LFOModule({ id = 'lfo1', init, preview }) {
   shapeRef.current = shape
   enabledRef.current = enabled
 
-  const syncConnected = cp.has('sync')
+  const syncConnected = cp.has('clk')
 
   const saveStateRef = useRef({})
   saveStateRef.current = { rate, depth, offset, shape }
@@ -82,24 +82,19 @@ export default function LFOModule({ id = 'lfo1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { sync: { type: 'scalar' } },
+    inputs: { clk: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
-    process: (inputs, dt) => {
+    process: (inputs, dt, t) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
-      syncInRef.current = inputs.sync
-
-      // Rising edge detection on sync
-      const syncVal = readScalar(inputs.sync)
-      const syncHigh = syncVal > 50
-      if (syncHigh && !prevSyncRef.current) phaseRef.current = 0
-      prevSyncRef.current = syncHigh
+      syncInRef.current = inputs.clk
 
       // Hz: map knob 0-100 to 0.1-20
       const hz = 0.1 + (rateRef.current / 100) * 19.9
-      phaseRef.current += dt * hz
+      advanceClockSync(syncRef.current, inputs.clk, t, dt, hz)
+      const phase = syncRef.current.phase
 
       // raw is bipolar [-1, 1]; depth scales amplitude; offset shifts DC
-      const raw = waveFn(phaseRef.current, shapeRef.current)
+      const raw = waveFn(phase, shapeRef.current)
       const val = raw * depthRef.current + offsetRef.current
       const out = scalar(val)
       outRef.current = out

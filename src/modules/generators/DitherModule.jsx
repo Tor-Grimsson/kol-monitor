@@ -7,6 +7,7 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, points, readScalar, readCv } from '../../hooks/signals'
 import { sinLut, cosLut } from '../../hooks/trigLut'
+import { newClockSyncState, measureClockRate } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -608,7 +609,7 @@ function DitherPanel({
   onIsEngineChange, onModeChange, onShapeChange, onIsAsciiChange, onAsciiSetChange,
   onCellCountChange, onGapChange, onScaleChange, onContrastChange, onAngleChange, onIntensityChange, onSpeedChange, onBlurChange,
   onInvertChange, onAnimateChange, onFillChange, onRayChange,
-  spdConn, spdCvRef, clkConn, clkCvRef,
+  spdConn, spdCvRef, clkConn, clkCvRef, clkInConn, clkInRef,
   sizeCvRef, gapCvRef, sclCvRef, ctrCvRef, angCvRef, intCvRef,
   sizeConn, gapConn, sclConn, ctrConn, angConn, intConn,
   inConn, inSigRef, clrConn, clrSigRef,
@@ -711,7 +712,8 @@ function DitherPanel({
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
           <LabeledJack type="in" port="in" moduleId={id} active={inConn} signalRef={inSigRef} label="in" />
           <LabeledJack type="in" port="clr" moduleId={id} active={clrConn} signalRef={clrSigRef} label="clr" />
-          <LabeledJack type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkCvRef} label="clk" />
+          <LabeledJack type="in" port="clk" moduleId={id} active={clkInConn} signalRef={clkInRef} label="clk" />
+          <LabeledJack type="in" port="rst" moduleId={id} active={clkConn} signalRef={clkCvRef} label="rst" />
           <LabeledJack type="out" port="color" moduleId={id} signalRef={colorOutRef} label="col" />
           <LabeledJack type="out" port="dns" moduleId={id} signalRef={dnsRef} label="dns" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
@@ -731,7 +733,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     onIsEngineChange={() => {}} onModeChange={() => {}} onShapeChange={() => {}} onIsAsciiChange={() => {}} onAsciiSetChange={() => {}}
     onCellCountChange={() => {}} onGapChange={() => {}} onScaleChange={() => {}} onContrastChange={() => {}} onAngleChange={() => {}} onIntensityChange={() => {}}
     onInvertChange={() => {}} onAnimateChange={() => {}} onFillChange={() => {}} ray={false} onRayChange={() => {}} onSpeedChange={() => {}} speed={50} blur={0} onBlurChange={() => {}}
-    spdConn={false} spdCvRef={{ current: null }} clkConn={false} clkCvRef={{ current: null }}
+    spdConn={false} spdCvRef={{ current: null }} clkConn={false} clkCvRef={{ current: null }} clkInConn={false} clkInRef={{ current: null }}
     sizeCvRef={{ current: null }} gapCvRef={{ current: null }} sclCvRef={{ current: null }}
     ctrCvRef={{ current: null }} angCvRef={{ current: null }} intCvRef={{ current: null }}
     sizeConn={false} gapConn={false} sclConn={false} ctrConn={false} angConn={false} intConn={false}
@@ -777,8 +779,10 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
   const fillRef = useRef(true)
   const speedRef = useRef(50)
   const spdCvRef = useRef(null)
-  const clkCvRef = useRef(null)
+  const clkCvRef = useRef(null)  // rst jack
+  const clkInRef = useRef(null)  // clk jack
   const prevClkRef = useRef(false)
+  const syncRef = useRef(newClockSyncState())
   const rayRef = useRef(false)
   const blurRef = useRef(0)
   const animTimeRef = useRef(0)
@@ -828,7 +832,8 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
   const inConn = cp.has('in')
   const clrConn = cp.has('clr')
   const spdConn = cp.has('spd')
-  const clkConn = cp.has('clk')
+  const clkConn = cp.has('rst')
+  const clkInConn = cp.has('clk')
 
   const handleIsEngineChange = (v) => {
     setIsEngine(v)
@@ -842,7 +847,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      in: { type: 'scalar' }, clr: { type: 'color' }, clk: { type: 'scalar' }, spd: { type: 'scalar', cv: 'offset' },
+      in: { type: 'scalar' }, clr: { type: 'color' }, rst: { type: 'scalar' }, clk: { type: 'scalar' }, spd: { type: 'scalar', cv: 'offset' },
       size: { type: 'scalar', cv: 'offset' }, gap: { type: 'scalar', cv: 'offset' }, scl: { type: 'scalar', cv: 'offset' },
       ctr: { type: 'scalar', cv: 'offset' }, ang: { type: 'scalar', cv: 'offset' }, int: { type: 'scalar', cv: 'attenuate' },
     },
@@ -869,16 +874,18 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
       const vContrast = readCv(inputs.ctr, contrastValRef.current)
       const vAngle = readCv(inputs.ang, angleValRef.current)
       const vIntensity = readCv(inputs.int, intensityValRef.current, 'attenuate')
-      // Clock: reset animation phase on rising edge
+      // Rst rising edge zeros animation phase. Clk (separate jack) drives rate.
       spdCvRef.current = inputs.spd
-      clkCvRef.current = inputs.clk
-      const clkHigh = readScalar(inputs.clk) > 0
+      clkCvRef.current = inputs.rst
+      clkInRef.current = inputs.clk
+      const clkHigh = readScalar(inputs.rst) > 0
       if (clkHigh && !prevClkRef.current) animTimeRef.current = 0
       prevClkRef.current = clkHigh
 
-      // Animation time with speed control
+      // Knob as multiplier; baseRate = 1 cycle/sec free, or 1/period when clk locks.
       const vSpeed = readCv(inputs.spd, speedRef.current)
-      if (animateRef.current) animTimeRef.current += dt * (vSpeed / 50)
+      const baseRate = measureClockRate(syncRef.current, inputs.clk, t, 1)
+      if (animateRef.current) animTimeRef.current += dt * baseRate * (vSpeed / 50)
 
       const geom = generateDither(
         isEngineRef.current, modeRef.current, isAsciiRef.current, asciiSetRef.current,
@@ -915,7 +922,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     onCellCountChange={setCellCount} onGapChange={setGap} onScaleChange={setScale} onContrastChange={setContrast}
     onAngleChange={setAngle} onIntensityChange={setIntensity}
     onInvertChange={setInvert} onAnimateChange={setAnimate} onFillChange={setFill} ray={ray} onRayChange={setRay} onSpeedChange={setSpeed} speed={speed} blur={blur} onBlurChange={setBlur}
-    spdConn={spdConn} spdCvRef={spdCvRef} clkConn={clkConn} clkCvRef={clkCvRef}
+    spdConn={spdConn} spdCvRef={spdCvRef} clkConn={clkConn} clkCvRef={clkCvRef} clkInConn={clkInConn} clkInRef={clkInRef}
     sizeCvRef={sizeCvRef} gapCvRef={gapCvRef} sclCvRef={sclCvRef}
     ctrCvRef={ctrCvRef} angCvRef={angCvRef} intCvRef={intCvRef}
     sizeConn={sizeConn} gapConn={gapConn} sclConn={sclConn} ctrConn={ctrConn} angConn={angConn} intConn={intConn}

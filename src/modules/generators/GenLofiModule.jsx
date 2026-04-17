@@ -7,6 +7,7 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import { sinLut, cosLut } from '../../hooks/trigLut'
+import { newClockSyncState, measureClockRate } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -151,7 +152,7 @@ function GeneratorPanel({
   onP1Change, onP2Change, onP3Change, onP4Change, onHueChange,
   onAnimateChange, onSpeedChange,
   p1Conn, p1Ref, p2Conn, p2Ref, p3Conn, p3Ref, p4Conn, p4Ref,
-  hueConn, hueCvRef, spdConn, spdCvRef, clkConn, clkCvRef,
+  hueConn, hueCvRef, spdConn, spdCvRef, clkConn, clkCvRef, clkInConn, clkInRef,
   gradOutRef, patternOutRef, waveOutRef,
 }) {
   const subs = SUB_ITEMS[tab] || []
@@ -219,7 +220,8 @@ function GeneratorPanel({
 
         {/* I/O — 1 input, 3 outputs */}
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
-          <LabeledJack type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkCvRef} label="clk" />
+          <LabeledJack type="in" port="clk" moduleId={id} active={clkInConn} signalRef={clkInRef} label="clk" />
+          <LabeledJack type="in" port="rst" moduleId={id} active={clkConn} signalRef={clkCvRef} label="rst" />
           <LabeledJack type="out" port="grad" moduleId={id} signalRef={gradOutRef} label="grad" />
           <LabeledJack type="out" port="ptrn" moduleId={id} signalRef={patternOutRef} label="ptrn" />
           <LabeledJack type="out" port="wave" moduleId={id} signalRef={waveOutRef} label="wave" />
@@ -240,7 +242,7 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
     onAnimateChange={() => {}} onSpeedChange={() => {}}
     p1Conn={false} p1Ref={{ current: null }} p2Conn={false} p2Ref={{ current: null }}
     p3Conn={false} p3Ref={{ current: null }} p4Conn={false} p4Ref={{ current: null }}
-    hueConn={false} hueCvRef={{ current: null }} spdConn={false} spdCvRef={{ current: null }} clkConn={false} clkCvRef={{ current: null }}
+    hueConn={false} hueCvRef={{ current: null }} spdConn={false} spdCvRef={{ current: null }} clkConn={false} clkCvRef={{ current: null }} clkInConn={false} clkInRef={{ current: null }}
     gradOutRef={{ current: null }} patternOutRef={{ current: null }} waveOutRef={{ current: null }}
   />
 
@@ -265,8 +267,10 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
   const animTimeRef = useRef(0)
   const hueCvRef = useRef(null)
   const spdCvRef = useRef(null)
-  const clkCvRef = useRef(null)
+  const clkCvRef = useRef(null)  // rst jack signal ref
+  const clkInRef = useRef(null)  // clk jack signal ref
   const prevClkRef = useRef(false)
+  const syncRef = useRef(newClockSyncState())
   const gradSubRef = useRef('linear')
   const patternSubRef = useRef('stripes')
   const waveSubRef = useRef('sin')
@@ -300,7 +304,8 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
   const p4Conn = cp.has('p4')
   const hueConn = cp.has('hue')
   const spdConn = cp.has('spd')
-  const clkConn = cp.has('clk')
+  const clkConn = cp.has('rst')
+  const clkInConn = cp.has('clk')
 
   const saveStateRef = useRef({})
   saveStateRef.current = { tab, gradSub, patternSub, waveSub, p1, p2, p3, p4, hue, animate, speed }
@@ -308,7 +313,7 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { p1: { type: 'scalar', cv: 'offset' }, p2: { type: 'scalar', cv: 'offset' }, p3: { type: 'scalar', cv: 'offset' }, p4: { type: 'scalar', cv: 'offset' }, hue: { type: 'scalar', cv: 'offset' }, spd: { type: 'scalar', cv: 'offset' }, clk: { type: 'scalar' } },
+    inputs: { p1: { type: 'scalar', cv: 'offset' }, p2: { type: 'scalar', cv: 'offset' }, p3: { type: 'scalar', cv: 'offset' }, p4: { type: 'scalar', cv: 'offset' }, hue: { type: 'scalar', cv: 'offset' }, spd: { type: 'scalar', cv: 'offset' }, rst: { type: 'scalar' }, clk: { type: 'scalar' } },
     outputs: { grad: { type: 'points' }, ptrn: { type: 'points' }, wave: { type: 'points' } },
     process: (inputs, dt, t) => {
       if (!enabledRef.current) {
@@ -327,13 +332,17 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
 
       hueCvRef.current = inputs.hue
       spdCvRef.current = inputs.spd
-      clkCvRef.current = inputs.clk
-      const clkHigh = readScalar(inputs.clk) > 0
+      clkCvRef.current = inputs.rst
+      clkInRef.current = inputs.clk
+      const clkHigh = readScalar(inputs.rst) > 0
       if (clkHigh && !prevClkRef.current) animTimeRef.current = 0
       prevClkRef.current = clkHigh
 
+      // vSpeed knob as multiplier. baseRate = 1 cycle/sec (free) or 1/period (locked).
+      // Knob at 50 → 1× baseRate; 100 → 2×; 0 → 0. Works in both modes uniformly.
       const vSpeed = readCv(inputs.spd, speedRef.current)
-      if (animateRef.current) animTimeRef.current += dt * (vSpeed / 50)
+      const baseRate = measureClockRate(syncRef.current, inputs.clk, t, 1)
+      if (animateRef.current) animTimeRef.current += dt * baseRate * (vSpeed / 50)
       const at = animTimeRef.current
 
       const vHue = readCv(inputs.hue, hueRef.current)
@@ -365,7 +374,7 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
     onTabChange={setTab} onGradSubChange={setGradSub} onPatternSubChange={setPatternSub} onWaveSubChange={setWaveSub}
     onP1Change={setP1} onP2Change={setP2} onP3Change={setP3} onP4Change={setP4} onHueChange={setHue}
     onAnimateChange={setAnimate} onSpeedChange={setSpeed}
-    hueConn={hueConn} hueCvRef={hueCvRef} spdConn={spdConn} spdCvRef={spdCvRef} clkConn={clkConn} clkCvRef={clkCvRef}
+    hueConn={hueConn} hueCvRef={hueCvRef} spdConn={spdConn} spdCvRef={spdCvRef} clkConn={clkConn} clkCvRef={clkCvRef} clkInConn={clkInConn} clkInRef={clkInRef}
     p1Conn={p1Conn} p1Ref={p1CvRef} p2Conn={p2Conn} p2Ref={p2CvRef}
     p3Conn={p3Conn} p3Ref={p3CvRef} p4Conn={p4Conn} p4Ref={p4CvRef}
     gradOutRef={gradOutRef} patternOutRef={patternOutRef} waveOutRef={waveOutRef}

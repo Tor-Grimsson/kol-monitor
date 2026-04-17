@@ -6,6 +6,7 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import { sinLut, cosLut } from '../../hooks/trigLut'
+import { newClockSyncState, measureClockRate } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -135,7 +136,7 @@ function transformAndProject(v, m, s, fov) {
   return { x: 0.5 + rx * scale * 0.3, y: 0.5 + ry * scale * 0.3 }
 }
 
-function WireframePanel({ shape, rxVal, ryVal, rzVal, speed, scale, resolution, fov, animate, grid, enabled, onToggle, onShapeChange, onRxChange, onRyChange, onRzChange, onSpeedChange, onScaleChange, onResolutionChange, onFovChange, onAnimateChange, onGridChange, onReset, id, rxConn, rxRef, ryConn, ryRef, rzConn, rzRef, spdConn, spdRef, sclConn, sclRef, resConn, resRef, fovConn, fovRef, clrConn, clrRef, clkConn, clkRef, outRef }) {
+function WireframePanel({ shape, rxVal, ryVal, rzVal, speed, scale, resolution, fov, animate, grid, enabled, onToggle, onShapeChange, onRxChange, onRyChange, onRzChange, onSpeedChange, onScaleChange, onResolutionChange, onFovChange, onAnimateChange, onGridChange, onReset, id, rxConn, rxRef, ryConn, ryRef, rzConn, rzRef, spdConn, spdRef, sclConn, sclRef, resConn, resRef, fovConn, fovRef, clrConn, clrRef, clkConn, clkRef, clkInConn, clkInRef, outRef }) {
   return (
     <Module label="Gen 3D" enabled={enabled} onToggle={onToggle}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: '100%', gap: 4, padding: '2px 4px' }}>
@@ -164,7 +165,8 @@ function WireframePanel({ shape, rxVal, ryVal, rzVal, speed, scale, resolution, 
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
           <LabeledJack type="in" port="clr" moduleId={id} active={clrConn} signalRef={clrRef} label="clr" />
-          <LabeledJack type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkRef} label="clk" />
+          <LabeledJack type="in" port="clk" moduleId={id} active={clkInConn} signalRef={clkInRef} label="clk" />
+          <LabeledJack type="in" port="rst" moduleId={id} active={clkConn} signalRef={clkRef} label="rst" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
@@ -173,7 +175,7 @@ function WireframePanel({ shape, rxVal, ryVal, rzVal, speed, scale, resolution, 
 }
 
 export default function WireframeModule({ id = 'wire1', init, preview }) {
-  if (preview) return <WireframePanel shape="cube" rxVal={50} ryVal={50} rzVal={50} speed={50} scale={50} resolution={50} fov={50} animate={false} grid={false} enabled={false} onToggle={() => {}} onShapeChange={() => {}} onRxChange={() => {}} onRyChange={() => {}} onRzChange={() => {}} onSpeedChange={() => {}} onScaleChange={() => {}} onResolutionChange={() => {}} onFovChange={() => {}} onAnimateChange={() => {}} onGridChange={() => {}} onReset={() => {}} id={id} rxConn={false} rxRef={{ current: null }} ryConn={false} ryRef={{ current: null }} rzConn={false} rzRef={{ current: null }} spdConn={false} spdRef={{ current: null }} sclConn={false} sclRef={{ current: null }} resConn={false} resRef={{ current: null }} fovConn={false} fovRef={{ current: null }} clrConn={false} clrRef={{ current: null }} clkConn={false} clkRef={{ current: null }} outRef={{ current: null }} />
+  if (preview) return <WireframePanel shape="cube" rxVal={50} ryVal={50} rzVal={50} speed={50} scale={50} resolution={50} fov={50} animate={false} grid={false} enabled={false} onToggle={() => {}} onShapeChange={() => {}} onRxChange={() => {}} onRyChange={() => {}} onRzChange={() => {}} onSpeedChange={() => {}} onScaleChange={() => {}} onResolutionChange={() => {}} onFovChange={() => {}} onAnimateChange={() => {}} onGridChange={() => {}} onReset={() => {}} id={id} rxConn={false} rxRef={{ current: null }} ryConn={false} ryRef={{ current: null }} rzConn={false} rzRef={{ current: null }} spdConn={false} spdRef={{ current: null }} sclConn={false} sclRef={{ current: null }} resConn={false} resRef={{ current: null }} fovConn={false} fovRef={{ current: null }} clrConn={false} clrRef={{ current: null }} clkConn={false} clkRef={{ current: null }} clkInConn={false} clkInRef={{ current: null }} outRef={{ current: null }} />
 
   const [shape, setShape] = useState(init?.shape ?? 'cube')
   const [rxVal, setRxVal] = useState(init?.rxVal ?? 50)
@@ -212,7 +214,9 @@ export default function WireframeModule({ id = 'wire1', init, preview }) {
   const resCvRef = useRef(null)
   const fovCvRef = useRef(null)
   const clrCvRef = useRef(null)
-  const clkCvRef = useRef(null)
+  const clkCvRef = useRef(null)  // legacy: the rst jack's signal ref
+  const clkInRef = useRef(null)  // new clk jack signal ref
+  const syncRef = useRef(newClockSyncState())
 
   enabledRef.current = enabled
   shapeRef.current = shape
@@ -236,7 +240,8 @@ export default function WireframeModule({ id = 'wire1', init, preview }) {
   const resConn = cp.has('res')
   const fovConn = cp.has('fov')
   const clrConn = cp.has('clr')
-  const clkConn = cp.has('clk')
+  const clkConn = cp.has('rst')
+  const clkInConn = cp.has('clk')
 
   const saveStateRef = useRef({})
   saveStateRef.current = { shape, rxVal, ryVal, rzVal, speed, scale, resolution, fov, animate, grid }
@@ -247,7 +252,7 @@ export default function WireframeModule({ id = 'wire1', init, preview }) {
     inputs: {
       rx: { type: 'scalar', cv: 'offset' }, ry: { type: 'scalar', cv: 'offset' }, rz: { type: 'scalar', cv: 'offset' },
       spd: { type: 'scalar', cv: 'offset' }, scl: { type: 'scalar', cv: 'offset' }, res: { type: 'scalar', cv: 'offset' },
-      fov: { type: 'scalar', cv: 'offset' }, clr: { type: 'color' }, clk: { type: 'scalar' },
+      fov: { type: 'scalar', cv: 'offset' }, clr: { type: 'color' }, rst: { type: 'scalar' }, clk: { type: 'scalar' },
     },
     outputs: { out: { type: 'points' } },
     process: (inputs, dt, t) => {
@@ -260,17 +265,24 @@ export default function WireframeModule({ id = 'wire1', init, preview }) {
       sclCvRef.current = inputs.scl
       resCvRef.current = inputs.res
       fovCvRef.current = inputs.fov
-      clkCvRef.current = inputs.clk
+      clkCvRef.current = inputs.rst
+      clkInRef.current = inputs.clk
 
-      const clkHigh = readScalar(inputs.clk) > 0
-      if (clkHigh && !prevClkRef.current) rotRef.current = { x: 0, y: 0, z: 0 }
-      prevClkRef.current = clkHigh
+      const rstHigh = readScalar(inputs.rst) > 0
+      if (rstHigh && !prevClkRef.current) rotRef.current = { x: 0, y: 0, z: 0 }
+      prevClkRef.current = rstHigh
 
-      const rate = readCv(inputs.spd, speedRef.current) / 50
+      // SPD knob as multiplier. In free-running the base rate is 1 rad/sec
+      // (legacy behavior: knob=50 → 1 rad/sec); under clk, base = 2π/period
+      // so Y completes one revolution per clock period at knob=50. X/Z stay at
+      // their proportional 0.7× / 0.3× multiples.
+      const knobMult = readCv(inputs.spd, speedRef.current) / 50
+      const cyclesPerSec = measureClockRate(syncRef.current, inputs.clk, t, 1 / (2 * Math.PI))
+      const radPerSec = cyclesPerSec * 2 * Math.PI * knobMult
       if (animateRef.current) {
-        rotRef.current.x += dt * rate * 0.7
-        rotRef.current.y += dt * rate
-        rotRef.current.z += dt * rate * 0.3
+        rotRef.current.x += dt * radPerSec * 0.7
+        rotRef.current.y += dt * radPerSec
+        rotRef.current.z += dt * radPerSec * 0.3
       }
 
       const rx = (readCv(inputs.rx, rxValRef.current) - 50) / 50 * Math.PI + rotRef.current.x
@@ -313,5 +325,5 @@ export default function WireframeModule({ id = 'wire1', init, preview }) {
     },
   })
 
-  return <WireframePanel shape={shape} rxVal={rxVal} ryVal={ryVal} rzVal={rzVal} speed={speed} scale={scale} resolution={resolution} fov={fov} animate={animate} grid={grid} enabled={enabled} onToggle={() => setEnabled(!enabled)} onShapeChange={setShape} onRxChange={setRxVal} onRyChange={setRyVal} onRzChange={setRzVal} onSpeedChange={setSpeed} onScaleChange={setScale} onResolutionChange={setResolution} onFovChange={setFov} onAnimateChange={setAnimate} onGridChange={setGrid} onReset={handleReset} id={id} rxConn={rxConn} rxRef={rxCvRef} ryConn={ryConn} ryRef={ryCvRef} rzConn={rzConn} rzRef={rzCvRef} spdConn={spdConn} spdRef={spdCvRef} sclConn={sclConn} sclRef={sclCvRef} resConn={resConn} resRef={resCvRef} fovConn={fovConn} fovRef={fovCvRef} clrConn={clrConn} clrRef={clrCvRef} clkConn={clkConn} clkRef={clkCvRef} outRef={outRef} />
+  return <WireframePanel shape={shape} rxVal={rxVal} ryVal={ryVal} rzVal={rzVal} speed={speed} scale={scale} resolution={resolution} fov={fov} animate={animate} grid={grid} enabled={enabled} onToggle={() => setEnabled(!enabled)} onShapeChange={setShape} onRxChange={setRxVal} onRyChange={setRyVal} onRzChange={setRzVal} onSpeedChange={setSpeed} onScaleChange={setScale} onResolutionChange={setResolution} onFovChange={setFov} onAnimateChange={setAnimate} onGridChange={setGrid} onReset={handleReset} id={id} rxConn={rxConn} rxRef={rxCvRef} ryConn={ryConn} ryRef={ryCvRef} rzConn={rzConn} rzRef={rzCvRef} spdConn={spdConn} spdRef={spdCvRef} sclConn={sclConn} sclRef={sclCvRef} resConn={resConn} resRef={resCvRef} fovConn={fovConn} fovRef={fovCvRef} clrConn={clrConn} clrRef={clrCvRef} clkConn={clkConn} clkRef={clkCvRef} clkInConn={clkInConn} clkInRef={clkInRef} outRef={outRef} />
 }

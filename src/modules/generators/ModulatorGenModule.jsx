@@ -7,6 +7,7 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import { sinLut, cosLut } from '../../hooks/trigLut'
+import { newClockSyncState, advanceClockSync } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -64,7 +65,7 @@ function ModulatorGenPanel({
   intConn, intRef, frqConn, frqRef, sepConn, sepRef,
   sclConn, sclRef, cirConn, cirRef, resConn, resRef,
   brtConn, brtRef, bamConn, bamRef, spdConn, spdRef,
-  strConn, strInRef, outRef,
+  strConn, strInRef, clkConn, clkRef, outRef,
 }) {
 
 
@@ -103,6 +104,7 @@ function ModulatorGenPanel({
         {/* Group 3 — output */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
           <LabeledJack type="in" port="str" moduleId={id} active={strConn} signalRef={strInRef} label="str" />
+          <LabeledJack type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkRef} label="clk" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
@@ -127,7 +129,7 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
     cirConn={false} cirRef={{ current: null }} resConn={false} resRef={{ current: null }}
     brtConn={false} brtRef={{ current: null }} bamConn={false} bamRef={{ current: null }}
     spdConn={false} spdRef={{ current: null }}
-    strConn={false} strInRef={{ current: null }} outRef={{ current: null }}
+    strConn={false} strInRef={{ current: null }} clkConn={false} clkRef={{ current: null }} outRef={{ current: null }}
   />
 
   const [intensity, setIntensity] = useState(init?.intensity ?? 50)
@@ -162,7 +164,7 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
 
   // Internal breath state
   const driftRef = useRef(0)
-  const breathPhaseRef = useRef(0)
+  const breathSyncRef = useRef(newClockSyncState())
 
   // Signal refs
   const outRef = useRef(null)
@@ -176,6 +178,7 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
   const bamCvRef = useRef(null)
   const spdCvRef = useRef(null)
   const strInRef = useRef(null)
+  const clkRef = useRef(null)
 
   enabledRef.current = enabled
   intensityRef.current = intensity
@@ -201,6 +204,7 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
   const bamConn = cp.has('bam')
   const spdConn = cp.has('spd')
   const strConn = cp.has('str')
+  const clkConn = cp.has('clk')
 
   const saveStateRef = useRef({})
   saveStateRef.current = { intensity, frequency, separation, scale, circles, resolution, breathTime, breathAmp, speed, quantize, absolute, freeze }
@@ -212,7 +216,7 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
       int: { type: 'scalar', cv: 'attenuate' }, frq: { type: 'scalar', cv: 'offset' }, sep: { type: 'scalar', cv: 'offset' },
       scl: { type: 'scalar', cv: 'offset' }, cir: { type: 'scalar', cv: 'offset' }, res: { type: 'scalar', cv: 'offset' },
       brt: { type: 'scalar', cv: 'offset' }, bam: { type: 'scalar', cv: 'attenuate' }, spd: { type: 'scalar', cv: 'offset' },
-      str: { type: 'scalar', cv: 'offset' },
+      str: { type: 'scalar', cv: 'offset' }, clk: { type: 'scalar' },
     },
     outputs: { out: { type: 'points' } },
     process: (inputs, dt, t) => {
@@ -229,6 +233,7 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
       bamCvRef.current = inputs.bam
       spdCvRef.current = inputs.spd
       strInRef.current = inputs.str
+      clkRef.current = inputs.clk
 
       const int = readCv(inputs.int, intensityRef.current, 'attenuate')
       const frq = readCv(inputs.frq, frequencyRef.current)
@@ -241,12 +246,12 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
       const str = inputs.str ? 0.5 + (readScalar(inputs.str) / 100) * 4.5 : 1.5
       const numPts = Math.round(24 + (readCv(inputs.res, resolutionRef.current) / 100) * 156) // 24-180
 
-      // Internal breath oscillator (replaces GSAP)
+      // Internal breath oscillator — syncs to clk when patched, else runs at spd/brt.
       if (!freezeRef.current) {
-        breathPhaseRef.current += (dt * spd) / Math.max(0.5, brt)
-        driftRef.current += (Math.sin(breathPhaseRef.current * Math.PI * 2) * 0.5 + 0.5) * 0.5 * spd
+        advanceClockSync(breathSyncRef.current, inputs.clk, t, dt, spd / Math.max(0.5, brt))
+        driftRef.current += (Math.sin(breathSyncRef.current.phase * Math.PI * 2) * 0.5 + 0.5) * 0.5 * spd
       }
-      const breathVal = Math.sin(breathPhaseRef.current * Math.PI * 2) * 0.5 + 0.5 // 0-1
+      const breathVal = Math.sin(breathSyncRef.current.phase * Math.PI * 2) * 0.5 + 0.5 // 0-1
 
       // Calculate amplitude and frequency based on mode
       const globalScaleF = scl / 100
@@ -326,6 +331,6 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
     cirConn={cirConn} cirRef={cirCvRef} resConn={resConn} resRef={resCvRef}
     brtConn={brtConn} brtRef={brtCvRef} bamConn={bamConn} bamRef={bamCvRef}
     spdConn={spdConn} spdRef={spdCvRef}
-    strConn={strConn} strInRef={strInRef} outRef={outRef}
+    strConn={strConn} strInRef={strInRef} clkConn={clkConn} clkRef={clkRef} outRef={outRef}
   />
 }

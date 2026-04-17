@@ -30,7 +30,7 @@ function RampPanel({ rate, shape, enabled, onToggle, onRateChange, onShapeChange
           <Knob value={rate} onChange={onRateChange} label="rate" variant="row-right" />
         </ModuleRow>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <LabeledJack type="in" port="sync" moduleId={id} active={syncConnected} signalRef={syncRef} label="rst" />
+          <LabeledJack type="in" port="rst" moduleId={id} active={syncConnected} signalRef={syncRef} label="rst" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
@@ -59,7 +59,7 @@ export default function RampModule({ id = 'ramp1', init, preview }) {
   shapeRef.current = shape
   enabledRef.current = enabled
 
-  const syncConnected = cp.has('sync')
+  const syncConnected = cp.has('rst')
   const rateCvConn = cp.has('rateCV')
 
   const saveStateRef = useRef({})
@@ -68,18 +68,17 @@ export default function RampModule({ id = 'ramp1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { sync: { type: 'scalar' }, rateCV: { type: 'scalar', cv: 'offset' } },
+    inputs: { rst: { type: 'scalar' }, rateCV: { type: 'scalar', cv: 'offset' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs, dt) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
-      syncRef.current = inputs.sync
+      syncRef.current = inputs.rst
       rateCvRef.current = inputs.rateCV
 
-      // Rising edge detection on sync
-      const syncVal = readScalar(inputs.sync)
-      const syncHigh = syncVal > 50
-      if (syncHigh && !prevSyncRef.current) phaseRef.current = 0
-      prevSyncRef.current = syncHigh
+      // Rising edge detection on rst
+      const rstHigh = readScalar(inputs.rst) > 0
+      if (rstHigh && !prevSyncRef.current) phaseRef.current = 0
+      prevSyncRef.current = rstHigh
 
       // Hz: map knob 0-100 to 0.1-10
       const rateVal = readCv(inputs.rateCV, rateRef.current)

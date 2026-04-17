@@ -5,6 +5,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
+import { newClockSyncState, advanceClockSync } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -74,8 +75,7 @@ export default function WaveformModule({ id = 'wave1', init, preview }) {
   const ampRef = useRef(100)
   const speedRef = useRef(50)
   const shapeRef = useRef('sin')
-  const phaseRef = useRef(0)
-  const prevClkRef = useRef(false)
+  const syncRef = useRef(newClockSyncState())
   const outRef = useRef(null)
   const freqInRef = useRef(null)
   const ampInRef = useRef(null)
@@ -113,21 +113,18 @@ export default function WaveformModule({ id = 'wave1', init, preview }) {
       spdInRef.current = inputs.spd
       clkInRef.current = inputs.clk
 
-      // Clock: reset phase on rising edge
-      const clkHigh = readScalar(inputs.clk) > 0
-      if (clkHigh && !prevClkRef.current) phaseRef.current = 0
-      prevClkRef.current = clkHigh
-
       const f = 0.5 + (readCv(inputs.freq, freqRef.current) / 100) * 9.5
       const a = readCv(inputs.amp, ampRef.current, 'attenuate') / 100
       const rate = readCv(inputs.spd, speedRef.current) / 50
 
-      phaseRef.current += dt * rate
+      // Sync advances phase at clock tempo once 2+ ticks received; otherwise at knob rate.
+      advanceClockSync(syncRef.current, inputs.clk, t, dt, rate)
+      const phase = syncRef.current.phase
 
       const pts = []
       for (let i = 0; i < RESOLUTION; i++) {
         const x = i / RESOLUTION
-        const y = waveFn(x * f + phaseRef.current, shapeRef.current) * a
+        const y = waveFn(x * f + phase, shapeRef.current) * a
         pts.push({ x, y: 0.5 + y * 0.5 })
       }
 

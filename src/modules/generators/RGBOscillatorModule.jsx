@@ -5,6 +5,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { color, scalar, readScalar } from '../../hooks/signals'
+import { newClockSyncState, advanceClockSync } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -89,8 +90,9 @@ export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
   const gInRef = useRef(null)
   const bInRef = useRef(null)
   const clkRef = useRef(null)
-  const prevClkRef = useRef(false)
-  const phaseOffsetRef = useRef(0)
+  const syncRRef = useRef(newClockSyncState())
+  const syncGRef = useRef(newClockSyncState())
+  const syncBRef = useRef(newClockSyncState())
 
   enabledRef.current = enabled
   rOscRef.current = rOsc
@@ -133,23 +135,24 @@ export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
       bInRef.current = inputs.b
       clkRef.current = inputs.clk
 
-      // Clock sync: reset phase on rising edge
-      const clkHigh = readScalar(inputs.clk) > 0
-      if (clkHigh && !prevClkRef.current) {
-        phaseOffsetRef.current = t
-      }
-      prevClkRef.current = clkHigh
-      const pt = t - phaseOffsetRef.current
+      // Per-channel phase. When clk is patched + ticking, all 3 phases lock to clock period.
+      // Otherwise each advances at its own knob rate.
+      const rHz = 0.1 + (rRateRef.current / 100) * 9.9
+      const gHz = 0.1 + (gRateRef.current / 100) * 9.9
+      const bHz = 0.1 + (bRateRef.current / 100) * 9.9
+      advanceClockSync(syncRRef.current, inputs.clk, t, dt, rHz)
+      advanceClockSync(syncGRef.current, inputs.clk, t, dt, gHz)
+      advanceClockSync(syncBRef.current, inputs.clk, t, dt, bHz)
 
-      function ch(input, knob, oscOn) {
+      function ch(input, knob, oscOn, phase) {
         if (input) return readScalar(input) / 100
         if (!oscOn) return knob / 100
-        return (Math.sin(pt * (0.1 + (knob / 100) * 9.9) * Math.PI * 2) + 1) / 2
+        return (Math.sin(phase * Math.PI * 2) + 1) / 2
       }
 
-      const r = ch(inputs.r, rRateRef.current, rOscRef.current)
-      const g = ch(inputs.g, gRateRef.current, gOscRef.current)
-      const b = ch(inputs.b, bRateRef.current, bOscRef.current)
+      const r = ch(inputs.r, rRateRef.current, rOscRef.current, syncRRef.current.phase)
+      const g = ch(inputs.g, gRateRef.current, gOscRef.current, syncGRef.current.phase)
+      const b = ch(inputs.b, bRateRef.current, bOscRef.current, syncBRef.current.phase)
 
       const rOut = rClrRef.current ? color(r, 0, 0) : scalar(r * 100)
       const gOut = gClrRef.current ? color(0, g, 0) : scalar(g * 100)

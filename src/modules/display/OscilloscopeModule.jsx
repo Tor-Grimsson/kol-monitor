@@ -282,7 +282,7 @@ function OscPanel({
           <div style={{ display: 'flex', gap: 6 }}>
             <LabeledJack type="in" port="a" moduleId={id} active={aConn} signalRef={aRef} label="a" />
             <LabeledJack type="in" port="b" moduleId={id} active={bConn} signalRef={bRef} label="b" />
-            <LabeledJack type="in" port="clk" moduleId={id} active={clkConn} signalRef={clkRef} label="clk" />
+            <LabeledJack type="in" port="rst" moduleId={id} active={clkConn} signalRef={clkRef} label="rst" />
           </div>
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
@@ -335,7 +335,7 @@ export default function OscilloscopeModule({ id = 'osc1', init, preview }) {
 
   const aConn = cp.has('a')
   const bConn = cp.has('b')
-  const clkConn = cp.has('clk')
+  const clkConn = cp.has('rst')
 
   const saveStateRef = useRef({})
   saveStateRef.current = { expr, vmin, vmax, sec, ofs }
@@ -343,16 +343,16 @@ export default function OscilloscopeModule({ id = 'osc1', init, preview }) {
   useModule({
     id,
     stateRef: saveStateRef,
-    inputs: { a: { type: 'scalar' }, b: { type: 'scalar' }, clk: { type: 'scalar' } },
+    inputs: { a: { type: 'scalar' }, b: { type: 'scalar' }, rst: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
     process: (inputs, dt, t) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
 
       aRef.current = inputs.a
       bRef.current = inputs.b
-      clkRef.current = inputs.clk
+      clkRef.current = inputs.rst
 
-      const clkHigh = readScalar(inputs.clk) > 0
+      const clkHigh = readScalar(inputs.rst) > 0
       if (clkHigh && !prevClkRef.current) {
         tStartRef.current = t
         frameRef.current = 0

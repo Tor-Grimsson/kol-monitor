@@ -24,7 +24,7 @@ function EnvelopePanel({ attack, decay, sustain, release, cycle, enabled, onTogg
           <Knob value={attack} onChange={onAttackChange} label="A" />
           <div style={{ position: 'absolute', left: '50%', marginLeft: -28, top: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <Toggle value={cycle} onChange={onCycleChange} label="cyc" />
-            <LabeledJack type="in" port="clk" moduleId={id} active={clkConnected} signalRef={clkInRef} label="clk" size="sm" />
+            <LabeledJack type="in" port="trig" moduleId={id} active={clkConnected} signalRef={clkInRef} label="trig" size="sm" />
           </div>
         </div>
         <Knob value={decay} onChange={onDecayChange} label="D" />
@@ -72,7 +72,7 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
   cycleRef.current = cycle
 
   const gateConnected = cp.has('gate')
-  const clkConnected = cp.has('clk')
+  const clkConnected = cp.has('trig')
 
   const saveStateRef = useRef({})
   saveStateRef.current = { attack, decay, sustain, release, cycle }
@@ -82,22 +82,22 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
     stateRef: saveStateRef,
     inputs: {
       gate: { type: 'scalar' },
-      clk: { type: 'scalar' },
+      trig: { type: 'scalar' },
     },
     outputs: { out: { type: 'scalar' } },
     process: (inputs, dt) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       gateInRef.current = inputs.gate
-      clkInRef.current = inputs.clk
+      clkInRef.current = inputs.trig
 
       const gateOn = readScalar(inputs.gate) > 0
       const wasOn = prevGateRef.current
       prevGateRef.current = gateOn
 
-      // Clock: retrigger on rising edge
-      const clkHigh = readScalar(inputs.clk) > 0
-      if (clkHigh && !prevClkRef.current) stageRef.current = STAGES.ATTACK
-      prevClkRef.current = clkHigh
+      // Trigger: kick into ATTACK on rising edge
+      const trigHigh = readScalar(inputs.trig) > 0
+      if (trigHigh && !prevClkRef.current) stageRef.current = STAGES.ATTACK
+      prevClkRef.current = trigHigh
 
       // Cycle: start if idle
       if (cycleRef.current && stageRef.current === STAGES.IDLE) stageRef.current = STAGES.ATTACK
