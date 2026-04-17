@@ -8,9 +8,9 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
-import IconSelect from '../controls/IconSelect'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
+import IconSelect from '../parametric/IconSelect'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const FILTER_ITEMS = [

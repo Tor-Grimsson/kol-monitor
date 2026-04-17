@@ -6,8 +6,8 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function MixerPanel({ la, lb, lc, ld, enabled, onToggle, onLaChange, onLbChange, onLcChange, onLdChange, id, aConnected, aRef, bConnected, bRef, cConnected, cRef, dConnected, dRef, outRef }) {

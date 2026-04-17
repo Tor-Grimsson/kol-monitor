@@ -6,10 +6,10 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
-import FlipToggle from '../controls/FlipToggle'
-import LED from '../controls/LED'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
+import FlipToggle from '../parametric/FlipToggle'
+import LED from '../parametric/LED'
 
 const GATE_DURATION = 0.03
 const DIVS = [1, 2, 3, 4, 5, 6, 7, 8]

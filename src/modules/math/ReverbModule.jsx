@@ -10,9 +10,9 @@ import Module from '../utility/Module'
 import ModuleLayout, { ModuleControls, ModuleRow, ModuleJacks } from '../utility/ModuleLayout'
 import Divider from '../../components/atoms/Divider'
 import JackSocket from '../utility/JackSocket'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
-import Toggle from '../controls/Toggle'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
+import Toggle from '../parametric/Toggle'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const TAP_PRIMES = [7, 13, 23, 37, 53, 71, 97, 113, 137, 157, 179, 199]

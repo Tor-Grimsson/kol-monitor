@@ -8,7 +8,7 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import Divider from '../../components/atoms/Divider'
-import LabeledJack from '../controls/LabeledJack'
+import LabeledJack from '../parametric/LabeledJack'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function V2SPanel({ enabled, onToggle, id, inConn, inRef, cntRef, xRef, yRef, areaRef }) {

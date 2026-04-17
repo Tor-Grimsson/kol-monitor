@@ -7,7 +7,7 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import LabeledJack from '../controls/LabeledJack'
+import LabeledJack from '../parametric/LabeledJack'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const GATE_DURATION = 0.03

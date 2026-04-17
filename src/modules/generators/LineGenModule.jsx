@@ -8,9 +8,9 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
-import IconSelect from '../controls/IconSelect'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
+import IconSelect from '../parametric/IconSelect'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const SHAPES = ['line', 'grid', 'circle', 'spiral', 'lissa']

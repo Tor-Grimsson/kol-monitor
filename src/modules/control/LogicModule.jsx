@@ -6,9 +6,9 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
+import LabeledJack from '../parametric/LabeledJack'
 import Divider from '../../components/atoms/Divider'
-import IconSelect from '../controls/IconSelect'
+import IconSelect from '../parametric/IconSelect'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const MODES = ['and', 'or', 'xor', 'not', 'nand', 'nor']

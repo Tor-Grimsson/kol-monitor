@@ -13,8 +13,8 @@ import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar, readCv, points } from '../../hooks/signals'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const BUF_SIZE = 256

@@ -7,9 +7,9 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import LabeledJack from '../controls/LabeledJack'
-import CvKnob from '../controls/CvKnob'
-import Dropdown from '../controls/Dropdown'
+import LabeledJack from '../parametric/LabeledJack'
+import CvKnob from '../parametric/CvKnob'
+import Dropdown from '../parametric/Dropdown'
 
 // Parse SVG text into { vertices: [[x,y]], edges: [[i,j]] }
 function parseSVG(svgText) {

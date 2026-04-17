@@ -9,7 +9,7 @@ import { savePatchFile, loadPatchFile } from '../../hooks/usePatchFile.js'
 import { patches } from '../../data/patches.js'
 import Module from './Module'
 
-import Dropdown from '../controls/Dropdown'
+import Dropdown from '../parametric/Dropdown'
 
 function PatchPanel({ tab, onTabChange, current, names, cableCount, onCurrentChange, onLoad, onSave, onClear, onExport, onImport }) {
   const btnStyle = {

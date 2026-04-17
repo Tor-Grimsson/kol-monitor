@@ -7,7 +7,7 @@ import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
+import LabeledJack from '../parametric/LabeledJack'
 import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 

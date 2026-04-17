@@ -6,8 +6,8 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
-import Toggle from '../controls/Toggle'
+import LabeledJack from '../parametric/LabeledJack'
+import Toggle from '../parametric/Toggle'
 
 function JoystickPanel({ x, y, z, snap, enabled, onToggle, onMove, onZChange, onSnapChange, id, xOutRef, yOutRef, zOutRef }) {
   const sliderRef = useRef(null)

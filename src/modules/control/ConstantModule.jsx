@@ -7,7 +7,7 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import Knob from '../controls/Knob'
+import Knob from '../parametric/Knob'
 
 function ConstantPanel({ value, enabled, onToggle, onValueChange, id, outputRef }) {
   return (

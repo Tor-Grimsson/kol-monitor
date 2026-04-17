@@ -7,7 +7,7 @@ import { TOTAL_HP, hpToPx } from '../modules/utility/eurorack'
 import { findFreeOffset } from '../hooks/useRackState'
 import Case, { RackRow } from '../modules/utility/Case.jsx'
 import { ModuleEditContext } from '../modules/utility/Module.jsx'
-import IconButton from '../modules/controls/IconButton.jsx'
+import IconButton from '../modules/parametric/IconButton.jsx'
 
 function ArrowOverlay({ onLeft, onRight, onUp, onDown }) {
   if (!onLeft && !onRight && !onUp && !onDown) return null

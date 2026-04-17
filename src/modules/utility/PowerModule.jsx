@@ -3,7 +3,7 @@
 
 import { useCasePower } from '../../hooks/useCasePower.jsx'
 import Module from './Module'
-import Toggle from '../controls/Toggle'
+import Toggle from '../parametric/Toggle'
 
 export default function PowerModule({ id = 'power1' }) {
   const { power: on, setPower, allEnabled, toggleAll } = useCasePower()

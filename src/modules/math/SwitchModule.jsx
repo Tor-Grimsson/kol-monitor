@@ -7,7 +7,7 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import LabeledJack from '../controls/LabeledJack'
+import LabeledJack from '../parametric/LabeledJack'
 import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 

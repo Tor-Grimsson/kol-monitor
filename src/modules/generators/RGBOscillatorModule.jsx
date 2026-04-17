@@ -7,9 +7,9 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { color, scalar, readScalar } from '../../hooks/signals'
 import { newClockSyncState, advanceClockSync } from '../../hooks/clockSync'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
-import Toggle from '../controls/Toggle'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
+import Toggle from '../parametric/Toggle'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr, bClr, enabled, onToggle, onRRateChange, onGRateChange, onBRateChange, onROscChange, onGOscChange, onBOscChange, onRClrChange, onGClrChange, onBClrChange, id, rConn, rInRef, gConn, gInRef, bConn, bInRef, clkConn, clkRef, rOutRef, gOutRef, bOutRef, outRef }) {

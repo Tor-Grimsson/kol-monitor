@@ -8,9 +8,9 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
-import CvKnob from '../controls/CvKnob'
-import Toggle from '../controls/Toggle'
+import LabeledJack from '../parametric/LabeledJack'
+import CvKnob from '../parametric/CvKnob'
+import Toggle from '../parametric/Toggle'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Cellular automata rulesets ---

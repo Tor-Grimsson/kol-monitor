@@ -8,8 +8,8 @@ import { scalar, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import { ModuleRow } from '../utility/ModuleLayout'
 import JackSocket from '../utility/JackSocket'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function ComparatorPanel({ threshold, enabled, onToggle, onThresholdChange, id, inConnected, inRef, thrCvConn, thrCvRef, outputRef }) {

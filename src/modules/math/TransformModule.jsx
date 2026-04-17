@@ -9,8 +9,8 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function TransformPanel({ posX, posY, scale, rotX, rotY, rotZ, enabled, onToggle, bypass, onBypass, onPosXChange, onPosYChange, onScaleChange, onRotXChange, onRotYChange, onRotZChange, id, inConn, inRef, xConn, xInRef, yConn, yInRef, sConn, sInRef, rxConn, rxInRef, ryConn, ryInRef, rzConn, rzInRef, outRef }) {

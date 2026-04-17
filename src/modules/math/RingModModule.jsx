@@ -8,9 +8,9 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
-import LabeledJack from '../controls/LabeledJack'
+import LabeledJack from '../parametric/LabeledJack'
 import Divider from '../../components/atoms/Divider'
-import Knob from '../controls/Knob'
+import Knob from '../parametric/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function RingModPanel({ depth, enabled, onToggle, bypass, onBypass, onDepthChange, id, aConnected, aRef, bConnected, bRef, depthCvConn, depthCvRef, outRef }) {

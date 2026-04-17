@@ -6,9 +6,9 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import LabeledJack from '../controls/LabeledJack'
-import Knob from '../controls/Knob'
-import Toggle from '../controls/Toggle'
+import LabeledJack from '../parametric/LabeledJack'
+import Knob from '../parametric/Knob'
+import Toggle from '../parametric/Toggle'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const STAGES = { IDLE: 0, ATTACK: 1, DECAY: 2, SUSTAIN: 3, RELEASE: 4 }

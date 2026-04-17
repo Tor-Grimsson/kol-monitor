@@ -3,7 +3,7 @@
 
 import { createContext, useContext } from 'react'
 import { MODULE_PADDING } from './eurorack'
-import ModuleHeader from '../controls/ModuleHeader'
+import ModuleHeader from '../parametric/ModuleHeader'
 
 export const ModuleEditContext = createContext(null)
 
