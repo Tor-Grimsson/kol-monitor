@@ -2,14 +2,27 @@
 // Adapted from arc-case/case-03, port-based instead of busKey/configKey
 
 import { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react'
+import { createContext as createSelectorContext, useContextSelector } from 'use-context-selector'
 
 // Split contexts: callbacks/refs are stable across the app's lifetime;
 // data (connections + pendingOutput + per-module port map) changes on patch.
 // Consumers that only need callbacks (most app chrome) do not re-render on cable changes.
+//
+// PatchDataContext uses use-context-selector: consumers subscribe to a slice (e.g. their
+// own module's port Set) and only re-render when that slice's reference changes — so
+// a cable connected to module X doesn't re-render every JackSocket in modules Y, Z, ...
 const PatchCallbackContext = createContext(null)
-const PatchDataContext = createContext(null)
+const PatchDataContext = createSelectorContext(null)
 
 const EMPTY_PORT_SET = new Set()
+
+// Content-equality check: returns true if two Sets hold the same string keys.
+function setsEqual(a, b) {
+  if (a === b) return true
+  if (!a || !b || a.size !== b.size) return false
+  for (const x of a) if (!b.has(x)) return false
+  return true
+}
 
 export function PatchRoutingProvider({ initialConnections, children }) {
   const [pendingOutput, setPendingOutput] = useState(null)
@@ -125,6 +138,10 @@ export function PatchRoutingProvider({ initialConnections, children }) {
 
   // Pre-compute per-module connected-input map once per connection change.
   // Replaces N × O(connections) per-module scans with a single O(connections) pass.
+  // CRITICAL: preserve Set reference identity across rebuilds for modules whose ports
+  // didn't change — that's what lets useContextSelector's reference-equality skip
+  // re-rendering those modules when cables change elsewhere.
+  const prevPortsByModuleRef = useRef(new Map())
   const portsByModule = useMemo(() => {
     const m = new Map()
     for (const c of connections) {
@@ -132,6 +149,13 @@ export function PatchRoutingProvider({ initialConnections, children }) {
       if (!s) { s = new Set(); m.set(c.toModuleId, s) }
       s.add(c.toPort)
     }
+    // Reuse old Set where contents match so downstream selectors see stable refs
+    const prev = prevPortsByModuleRef.current
+    for (const [moduleId, newSet] of m) {
+      const oldSet = prev.get(moduleId)
+      if (oldSet && setsEqual(oldSet, newSet)) m.set(moduleId, oldSet)
+    }
+    prevPortsByModuleRef.current = m
     return m
   }, [connections])
 
@@ -152,21 +176,22 @@ export function PatchRoutingProvider({ initialConnections, children }) {
 
 // Backward-compat hook — reads both contexts and merges. Use only when both are needed;
 // prefer the narrow hooks below (usePatchCallbacks / usePatchData) when you can.
+// NOTE: this hook subscribes to ALL data changes — use it sparingly. The overlay and
+// a handful of app-chrome consumers need the combined view; modules should not.
 export function usePatchRouting() {
   const cb = useContext(PatchCallbackContext)
-  const data = useContext(PatchDataContext)
+  const data = useContextSelector(PatchDataContext, (s) => s)
   if (!cb || !data) return null
   return { ...cb, ...data }
 }
 
 export function usePatchCallbacks() { return useContext(PatchCallbackContext) }
-export function usePatchData() { return useContext(PatchDataContext) }
+export function usePatchData() { return useContextSelector(PatchDataContext, (s) => s) }
 
-// O(1) per-module port lookup via pre-computed map.
-// Returns the same Set reference across renders where the module's port set is unchanged,
-// so downstream memoization can survive cable changes to other modules.
+// O(1) per-module port lookup with selector-based subscription.
+// Re-renders ONLY when THIS module's port Set reference changes. Cable changes on other
+// modules — most of the rack — don't touch this hook's consumers. Combined with the
+// Set-identity-preservation in portsByModule above, that's full isolation.
 export function useConnectedPorts(moduleId) {
-  const data = useContext(PatchDataContext)
-  if (!data) return EMPTY_PORT_SET
-  return data.portsByModule.get(moduleId) || EMPTY_PORT_SET
+  return useContextSelector(PatchDataContext, (s) => s?.portsByModule?.get(moduleId) || EMPTY_PORT_SET)
 }
