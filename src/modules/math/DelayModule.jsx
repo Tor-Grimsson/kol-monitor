@@ -1,7 +1,11 @@
-// DelayModule — frame-based delay with dry/wet, copies, feedback
+// DelayModule — time-based delay with dry/wet, copies, feedback
 // 6HP — works with any signal type
 // For points: copies layer past frames as trailing echoes
 // For scalars: feedback creates decaying repeats
+//
+// Ring buffer is time-keyed (each slot stores its write timestamp). Reads search
+// backward for the most recent slot whose timestamp ≤ targetT. This makes behaviour
+// FPS-independent — musical timing survives frame drops. Pattern mirrors Magneto.
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
@@ -13,6 +17,8 @@ import Knob from '../controls/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const BUF_SIZE = 256
+const MAX_DELAY_SECONDS = 2.0  // total ring-buffer window
+const MAX_BASE_DELAY = 1.0     // knob max; actual tap delay = base * (copy + 1), capped at MAX_DELAY_SECONDS
 
 function DelayPanel({ time, mix, copies, fb, enabled, onToggle, onTimeChange, onMixChange, onCopiesChange, onFbChange, id, inConnected, inRef, timeConn, timeInRef, mixConn, mixInRef, copyConn, copyInRef, fbConn, fbInRef, outRef }) {
   return (
@@ -61,6 +67,7 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
   const copiesRef = useRef(30)
   const fbRef = useRef(50)
   const enabledRef = useRef(true)
+  // Ring buffer stores { data, t } per slot, where t is the write timestamp in seconds.
   const bufferRef = useRef(new Array(BUF_SIZE).fill(null))
   const writeHeadRef = useRef(0)
   const outRef = useRef(null)
@@ -97,7 +104,7 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
       fCV: { type: 'scalar', cv: 'attenuate' },
     },
     outputs: { out: { type: 'any' } },
-    process: (inputs) => {
+    process: (inputs, dt, t) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       inRef.current = inputs.in
       timeInRef.current = inputs.tCV
@@ -106,21 +113,36 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
       fbInRef.current = inputs.fCV
 
       const buf = bufferRef.current
-      const t = readCv(inputs.tCV, timeRef.current)
+      const timeKnob = readCv(inputs.tCV, timeRef.current)
       const m = readCv(inputs.mCV, mixRef.current, 'attenuate')
-      const c = readCv(inputs.cCV, copiesRef.current)
-      const f = readCv(inputs.fCV, fbRef.current, 'attenuate')
-      const delayFrames = Math.max(1, Math.round(1 + (t / 100) * (BUF_SIZE - 1)))
+      const cKnob = readCv(inputs.cCV, copiesRef.current)
+      const fKnob = readCv(inputs.fCV, fbRef.current, 'attenuate')
+      // Base delay in seconds: 0.01s at knob=0, up to MAX_BASE_DELAY at knob=100.
+      // Actual tap at copy c is (c+1) * baseDelay, capped at MAX_DELAY_SECONDS.
+      const baseDelay = 0.01 + (timeKnob / 100) * (MAX_BASE_DELAY - 0.01)
       const wet = m / 100
-      const numCopies = Math.max(1, Math.round(1 + (c / 100) * 5))
-      const feedback = f / 100
+      const numCopies = Math.max(1, Math.round(1 + (cKnob / 100) * 5))
+      const feedback = fKnob / 100
       const input = inputs.in
 
-      // Write current signal
-      buf[writeHeadRef.current] = input || null
+      // Write current signal with timestamp
+      buf[writeHeadRef.current] = input ? { data: input, t } : null
       writeHeadRef.current = (writeHeadRef.current + 1) % BUF_SIZE
 
       if (!input) { outRef.current = null; return { out: null } }
+
+      // Read most recent slot whose timestamp ≤ targetT. Returns the stored signal
+      // (or null if the buffer hasn't filled that far back yet).
+      const readAtTime = (targetT) => {
+        if (targetT < 0) return null
+        for (let i = 0; i < BUF_SIZE; i++) {
+          const idx = ((writeHeadRef.current - 1 - i) % BUF_SIZE + BUF_SIZE) % BUF_SIZE
+          const slot = buf[idx]
+          if (!slot) continue
+          if (slot.t <= targetT) return slot.data
+        }
+        return null
+      }
 
       // Points: merge copies as trailing echoes
       if (input.type === 'points') {
@@ -133,10 +155,9 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
           if (input.edges) for (const [a, b] of input.edges) allEdges.push([a + offset, b + offset])
         }
         // Wet: delayed copies
-        for (let c = 0; c < numCopies; c++) {
-          const tapDelay = delayFrames * (c + 1)
-          const readPos = ((writeHeadRef.current - 1 - tapDelay) % BUF_SIZE + BUF_SIZE) % BUF_SIZE
-          const tap = buf[readPos]
+        for (let ci = 0; ci < numCopies; ci++) {
+          const tapDelay = Math.min(baseDelay * (ci + 1), MAX_DELAY_SECONDS)
+          const tap = readAtTime(t - tapDelay)
           if (!tap || tap.type !== 'points') continue
           const offset = allPts.length
           for (const pt of tap.value) allPts.push(pt)
@@ -159,12 +180,11 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
       if (input.type === 'scalar') {
         const dry = readScalar(input)
         let wetSum = 0
-        for (let c = 0; c < numCopies; c++) {
-          const tapDelay = delayFrames * (c + 1)
-          const readPos = ((writeHeadRef.current - 1 - tapDelay) % BUF_SIZE + BUF_SIZE) % BUF_SIZE
-          const tap = buf[readPos]
+        for (let ci = 0; ci < numCopies; ci++) {
+          const tapDelay = Math.min(baseDelay * (ci + 1), MAX_DELAY_SECONDS)
+          const tap = readAtTime(t - tapDelay)
           if (tap && tap.type === 'scalar') {
-            wetSum += tap.value * Math.pow(feedback, c + 1)
+            wetSum += tap.value * Math.pow(feedback, ci + 1)
           }
         }
         const mixed = dry * (1 - wet) + (wetSum / Math.max(1, numCopies)) * wet
@@ -173,9 +193,8 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
         return { out }
       }
 
-      // Other types: simple delay
-      const readPos = ((writeHeadRef.current - 1 - delayFrames) % BUF_SIZE + BUF_SIZE) % BUF_SIZE
-      const delayed = buf[readPos]
+      // Other types: simple delay at base tap (first copy)
+      const delayed = readAtTime(t - Math.min(baseDelay, MAX_DELAY_SECONDS))
       outRef.current = delayed
       return { out: delayed }
     },
