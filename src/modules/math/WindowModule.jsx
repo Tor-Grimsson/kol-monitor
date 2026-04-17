@@ -3,6 +3,7 @@
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -10,9 +11,9 @@ import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
-function WindowPanel({ lo, hi, ofs, enabled, onToggle, onLoChange, onHiChange, onOfsChange, id, inConnected, inRef, outputRef }) {
+function WindowPanel({ lo, hi, ofs, enabled, onToggle, bypass, onBypass, onLoChange, onHiChange, onOfsChange, id, inConnected, inRef, outputRef }) {
   return (
-    <Module label="Window" enabled={enabled} onToggle={onToggle} u={1}>
+    <Module label="Window" enabled={enabled} onToggle={onToggle} u={1} bypass={bypass} onBypass={onBypass}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
         height: '100%', padding: '10px 8px 0 8px', gap: 6,
@@ -41,6 +42,7 @@ export default function WindowModule({ id = 'win1', init, preview }) {
   const [hi, setHi] = useState(init?.hi ?? 100)
   const [ofs, setOfs] = useState(init?.ofs ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
+  const [bypass, setBypass] = useModuleBypass(init?.bypass ?? false)
   const cp = useConnectedPorts(id)
 
   const loRef = useRef(-100)
@@ -58,13 +60,14 @@ export default function WindowModule({ id = 'win1', init, preview }) {
   const inConnected = cp.has('in')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { lo, hi, ofs }
+  saveStateRef.current = { lo, hi, ofs, bypass }
 
   useModule({
     id,
     stateRef: saveStateRef,
     inputs: { in: { type: 'scalar' } },
     outputs: { out: { type: 'scalar' } },
+    bypass: { in: 'in', out: 'out' },
     process: (inputs) => {
       if (!enabledRef.current) { outputRef.current = null; return { out: null } }
       inRef.current = inputs.in
@@ -82,5 +85,5 @@ export default function WindowModule({ id = 'win1', init, preview }) {
     },
   })
 
-  return <WindowPanel lo={lo} hi={hi} ofs={ofs} enabled={enabled} onToggle={() => setEnabled(!enabled)} onLoChange={setLo} onHiChange={setHi} onOfsChange={setOfs} id={id} inConnected={inConnected} inRef={inRef} outputRef={outputRef} />
+  return <WindowPanel lo={lo} hi={hi} ofs={ofs} enabled={enabled} onToggle={() => setEnabled(!enabled)} bypass={bypass} onBypass={() => setBypass(!bypass)} onLoChange={setLo} onHiChange={setHi} onOfsChange={setOfs} id={id} inConnected={inConnected} inRef={inRef} outputRef={outputRef} />
 }

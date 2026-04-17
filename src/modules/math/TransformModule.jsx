@@ -4,6 +4,7 @@
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -12,11 +13,11 @@ import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
-function TransformPanel({ posX, posY, scale, rotX, rotY, rotZ, enabled, onToggle, onPosXChange, onPosYChange, onScaleChange, onRotXChange, onRotYChange, onRotZChange, id, inConn, inRef, xConn, xInRef, yConn, yInRef, sConn, sInRef, rxConn, rxInRef, ryConn, ryInRef, rzConn, rzInRef, outRef }) {
+function TransformPanel({ posX, posY, scale, rotX, rotY, rotZ, enabled, onToggle, bypass, onBypass, onPosXChange, onPosYChange, onScaleChange, onRotXChange, onRotYChange, onRotZChange, id, inConn, inRef, xConn, xInRef, yConn, yInRef, sConn, sInRef, rxConn, rxInRef, ryConn, ryInRef, rzConn, rzInRef, outRef }) {
   const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', padding: '0 2px' }
 
   return (
-    <Module label="Xform" enabled={enabled} onToggle={onToggle}>
+    <Module label="Xform" enabled={enabled} onToggle={onToggle} bypass={bypass} onBypass={onBypass}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
@@ -64,6 +65,7 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
   const [rotY, setRotY] = useState(init?.rotY ?? 0)
   const [rotZ, setRotZ] = useState(init?.rotZ ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
+  const [bypass, setBypass] = useModuleBypass(init?.bypass ?? false)
   const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
@@ -99,7 +101,7 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
   const rzConn = cp.has('rz')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { posX, posY, scale, rotX, rotY, rotZ }
+  saveStateRef.current = { posX, posY, scale, rotX, rotY, rotZ, bypass }
 
   useModule({
     id,
@@ -114,6 +116,7 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
       rz: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out: { type: 'points' } },
+    bypass: { in: 'in', out: 'out' },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       inRef.current = inputs.in
@@ -176,7 +179,6 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
       if (inputs.in.opacity != null) out.opacity = inputs.in.opacity
       if (inputs.in.color) out.color = inputs.in.color
       if (inputs.in.bg) out.bg = inputs.in.bg
-      if (inputs.in.aspectFill) out.aspectFill = inputs.in.aspectFill
       // Pass-through upstream groups. Note: group points are NOT rotated/translated by
       // Transform — a later pass could apply the same affine to each group.pts[] if desired.
       if (inputs.in.groups) out.groups = inputs.in.groups
@@ -185,5 +187,5 @@ export default function TransformModule({ id = 'xfm1', init, preview }) {
     },
   })
 
-  return <TransformPanel posX={posX} posY={posY} scale={scale} rotX={rotX} rotY={rotY} rotZ={rotZ} enabled={enabled} onToggle={() => setEnabled(!enabled)} onPosXChange={setPosX} onPosYChange={setPosY} onScaleChange={setScale} onRotXChange={setRotX} onRotYChange={setRotY} onRotZChange={setRotZ} id={id} inConn={inConn} inRef={inRef} xConn={xConn} xInRef={xInRef} yConn={yConn} yInRef={yInRef} sConn={sConn} sInRef={sInRef} rxConn={rxConn} rxInRef={rxInRef} ryConn={ryConn} ryInRef={ryInRef} rzConn={rzConn} rzInRef={rzInRef} outRef={outRef} />
+  return <TransformPanel posX={posX} posY={posY} scale={scale} rotX={rotX} rotY={rotY} rotZ={rotZ} enabled={enabled} onToggle={() => setEnabled(!enabled)} bypass={bypass} onBypass={() => setBypass(!bypass)} onPosXChange={setPosX} onPosYChange={setPosY} onScaleChange={setScale} onRotXChange={setRotX} onRotYChange={setRotY} onRotZChange={setRotZ} id={id} inConn={inConn} inRef={inRef} xConn={xConn} xInRef={xInRef} yConn={yConn} yInRef={yInRef} sConn={sConn} sInRef={sInRef} rxConn={rxConn} rxInRef={rxInRef} ryConn={ryConn} ryInRef={ryInRef} rzConn={rzConn} rzInRef={rzInRef} outRef={outRef} />
 }

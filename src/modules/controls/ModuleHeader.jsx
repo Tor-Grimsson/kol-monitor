@@ -4,7 +4,7 @@
 import { useCasePower } from '../../hooks/useCasePower.jsx'
 import Toggle from './Toggle'
 
-export default function ModuleHeader({ label, enabled, onToggle, editMode, onRemove }) {
+export default function ModuleHeader({ label, enabled, onToggle, editMode, onRemove, bypass, onBypass }) {
   const { power } = useCasePower()
   const isOn = power && enabled
 
@@ -19,7 +19,7 @@ export default function ModuleHeader({ label, enabled, onToggle, editMode, onRem
       }}>
         {label}
       </span>
-      {editMode && onRemove && (
+      {editMode && onRemove ? (
         <div
           onClick={(e) => { e.stopPropagation(); onRemove() }}
           title="Send module to workbench"
@@ -29,7 +29,18 @@ export default function ModuleHeader({ label, enabled, onToggle, editMode, onRem
             cursor: 'pointer', flexShrink: 0,
           }}
         />
-      )}
+      ) : onBypass ? (
+        <div
+          onClick={(e) => { e.stopPropagation(); onBypass() }}
+          title={bypass ? 'Bypassed — click to re-engage' : 'Bypass'}
+          style={{
+            width: 8, height: 8, borderRadius: '50%',
+            backgroundColor: 'var(--kol-cv-attenuate)',
+            opacity: bypass ? 0.25 : 1,
+            cursor: 'pointer', flexShrink: 0,
+          }}
+        />
+      ) : null}
     </div>
   )
 }

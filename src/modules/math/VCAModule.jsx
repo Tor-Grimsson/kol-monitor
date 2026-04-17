@@ -3,6 +3,7 @@
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -10,13 +11,13 @@ import LabeledJack from '../controls/LabeledJack'
 import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
-function VCAPanel({ enabled, onToggle, id,
+function VCAPanel({ enabled, onToggle, bypass, onBypass, id,
   in1Conn, in1Ref, cv1Conn, cv1Ref, out1Ref,
   in2Conn, in2Ref, cv2Conn, cv2Ref, out2Ref,
 }) {
   const rowStyle = { display: 'flex', alignItems: 'stretch', gap: 8 }
   return (
-    <Module label="VCA" enabled={enabled} onToggle={onToggle} u={1}>
+    <Module label="VCA" enabled={enabled} onToggle={onToggle} u={1} bypass={bypass} onBypass={onBypass}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={rowStyle}>
@@ -40,13 +41,14 @@ function VCAPanel({ enabled, onToggle, id,
 
 const NULL_REF = { current: null }
 
-export default function VCAModule({ id = 'vca1', preview }) {
+export default function VCAModule({ id = 'vca1', init, preview }) {
   if (preview) return <VCAPanel enabled={false} onToggle={() => {}} id={id}
     in1Conn={false} in1Ref={NULL_REF} cv1Conn={false} cv1Ref={NULL_REF} out1Ref={NULL_REF}
     in2Conn={false} in2Ref={NULL_REF} cv2Conn={false} cv2Ref={NULL_REF} out2Ref={NULL_REF}
   />
 
   const [enabled, setEnabled] = useModuleEnabled()
+  const [bypass, setBypass] = useModuleBypass(init?.bypass ?? false)
   const enabledRef = useRef(true)
   const cp = useConnectedPorts(id)
   enabledRef.current = enabled
@@ -59,13 +61,18 @@ export default function VCAModule({ id = 'vca1', preview }) {
   const in2Conn = cp.has('in2')
   const cv2Conn = cp.has('cv2')
 
+  const saveStateRef = useRef({})
+  saveStateRef.current = { bypass }
+
   useModule({
     id,
+    stateRef: saveStateRef,
     inputs: {
       in1: { type: 'scalar' }, cv1: { type: 'scalar', cv: 'offset' },
       in2: { type: 'scalar' }, cv2: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out1: { type: 'scalar' }, out2: { type: 'scalar' } },
+    bypass: [{ in: 'in1', out: 'out1' }, { in: 'in2', out: 'out2' }],
     process: (inputs) => {
       if (!enabledRef.current) {
         out1Ref.current = null; out2Ref.current = null
@@ -81,7 +88,7 @@ export default function VCAModule({ id = 'vca1', preview }) {
     },
   })
 
-  return <VCAPanel enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id}
+  return <VCAPanel enabled={enabled} onToggle={() => setEnabled(!enabled)} bypass={bypass} onBypass={() => setBypass(!bypass)} id={id}
     in1Conn={in1Conn} in1Ref={in1Ref} cv1Conn={cv1Conn} cv1Ref={cv1Ref} out1Ref={out1Ref}
     in2Conn={in2Conn} in2Ref={in2Ref} cv2Conn={cv2Conn} cv2Ref={cv2Ref} out2Ref={out2Ref}
   />

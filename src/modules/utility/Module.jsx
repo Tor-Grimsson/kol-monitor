@@ -7,7 +7,7 @@ import ModuleHeader from '../controls/ModuleHeader'
 
 export const ModuleEditContext = createContext(null)
 
-export default function Module({ children, className = 'bg-surface-secondary', label, enabled, onToggle, u = 3 }) {
+export default function Module({ children, className = 'bg-surface-secondary', label, enabled, onToggle, u = 3, bypass, onBypass }) {
   const editCtx = useContext(ModuleEditContext)
   const editMode = editCtx?.editMode
   const onRemove = editCtx?.onRemove
@@ -26,7 +26,7 @@ export default function Module({ children, className = 'bg-surface-secondary', l
     >
       {label && (
         <div style={{ flexShrink: 0, padding: `0 4px ${u === 1 ? 8 : 16}px` }}>
-          <ModuleHeader label={label} enabled={enabled} onToggle={onToggle} editMode={editMode} onRemove={onRemove} hp={hp} />
+          <ModuleHeader label={label} enabled={enabled} onToggle={onToggle} editMode={editMode} onRemove={onRemove} hp={hp} bypass={bypass} onBypass={onBypass} />
         </div>
       )}
       <div style={{ flex: 1, overflow: 'hidden', padding: '0 4px', minHeight: 0 }}>

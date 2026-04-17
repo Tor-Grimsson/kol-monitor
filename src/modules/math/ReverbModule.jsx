@@ -3,6 +3,7 @@
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -16,9 +17,9 @@ import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const TAP_PRIMES = [7, 13, 23, 37, 53, 71, 97, 113, 137, 157, 179, 199]
 
-function ReverbPanel({ size, decay, mix, freeze, bypass, bypassFx, enabled, onToggle, onSizeChange, onDecayChange, onMixChange, onFreezeChange, onBypassChange, onBypassFxChange, id, sizeCvConn, sizeCvRef, decayCvConn, decayCvRef, inConnected, inRef, outRef }) {
+function ReverbPanel({ size, decay, mix, freeze, srcOff, enabled, onToggle, bypass, onBypass, onSizeChange, onDecayChange, onMixChange, onFreezeChange, onSrcOffChange, id, sizeCvConn, sizeCvRef, decayCvConn, decayCvRef, inConnected, inRef, outRef }) {
   return (
-    <Module label="Ghost" enabled={enabled} onToggle={onToggle} u={1}>
+    <Module label="Ghost" enabled={enabled} onToggle={onToggle} u={1} bypass={bypass} onBypass={onBypass}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
         <div style={{ display: 'flex', gap: 12 }}>
           {/* Left: CV + knobs */}
@@ -39,8 +40,7 @@ function ReverbPanel({ size, decay, mix, freeze, bypass, bypassFx, enabled, onTo
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Toggle horizontal value={freeze} onChange={onFreezeChange} label="frz" size="sm" />
-              <Toggle horizontal value={bypass} onChange={onBypassChange} label="src" size="sm" />
-              <Toggle horizontal value={bypassFx} onChange={onBypassFxChange} label="byp" size="sm" />
+              <Toggle horizontal value={srcOff} onChange={onSrcOffChange} label="src" size="sm" />
             </div>
             <Divider className="pt-1" />
             <ModuleJacks>
@@ -55,23 +55,22 @@ function ReverbPanel({ size, decay, mix, freeze, bypass, bypassFx, enabled, onTo
 }
 
 export default function ReverbModule({ id = 'verb1', init, preview }) {
-  if (preview) return <ReverbPanel size={50} decay={50} mix={50} freeze={false} bypass={false} bypassFx={false} enabled={false} onToggle={() => {}} onSizeChange={() => {}} onDecayChange={() => {}} onMixChange={() => {}} onFreezeChange={() => {}} onBypassChange={() => {}} onBypassFxChange={() => {}} id={id} sizeCvConn={false} sizeCvRef={{ current: null }} decayCvConn={false} decayCvRef={{ current: null }} inConnected={false} inRef={{ current: null }} outRef={{ current: null }} />
+  if (preview) return <ReverbPanel size={50} decay={50} mix={50} freeze={false} srcOff={false} enabled={false} onToggle={() => {}} bypass={false} onBypass={() => {}} onSizeChange={() => {}} onDecayChange={() => {}} onMixChange={() => {}} onFreezeChange={() => {}} onSrcOffChange={() => {}} id={id} sizeCvConn={false} sizeCvRef={{ current: null }} decayCvConn={false} decayCvRef={{ current: null }} inConnected={false} inRef={{ current: null }} outRef={{ current: null }} />
 
   const [size, setSize] = useState(init?.size ?? 50)
   const [decay, setDecay] = useState(init?.decay ?? 50)
   const [mix, setMix] = useState(init?.mix ?? 50)
   const [freeze, setFreeze] = useState(init?.freeze ?? false)
-  const [bypass, setBypass] = useState(init?.bypass ?? false)
-  const [bypassFx, setBypassFx] = useState(init?.bypassFx ?? false)
+  const [srcOff, setSrcOff] = useState(init?.srcOff ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
+  const [bypass, setBypass] = useModuleBypass(init?.bypass ?? false)
   const cp = useConnectedPorts(id)
 
   const sizeRef = useRef(50)
   const decayRef = useRef(50)
   const mixRef = useRef(50)
   const freezeRef = useRef(false)
-  const bypassRef = useRef(false)
-  const bypassFxRef = useRef(false)
+  const srcOffRef = useRef(false)
   const enabledRef = useRef(true)
   const bufferRef = useRef(new Array(256).fill(null))
   const writeHeadRef = useRef(0)
@@ -84,8 +83,7 @@ export default function ReverbModule({ id = 'verb1', init, preview }) {
   decayRef.current = decay
   mixRef.current = mix
   freezeRef.current = freeze
-  bypassRef.current = bypass
-  bypassFxRef.current = bypassFx
+  srcOffRef.current = srcOff
   enabledRef.current = enabled
 
   const inConnected = cp.has('in')
@@ -93,17 +91,17 @@ export default function ReverbModule({ id = 'verb1', init, preview }) {
   const decayCvConn = cp.has('decayCV')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { size, decay, mix, freeze, bypass, bypassFx }
+  saveStateRef.current = { size, decay, mix, freeze, srcOff, bypass }
 
   useModule({
     id,
     stateRef: saveStateRef,
     inputs: { in: { type: 'any' }, sizeCV: { type: 'scalar', cv: 'offset' }, decayCV: { type: 'scalar', cv: 'offset' } },
     outputs: { out: { type: 'any' } },
+    bypass: { in: 'in', out: 'out' },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       inRef.current = inputs.in
-      if (bypassFxRef.current) { outRef.current = inputs.in; return { out: inputs.in } }
       sizeCvRef.current = inputs.sizeCV
       decayCvRef.current = inputs.decayCV
 
@@ -131,7 +129,7 @@ export default function ReverbModule({ id = 'verb1', init, preview }) {
         if (tap) taps.push({ signal: tap, decay: Math.pow(decayAmt, i + 1) })
       }
 
-      const byp = bypassRef.current
+      const byp = srcOffRef.current
 
       // Points: merge dry + wet trails
       if (input && input.type === 'points') {
@@ -170,7 +168,6 @@ export default function ReverbModule({ id = 'verb1', init, preview }) {
         if (!byp && input.groups) out.groups = input.groups
         if (input.bg) out.bg = input.bg
         if (input.aspectLock) out.aspectLock = input.aspectLock
-        if (input.aspectFill) out.aspectFill = input.aspectFill
         outRef.current = out
         return { out }
       }
@@ -214,5 +211,5 @@ export default function ReverbModule({ id = 'verb1', init, preview }) {
     },
   })
 
-  return <ReverbPanel size={size} decay={decay} mix={mix} freeze={freeze} bypass={bypass} bypassFx={bypassFx} enabled={enabled} onToggle={() => setEnabled(!enabled)} onSizeChange={setSize} onDecayChange={setDecay} onMixChange={setMix} onFreezeChange={setFreeze} onBypassChange={setBypass} onBypassFxChange={setBypassFx} id={id} sizeCvConn={sizeCvConn} sizeCvRef={sizeCvRef} decayCvConn={decayCvConn} decayCvRef={decayCvRef} inConnected={inConnected} inRef={inRef} outRef={outRef} />
+  return <ReverbPanel size={size} decay={decay} mix={mix} freeze={freeze} srcOff={srcOff} enabled={enabled} onToggle={() => setEnabled(!enabled)} bypass={bypass} onBypass={() => setBypass(!bypass)} onSizeChange={setSize} onDecayChange={setDecay} onMixChange={setMix} onFreezeChange={setFreeze} onSrcOffChange={setSrcOff} id={id} sizeCvConn={sizeCvConn} sizeCvRef={sizeCvRef} decayCvConn={decayCvConn} decayCvRef={decayCvRef} inConnected={inConnected} inRef={inRef} outRef={outRef} />
 }

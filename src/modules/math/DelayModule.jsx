@@ -9,6 +9,7 @@
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar, readCv, points } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -20,9 +21,9 @@ const BUF_SIZE = 256
 const MAX_DELAY_SECONDS = 2.0  // total ring-buffer window
 const MAX_BASE_DELAY = 1.0     // knob max; actual tap delay = base * (copy + 1), capped at MAX_DELAY_SECONDS
 
-function DelayPanel({ time, mix, copies, fb, enabled, onToggle, onTimeChange, onMixChange, onCopiesChange, onFbChange, id, inConnected, inRef, timeConn, timeInRef, mixConn, mixInRef, copyConn, copyInRef, fbConn, fbInRef, outRef }) {
+function DelayPanel({ time, mix, copies, fb, enabled, onToggle, bypass, onBypass, onTimeChange, onMixChange, onCopiesChange, onFbChange, id, inConnected, inRef, timeConn, timeInRef, mixConn, mixInRef, copyConn, copyInRef, fbConn, fbInRef, outRef }) {
   return (
-    <Module label="Delay" enabled={enabled} onToggle={onToggle}>
+    <Module label="Delay" enabled={enabled} onToggle={onToggle} bypass={bypass} onBypass={onBypass}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
@@ -60,6 +61,7 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
   const [copies, setCopies] = useState(init?.copies ?? 30)
   const [fb, setFb] = useState(init?.fb ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
+  const [bypass, setBypass] = useModuleBypass(init?.bypass ?? false)
   const cp = useConnectedPorts(id)
 
   const timeRef = useRef(50)
@@ -94,7 +96,7 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
   const fbConn = cp.has('fCV')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { time, mix, copies, fb }
+  saveStateRef.current = { time, mix, copies, fb, bypass }
 
   useModule({
     id,
@@ -107,6 +109,7 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
       fCV: { type: 'scalar', cv: 'attenuate' },
     },
     outputs: { out: { type: 'any' } },
+    bypass: { in: 'in', out: 'out' },
     process: (inputs, dt, t) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       inRef.current = inputs.in
@@ -183,7 +186,6 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
         if (input.groups) out.groups = input.groups
         if (input.bg) out.bg = input.bg
         if (input.aspectLock) out.aspectLock = input.aspectLock
-        if (input.aspectFill) out.aspectFill = input.aspectFill
         outRef.current = out
         return { out }
       }
@@ -212,5 +214,5 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
     },
   })
 
-  return <DelayPanel time={time} mix={mix} copies={copies} fb={fb} enabled={enabled} onToggle={() => setEnabled(!enabled)} onTimeChange={setTime} onMixChange={setMix} onCopiesChange={setCopies} onFbChange={setFb} id={id} inConnected={inConnected} inRef={inRef} timeConn={timeConn} timeInRef={timeInRef} mixConn={mixConn} mixInRef={mixInRef} copyConn={copyConn} copyInRef={copyInRef} fbConn={fbConn} fbInRef={fbInRef} outRef={outRef} />
+  return <DelayPanel time={time} mix={mix} copies={copies} fb={fb} enabled={enabled} onToggle={() => setEnabled(!enabled)} bypass={bypass} onBypass={() => setBypass(!bypass)} onTimeChange={setTime} onMixChange={setMix} onCopiesChange={setCopies} onFbChange={setFb} id={id} inConnected={inConnected} inRef={inRef} timeConn={timeConn} timeInRef={timeInRef} mixConn={mixConn} mixInRef={mixInRef} copyConn={copyConn} copyInRef={copyInRef} fbConn={fbConn} fbInRef={fbInRef} outRef={outRef} />
 }

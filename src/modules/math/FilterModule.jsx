@@ -3,6 +3,7 @@
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -19,9 +20,9 @@ const FILTER_ITEMS = [
   { value: 'notch', icon: 'filter-notch' },
 ]
 
-function FilterPanel({ mode, cutoff, resonance, enabled, onToggle, onModeChange, onCutoffChange, onResonanceChange, id, inConn, inRef, cutCvConn, cutCvRef, resCvConn, resCvRef, outRef }) {
+function FilterPanel({ mode, cutoff, resonance, enabled, onToggle, bypass, onBypass, onModeChange, onCutoffChange, onResonanceChange, id, inConn, inRef, cutCvConn, cutCvRef, resCvConn, resCvRef, outRef }) {
   return (
-    <Module label="Filter" enabled={enabled} onToggle={onToggle}>
+    <Module label="Filter" enabled={enabled} onToggle={onToggle} bypass={bypass} onBypass={onBypass}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
@@ -53,6 +54,7 @@ export default function FilterModule({ id = 'filt1', init, preview }) {
   const [cutoff, setCutoff] = useState(init?.cutoff ?? 50)
   const [resonance, setResonance] = useState(init?.resonance ?? 0)
   const [enabled, setEnabled] = useModuleEnabled()
+  const [bypass, setBypass] = useModuleBypass(init?.bypass ?? false)
   const cp = useConnectedPorts(id)
 
   const modeRef = useRef('lp')
@@ -86,13 +88,14 @@ export default function FilterModule({ id = 'filt1', init, preview }) {
   const resCvConn = cp.has('resCV')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { mode, cutoff, resonance }
+  saveStateRef.current = { mode, cutoff, resonance, bypass }
 
   useModule({
     id,
     stateRef: saveStateRef,
     inputs: { in: { type: 'any' }, cutCV: { type: 'scalar', cv: 'offset' }, resCV: { type: 'scalar', cv: 'offset' } },
     outputs: { out: { type: 'any' } },
+    bypass: { in: 'in', out: 'out' },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       inRef.current = inputs.in
@@ -177,7 +180,6 @@ export default function FilterModule({ id = 'filt1', init, preview }) {
         if (input.color) out.color = input.color
         if (input.bg) out.bg = input.bg
         if (input.aspectLock) out.aspectLock = input.aspectLock
-        if (input.aspectFill) out.aspectFill = input.aspectFill
         outRef.current = out
         return { out }
       }
@@ -188,5 +190,5 @@ export default function FilterModule({ id = 'filt1', init, preview }) {
     },
   })
 
-  return <FilterPanel mode={mode} cutoff={cutoff} resonance={resonance} enabled={enabled} onToggle={() => setEnabled(!enabled)} onModeChange={setMode} onCutoffChange={setCutoff} onResonanceChange={setResonance} id={id} inConn={inConn} inRef={inRef} cutCvConn={cutCvConn} cutCvRef={cutCvRef} resCvConn={resCvConn} resCvRef={resCvRef} outRef={outRef} />
+  return <FilterPanel mode={mode} cutoff={cutoff} resonance={resonance} enabled={enabled} onToggle={() => setEnabled(!enabled)} bypass={bypass} onBypass={() => setBypass(!bypass)} onModeChange={setMode} onCutoffChange={setCutoff} onResonanceChange={setResonance} id={id} inConn={inConn} inRef={inRef} cutCvConn={cutCvConn} cutCvRef={cutCvRef} resCvConn={resCvConn} resCvRef={resCvRef} outRef={outRef} />
 }

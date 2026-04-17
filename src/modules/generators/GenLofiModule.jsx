@@ -342,7 +342,7 @@ export default function GeneratorModule({ id = 'gen1', init, preview }) {
       const makeOut = (mode, sub) => {
         const grid = generateGrid(mode, sub, v1, v2, v3, v4, at)
         const p = points(grid.pts, grid.edges)
-        p.aspectFill = true; p.fill = false
+        p.fill = false
         p.color = outColor
         return p
       }

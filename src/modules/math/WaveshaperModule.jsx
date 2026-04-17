@@ -3,6 +3,7 @@
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -46,9 +47,9 @@ function makeShaper(mode, sym) {
   }
 }
 
-function WaveshaperPanel({ mode, amount, symmetry, smooth, smoothFold, enabled, onToggle, onModeChange, onAmountChange, onSymmetryChange, onSmoothChange, onSmoothFoldChange, id, inConnected, inRef, amtCvConn, amtCvRef, symCvConn, symCvRef, smCvConn, smCvRef, outRef }) {
+function WaveshaperPanel({ mode, amount, symmetry, smooth, smoothFold, enabled, onToggle, bypass, onBypass, onModeChange, onAmountChange, onSymmetryChange, onSmoothChange, onSmoothFoldChange, id, inConnected, inRef, amtCvConn, amtCvRef, symCvConn, symCvRef, smCvConn, smCvRef, outRef }) {
   return (
-    <Module label="Shaper" enabled={enabled} onToggle={onToggle}>
+    <Module label="Shaper" enabled={enabled} onToggle={onToggle} bypass={bypass} onBypass={onBypass}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
@@ -92,6 +93,7 @@ export default function WaveshaperModule({ id = 'wshp1', init, preview }) {
   const [smooth, setSmooth] = useState(init?.smooth ?? 0)
   const [smoothFold, setSmoothFold] = useState(init?.smoothFold ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
+  const [bypass, setBypass] = useModuleBypass(init?.bypass ?? false)
   const cp = useConnectedPorts(id)
 
   const modeRef = useRef('exp')
@@ -119,13 +121,14 @@ export default function WaveshaperModule({ id = 'wshp1', init, preview }) {
   const smCvConn = cp.has('smCV')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { mode, amount, symmetry, smooth, smoothFold }
+  saveStateRef.current = { mode, amount, symmetry, smooth, smoothFold, bypass }
 
   useModule({
     id,
     stateRef: saveStateRef,
     inputs: { in: { type: 'any' }, amtCV: { type: 'scalar', cv: 'attenuate' }, symCV: { type: 'scalar', cv: 'offset' }, smCV: { type: 'scalar', cv: 'attenuate' } },
     outputs: { out: { type: 'any' } },
+    bypass: { in: 'in', out: 'out' },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       inRef.current = inputs.in
@@ -171,7 +174,6 @@ export default function WaveshaperModule({ id = 'wshp1', init, preview }) {
         if (input.color) out.color = input.color
         if (input.bg) out.bg = input.bg
         if (input.aspectLock) out.aspectLock = input.aspectLock
-        if (input.aspectFill) out.aspectFill = input.aspectFill
         outRef.current = out
         return { out }
       }
@@ -199,5 +201,5 @@ export default function WaveshaperModule({ id = 'wshp1', init, preview }) {
     },
   })
 
-  return <WaveshaperPanel mode={mode} amount={amount} symmetry={symmetry} smooth={smooth} smoothFold={smoothFold} enabled={enabled} onToggle={() => setEnabled(!enabled)} onModeChange={setMode} onAmountChange={setAmount} onSymmetryChange={setSymmetry} onSmoothChange={setSmooth} onSmoothFoldChange={setSmoothFold} id={id} inConnected={inConnected} inRef={inRef} amtCvConn={amtCvConn} amtCvRef={amtCvRef} symCvConn={symCvConn} symCvRef={symCvRef} smCvConn={smCvConn} smCvRef={smCvRef} outRef={outRef} />
+  return <WaveshaperPanel mode={mode} amount={amount} symmetry={symmetry} smooth={smooth} smoothFold={smoothFold} enabled={enabled} onToggle={() => setEnabled(!enabled)} bypass={bypass} onBypass={() => setBypass(!bypass)} onModeChange={setMode} onAmountChange={setAmount} onSymmetryChange={setSymmetry} onSmoothChange={setSmooth} onSmoothFoldChange={setSmoothFold} id={id} inConnected={inConnected} inRef={inRef} amtCvConn={amtCvConn} amtCvRef={amtCvRef} symCvConn={symCvConn} symCvRef={symCvRef} smCvConn={smCvConn} smCvRef={smCvRef} outRef={outRef} />
 }

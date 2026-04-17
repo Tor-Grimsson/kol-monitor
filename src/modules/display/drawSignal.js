@@ -112,16 +112,17 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
   // Override pen thickness if signal carries strokeWidth
   if (signal.strokeWidth != null) ctx.lineWidth = signal.strokeWidth
 
-  // Aspect: contain (aspectLock) or cover (aspectFill)
-  let dx = x, dy = y, dw = w, dh = h
-  if (signal.aspectFill) {
-    const side = Math.max(w, h)
+  // Aspect: contain (aspectLock) is opt-in; everything else fills (cover).
+  // Stretch is not a display option — pipe through Transform if you want it.
+  let dx, dy, dw, dh
+  if (signal.aspectLock) {
+    const side = Math.min(w, h)
     dx = x + (w - side) / 2
     dy = y + (h - side) / 2
     dw = side
     dh = side
-  } else if (signal.aspectLock) {
-    const side = Math.min(w, h)
+  } else {
+    const side = Math.max(w, h)
     dx = x + (w - side) / 2
     dy = y + (h - side) / 2
     dw = side
@@ -163,8 +164,8 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
   // Cheaper than emitting N rotated copies of every vertex when the repeat is uniform
   // (e.g. Kaleidoscope). Absent = draw once at identity.
   // Transform order on a point: mirror → translate(offsetX, 0) → rotate → (back to world).
-  // Note: assumes isotropic rendering (dw ≈ dh, i.e. aspectLock/Fill) — instanced
-  // rotations otherwise skew because points-space is not isotropic to screen-space.
+  // Note: assumes isotropic rendering (dw === dh) — guaranteed by the aspect
+  // branch above (both aspectLock contain and the default fill produce a square).
   const instances = signal.instances && signal.instances.length > 0 ? signal.instances : null
   const instCount = instances ? instances.length : 1
   const centerX = dx + dw * 0.5

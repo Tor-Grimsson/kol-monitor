@@ -247,9 +247,11 @@ export default function CreatePage() {
                       action={
                         <span
                           onClick={(e) => { e.stopPropagation(); if (justDraggedRef.current) return; addModule(m.type) }}
-                          className="cursor-pointer"
-                          style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#c0392b', flexShrink: 0 }}
-                        />
+                          className="cursor-pointer flex items-center gap-2 kol-helper-xxs text-fg-80"
+                        >
+                          INSERT
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--kol-color-brand-red)', flexShrink: 0 }} />
+                        </span>
                       }
                     />
                   </div>

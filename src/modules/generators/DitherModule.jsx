@@ -887,7 +887,6 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
       )
 
       const pOut = points(geom.pts, geom.edges)
-      pOut.aspectFill = true
       pOut.fill = fillRef.current
       pOut.strokeWidth = 1
       if (inputs.clr?.type === 'color') pOut.color = inputs.clr.value

@@ -3,6 +3,7 @@
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
 import { sinLut, cosLut } from '../../hooks/trigLut'
@@ -55,7 +56,7 @@ function canonicalWedge(srcPts, srcEdges, { zoom, fold, cut, halfWedge }) {
 
 function KaleidoscopePanel({
   seg, rot, zm, ofs, spd, fold, opa, mir, ani, cut, fil,
-  enabled, onToggle, id,
+  enabled, onToggle, bypass, onBypass, id,
   onSegChange, onRotChange, onZmChange, onOfsChange, onSpdChange, onFoldChange, onOpaChange,
   onMirChange, onAniChange, onCutChange, onFilChange,
   inConn, inRef, penConn, penInRef, clrConn, clrInRef, clkConn, clkInRef,
@@ -65,7 +66,7 @@ function KaleidoscopePanel({
   const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%' }
 
   return (
-    <Module label="Kaleido" enabled={enabled} onToggle={onToggle}>
+    <Module label="Kaleido" enabled={enabled} onToggle={onToggle} bypass={bypass} onBypass={onBypass}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0', gap: 2,
@@ -142,6 +143,7 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
   const [cut, setCut] = useState(init?.cut ?? false)
   const [fil, setFil] = useState(init?.fil ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
+  const [bypass, setBypass] = useModuleBypass(init?.bypass ?? false)
   const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
@@ -191,7 +193,7 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
   const zmCvConn = cp.has('zmCV')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { seg, rot, zm, ofs, spd, fold, opa, mir, ani, cut, fil }
+  saveStateRef.current = { seg, rot, zm, ofs, spd, fold, opa, mir, ani, cut, fil, bypass }
 
   useModule({
     id,
@@ -206,6 +208,7 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
       zmCV: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out: { type: 'points' } },
+    bypass: { in: 'in', out: 'out' },
     process: (inputs, dt) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
 
@@ -308,7 +311,7 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
 
   return <KaleidoscopePanel
     seg={seg} rot={rot} zm={zm} ofs={ofs} spd={spd} fold={fold} opa={opa} mir={mir} ani={ani} cut={cut} fil={fil}
-    enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id}
+    enabled={enabled} onToggle={() => setEnabled(!enabled)} bypass={bypass} onBypass={() => setBypass(!bypass)} id={id}
     onSegChange={setSeg} onRotChange={setRot} onZmChange={setZm} onOfsChange={setOfs}
     onSpdChange={setSpd} onFoldChange={setFold} onOpaChange={setOpa} onMirChange={setMir} onAniChange={setAni} onCutChange={setCut} onFilChange={setFil}
     inConn={inConn} inRef={inRef} penConn={penConn} penInRef={penInRef}

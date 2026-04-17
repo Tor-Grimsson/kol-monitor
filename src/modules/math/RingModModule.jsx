@@ -3,6 +3,7 @@
 
 import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
+import { useModuleBypass } from '../../hooks/useModuleBypass.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
@@ -12,9 +13,9 @@ import Divider from '../../components/atoms/Divider'
 import Knob from '../controls/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
-function RingModPanel({ depth, enabled, onToggle, onDepthChange, id, aConnected, aRef, bConnected, bRef, depthCvConn, depthCvRef, outRef }) {
+function RingModPanel({ depth, enabled, onToggle, bypass, onBypass, onDepthChange, id, aConnected, aRef, bConnected, bRef, depthCvConn, depthCvRef, outRef }) {
   return (
-    <Module label="Ring" enabled={enabled} onToggle={onToggle} u={1}>
+    <Module label="Ring" enabled={enabled} onToggle={onToggle} u={1} bypass={bypass} onBypass={onBypass}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', height: '100%', gap: 8,
@@ -40,6 +41,7 @@ export default function RingModModule({ id = 'ring1', init, preview }) {
 
   const [depth, setDepth] = useState(init?.depth ?? 100)
   const [enabled, setEnabled] = useModuleEnabled()
+  const [bypass, setBypass] = useModuleBypass(init?.bypass ?? false)
   const cp = useConnectedPorts(id)
 
   const depthRef = useRef(100)
@@ -57,13 +59,14 @@ export default function RingModModule({ id = 'ring1', init, preview }) {
   const depthCvConn = cp.has('depthCV')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { depth }
+  saveStateRef.current = { depth, bypass }
 
   useModule({
     id,
     stateRef: saveStateRef,
     inputs: { a: { type: 'scalar' }, b: { type: 'scalar' }, depthCV: { type: 'scalar', cv: 'attenuate' } },
     outputs: { out: { type: 'scalar' } },
+    bypass: { in: 'a', out: 'out' },
     process: (inputs) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       aRef.current = inputs.a
@@ -80,5 +83,5 @@ export default function RingModModule({ id = 'ring1', init, preview }) {
     },
   })
 
-  return <RingModPanel depth={depth} enabled={enabled} onToggle={() => setEnabled(!enabled)} onDepthChange={setDepth} id={id} aConnected={aConnected} aRef={aRef} bConnected={bConnected} bRef={bRef} depthCvConn={depthCvConn} depthCvRef={depthCvRef} outRef={outRef} />
+  return <RingModPanel depth={depth} enabled={enabled} onToggle={() => setEnabled(!enabled)} bypass={bypass} onBypass={() => setBypass(!bypass)} onDepthChange={setDepth} id={id} aConnected={aConnected} aRef={aRef} bConnected={bConnected} bRef={bRef} depthCvConn={depthCvConn} depthCvRef={depthCvRef} outRef={outRef} />
 }

@@ -581,7 +581,6 @@ export default function Generator2Module({ id = 'gen2_1', init, preview }) {
       const ofsVal = readCv(inputs.ofs, offsetRef.current)
       const geom = generate(geoModeRef.current, geoSubRef.current, v1, v2, v3, v4, animTimeRef.current, animateRef.current, spdVal, oscillateRef.current, ampVal, dtyVal, ofsVal)
       const pOut = points(geom.pts, geom.edges)
-      pOut.aspectFill = true
       pOut.fill = true
       pOut.strokeWidth = 1
       pointsOutRef.current = pOut
