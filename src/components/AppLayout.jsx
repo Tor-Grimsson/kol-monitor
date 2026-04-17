@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import NavSidebar from './NavSidebar'
+import TouchDeviceOverlay from '../TouchDeviceOverlay'
 
 const NavHiddenContext = createContext(null)
 export const useNavHidden = () => useContext(NavHiddenContext)
@@ -14,6 +15,7 @@ export default function AppLayout() {
       <div style={{ marginLeft: navHidden ? 0 : 48 }}>
         <Outlet />
       </div>
+      <TouchDeviceOverlay />
     </NavHiddenContext.Provider>
   )
 }
