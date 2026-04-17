@@ -1,21 +1,21 @@
 // ModuleDesign — visual mockup page for module panel layouts
 // Access at /design
 
-import Module from '../modules/utility/Module'
-import JackSocket from '../modules/utility/JackSocket'
-import LabeledJack from '../modules/parametric/LabeledJack'
-import Knob from '../modules/parametric/Knob'
-import CvKnob from '../modules/parametric/CvKnob'
-import Slider from '../modules/parametric/Slider'
-import FlipToggle from '../modules/parametric/FlipToggle'
-import Toggle from '../modules/parametric/Toggle'
-import LED from '../modules/parametric/LED'
-import Divider from '../components/atoms/Divider'
-import Icon from '../components/icons/Icon'
-import { HP_PX, TOTAL_HP, ASPECT } from '../modules/utility/eurorack'
-import { PatchRoutingProvider } from '../hooks/usePatchRouting.jsx'
-import { ModuleRegistryProvider } from '../hooks/useModuleRegistry.jsx'
-import { CasePowerProvider } from '../hooks/useCasePower.jsx'
+import Module from '../../modules/utility/Module'
+import JackSocket from '../../modules/utility/JackSocket'
+import LabeledJack from '../../modules/parametric/LabeledJack'
+import Knob from '../../modules/parametric/Knob'
+import CvKnob from '../../modules/parametric/CvKnob'
+import Slider from '../../modules/parametric/Slider'
+import FlipToggle from '../../modules/parametric/FlipToggle'
+import Toggle from '../../modules/parametric/Toggle'
+import LED from '../../modules/parametric/LED'
+import Divider from '../../components/atoms/Divider'
+import Icon from '../../components/icons/Icon'
+import { HP_PX, TOTAL_HP, ASPECT } from '../../modules/utility/eurorack'
+import { PatchRoutingProvider } from '../../hooks/usePatchRouting.jsx'
+import { ModuleRegistryProvider } from '../../hooks/useModuleRegistry.jsx'
+import { CasePowerProvider } from '../../hooks/useCasePower.jsx'
 
 function Panel({ hp = 20, u = 1, label, children }) {
   const aspectDiv = u === 1 ? 12 : 4

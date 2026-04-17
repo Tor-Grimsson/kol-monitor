@@ -9,9 +9,9 @@ import ModuleDetailPage from './pages/ModuleDetailPage.jsx'
 import PatchDetailPage from './pages/PatchDetailPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import CreatePage from './pages/CreatePage.jsx'
-import DevCapturePage from './pages/DevCapturePage.jsx'
+import DevCapturePage from './pages/dev/DevCapturePage.jsx'
 
-const ModuleDesign = lazy(() => import('./pages/ModuleDesign.jsx'))
+const ModuleDesign = lazy(() => import('./pages/dev/ModuleDesignPage.jsx'))
 
 function App() {
   return (

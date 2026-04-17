@@ -2,10 +2,10 @@
 // URL params: ?kind=module&type=clock or ?kind=patch&name=filmstrip
 
 import { useSearchParams } from 'react-router-dom'
-import ModulePreview from '../components/ModulePreview'
-import PatchPreview from '../components/PatchPreview'
-import { MODULE_DEFS } from '../modules/registry'
-import { patches } from '../data/patches'
+import ModulePreview from '../../components/ModulePreview'
+import PatchPreview from '../../components/PatchPreview'
+import { MODULE_DEFS } from '../../modules/registry'
+import { patches } from '../../data/patches'
 
 export default function DevCapturePage() {
   const [params] = useSearchParams()
