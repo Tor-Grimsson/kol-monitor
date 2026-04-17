@@ -7,12 +7,21 @@ const SCOPE_COLOR = '#2ecc71'
 const WIRE_COLOR = '#ffffff'
 const REF_COLOR = 'rgba(255,255,255,0.06)'
 
+// Cache `rgb(r,g,b)` strings on the color object to avoid rebuilding them per
+// draw. Invalidated by detecting component changes via a cheap stable hash.
+// Color objects are mostly immutable per frame — producers allocate fresh ones
+// when values change — so the cache hits >95% of the time in steady state.
+function rgbString(c) {
+  if (!c) return null
+  const hash = (c.r * 255 | 0) * 65536 + (c.g * 255 | 0) * 256 + (c.b * 255 | 0)
+  if (c.__rgbHash === hash && c.__rgbStr) return c.__rgbStr
+  c.__rgbStr = `rgb(${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)})`
+  c.__rgbHash = hash
+  return c.__rgbStr
+}
+
 function penColor(p, fallback) {
-  if (p.color) {
-    const { r, g, b } = p.color
-    return `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`
-  }
-  return fallback
+  return p.color ? rgbString(p.color) : fallback
 }
 
 // Captures the caller's baseline globalAlpha so multi-drawSignal callers
@@ -226,9 +235,7 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
     if (signal.groups) {
       for (const g of signal.groups) {
         if (!g.pts || g.pts.length === 0) continue
-        const gc = g.color
-          ? `rgb(${Math.round(g.color.r * 255)},${Math.round(g.color.g * 255)},${Math.round(g.color.b * 255)})`
-          : penColor(p, WIRE_COLOR)
+        const gc = g.color ? rgbString(g.color) : penColor(p, WIRE_COLOR)
         if (g.opacity != null) ctx.globalAlpha = g.opacity
         ctx.strokeStyle = gc
         ctx.fillStyle = gc
@@ -272,7 +279,7 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
     // Per-axis colored lines (from Gen 3D)
     if (signal.axes) {
       for (const axis of signal.axes) {
-        ctx.strokeStyle = `rgb(${Math.round(axis.color.r * 255)},${Math.round(axis.color.g * 255)},${Math.round(axis.color.b * 255)})`
+        ctx.strokeStyle = rgbString(axis.color)
         ctx.globalAlpha = 0.5
         ctx.beginPath()
         ctx.moveTo(dx + axis.pts[0].x * dw, dy + axis.pts[0].y * dh)

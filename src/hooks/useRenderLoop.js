@@ -1,6 +1,9 @@
-// Centralized render loop — single RAF, topological sort, module evaluation
+// Centralized render loop — single RAF, topological sort, module evaluation.
+// Also drives canvas draws (folded with useCanvasLoop's registry) so only one
+// rAF callback fires per frame: process signals → draw all canvases.
 
 import { useRef, useEffect, useCallback } from 'react'
+import { runAllCanvasDraws, setExternalDriverActive } from './useCanvasLoop'
 
 // Kahn's algorithm — returns sorted IDs, cycle-delayed set, and connection index
 function buildGraph(modulesMap, connections) {
@@ -189,13 +192,20 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
       timingRef.current.frameCount = localTimingRef.current.frameCount
     }
 
+    // Drive canvas draws after the signal graph has fresh outputs.
+    // Eliminates the need for useCanvasLoop to run its own rAF in parallel.
+    runAllCanvasDraws()
+
     rafRef.current = requestAnimationFrame(tick)
   }, [modulesRef, connectionsRef])
 
   useEffect(() => {
+    // Take over canvas drawing — useCanvasLoop's fallback rAF goes idle while we drive.
+    setExternalDriverActive(true)
     rafRef.current = requestAnimationFrame(tick)
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      setExternalDriverActive(false)
     }
   }, [tick])
 

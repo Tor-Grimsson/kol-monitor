@@ -70,6 +70,9 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
   // Ring buffer stores { data, t } per slot, where t is the write timestamp in seconds.
   const bufferRef = useRef(new Array(BUF_SIZE).fill(null))
   const writeHeadRef = useRef(0)
+  // Precomputed decay weights per copy: decayTable[c] = feedback^(c+1). Rebuilt only
+  // when feedback or numCopies change — avoids a Math.pow per tap per frame.
+  const decayTableRef = useRef({ feedback: NaN, numCopies: 0, table: new Float32Array(6) })
   const outRef = useRef(null)
   const inRef = useRef(null)
 
@@ -124,6 +127,15 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
       const numCopies = Math.max(1, Math.round(1 + (cKnob / 100) * 5))
       const feedback = fKnob / 100
       const input = inputs.in
+
+      // Rebuild decay table only when inputs change
+      const dt_cache = decayTableRef.current
+      if (dt_cache.feedback !== feedback || dt_cache.numCopies !== numCopies) {
+        for (let ci = 0; ci < numCopies; ci++) dt_cache.table[ci] = Math.pow(feedback, ci + 1)
+        dt_cache.feedback = feedback
+        dt_cache.numCopies = numCopies
+      }
+      const decayTable = dt_cache.table
 
       // Write current signal with timestamp
       buf[writeHeadRef.current] = input ? { data: input, t } : null
@@ -184,7 +196,7 @@ export default function DelayModule({ id = 'dly1', init, preview }) {
           const tapDelay = Math.min(baseDelay * (ci + 1), MAX_DELAY_SECONDS)
           const tap = readAtTime(t - tapDelay)
           if (tap && tap.type === 'scalar') {
-            wetSum += tap.value * Math.pow(feedback, ci + 1)
+            wetSum += tap.value * decayTable[ci]
           }
         }
         const mixed = dry * (1 - wet) + (wetSum / Math.max(1, numCopies)) * wet

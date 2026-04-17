@@ -53,20 +53,16 @@ export default function PatchCableOverlay({ containerRef, cableVisibility = 'on'
     return () => cancelAnimationFrame(id)
   }, [conns])
 
-  // Re-render on scroll
-  useEffect(() => {
-    const container = containerRef?.current
-    if (!container) return
-    const handleScroll = () => forceUpdate(n => n + 1)
-    container.addEventListener('scroll', handleScroll)
-    return () => container.removeEventListener('scroll', handleScroll)
-  }, [containerRef])
-
-  // Track mouse for pending cable
+  // Track mouse + scroll for pending cable only. Existing cables are positioned in
+  // content-space, which is scroll-invariant — the SVG scrolls with its container
+  // naturally, so no re-render is needed during normal panning. We only need scroll
+  // updates while the user is dragging a pending cable (mouse-pos → content-space
+  // mapping depends on scrollLeft, and scroll without mousemove would otherwise
+  // leave the cable tip stale).
   useEffect(() => {
     if (!routing?.pendingOutput) { setMousePos(null); return }
+    const container = containerRef?.current
     const handleMove = (e) => {
-      const container = containerRef?.current
       if (!container) return
       const cr = container.getBoundingClientRect()
       const zoom = parseFloat(container.style.zoom) || 1
@@ -75,8 +71,13 @@ export default function PatchCableOverlay({ containerRef, cableVisibility = 'on'
         y: (e.clientY - cr.top) / zoom,
       })
     }
+    const handleScroll = () => forceUpdate(n => n + 1)
     window.addEventListener('pointermove', handleMove)
-    return () => window.removeEventListener('pointermove', handleMove)
+    if (container) container.addEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('pointermove', handleMove)
+      if (container) container.removeEventListener('scroll', handleScroll)
+    }
   }, [routing?.pendingOutput, containerRef])
 
   if (!routing) return null
