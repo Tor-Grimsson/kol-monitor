@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar } from '../../hooks/signals'
+import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import IconSelect from '../controls/IconSelect'
@@ -55,7 +56,7 @@ function generateGauge(vals) {
   const arcPts = 32
   for (let i = 0; i <= arcPts; i++) {
     const a = Math.PI * 0.8 + (i / arcPts) * Math.PI * 1.4
-    pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r })
+    pts.push({ x: cx + cosLut(a) * r, y: cy + sinLut(a) * r })
     if (i > 0) edges.push([pts.length - 2, pts.length - 1])
   }
   // Needle for first input
@@ -63,7 +64,7 @@ function generateGauge(vals) {
   const needleA = Math.PI * 0.8 + (val / 100) * Math.PI * 1.4
   const base = pts.length
   pts.push({ x: cx, y: cy })
-  pts.push({ x: cx + Math.cos(needleA) * r * 0.85, y: cy + Math.sin(needleA) * r * 0.85 })
+  pts.push({ x: cx + cosLut(needleA) * r * 0.85, y: cy + sinLut(needleA) * r * 0.85 })
   edges.push([base, base + 1])
   return { pts, edges }
 }
@@ -121,7 +122,7 @@ function generateScatter(vals) {
   const base = pts.length
   for (let i = 0; i < segs; i++) {
     const a = (i / segs) * Math.PI * 2
-    pts.push({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r })
+    pts.push({ x: x + cosLut(a) * r, y: y + sinLut(a) * r })
   }
   for (let i = 0; i < segs; i++) edges.push([base + i, base + (i + 1) % segs])
   // Crosshair

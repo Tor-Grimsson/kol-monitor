@@ -5,6 +5,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
+import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -14,66 +15,40 @@ import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Pure geometry transform ---
+//
+// New approach: compute ONE canonical wedge (at rotation=0, no mirror, no offset) and
+// emit it with `signal.instances` describing how to replay it N times with canvas
+// transforms. Cuts per-vertex JS work by `segments`× at the cost of a handful of
+// matrix transforms in drawSignal. See drawSignal's instance-loop for the exact
+// transform order (mirror → offset → rotate around centre).
 
-function kaleidoscopePoints(srcPts, srcEdges, params) {
-  const { segments, rotation, zoom, offset, fold, mirror, cut } = params
-  const segAngle = (Math.PI * 2) / segments
-  const halfWedge = (segAngle / 2) * fold
+function canonicalWedge(srcPts, srcEdges, { zoom, fold, cut, halfWedge }) {
   const N = srcPts.length
-  const E = srcEdges ? srcEdges.length : 0
-  const hasOffset = offset !== 0
+  const sinH = cut ? sinLut(halfWedge) : 0
+  const cosH = cut ? cosLut(halfWedge) : 0
 
-  // Pre-allocate to exact size
-  const allPts = new Array(segments * N)
-  const allEdges = E > 0 ? new Array(segments * E) : null
-  let pi = 0, ei = 0
+  const allPts = new Array(N)
+  for (let i = 0; i < N; i++) {
+    let px = (srcPts[i].x - 0.5) * zoom
+    let py = (srcPts[i].y - 0.5) * zoom * fold
 
-  // Precompute cut boundary trig
-  const sinH = cut ? Math.sin(halfWedge) : 0
-  const cosH = cut ? Math.cos(halfWedge) : 0
-
-  for (let s = 0; s < segments; s++) {
-    const angle = rotation + s * segAngle
-    const shouldMirror = mirror && (s % 2 === 1)
-    const cos = Math.cos(angle)
-    const sin = Math.sin(angle)
-    const ox = hasOffset ? offset * cos + 0.5 : 0.5
-    const oy = hasOffset ? offset * sin + 0.5 : 0.5
-    const baseIdx = s * N
-
-    for (let i = 0; i < N; i++) {
-      let px = (srcPts[i].x - 0.5) * zoom
-      let py = (srcPts[i].y - 0.5) * zoom * fold
-
-      // Cut: clamp points to wedge boundary (preserves polygon closure for fill)
-      if (cut) {
-        // Fast inside check via cross-product: |py| * cosH <= px * sinH (when px > 0)
-        const absPy = py < 0 ? -py : py
-        if (px < 0 || absPy * cosH > px * sinH) {
-          const r = Math.sqrt(px * px + py * py)
-          const ptAngle = Math.atan2(py, px)
-          const clamped = ptAngle < -halfWedge ? -halfWedge : halfWedge
-          px = r * Math.cos(clamped)
-          py = r * Math.sin(clamped)
-        }
-      }
-
-      if (shouldMirror) px = -px
-
-      allPts[pi++] = {
-        x: px * cos - py * sin + ox,
-        y: px * sin + py * cos + oy,
+    if (cut) {
+      // Fast inside check via cross-product: |py| * cosH <= px * sinH (when px > 0)
+      const absPy = py < 0 ? -py : py
+      if (px < 0 || absPy * cosH > px * sinH) {
+        const r = Math.sqrt(px * px + py * py)
+        const ptAngle = Math.atan2(py, px)
+        const signY = ptAngle < -halfWedge ? -1 : 1
+        px = r * cosH
+        py = r * sinH * signY
       }
     }
 
-    if (allEdges) {
-      for (let e = 0; e < E; e++) {
-        allEdges[ei++] = [srcEdges[e][0] + baseIdx, srcEdges[e][1] + baseIdx]
-      }
-    }
+    allPts[i] = { x: px + 0.5, y: py + 0.5 }
   }
 
-  return { pts: allPts, edges: allEdges }
+  // Edges are unchanged — wedge has the same vertex count and ordering as the source.
+  return { pts: allPts, edges: srcEdges || null }
 }
 
 // --- UI Panel ---
@@ -270,10 +245,12 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
       const foldVal = 0.5 + (foldRef.current / 100) * 1.0
       const mirror = mirRef.current
 
-      const result = kaleidoscopePoints(
-        inputs.in.value, inputs.in.edges,
-        { segments, rotation, zoom, offset, fold: foldVal, mirror, cut: cutRef.current }
-      )
+      const segAngle = (Math.PI * 2) / segments
+      const halfWedge = (segAngle / 2) * foldVal
+      const wedgeParams = { zoom, fold: foldVal, cut: cutRef.current, halfWedge }
+
+      // Canonical wedge (one segment's worth of geometry, centred at 0.5, no rotation/mirror)
+      const result = canonicalWedge(inputs.in.value, inputs.in.edges, wedgeParams)
 
       const out = points(result.pts, result.edges)
 
@@ -281,9 +258,43 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
       if (inputs.in.strokeWidth != null) out.strokeWidth = inputs.in.strokeWidth
       out.fill = filRef.current || inputs.in.fill
       if (inputs.in.grid) out.grid = inputs.in.grid
-      if (inputs.in.aspectLock) out.aspectLock = inputs.in.aspectLock
+      // Aspect lock is required for undistorted radial rotation — force it on our output.
+      out.aspectLock = true
       out.opacity = opaRef.current / 100
-      if (inputs.in.groups) out.groups = inputs.in.groups
+
+      // Groups: each group becomes its own canonical wedge. Instance replay (below)
+      // applies the same rotation/mirror/offset to all groups uniformly.
+      if (inputs.in.groups) {
+        const srcGroups = inputs.in.groups
+        const outGroups = new Array(srcGroups.length)
+        for (let gi = 0; gi < srcGroups.length; gi++) {
+          const g = srcGroups[gi]
+          if (!g.pts || g.pts.length === 0) { outGroups[gi] = g; continue }
+          const gResult = canonicalWedge(g.pts, g.edges, wedgeParams)
+          outGroups[gi] = {
+            pts: gResult.pts,
+            edges: gResult.edges,
+            color: g.color,
+            opacity: g.opacity,
+            fill: g.fill,
+            stroke: g.stroke,
+          }
+        }
+        out.groups = outGroups
+      }
+
+      // Instances — one per segment. drawSignal applies these as canvas transforms
+      // in order: mirror → translate(offsetX, 0) → rotate around centre.
+      const instances = new Array(segments)
+      for (let s = 0; s < segments; s++) {
+        instances[s] = {
+          rotation: rotation + s * segAngle,
+          mirror: mirror && (s % 2 === 1),
+          offsetX: offset,
+        }
+      }
+      out.instances = instances
+
       if (inputs.in.bg) out.bg = inputs.in.bg
 
       // Color override

@@ -149,111 +149,139 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
     else applyPen(ctx, p)
   }
 
-  if (signal.edges && signal.edges.length > 0) {
-    const color = signal.color
-      ? `rgb(${Math.round(signal.color.r * 255)},${Math.round(signal.color.g * 255)},${Math.round(signal.color.b * 255)})`
-      : penColor(p, 'strokeWidth' in signal ? '#ffffff' : WIRE_COLOR)
+  // Optional instancing: signal.instances = [{rotation?, mirror?, offsetX?}, ...] replays
+  // the whole shape draw N times with canvas2D transforms around the content center.
+  // Cheaper than emitting N rotated copies of every vertex when the repeat is uniform
+  // (e.g. Kaleidoscope). Absent = draw once at identity.
+  // Transform order on a point: mirror → translate(offsetX, 0) → rotate → (back to world).
+  // Note: assumes isotropic rendering (dw ≈ dh, i.e. aspectLock/Fill) — instanced
+  // rotations otherwise skew because points-space is not isotropic to screen-space.
+  const instances = signal.instances && signal.instances.length > 0 ? signal.instances : null
+  const instCount = instances ? instances.length : 1
+  const centerX = dx + dw * 0.5
+  const centerY = dy + dh * 0.5
 
-    // Fill — trace closed shapes from edges
-    if (signal.fill || p?.fill) {
-      ctx.fillStyle = color
-      let prevTo = -1
-      for (let e = 0; e < signal.edges.length; e++) {
-        const [i, j] = signal.edges[e]
-        if (i >= pts.length || j >= pts.length) continue
-        if (i !== prevTo) {
-          if (prevTo !== -1) { ctx.closePath(); ctx.fill() }
-          ctx.beginPath()
-          ctx.moveTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
-        }
-        ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
-        prevTo = j
+  for (let ii = 0; ii < instCount; ii++) {
+    if (instances) {
+      const inst = instances[ii]
+      ctx.save()
+      if (inst.rotation || inst.mirror || inst.offsetX) {
+        ctx.translate(centerX, centerY)
+        if (inst.rotation) ctx.rotate(inst.rotation)
+        if (inst.offsetX) ctx.translate(inst.offsetX * dw, 0)
+        if (inst.mirror) ctx.scale(-1, 1)
+        ctx.translate(-centerX, -centerY)
       }
-      if (prevTo !== -1) { ctx.closePath(); ctx.fill() }
     }
 
-    // Stroke — suppressed when pen.fill is on (override: pen.fill flips stroke→fill)
-    if (!p?.fill) {
-      ctx.strokeStyle = color
+    if (signal.edges && signal.edges.length > 0) {
+      const color = signal.color
+        ? `rgb(${Math.round(signal.color.r * 255)},${Math.round(signal.color.g * 255)},${Math.round(signal.color.b * 255)})`
+        : penColor(p, 'strokeWidth' in signal ? '#ffffff' : WIRE_COLOR)
+
+      // Fill — trace closed shapes from edges
+      if (signal.fill || p?.fill) {
+        ctx.fillStyle = color
+        let prevTo = -1
+        for (let e = 0; e < signal.edges.length; e++) {
+          const [i, j] = signal.edges[e]
+          if (i >= pts.length || j >= pts.length) continue
+          if (i !== prevTo) {
+            if (prevTo !== -1) { ctx.closePath(); ctx.fill() }
+            ctx.beginPath()
+            ctx.moveTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
+          }
+          ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
+          prevTo = j
+        }
+        if (prevTo !== -1) { ctx.closePath(); ctx.fill() }
+      }
+
+      // Stroke — suppressed when pen.fill is on (override: pen.fill flips stroke→fill)
+      if (!p?.fill) {
+        ctx.strokeStyle = color
+        ctx.beginPath()
+        const edges = signal.edges
+        const ptsLen = pts.length
+        for (let k = 0; k < edges.length; k++) {
+          const e = edges[k]
+          const i = e[0], j = e[1]
+          if (i >= ptsLen || j >= ptsLen) continue
+          ctx.moveTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
+          ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
+        }
+        ctx.stroke()
+      }
+    } else if (pts && pts.length > 0) {
+      ctx.strokeStyle = penColor(p, SCOPE_COLOR)
       ctx.beginPath()
-      const edges = signal.edges
-      const ptsLen = pts.length
-      for (let k = 0; k < edges.length; k++) {
-        const e = edges[k]
-        const i = e[0], j = e[1]
-        if (i >= ptsLen || j >= ptsLen) continue
-        ctx.moveTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
-        ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
+      ctx.moveTo(dx + pts[0].x * dw, dy + pts[0].y * dh)
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
       }
       ctx.stroke()
     }
-  } else if (pts && pts.length > 0) {
-    ctx.strokeStyle = penColor(p, SCOPE_COLOR)
-    ctx.beginPath()
-    ctx.moveTo(dx + pts[0].x * dw, dy + pts[0].y * dh)
-    for (let i = 1; i < pts.length; i++) {
-      ctx.lineTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
-    }
-    ctx.stroke()
-  }
 
-  // Per-group colored wireframes (from Magneto etc.)
-  if (signal.groups) {
-    for (const g of signal.groups) {
-      if (!g.pts || g.pts.length === 0) continue
-      const gc = g.color
-        ? `rgb(${Math.round(g.color.r * 255)},${Math.round(g.color.g * 255)},${Math.round(g.color.b * 255)})`
-        : penColor(p, WIRE_COLOR)
-      if (g.opacity != null) ctx.globalAlpha = g.opacity
-      ctx.strokeStyle = gc
-      ctx.fillStyle = gc
-      if (g.edges && g.edges.length > 0) {
-        // Pen.fill is an override: forces fill, suppresses stroke
-        const doFill = (g.fill || p?.fill) && g.pts.length > 2
-        const doStroke = g.stroke !== false && !p?.fill
-        if (doFill) {
+    // Per-group colored wireframes (from Magneto etc.)
+    if (signal.groups) {
+      for (const g of signal.groups) {
+        if (!g.pts || g.pts.length === 0) continue
+        const gc = g.color
+          ? `rgb(${Math.round(g.color.r * 255)},${Math.round(g.color.g * 255)},${Math.round(g.color.b * 255)})`
+          : penColor(p, WIRE_COLOR)
+        if (g.opacity != null) ctx.globalAlpha = g.opacity
+        ctx.strokeStyle = gc
+        ctx.fillStyle = gc
+        if (g.edges && g.edges.length > 0) {
+          // Pen.fill is an override: forces fill, suppresses stroke
+          const doFill = (g.fill || p?.fill) && g.pts.length > 2
+          const doStroke = g.stroke !== false && !p?.fill
+          if (doFill) {
+            ctx.beginPath()
+            ctx.moveTo(dx + g.pts[0].x * dw, dy + g.pts[0].y * dh)
+            for (let i = 1; i < g.pts.length; i++) {
+              ctx.lineTo(dx + g.pts[i].x * dw, dy + g.pts[i].y * dh)
+            }
+            ctx.closePath()
+            ctx.fill()
+          }
+          if (doStroke) {
+            ctx.beginPath()
+            const gEdges = g.edges
+            const gPtsLen = g.pts.length
+            for (let k = 0; k < gEdges.length; k++) {
+              const e = gEdges[k]
+              const i = e[0], j = e[1]
+              if (i >= gPtsLen || j >= gPtsLen) continue
+              ctx.moveTo(dx + g.pts[i].x * dw, dy + g.pts[i].y * dh)
+              ctx.lineTo(dx + g.pts[j].x * dw, dy + g.pts[j].y * dh)
+            }
+            ctx.stroke()
+          }
+        } else {
           ctx.beginPath()
           ctx.moveTo(dx + g.pts[0].x * dw, dy + g.pts[0].y * dh)
           for (let i = 1; i < g.pts.length; i++) {
             ctx.lineTo(dx + g.pts[i].x * dw, dy + g.pts[i].y * dh)
           }
-          ctx.closePath()
-          ctx.fill()
-        }
-        if (doStroke) {
-          ctx.beginPath()
-          const gEdges = g.edges
-          const gPtsLen = g.pts.length
-          for (let k = 0; k < gEdges.length; k++) {
-            const e = gEdges[k]
-            const i = e[0], j = e[1]
-            if (i >= gPtsLen || j >= gPtsLen) continue
-            ctx.moveTo(dx + g.pts[i].x * dw, dy + g.pts[i].y * dh)
-            ctx.lineTo(dx + g.pts[j].x * dw, dy + g.pts[j].y * dh)
-          }
           ctx.stroke()
         }
-      } else {
+      }
+    }
+
+    // Per-axis colored lines (from Gen 3D)
+    if (signal.axes) {
+      for (const axis of signal.axes) {
+        ctx.strokeStyle = `rgb(${Math.round(axis.color.r * 255)},${Math.round(axis.color.g * 255)},${Math.round(axis.color.b * 255)})`
+        ctx.globalAlpha = 0.5
         ctx.beginPath()
-        ctx.moveTo(dx + g.pts[0].x * dw, dy + g.pts[0].y * dh)
-        for (let i = 1; i < g.pts.length; i++) {
-          ctx.lineTo(dx + g.pts[i].x * dw, dy + g.pts[i].y * dh)
-        }
+        ctx.moveTo(dx + axis.pts[0].x * dw, dy + axis.pts[0].y * dh)
+        ctx.lineTo(dx + axis.pts[1].x * dw, dy + axis.pts[1].y * dh)
         ctx.stroke()
       }
     }
-  }
 
-  // Per-axis colored lines (from Gen 3D)
-  if (signal.axes) {
-    for (const axis of signal.axes) {
-      ctx.strokeStyle = `rgb(${Math.round(axis.color.r * 255)},${Math.round(axis.color.g * 255)},${Math.round(axis.color.b * 255)})`
-      ctx.globalAlpha = 0.5
-      ctx.beginPath()
-      ctx.moveTo(dx + axis.pts[0].x * dw, dy + axis.pts[0].y * dh)
-      ctx.lineTo(dx + axis.pts[1].x * dw, dy + axis.pts[1].y * dh)
-      ctx.stroke()
-    }
+    if (instances) ctx.restore()
   }
 
   resetPen(ctx)

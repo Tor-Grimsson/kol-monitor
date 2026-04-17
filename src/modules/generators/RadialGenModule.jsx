@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
+import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -28,14 +29,16 @@ const SHAPE_PRESETS = {
 
 function getLfoValue(phase, waveType) {
   switch (waveType) {
-    case 'sine': return Math.sin(phase)
-    case 'triangle': return (2 / Math.PI) * Math.asin(Math.sin(phase))
-    case 'square': return Math.sin(phase) >= 0 ? 1 : -1
+    case 'sine': return sinLut(phase)
+    case 'triangle': return (2 / Math.PI) * Math.asin(sinLut(phase))
+    case 'square': return sinLut(phase) >= 0 ? 1 : -1
     case 'random': {
+      // Keep Math.sin here — this is a deterministic hash, not a waveform;
+      // swapping to LUT would change the randomness distribution.
       const seed = Math.floor(phase / (Math.PI / 4))
       return (Math.sin(seed * 12.9898 + seed * 78.233) * 43758.5453) % 2 - 1
     }
-    default: return Math.sin(phase)
+    default: return sinLut(phase)
   }
 }
 
@@ -77,12 +80,12 @@ function generateRadialPoints(params) {
     }
 
     const wavePhase = freqMod * mirrorTheta
-    const r = (radius + amplitude * Math.sin(wavePhase)) * scaleF / 200 // normalize to ~0-1 range
+    const r = (radius + amplitude * sinLut(wavePhase)) * scaleF / 200 // normalize to ~0-1 range
     const angle = theta + rotateRad
 
     pts.push({
-      x: 0.5 + r * Math.cos(angle),
-      y: 0.5 + r * Math.sin(angle),
+      x: 0.5 + r * cosLut(angle),
+      y: 0.5 + r * sinLut(angle),
     })
   }
 
