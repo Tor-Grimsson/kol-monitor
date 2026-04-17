@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, points, readScalar, readCv } from '../../hooks/signals'
+import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -138,12 +139,12 @@ function addShape(pts, edges, cx, cy, r, type, rot) {
       const petals = 5, res = 6
       for (let i = 0; i < petals; i++) {
         const a = (i / petals) * Math.PI * 2
-        const pcx = Math.cos(a) * r * 0.5
-        const pcy = Math.sin(a) * r * 0.5
+        const pcx = cosLut(a) * r * 0.5
+        const pcy = sinLut(a) * r * 0.5
         const v = []
         for (let j = 0; j < res; j++) {
           const pa = (j / res) * Math.PI * 2
-          v.push([pcx + Math.cos(pa) * r * 0.4, pcy + Math.sin(pa) * r * 0.4])
+          v.push([pcx + cosLut(pa) * r * 0.4, pcy + sinLut(pa) * r * 0.4])
         }
         addRotatedPoly(pts, edges, cx, cy, v, cos, sin)
       }
@@ -163,7 +164,7 @@ function addAscii(pts, edges, cx, cy, r, charType) {
       const base = pts.length, segs = 6, sr = r * 0.25
       for (let i = 0; i < segs; i++) {
         const a = (i / segs) * Math.PI * 2
-        pts.push({ x: cx + Math.cos(a) * sr, y: cy + Math.sin(a) * sr })
+        pts.push({ x: cx + cosLut(a) * sr, y: cy + sinLut(a) * sr })
       }
       for (let i = 0; i < segs; i++) edges.push([base + i, base + (i + 1) % segs])
       break
@@ -327,7 +328,7 @@ function layoutRadial(count) {
     const n = Math.max(4, Math.round((2 * Math.PI * r) / step))
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2
-      cells.push({ nx: cx + Math.cos(a) * r, ny: cy + Math.sin(a) * r })
+      cells.push({ nx: cx + cosLut(a) * r, ny: cy + sinLut(a) * r })
     }
   }
   return { cells, cellSize: step }
@@ -337,18 +338,18 @@ function layoutRadial(count) {
 
 function sampleBrightness(nx, ny, mode, isEngine, angle, t, animate) {
   if (isEngine) {
-    const cos = Math.cos(angle), sin = Math.sin(angle)
+    const cos = cosLut(angle), sin = sinLut(angle)
     const grad = (cos * (nx - 0.5) + sin * (ny - 0.5)) + 0.5
-    return Math.max(0, Math.min(1, animate ? grad + Math.sin(t * 0.8) * 0.2 : grad))
+    return Math.max(0, Math.min(1, animate ? grad + sinLut(t * 0.8) * 0.2 : grad))
   }
   switch (mode) {
     case 'halftone': {
       const dx = nx - 0.5, dy = ny - 0.5
       const dist = 1 - Math.sqrt(dx * dx + dy * dy) * 2
-      return Math.max(0, Math.min(1, animate ? dist + Math.sin(t * 0.6) * 0.2 : dist))
+      return Math.max(0, Math.min(1, animate ? dist + sinLut(t * 0.6) * 0.2 : dist))
     }
     case 'flow': {
-      const cos = Math.cos(angle), sin = Math.sin(angle)
+      const cos = cosLut(angle), sin = sinLut(angle)
       return Math.max(0, Math.min(1, (cos * (nx - 0.5) + sin * (ny - 0.5)) + 0.5))
     }
     case 'crosshatch': {
@@ -356,11 +357,11 @@ function sampleBrightness(nx, ny, mode, isEngine, angle, t, animate) {
       return ((Math.floor(nx * g) + Math.floor(ny * g)) % 2 === 0) ? 0.8 : 0.3
     }
     case 'crt':
-      return Math.max(0, Math.min(1, nx + (animate ? Math.sin(t) * 0.2 : 0)))
+      return Math.max(0, Math.min(1, nx + (animate ? sinLut(t) * 0.2 : 0)))
     case 'glitch':
-      return Math.max(0, Math.min(1, nx + Math.sin(ny * 20) * 0.3))
+      return Math.max(0, Math.min(1, nx + sinLut(ny * 20) * 0.3))
     case 'melt':
-      return Math.max(0, Math.min(1, 1 - ny + (animate ? Math.sin(t * 0.5) * 0.2 : 0)))
+      return Math.max(0, Math.min(1, 1 - ny + (animate ? sinLut(t * 0.5) * 0.2 : 0)))
     default:
       return 0.5
   }

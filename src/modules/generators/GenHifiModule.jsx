@@ -6,6 +6,7 @@ import React, { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, color, points, readScalar, readCv } from '../../hooks/signals'
+import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -112,8 +113,8 @@ function generateGradient(subType, p1, p2, p3, t, oscillate) {
         const size = spc * (0.5 + brightness * 0.8)
         for (let s = 0; s < segsPerRing; s++) {
           const a = (s / segsPerRing) * Math.PI * 2 + angle
-          const cx = 0.5 + Math.cos(a) * radius
-          const cy = 0.5 + Math.sin(a) * radius
+          const cx = 0.5 + cosLut(a) * radius
+          const cy = 0.5 + sinLut(a) * radius
           quad(pts, edges, cx - size, cy - size, cx + size, cy + size)
         }
       }
@@ -126,8 +127,8 @@ function generateGradient(subType, p1, p2, p3, t, oscillate) {
         const a = (i / segs) * Math.PI * 2
         const brightness = ((a / (Math.PI * 2) + phase) % 1 + 1) % 1
         const r = radius * (0.5 + brightness * 0.5)
-        const cx = 0.5 + Math.cos(a) * r
-        const cy = 0.5 + Math.sin(a) * r
+        const cx = 0.5 + cosLut(a) * r
+        const cy = 0.5 + sinLut(a) * r
         const size = spc * (0.5 + brightness)
         quad(pts, edges, cx - size, cy - size, cx + size, cy + size)
       }
@@ -180,7 +181,7 @@ function generatePattern(subType, p1, p2, p3, t, animate, speed) {
           const base = pts.length
           for (let s = 0; s < segs; s++) {
             const a = (s / segs) * Math.PI * 2
-            pts.push({ x: cx + Math.cos(a) * dotR, y: cy + Math.sin(a) * dotR })
+            pts.push({ x: cx + cosLut(a) * dotR, y: cy + sinLut(a) * dotR })
           }
           for (let s = 0; s < segs; s++) edges.push([base + s, base + (s + 1) % segs])
         }
@@ -233,7 +234,7 @@ function generateWave(subType, p1, p2, p3, p4, t, ampVal, dutyVal, ofsVal) {
   const waveOffset = (n) => {
     const phase = n * waveFreq + t * speed
     switch (subType) {
-      case 'sin': return Math.sin(phase * Math.PI * 2) * amp * 0.5
+      case 'sin': return sinLut(phase * Math.PI * 2) * amp * 0.5
       case 'saw': return (((phase % 1) + 1) % 1 - 0.5) * amp
       case 'tri': return (Math.abs(((((phase % 1) + 1) % 1) * 2) - 1) - 0.5) * amp
       case 'sqr': return ((((phase % 1) + 1) % 1) > pwm ? -0.5 : 0.5) * amp

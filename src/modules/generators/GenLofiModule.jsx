@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
+import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -70,10 +71,10 @@ function sample(mode, subType, x, y, p1, p2, p3, p4, t) {
       const speed = p2 / 50
       const phase = t * speed
       switch (subType) {
-        case 'linear': return Math.cos(angle) * x + Math.sin(angle) * y + phase * 0.1
+        case 'linear': return cosLut(angle) * x + sinLut(angle) * y + phase * 0.1
         case 'radial': {
           const dx = x - 0.5, dy = y - 0.5
-          return 1 - Math.sqrt(dx * dx + dy * dy) * 2 + Math.sin(phase) * 0.2
+          return 1 - Math.sqrt(dx * dx + dy * dy) * 2 + sinLut(phase) * 0.2
         }
         case 'conic': return ((Math.atan2(y - 0.5, x - 0.5) + Math.PI + phase) % (Math.PI * 2)) / (Math.PI * 2)
         default: return 0.5
@@ -83,11 +84,11 @@ function sample(mode, subType, x, y, p1, p2, p3, p4, t) {
       const spacing = 2 + (p1 / 100) * 14
       const angle = (p2 / 100) * Math.PI
       const duty = 0.1 + (p3 / 100) * 0.8
-      const rx = Math.cos(angle) * x + Math.sin(angle) * y
-      const ry = -Math.sin(angle) * x + Math.cos(angle) * y
+      const rx = cosLut(angle) * x + sinLut(angle) * y
+      const ry = -sinLut(angle) * x + cosLut(angle) * y
       switch (subType) {
-        case 'stripes': return Math.sin(rx * spacing + t * 0.5) > (duty - 0.5) * 2 ? 1 : 0
-        case 'dots': return (Math.sin(rx * spacing + t * 0.3) * Math.sin(ry * spacing + t * 0.3)) > (duty - 0.5) ? 1 : 0
+        case 'stripes': return sinLut(rx * spacing + t * 0.5) > (duty - 0.5) * 2 ? 1 : 0
+        case 'dots': return (sinLut(rx * spacing + t * 0.3) * sinLut(ry * spacing + t * 0.3)) > (duty - 0.5) ? 1 : 0
         case 'checker': return ((Math.floor(rx * spacing) + Math.floor(ry * spacing)) % 2 === 0) ? 1 : 0
         default: return 0.5
       }
@@ -97,10 +98,10 @@ function sample(mode, subType, x, y, p1, p2, p3, p4, t) {
       const speed = p2 / 50
       const angle = (p3 / 100) * Math.PI
       const pwm = p4 / 100
-      const rx = Math.cos(angle) * x + Math.sin(angle) * y
+      const rx = cosLut(angle) * x + sinLut(angle) * y
       const phase = rx * freq + t * speed
       switch (subType) {
-        case 'sin': return (Math.sin(phase * Math.PI * 2) + 1) / 2
+        case 'sin': return (sinLut(phase * Math.PI * 2) + 1) / 2
         case 'saw': return ((phase % 1) + 1) % 1
         case 'tri': return Math.abs(((phase % 1) * 2) - 1)
         case 'sqr': return ((phase % 1) > pwm) ? 1 : 0

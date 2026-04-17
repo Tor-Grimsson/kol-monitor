@@ -5,6 +5,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
+import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -52,9 +53,11 @@ function generateGeometry(shape, res) {
       const edges = []
       for (let i = 0; i <= rings; i++) {
         const theta = (i / rings) * Math.PI
+        const sinTheta = sinLut(theta)
+        const cosTheta = cosLut(theta)
         for (let j = 0; j < segs; j++) {
           const phi = (j / segs) * Math.PI * 2
-          pts.push([Math.sin(theta) * Math.cos(phi), Math.cos(theta), Math.sin(theta) * Math.sin(phi)])
+          pts.push([sinTheta * cosLut(phi), cosTheta, sinTheta * sinLut(phi)])
           const idx = i * segs + j
           if (j > 0) edges.push([idx - 1, idx])
           if (j === segs - 1) edges.push([idx, i * segs])
@@ -71,12 +74,15 @@ function generateGeometry(shape, res) {
       const edges = []
       for (let i = 0; i < rings; i++) {
         const theta = (i / rings) * Math.PI * 2
+        const sinTheta = sinLut(theta)
+        const cosTheta = cosLut(theta)
         for (let j = 0; j < segs; j++) {
           const phi = (j / segs) * Math.PI * 2
+          const cosPhi = cosLut(phi)
           pts.push([
-            (R + r * Math.cos(phi)) * Math.cos(theta),
-            r * Math.sin(phi),
-            (R + r * Math.cos(phi)) * Math.sin(theta),
+            (R + r * cosPhi) * cosTheta,
+            r * sinLut(phi),
+            (R + r * cosPhi) * sinTheta,
           ])
           const idx = i * segs + j
           const next = i * segs + (j + 1) % segs
@@ -93,7 +99,7 @@ function generateGeometry(shape, res) {
       const edges = []
       for (let i = 0; i < segs; i++) {
         const a = (i / segs) * Math.PI * 2
-        const x = Math.cos(a), z = Math.sin(a)
+        const x = cosLut(a), z = sinLut(a)
         pts.push([x, 1, z])
         pts.push([x, -1, z])
         const t = i * 2, b = i * 2 + 1

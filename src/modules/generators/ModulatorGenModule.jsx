@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
+import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import CvKnob from '../controls/CvKnob'
@@ -31,12 +32,12 @@ function generateCirclePoints(radius, amp, freq, drift, phaseOffset, quantize, s
       wavePhase = ((angle / (Math.PI * 2) * 180 + drift + phaseOffset) / 60) * freq
     }
 
-    const waveOffset = amp * Math.sin(wavePhase)
+    const waveOffset = amp * sinLut(wavePhase)
     const r = (radius + waveOffset) * scaleF
 
     pts.push({
-      x: 0.5 + Math.cos(angle) * r,
-      y: 0.5 + Math.sin(angle) * r,
+      x: 0.5 + cosLut(angle) * r,
+      y: 0.5 + sinLut(angle) * r,
     })
   }
 

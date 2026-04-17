@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { points, readScalar, readCv } from '../../hooks/signals'
+import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../controls/LabeledJack'
 import Knob from '../controls/Knob'
@@ -27,7 +28,7 @@ function generate(shape, freq, density, phase, t) {
       const count = d
       for (let l = 0; l < count; l++) {
         const y = (l + 0.5) / count
-        const offset = Math.sin(t * f + l * 0.5) * 0.05
+        const offset = sinLut(t * f + l * 0.5) * 0.05
         const i0 = pts.length
         pts.push({ x: 0.05, y: y + offset })
         pts.push({ x: 0.95, y: y + offset })
@@ -44,7 +45,7 @@ function generate(shape, freq, density, phase, t) {
         const hi0 = pts.length
         for (let j = 0; j <= RESOLUTION / 4; j++) {
           const x = j / (RESOLUTION / 4)
-          const warp = Math.sin(x * Math.PI * f + t + i) * 0.02
+          const warp = sinLut(x * Math.PI * f + t + i) * 0.02
           pts.push({ x: 0.05 + x * 0.9, y: 0.05 + t0 * 0.9 + warp })
         }
         for (let j = 0; j < RESOLUTION / 4; j++) edges.push([hi0 + j, hi0 + j + 1])
@@ -52,7 +53,7 @@ function generate(shape, freq, density, phase, t) {
         const vi0 = pts.length
         for (let j = 0; j <= RESOLUTION / 4; j++) {
           const y = j / (RESOLUTION / 4)
-          const warp = Math.sin(y * Math.PI * f + t + i) * 0.02
+          const warp = sinLut(y * Math.PI * f + t + i) * 0.02
           pts.push({ x: 0.05 + t0 * 0.9 + warp, y: 0.05 + y * 0.9 })
         }
         for (let j = 0; j < RESOLUTION / 4; j++) edges.push([vi0 + j, vi0 + j + 1])
@@ -63,12 +64,12 @@ function generate(shape, freq, density, phase, t) {
       // Concentric circles that pulse
       const rings = d
       for (let r = 0; r < rings; r++) {
-        const radius = (0.1 + (r / rings) * 0.35) * (1 + Math.sin(t * f + r) * 0.1)
+        const radius = (0.1 + (r / rings) * 0.35) * (1 + sinLut(t * f + r) * 0.1)
         const i0 = pts.length
         const segs = Math.max(12, RESOLUTION / 2)
         for (let i = 0; i < segs; i++) {
           const a = (i / segs) * Math.PI * 2
-          pts.push({ x: 0.5 + Math.cos(a) * radius, y: 0.5 + Math.sin(a) * radius })
+          pts.push({ x: 0.5 + cosLut(a) * radius, y: 0.5 + sinLut(a) * radius })
         }
         for (let i = 0; i < segs; i++) edges.push([i0 + i, i0 + (i + 1) % segs])
       }
@@ -82,7 +83,7 @@ function generate(shape, freq, density, phase, t) {
         const n = i / RESOLUTION
         const a = n * turns * Math.PI * 2 + t * f
         const r = n * 0.4
-        pts.push({ x: 0.5 + Math.cos(a) * r, y: 0.5 + Math.sin(a) * r })
+        pts.push({ x: 0.5 + cosLut(a) * r, y: 0.5 + sinLut(a) * r })
       }
       for (let i = 0; i < RESOLUTION - 1; i++) edges.push([i0 + i, i0 + i + 1])
       break
@@ -93,8 +94,8 @@ function generate(shape, freq, density, phase, t) {
       const i0 = pts.length
       for (let i = 0; i < RESOLUTION; i++) {
         const n = (i / RESOLUTION) * Math.PI * 2
-        const x = Math.sin(n * f + t) * 0.4
-        const y = Math.cos(n * f * ratio + phase + t * 0.3) * 0.4
+        const x = sinLut(n * f + t) * 0.4
+        const y = cosLut(n * f * ratio + phase + t * 0.3) * 0.4
         pts.push({ x: 0.5 + x, y: 0.5 + y })
       }
       for (let i = 0; i < RESOLUTION - 1; i++) edges.push([i0 + i, i0 + i + 1])

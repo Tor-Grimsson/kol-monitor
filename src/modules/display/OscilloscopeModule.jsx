@@ -39,6 +39,14 @@ const EXAMPLES = [
   ['tri(t)*pulse(t*4)', 'Gated bounce'],
   ['step(t, 6)*0.8+10', 'Steps 10–90'],
   ['ease(t*0.3, 3)*0.6+20', 'Slow dramatic'],
+  // --- with inputs ---
+  ['a', 'A passthrough'],
+  ['(a + b) / 2', 'A+B average'],
+  ['wave(t*2) + a/100', 'Wave + A offset'],
+  ['wave(t * (1 + a/100))', 'A = frequency'],
+  ['wave(t*2 + a/10)', 'A = phase'],
+  ['a/100 * wave(t*2)', 'A = amplitude'],
+  ['a > 50 ? wave(t*4) : wave(t)', 'A = tempo gate'],
 ]
 
 const REFERENCE_GROUPS = [
