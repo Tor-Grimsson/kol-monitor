@@ -99,8 +99,7 @@ function autoReseed(cols, rows, rule) {
   return grid
 }
 
-function step(grid, cols, rows, rule, wrap) {
-  const next = new Uint8Array(cols * rows)
+function step(src, dst, cols, rows, rule, wrap) {
   const birthSet = rule.birth
   const surviveSet = rule.survive
   for (let y = 0; y < rows; y++) {
@@ -116,18 +115,17 @@ function step(grid, cols, rows, rule, wrap) {
           } else {
             if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue
           }
-          count += grid[ny * cols + nx]
+          count += src[ny * cols + nx]
         }
       }
-      const alive = grid[y * cols + x]
+      const alive = src[y * cols + x]
       if (alive) {
-        next[y * cols + x] = surviveSet.includes(count) ? 1 : 0
+        dst[y * cols + x] = surviveSet.includes(count) ? 1 : 0
       } else {
-        next[y * cols + x] = birthSet.includes(count) ? 1 : 0
+        dst[y * cols + x] = birthSet.includes(count) ? 1 : 0
       }
     }
   }
-  return next
 }
 
 function gridToPoints(grid, cols, rows) {
@@ -272,6 +270,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
   const ruleRef = useRef(44)
   const zoomRef = useRef(50)
   const gridRef = useRef(null)
+  const gridNextRef = useRef(null)
   const gridDimsRef = useRef({ cols: 0, rows: 0 })
   const accumRef = useRef(0)
   const prevClkRef = useRef(false)
@@ -362,6 +361,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
         gridRef.current = needsSeedRef.current === 'auto'
           ? autoReseed(cols, rows, vRule)
           : createGrid(cols, rows, vDensity)
+        gridNextRef.current = new Uint8Array(cols * rows)
         gridDimsRef.current = { cols, rows }
         needsSeedRef.current = false
         accumRef.current = 0
@@ -382,6 +382,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
           }
         }
         gridRef.current = newGrid
+        gridNextRef.current = new Uint8Array(cols * rows)
         gridDimsRef.current = { cols, rows }
       }
 
@@ -401,8 +402,11 @@ export default function LifeModule({ id = 'life1', init, preview }) {
         }
       }
 
-      if (doStep && gridRef.current) {
-        gridRef.current = step(gridRef.current, cols, rows, vRule, wrapRef.current)
+      if (doStep && gridRef.current && gridNextRef.current) {
+        step(gridRef.current, gridNextRef.current, cols, rows, vRule, wrapRef.current)
+        const swap = gridRef.current
+        gridRef.current = gridNextRef.current
+        gridNextRef.current = swap
         // Auto-reseed if grid is completely dead
         let alive = 0
         for (let i = 0; i < gridRef.current.length; i++) alive += gridRef.current[i]

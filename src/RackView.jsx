@@ -38,7 +38,7 @@ function ArrowOverlay({ onLeft, onRight, onUp, onDown }) {
   )
 }
 
-const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, editMode, onSendToWorkbench, onSwapInRow, onMoveToRow }) {
+const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, editMode, siblingIdx, siblingCount, onSendToWorkbench, onSwapInRow, onMoveToRow }) {
   const def = MODULE_DEFS[mod.type]
   const [hovered, setHovered] = useState(false)
   if (!def) return null
@@ -49,16 +49,14 @@ const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, editMode, 
 
   let arrows = null
   if (editMode && hovered) {
-    const sorted = [...row.modules].sort((a, b) => a.offset - b.offset)
-    const idx = sorted.findIndex(m => m.id === mod.id)
     const targetHeight = u === 1 ? '1u' : '3u'
     const above = rows[rowIdx - 1]
     const below = rows[rowIdx + 1]
     const aboveRow = above && above.height === targetHeight && findFreeOffset(above.modules, mod.hp) !== null ? above : null
     const belowRow = below && below.height === targetHeight && findFreeOffset(below.modules, mod.hp) !== null ? below : null
     arrows = {
-      onLeft: idx > 0 ? () => onSwapInRow(row.id, mod.id, 'left') : null,
-      onRight: idx >= 0 && idx < sorted.length - 1 ? () => onSwapInRow(row.id, mod.id, 'right') : null,
+      onLeft: siblingIdx > 0 ? () => onSwapInRow(row.id, mod.id, 'left') : null,
+      onRight: siblingIdx >= 0 && siblingIdx < siblingCount - 1 ? () => onSwapInRow(row.id, mod.id, 'right') : null,
       onUp: aboveRow ? () => onMoveToRow(mod.id, aboveRow.id) : null,
       onDown: belowRow ? () => onMoveToRow(mod.id, belowRow.id) : null,
     }
@@ -98,7 +96,7 @@ const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, editMod
         ref={el => { if (el) rowRefs.current[row.id] = el }}
         style={{ display: 'flex', width: '100%', height: '100%', gap: 2, alignItems: 'flex-start' }}
       >
-        {sorted.map(mod => (
+        {sorted.map((mod, idx) => (
           <ModuleSlot
             key={mod.id}
             mod={mod}
@@ -106,6 +104,8 @@ const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, editMod
             rowIdx={rowIdx}
             rows={rows}
             editMode={editMode}
+            siblingIdx={idx}
+            siblingCount={sorted.length}
             onSendToWorkbench={onSendToWorkbench}
             onSwapInRow={onSwapInRow}
             onMoveToRow={onMoveToRow}

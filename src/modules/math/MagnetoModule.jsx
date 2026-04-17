@@ -749,10 +749,17 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
             // Build vertex list — keep ALL past vertices (so edges work)
             // Apply composite scale around center (0.5, 0.5) + chromatic offset
             // Mark which are in-band; only render edges that touch the band
-            const bandPts = past.value.map(pt => ({
-              x: 0.5 + (pt.x - 0.5) * sclMul + chroma.x,
-              y: 0.5 + (pt.y - 0.5) * sclMul + chroma.y,
-            }))
+            const pastValueSlit = past.value
+            const chromaX = chroma.x
+            const chromaY = chroma.y
+            const bandPts = new Array(pastValueSlit.length)
+            for (let i = 0; i < pastValueSlit.length; i++) {
+              const pt = pastValueSlit[i]
+              bandPts[i] = {
+                x: 0.5 + (pt.x - 0.5) * sclMul + chromaX,
+                y: 0.5 + (pt.y - 0.5) * sclMul + chromaY,
+              }
+            }
             const inBand = new Uint8Array(past.value.length)
             let anyInBand = false
             for (let i = 0; i < past.value.length; i++) {
@@ -796,10 +803,17 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
             const past = readAtTime(targetT)
             if (!past || past.type !== 'points' || !past.value) continue
             const dropFactor = (1 - s / numSmears)
-            const offsetPts = past.value.map(pt => ({
-              x: 0.5 + (pt.x - 0.5) * sclMul + chroma.x * (s + 1) * 0.3,
-              y: 0.5 + (pt.y - 0.5) * sclMul + chroma.y * (s + 1) * 0.3,
-            }))
+            const chromaOffX = chroma.x * (s + 1) * 0.3
+            const chromaOffY = chroma.y * (s + 1) * 0.3
+            const pastValue = past.value
+            const offsetPts = new Array(pastValue.length)
+            for (let i = 0; i < pastValue.length; i++) {
+              const pt = pastValue[i]
+              offsetPts[i] = {
+                x: 0.5 + (pt.x - 0.5) * sclMul + chromaOffX,
+                y: 0.5 + (pt.y - 0.5) * sclMul + chromaOffY,
+              }
+            }
             const grp = {
               pts: offsetPts,
               edges: past.edges,
@@ -925,7 +939,19 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       invOut.strokeWidth = out.strokeWidth
       invOut.aspectLock = true
       invOut.opacity = out.opacity
-      invOut.groups = finalGroups.map(g => ({ ...g, color: invertColor(g.color) }))
+      const invGroups = new Array(finalGroups.length)
+      for (let i = 0; i < finalGroups.length; i++) {
+        const g = finalGroups[i]
+        invGroups[i] = {
+          pts: g.pts,
+          edges: g.edges,
+          color: invertColor(g.color),
+          opacity: g.opacity,
+          fill: g.fill,
+          stroke: g.stroke,
+        }
+      }
+      invOut.groups = invGroups
       if (out.color) invOut.color = invertColor(out.color)
       if (out.bg) invOut.bg = invertColor(out.bg)
       invRef.current = invOut

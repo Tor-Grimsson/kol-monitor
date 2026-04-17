@@ -247,7 +247,12 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
   const aspectLockRef = useRef(true)
 
   const outRef = useRef(null)
-  const cacheKeyRef = useRef('')
+  // Previous frame's input tuple for cache invalidation — primitives only, no string work.
+  const prevParamsRef = useRef({
+    rad: NaN, amp: NaN, freq: NaN, res: NaN, scl: NaN, rot: NaN,
+    lfoAmt: NaN, lfoFrq: NaN, lfoSync: null, lfoWaveType: null,
+    mirrorX: null, mirrorY: null, sw: NaN, fill: null, grid: null, aspectLock: null,
+  })
   const cachedOutRef = useRef(null)
   const radInRef = useRef(null)
   const ampInRef = useRef(null)
@@ -349,13 +354,31 @@ export default function RadialGenModule({ id = 'radial1', init, preview }) {
       const res = Math.max(1, Math.round(1 + (resKnob / 100) * 15))
 
       const sw = 0.5 + (str / 100) * 4.5
-      const key = `${rad}:${amp}:${freq}:${res}:${scl}:${rot}:${lfoAmt}:${lfoFrq}:${lfoSyncRef.current}:${lfoWaveTypeRef.current}:${mirrorXRef.current}:${mirrorYRef.current}:${sw}:${fillRef.current}:${gridRef.current}:${aspectLockRef.current}`
+      const lfoSync = lfoSyncRef.current
+      const lfoWaveType = lfoWaveTypeRef.current
+      const mirrorX = mirrorXRef.current
+      const mirrorY = mirrorYRef.current
+      const fill = fillRef.current
+      const grid = gridRef.current
+      const aspectLock = aspectLockRef.current
 
-      if (key === cacheKeyRef.current && cachedOutRef.current) {
+      const prev = prevParamsRef.current
+      if (
+        cachedOutRef.current &&
+        prev.rad === rad && prev.amp === amp && prev.freq === freq && prev.res === res &&
+        prev.scl === scl && prev.rot === rot && prev.lfoAmt === lfoAmt && prev.lfoFrq === lfoFrq &&
+        prev.lfoSync === lfoSync && prev.lfoWaveType === lfoWaveType &&
+        prev.mirrorX === mirrorX && prev.mirrorY === mirrorY &&
+        prev.sw === sw && prev.fill === fill && prev.grid === grid && prev.aspectLock === aspectLock
+      ) {
         outRef.current = cachedOutRef.current
         return { out: cachedOutRef.current }
       }
-      cacheKeyRef.current = key
+      prev.rad = rad; prev.amp = amp; prev.freq = freq; prev.res = res
+      prev.scl = scl; prev.rot = rot; prev.lfoAmt = lfoAmt; prev.lfoFrq = lfoFrq
+      prev.lfoSync = lfoSync; prev.lfoWaveType = lfoWaveType
+      prev.mirrorX = mirrorX; prev.mirrorY = mirrorY
+      prev.sw = sw; prev.fill = fill; prev.grid = grid; prev.aspectLock = aspectLock
 
       const result = generateRadialPoints({
         radius: rad,

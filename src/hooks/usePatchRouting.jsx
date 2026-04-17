@@ -3,7 +3,13 @@
 
 import { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react'
 
-const PatchRoutingContext = createContext(null)
+// Split contexts: callbacks/refs are stable across the app's lifetime;
+// data (connections + pendingOutput + per-module port map) changes on patch.
+// Consumers that only need callbacks (most app chrome) do not re-render on cable changes.
+const PatchCallbackContext = createContext(null)
+const PatchDataContext = createContext(null)
+
+const EMPTY_PORT_SET = new Set()
 
 export function PatchRoutingProvider({ initialConnections, children }) {
   const [pendingOutput, setPendingOutput] = useState(null)
@@ -105,9 +111,8 @@ export function PatchRoutingProvider({ initialConnections, children }) {
   const lockedRef = useRef(false)
   const visibilityRef = useRef('on')
 
-  const value = useMemo(() => ({
-    pendingOutput,
-    connections,
+  // Stable across app lifetime — callback identities and refs never change after mount
+  const callbacks = useMemo(() => ({
     connectionsRef,
     jackRefs,
     lockedRef,
@@ -116,28 +121,52 @@ export function PatchRoutingProvider({ initialConnections, children }) {
     selectOutput,
     removeConnection,
     loadPatch,
-  }), [pendingOutput, connections, registerJack, selectOutput, removeConnection, loadPatch])
+  }), [registerJack, selectOutput, removeConnection, loadPatch])
+
+  // Pre-compute per-module connected-input map once per connection change.
+  // Replaces N × O(connections) per-module scans with a single O(connections) pass.
+  const portsByModule = useMemo(() => {
+    const m = new Map()
+    for (const c of connections) {
+      let s = m.get(c.toModuleId)
+      if (!s) { s = new Set(); m.set(c.toModuleId, s) }
+      s.add(c.toPort)
+    }
+    return m
+  }, [connections])
+
+  const data = useMemo(() => ({
+    pendingOutput,
+    connections,
+    portsByModule,
+  }), [pendingOutput, connections, portsByModule])
 
   return (
-    <PatchRoutingContext.Provider value={value}>
-      {children}
-    </PatchRoutingContext.Provider>
+    <PatchCallbackContext.Provider value={callbacks}>
+      <PatchDataContext.Provider value={data}>
+        {children}
+      </PatchDataContext.Provider>
+    </PatchCallbackContext.Provider>
   )
 }
 
+// Backward-compat hook — reads both contexts and merges. Use only when both are needed;
+// prefer the narrow hooks below (usePatchCallbacks / usePatchData) when you can.
 export function usePatchRouting() {
-  return useContext(PatchRoutingContext)
+  const cb = useContext(PatchCallbackContext)
+  const data = useContext(PatchDataContext)
+  if (!cb || !data) return null
+  return { ...cb, ...data }
 }
 
-// Memoized per-module connected input ports — replaces N × conns.some() with one Set lookup
+export function usePatchCallbacks() { return useContext(PatchCallbackContext) }
+export function usePatchData() { return useContext(PatchDataContext) }
+
+// O(1) per-module port lookup via pre-computed map.
+// Returns the same Set reference across renders where the module's port set is unchanged,
+// so downstream memoization can survive cable changes to other modules.
 export function useConnectedPorts(moduleId) {
-  const routing = usePatchRouting()
-  const connections = routing?.connections || []
-  return useMemo(() => {
-    const ports = new Set()
-    for (const c of connections) {
-      if (c.toModuleId === moduleId) ports.add(c.toPort)
-    }
-    return ports
-  }, [connections, moduleId])
+  const data = useContext(PatchDataContext)
+  if (!data) return EMPTY_PORT_SET
+  return data.portsByModule.get(moduleId) || EMPTY_PORT_SET
 }

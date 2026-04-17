@@ -15,15 +15,18 @@ function penColor(p, fallback) {
   return fallback
 }
 
+// Captures the caller's baseline globalAlpha so multi-drawSignal callers
+// (e.g. ConsoleModule rendering 4 channels + 2 returns) retain their pre-set alpha.
 function applyPen(ctx, p) {
   ctx.lineWidth = p.thickness
   ctx.lineCap = p.cap
-  ctx.globalAlpha *= p.opacity / 100
+  ctx._baseAlpha = ctx.globalAlpha
+  ctx.globalAlpha = ctx._baseAlpha * (p.opacity / 100)
   ctx.setLineDash(p.dash > 0.5 ? [p.dash, p.gap || p.dash] : [])
 }
 
 function resetPen(ctx) {
-  ctx.globalAlpha = 1
+  ctx.globalAlpha = ctx._baseAlpha ?? 1
   ctx.setLineDash([])
 }
 
@@ -173,8 +176,12 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
     if (!p?.fill) {
       ctx.strokeStyle = color
       ctx.beginPath()
-      for (const [i, j] of signal.edges) {
-        if (i >= pts.length || j >= pts.length) continue
+      const edges = signal.edges
+      const ptsLen = pts.length
+      for (let k = 0; k < edges.length; k++) {
+        const e = edges[k]
+        const i = e[0], j = e[1]
+        if (i >= ptsLen || j >= ptsLen) continue
         ctx.moveTo(dx + pts[i].x * dw, dy + pts[i].y * dh)
         ctx.lineTo(dx + pts[j].x * dw, dy + pts[j].y * dh)
       }
@@ -215,8 +222,12 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
         }
         if (doStroke) {
           ctx.beginPath()
-          for (const [i, j] of g.edges) {
-            if (i >= g.pts.length || j >= g.pts.length) continue
+          const gEdges = g.edges
+          const gPtsLen = g.pts.length
+          for (let k = 0; k < gEdges.length; k++) {
+            const e = gEdges[k]
+            const i = e[0], j = e[1]
+            if (i >= gPtsLen || j >= gPtsLen) continue
             ctx.moveTo(dx + g.pts[i].x * dw, dy + g.pts[i].y * dh)
             ctx.lineTo(dx + g.pts[j].x * dw, dy + g.pts[j].y * dh)
           }

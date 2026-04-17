@@ -143,11 +143,24 @@ export default function ReverbModule({ id = 'verb1', init, preview }) {
           if (input.edges) for (const [a, b] of input.edges) allEdges.push([a, b])
         }
         // Wet: tapped frames with decay * mix
-        for (const { signal, decay } of taps) {
+        for (let ti = 0; ti < taps.length; ti++) {
+          const signal = taps[ti].signal
+          const decay = taps[ti].decay
           if (signal.type !== 'points') continue
           const offset = allPts.length
-          for (const pt of signal.value) allPts.push({ ...pt, a: (pt.a ?? 1) * decay * wet })
-          if (signal.edges) for (const [a, b] of signal.edges) allEdges.push([a + offset, b + offset])
+          const tapAlphaBase = decay * wet
+          const sv = signal.value
+          for (let pi = 0; pi < sv.length; pi++) {
+            const pt = sv[pi]
+            allPts.push({ x: pt.x, y: pt.y, a: (pt.a ?? 1) * tapAlphaBase })
+          }
+          if (signal.edges) {
+            const se = signal.edges
+            for (let ei = 0; ei < se.length; ei++) {
+              const e = se[ei]
+              allEdges.push([e[0] + offset, e[1] + offset])
+            }
+          }
         }
         const out = points(allPts, allEdges.length > 0 ? allEdges : null)
         out.strokeWidth = input.strokeWidth ?? 1

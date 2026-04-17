@@ -56,8 +56,13 @@ const EMPTY_CONNS = []
 
 export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRef) {
   const rafRef = useRef(null)
-  const outputsRef = useRef(new Map())
-  const prevOutputsRef = useRef(new Map())
+  // Double-buffer output maps: alternate which one is "current" per frame.
+  // Eliminates per-frame clear+copy across the outputs Map.
+  const bufARef = useRef(new Map())
+  const bufBRef = useRef(new Map())
+  const useARef = useRef(true)
+  const outputsRef = useRef(bufARef.current)
+  const prevOutputsRef = useRef(bufBRef.current)
   const startTimeRef = useRef(0)
   const lastFrameRef = useRef(0)
   const localTimingRef = useRef({ evalMs: 0, frameCount: 0 })
@@ -70,11 +75,6 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
   const graphCacheRef = useRef(null)
   const cachedModuleCount = useRef(0)
   const cachedConnectionsRef = useRef(null)
-
-  // Double-buffer for output swap (avoids new Map() every frame)
-  const outputBufA = useRef(new Map())
-  const outputBufB = useRef(new Map())
-  const useA = useRef(true)
 
   // Offline stepping state
   const steppedT = useRef(0)
@@ -102,13 +102,22 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
       return 0
     }
 
+    // Swap buffers: "current" becomes "prev" (carrying last frame's outputs
+    // for cycle-delayed reads); we write this frame's outputs into the other buffer.
+    useARef.current = !useARef.current
+    const currentBuf = useARef.current ? bufARef.current : bufBRef.current
+    const prevBuf = useARef.current ? bufBRef.current : bufARef.current
+    currentBuf.clear()
+    outputsRef.current = currentBuf
+    prevOutputsRef.current = prevBuf
+
     let enabledCount = 0
     for (const id of sorted) {
       const mod = modules.get(id)
       if (!mod) continue
 
       if (mod.enabledRef && !mod.enabledRef.current) {
-        outputsRef.current.delete(id)
+        // Skip — nothing written to currentBuf for this id this frame
         continue
       }
 
@@ -121,9 +130,9 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
 
       const modConns = connIndex.get(id) || EMPTY_CONNS
       for (const conn of modConns) {
-        const source = delayed.has(conn.fromModuleId) && !outputsRef.current.has(conn.fromModuleId)
-          ? prevOutputsRef.current.get(conn.fromModuleId)
-          : outputsRef.current.get(conn.fromModuleId)
+        const source = delayed.has(conn.fromModuleId) && !currentBuf.has(conn.fromModuleId)
+          ? prevBuf.get(conn.fromModuleId)
+          : currentBuf.get(conn.fromModuleId)
 
         if (source && conn.toPort in inputs) {
           inputs[conn.toPort] = source[conn.fromPort] || null
@@ -132,16 +141,9 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
 
       const result = mod.process(inputs, dt, t)
       if (result) {
-        outputsRef.current.set(id, result)
+        currentBuf.set(id, result)
         mod.lastOutputs = result
       }
-    }
-
-    // Skip buffer swap when nothing processed
-    if (enabledCount > 0) {
-      const prev = prevOutputsRef.current
-      prev.clear()
-      for (const [k, v] of outputsRef.current) prev.set(k, v)
     }
 
     return enabledCount
@@ -149,6 +151,12 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
 
   const tick = useCallback((now) => {
     if (pausedRef.current) return
+    // Skip work when the tab is hidden — rAF still fires but we don't burn cycles.
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      lastFrameRef.current = now
+      rafRef.current = requestAnimationFrame(tick)
+      return
+    }
 
     if (!startTimeRef.current) startTimeRef.current = now
     const t = (now - startTimeRef.current) / 1000
