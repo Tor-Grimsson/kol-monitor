@@ -209,7 +209,7 @@ export default function KaleidoscopeModule({ id = 'kal1', init, preview }) {
     },
     outputs: { out: { type: 'points' } },
     bypass: { in: 'in', out: 'out' },
-    process: (inputs, dt) => {
+    process: (inputs, dt, t) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
 
       inRef.current = inputs.in

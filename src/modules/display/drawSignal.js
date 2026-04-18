@@ -315,7 +315,9 @@ function drawScalarLofi(ctx, signal, x, y, w, h, p) {
 function drawPointsLofi(ctx, signal, x, y, w, h, p) {
   const pts = signal.value
   if (!pts || pts.length === 0) return
-  ctx.globalAlpha = p.opacity / 100
+  ctx._baseAlpha = ctx.globalAlpha
+  ctx.globalAlpha = ctx._baseAlpha * (p.opacity / 100)
+  if (signal.opacity != null) ctx.globalAlpha *= signal.opacity
   ctx.fillStyle = penColor(p, signal.edges ? WIRE_COLOR : SCOPE_COLOR)
   const r = Math.max(1.5, p.thickness / 2)
   // Match drawPoints aspect policy: aspectLock = contain, default = cover.

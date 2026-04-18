@@ -95,7 +95,7 @@ export default function JackSocket({
       if (!signal) val = 0
       else if (signal.type === 'scalar') val = signal.value
       else if (signal.type === 'color') { const c = signal.value; val = Math.max(c.r, c.g, c.b) * 100 }
-      else if (signal.type === 'points') val = signal.value?.length > 0 ? 80 : 0
+      else if (signal.type === 'points') val = signal.value?.length > 0 ? (signal.opacity ?? 1) * 100 : 0
       const norm = Math.min(1, val / 100)
       if (norm === prevNorm) return
       prevNorm = norm

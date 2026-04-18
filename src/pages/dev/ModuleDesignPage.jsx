@@ -9,6 +9,7 @@ import CvKnob from '../../modules/parametric/CvKnob'
 import Slider from '../../modules/parametric/Slider'
 import FlipToggle from '../../modules/parametric/FlipToggle'
 import Toggle from '../../modules/parametric/Toggle'
+import IconButton from '../../modules/parametric/IconButton'
 import LED from '../../modules/parametric/LED'
 import Divider from '../../components/atoms/Divider'
 import Icon from '../../icons/Icon'
@@ -425,6 +426,374 @@ function SequencerStepsV2() {
   )
 }
 
+// Quad VCA — wireframe reference from Claude Design (a_torg/Quad VCA Wireframe.html).
+// Pure visual mockup, non-functional. Uses the HTML div structure verbatim so we can
+// iterate on layout before porting to live components.
+function QuadVCAReference() {
+  const CV_COL = '#6ea8ff'
+  const SIG_COL = '#e06b5a'
+  const OK_COL = '#7bcf8a'
+  const PANEL = '#1a1d22'
+  const LINE = '#3a3f47'
+  const LINE_STRONG = '#5a616b'
+  const INK = '#e7e9ec'
+  const MUTED = '#8a8f98'
+
+  const jackStyle = {
+    width: 26, height: 26, borderRadius: '50%',
+    border: `1.5px solid ${LINE_STRONG}`,
+    background: 'radial-gradient(circle, #0b0c0f 40%, #1a1d22 41%)',
+    position: 'relative',
+  }
+  const jackHoleStyle = {
+    content: '""', position: 'absolute', inset: 7, borderRadius: '50%',
+    background: '#000', border: '1px solid #2a2e35',
+  }
+  const Jack = () => (
+    <div style={jackStyle}>
+      <div style={jackHoleStyle} />
+    </div>
+  )
+  const Led = ({ on }) => (
+    <div style={{
+      width: 6, height: 6, borderRadius: '50%',
+      background: on ? OK_COL : '#2a2e35',
+      border: '1px solid #111',
+      boxShadow: on ? `0 0 4px ${OK_COL}` : 'none',
+    }} />
+  )
+  const SmallKnob = () => (
+    <div style={{
+      width: 30, height: 30, borderRadius: '50%',
+      background: 'radial-gradient(circle at 35% 30%, #2a2e35 0%, #0d0f12 70%)',
+      border: `1.5px solid ${LINE_STRONG}`,
+      position: 'relative',
+    }}>
+      <div style={{
+        position: 'absolute', left: '50%', top: 3, width: 1.5, height: 8,
+        background: INK, transform: 'translateX(-50%)',
+      }} />
+    </div>
+  )
+  const TinyKnob = () => (
+    <div style={{
+      width: 24, height: 24, borderRadius: '50%',
+      background: 'radial-gradient(circle at 35% 30%, #2a2e35 0%, #0d0f12 70%)',
+      border: `1.5px solid ${LINE_STRONG}`,
+      position: 'relative',
+    }}>
+      <div style={{
+        position: 'absolute', left: '50%', top: 2, width: 1.5, height: 7,
+        background: INK, transform: 'translateX(-50%)',
+      }} />
+    </div>
+  )
+  const BigKnob = () => (
+    <div style={{
+      width: 54, height: 54, borderRadius: '50%',
+      background: 'radial-gradient(circle at 35% 30%, #f1f3f5 0%, #c7ccd3 55%, #8a8f98 100%)',
+      border: '2px solid rgba(0,0,0,0.5)',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+      position: 'relative',
+    }}>
+      <div style={{
+        position: 'absolute', left: '50%', top: 4, width: 2, height: 14,
+        background: '#111', transform: 'translateX(-50%)',
+      }} />
+    </div>
+  )
+  const BoostSwitch = () => (
+    <div style={{
+      width: 10, height: 18, display: 'inline-flex', flexDirection: 'column',
+      alignItems: 'center', position: 'relative',
+    }}>
+      <span style={{
+        width: 10, height: 10, borderRadius: 2,
+        background: 'linear-gradient(#7a2a24, #4a1814)',
+        border: '1px solid #2a0e0b',
+        position: 'absolute', top: 4,
+      }} />
+      <span style={{
+        width: 2, height: 8, background: '#d0d4da', borderRadius: 1,
+        position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
+        boxShadow: '0 1px 0 rgba(0,0,0,0.5)',
+      }} />
+      <span style={{
+        width: 5, height: 5, borderRadius: '50%', background: '#e7e9ec',
+        border: '1px solid rgba(0,0,0,0.4)',
+        position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)',
+      }} />
+    </div>
+  )
+  const CurveChip = ({ kind }) => (
+    <span style={{
+      width: 16, height: 16, border: `1px solid ${SIG_COL}`, borderRadius: 2,
+      display: 'grid', placeItems: 'center', background: '#1a0f0d',
+    }}>
+      <svg width="11" height="11" viewBox="0 0 12 12">
+        {kind === 'log' ? (
+          <path d="M1 11 C 2 4, 6 1, 11 1" stroke={SIG_COL} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+        ) : (
+          <path d="M1 11 C 6 11, 10 8, 11 1" stroke={SIG_COL} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+        )}
+      </svg>
+    </span>
+  )
+  const labelMini = {
+    fontSize: 9, color: MUTED, letterSpacing: '0.15em',
+    fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+  }
+
+  const Channel = ({ idx, ledOn }) => (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '20px 30px 8px 36px 1fr 64px',
+      gridTemplateAreas: '"cvtag jack led cvknob mid level"',
+      gap: 6,
+      alignItems: 'center',
+      padding: '14px 4px 10px',
+      border: `1px dashed ${LINE}`,
+      borderRadius: 4,
+      position: 'relative',
+    }}>
+      {/* dashed signal path */}
+      <div style={{
+        position: 'absolute', left: 28, right: 84, top: '50%', height: 1,
+        background: `repeating-linear-gradient(to right, ${LINE_STRONG} 0 4px, transparent 4px 8px)`,
+        zIndex: 0,
+      }} />
+      <span style={{
+        position: 'absolute', top: -7, left: 8, background: PANEL,
+        padding: '0 6px', fontSize: 9, color: MUTED, letterSpacing: '0.2em',
+      }}>CHANNEL</span>
+      <span style={{
+        position: 'absolute', top: -7, right: 8, background: PANEL,
+        padding: '0 6px', fontSize: 9, color: MUTED, letterSpacing: '0.2em',
+      }}>{String(idx).padStart(2, '0')}</span>
+
+      <div style={{
+        gridArea: 'cvtag', fontSize: 9, color: CV_COL,
+        letterSpacing: '0.15em', fontWeight: 700, textAlign: 'center',
+        padding: '2px 0', background: '#1f2636', border: '1px solid #2f3a54',
+        borderRadius: 2, zIndex: 1,
+      }}>CV</div>
+      <div style={{ gridArea: 'jack', display: 'flex', justifyContent: 'center', zIndex: 1 }}>
+        <Jack />
+      </div>
+      <div style={{ gridArea: 'led', display: 'flex', justifyContent: 'center', zIndex: 1 }}>
+        <Led on={ledOn} />
+      </div>
+      <div style={{ gridArea: 'cvknob', display: 'flex', justifyContent: 'center', zIndex: 1 }}>
+        <SmallKnob />
+      </div>
+      <div style={{
+        gridArea: 'mid', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', gap: 4, padding: '0 4px', zIndex: 1,
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <span style={labelMini}>BOOST</span>
+          <BoostSwitch />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <CurveChip kind="log" />
+          <TinyKnob />
+          <CurveChip kind="exp" />
+        </div>
+      </div>
+      <div style={{
+        gridArea: 'level', display: 'flex', alignItems: 'center',
+        gap: 6, zIndex: 1,
+      }}>
+        <BigKnob />
+        <span style={{ ...labelMini, color: INK, fontWeight: 700, whiteSpace: 'nowrap' }}>LEVEL {idx}</span>
+      </div>
+    </div>
+  )
+
+  return (
+    <div style={{
+      fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+      fontSize: 13, color: INK,
+    }}>
+      <div style={{
+        background: PANEL, border: `1px solid ${LINE}`, borderRadius: 6,
+        padding: '14px 14px 18px', position: 'relative', width: 380,
+        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.3)',
+      }}>
+        {/* rack screw stubs */}
+        <div style={{
+          content: '""', position: 'absolute', left: 0, right: 0, top: -1, height: 10,
+          background: `radial-gradient(circle at 12px 50%, #000 2.5px, transparent 3px), radial-gradient(circle at calc(100% - 12px) 50%, #000 2.5px, transparent 3px)`,
+        }} />
+        <div style={{
+          content: '""', position: 'absolute', left: 0, right: 0, bottom: -1, height: 10,
+          background: `radial-gradient(circle at 12px 50%, #000 2.5px, transparent 3px), radial-gradient(circle at calc(100% - 12px) 50%, #000 2.5px, transparent 3px)`,
+        }} />
+
+        {/* header */}
+        <div style={{
+          textAlign: 'center', padding: '6px 0 14px',
+          borderBottom: `1px dashed ${LINE}`, marginBottom: 12,
+        }}>
+          <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '0.18em' }}>QUAD VCA</div>
+          <div style={{ fontSize: 10, color: MUTED, letterSpacing: '0.2em', marginTop: 3 }}>
+            4 × LEVEL · CV · BOOST · LIN/EXP
+          </div>
+        </div>
+
+        {/* channels */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Channel idx={1} ledOn />
+          <Channel idx={2} ledOn={false} />
+          <Channel idx={3} ledOn />
+          <Channel idx={4} ledOn={false} />
+        </div>
+
+        {/* footer: IN row + OUT row */}
+        <div style={{
+          marginTop: 14, borderTop: `1px dashed ${LINE}`,
+          paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 10,
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, textAlign: 'center' }}>
+            {[1, 2, 3, 4].map(n => (
+              <div key={`in${n}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <Jack />
+                <span style={labelMini}>IN {n}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, textAlign: 'center' }}>
+            {[1, 2, 3, 4].map(n => (
+              <div key={`out${n}`} style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                background: '#0d0f12', border: `1px solid ${LINE}`,
+                borderRadius: 4, padding: '6px 0',
+              }}>
+                <Jack />
+                <span style={labelMini}>{n === 4 ? 'SUM' : `OUT ${n}`}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 3U templated QVCA — same wireframe div structure as QuadVCAReference but using:
+//  - our <Module> chrome + header
+//  - our <LabeledJack>/<JackSocket> for all jacks
+//  - our <Knob> for CV attenuverter, response curve, level
+//  - our <FlipToggle> (horizontal) for boost, with vertical "BOOST" label stack
+//  - our <IconButton> with curve-log / curve-exp icons flanking the response knob
+//  - the ABCD in/out matrix layout from AttenuatorModule instead of the two
+//    stacked jack rows from the Claude Design wireframe.
+// Non-functional mockup — pass no-op handlers + null refs.
+function QVCAChannel({ idx, id, ledOn }) {
+  const nullRef = { current: null }
+  const DashedSpacer = () => (
+    <div style={{
+      flex: 1, height: 1,
+      background: 'repeating-linear-gradient(to right, rgba(255,255,255,0.20) 0 2px, transparent 2px 5px)',
+    }} />
+  )
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center',
+      gap: 6, padding: '8px 6px',
+      borderBottom: idx < 4 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+    }}>
+      {/* Left cluster: CV jack (sm) · LED · CV knob */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <LabeledJack type="in" port={`cv${idx}`} moduleId={id} active={false} signalRef={nullRef} size="sm" />
+        <LED active={ledOn} color="green" size="sm" />
+        <Knob value={0} onChange={() => {}} bipolar size="sm" />
+      </div>
+
+      {/* dashed flex-1 segment */}
+      <DashedSpacer />
+
+      {/* Middle column: BOOST stacked above response row */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, paddingTop: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <LED active={false} color="red" size="sm" />
+          <FlipToggle value={false} onChange={() => {}} variant="horizontal" />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Icon name="curve-log" size={8} style={{ color: 'var(--kol-color-brand-red)' }} />
+          <Knob value={50} onChange={() => {}} size="sm" />
+          <Icon name="curve-exp" size={8} style={{ color: 'var(--kol-color-brand-red)' }} />
+        </div>
+      </div>
+
+      {/* dashed flex-1 segment */}
+      <DashedSpacer />
+
+      {/* Right: LEVEL big knob with channel label below */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <Knob value={100} onChange={() => {}} size="lg" />
+        <span className="kol-helper-xxxs" style={{
+          color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1,
+        }}>{`channel ${idx}`}</span>
+      </div>
+    </div>
+  )
+}
+
+function QuadVCATemplated() {
+  const id = 'qvca-design'
+  const nullRef = { current: null }
+
+  return (
+    <Panel hp={16} u={3} label="QVCA">
+      <div style={{
+        display: 'flex', flexDirection: 'column',
+        height: '100%', gap: 4,
+      }}>
+        {/* 4 channels, factored component */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <QVCAChannel idx={1} id={id} ledOn />
+          <QVCAChannel idx={2} id={id} ledOn={false} />
+          <QVCAChannel idx={3} id={id} ledOn />
+          <QVCAChannel idx={4} id={id} ledOn={false} />
+        </div>
+
+        <Divider className="px-2" />
+
+        {/* ABCD-style matrix — identical to AttenuatorModule layout */}
+        <div style={{
+          display: 'inline-grid',
+          gridTemplateColumns: 'repeat(4, auto)',
+          columnGap: 20, rowGap: 16,
+          justifyContent: 'center',
+          padding: '6px 0',
+        }}>
+          {[1, 2, 3, 4].map(n => (
+            <div key={`in${n}`} style={{ position: 'relative' }}>
+              <LabeledJack type="in" port={`in${n}`} moduleId={id} active={false} signalRef={nullRef} label={`${n}`} labelPosition="top" />
+              <Icon name="caret-down" size={8} style={{
+                color: 'rgba(255,255,255,0.25)',
+                position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)',
+              }} />
+            </div>
+          ))}
+          {[1, 2, 3, 4].map((n, i) => (
+            <div key={`out${n}`} style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+              <JackSocket type="out" port={`out${n}`} moduleId={id} signalRef={nullRef} />
+              {i < 3 && (
+                <Icon name="caret-right" size={8} style={{
+                  color: 'rgba(255,255,255,0.25)',
+                  position: 'absolute', right: -14, top: '50%', transform: 'translateY(-50%)',
+                }} />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </Panel>
+  )
+}
+
 export default function ModuleDesign() {
   return (
     <ModuleRegistryProvider>
@@ -433,6 +802,21 @@ export default function ModuleDesign() {
           <div className="min-h-screen bg-surface-primary p-8">
             <h1 className="kol-helper-xs text-fg-48 uppercase mb-8">Module Design</h1>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+
+              {/* Quad VCA — wireframe reference beside our 3U templated version */}
+              <div>
+                <span className="kol-helper-xs text-fg-32 uppercase">Quad VCA — wireframe (Claude Design) vs our 3U template</span>
+                <div className="mt-4" style={{ display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                  <div>
+                    <span className="kol-helper-xxs text-fg-32 uppercase" style={{ display: 'block', marginBottom: 8 }}>Wireframe</span>
+                    <QuadVCAReference />
+                  </div>
+                  <div>
+                    <span className="kol-helper-xxs text-fg-32 uppercase" style={{ display: 'block', marginBottom: 8 }}>Our template (3U × 16HP)</span>
+                    <QuadVCATemplated />
+                  </div>
+                </div>
+              </div>
 
               {/* Reference mockup — pure visual */}
               <div>

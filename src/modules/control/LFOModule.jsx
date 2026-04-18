@@ -88,8 +88,8 @@ export default function LFOModule({ id = 'lfo1', init, preview }) {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
       syncInRef.current = inputs.clk
 
-      // Hz: map knob 0-100 to 0.1-20
-      const hz = 0.1 + (rateRef.current / 100) * 19.9
+      // Hz: map knob 0-100 to 0.1-20 exponentially (perceptually linear across ~7.6 octaves)
+      const hz = 0.1 * Math.pow(200, rateRef.current / 100)
       advanceClockSync(syncRef.current, inputs.clk, t, dt, hz)
       const phase = syncRef.current.phase
 

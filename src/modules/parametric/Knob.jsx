@@ -40,9 +40,6 @@ export default function Knob({ value, onChange, min, max, label, variant = 'colu
   const knobSvg = (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <circle cx={r} cy={r} r={r * 0.75} fill="rgba(30,30,30,0.9)" stroke="rgba(180,175,165,0.3)" strokeWidth="1" />
-      {bipolar && (
-        <line x1={r} y1={r - r * 0.9} x2={r} y2={r - r * 0.72} stroke="rgba(255,255,255,0.35)" strokeWidth="1" strokeLinecap="round" />
-      )}
       <line
         x1={r} y1={r}
         x2={r + ir * Math.cos((angle - 90) * Math.PI / 180)}
@@ -89,6 +86,11 @@ export default function Knob({ value, onChange, min, max, label, variant = 'colu
       onPointerDown={handlePointerDown}
       style={{ cursor: 'ns-resize', touchAction: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
     >
+      {bipolar && (
+        <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', lineHeight: 1 }}>
+          -/+
+        </span>
+      )}
       {knobSvg}
       {label && (
         <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>

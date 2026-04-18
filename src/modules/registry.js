@@ -17,6 +17,7 @@ import ExpressionModule from './control/ExpressionModule.jsx'
 import MultModule from './math/MultModule.jsx'
 import AttenuatorModule from './math/AttenuatorModule.jsx'
 import VCAModule from './math/VCAModule.jsx'
+import QuadVCAModule from './math/QuadVCAModule.jsx'
 import SwitchModule from './math/SwitchModule.jsx'
 import QuantizerModule from './math/QuantizerModule.jsx'
 import ScaleOffsetModule from './math/ScaleOffsetModule.jsx'
@@ -167,6 +168,15 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'in2', signal: 'scalar', description: 'VCA 2 signal input' },
     { type: 'input', name: 'cv2', signal: 'scalar', description: 'VCA 2 control voltage' },
     { type: 'output', name: 'out2', signal: 'scalar', description: 'in2 × (cv2 / 100)' },
+  ] },
+  quadVca:   { component: QuadVCAModule,      hp: 16, u: 3, category: 'math',       label: 'QVCA',        description: '4-channel polymorphic voltage-controlled amplifier modelled on the Intellijel Quad VCA. Each channel has a CV attenuverter (bipolar), response curve knob (linear to cubic blend), boost switch (allows gain above unity), and level knob. Works on scalar and points signals: scalar values are multiplied, points signals get their opacity scaled. Unpatched outputs sum into the next channel, so patching only out 4 gives a 4-channel mix. CV1 normalises to CV2/3/4 when those are unpatched.', controls: [
+    { type: 'knob', name: 'level 1–4', range: '0–100%', description: 'Per-channel base gain' },
+    { type: 'knob', name: 'atten 1–4', range: '-100 to +100', description: 'Per-channel CV attenuverter (bipolar)' },
+    { type: 'knob', name: 'curve 1–4', range: '0–100', description: 'Per-channel response curve; 0 = linear, 100 = cubic' },
+    { type: 'toggle', name: 'boost 1–4', description: 'Per-channel unity cap defeat (gain up to 2×)' },
+    { type: 'input', name: 'in 1–4', signal: 'any', description: 'Per-channel signal input' },
+    { type: 'input', name: 'cv 1–4', signal: 'scalar', description: 'Per-channel CV; cv1 normalises to cv2/3/4 when unpatched' },
+    { type: 'output', name: 'out 1–4', signal: 'any', description: 'Per-channel output; unpatched outs sum into next channel' },
   ] },
   switch:    { component: SwitchModule,       hp: 10, u: 1, category: 'math',       label: 'Switch',      description: 'Dual CV-controlled A/B signal switch. When CV is positive (> 0), output selects input B; otherwise it selects input A. Works with any signal type including scalars, colors, and points. Useful for alternating between two sources rhythmically or conditionally.', controls: [
     { type: 'input', name: 'a1', signal: 'any', description: 'Switch 1 input A (CV ≤ 0)' },

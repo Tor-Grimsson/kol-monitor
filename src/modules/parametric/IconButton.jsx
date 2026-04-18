@@ -7,7 +7,7 @@ import Icon from '../../icons/Icon.jsx'
 
 const PULSE_MS = 100
 
-export default function IconButton({ icon, active, onClick, title, momentary, disabled }) {
+export default function IconButton({ icon, active, onClick, title, momentary, disabled, iconSize = 10 }) {
   const [pulse, setPulse] = useState(false)
   const timeoutRef = useRef(null)
   const isActive = active || pulse
@@ -42,7 +42,7 @@ export default function IconButton({ icon, active, onClick, title, momentary, di
         transition: pulse ? 'none' : `border-color ${PULSE_MS}ms, background-color ${PULSE_MS}ms, color ${PULSE_MS}ms, opacity ${PULSE_MS}ms`,
       }}
     >
-      <Icon name={icon} size={10} />
+      <Icon name={icon} size={iconSize} />
     </button>
   )
 }

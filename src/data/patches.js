@@ -83,40 +83,6 @@ export const patches = {
 
   // --- LINEGEN PATCHES ---
 
-  // Concentric circles pulsing at different rates, driven by a slow clock
-  // 3 LineGens: inner rings fast, outer rings slow, middle modulated by envelope
-  // Pen controls thickness so rings breathe from thin to thick
-  // Visual: nested pulsing circles like a radar or sonar ping
-  'sonar': {
-    rows: [
-      UTIL_ROW,
-      { height: '3u', modules: [
-        { type: 'clock', id: 'clk', state: { bpm: 40, division: 1 } },
-        { type: 'envelope', id: 'env', state: { attack: 70, decay: 40, sustain: 20, release: 80 } },
-        { type: 'lfo', id: 'lfo', state: { rate: 30, shape: 'sin', depth: 90, offset: 40 } },
-        { type: 'lineGen', id: 'inner', state: { shape: 'circle', freq: 60, density: 30, speed: 70 } },
-        { type: 'lineGen', id: 'mid', state: { shape: 'circle', freq: 25, density: 50, speed: 35 } },
-        { type: 'lineGen', id: 'outer', state: { shape: 'circle', freq: 10, density: 80, speed: 15 } },
-        { type: 'pen', id: 'pen', state: { thickness: 40, opacity: 70 } },
-        { type: 'output', id: 'out' },
-      ]},
-    ],
-    connections: [
-      // Clock triggers envelope, envelope modulates mid ring density
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'env', toPort: 'gate' },
-      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'mid', toPort: 'dens' },
-      // LFO modulates inner ring speed — fast pulsing core
-      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'inner', toPort: 'spd' },
-      // Envelope modulates pen thickness — rings swell on each ping
-      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'pen', toPort: 'tk' },
-      // All three rings → output layered
-      { fromModuleId: 'inner', fromPort: 'out', toModuleId: 'out', toPort: 'a' },
-      { fromModuleId: 'mid', fromPort: 'out', toModuleId: 'out', toPort: 'b' },
-      { fromModuleId: 'outer', fromPort: 'out', toModuleId: 'out', toPort: 'c' },
-      { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'out', toPort: 'pen' },
-    ],
-  },
-
   // Logic-driven morphing — XOR of clock+LFO creates complex switching pattern
   // Switch alternates between two LineGens based on logic output
   // Logic also drives freq/density so shapes react to the pattern
@@ -1054,28 +1020,63 @@ export const patches = {
     ],
   },
 
-  // RadialGen triangle → Kaleidoscope with cut + animate → Monitor
-  // Visual: triangle shape spinning through 32 kaleidoscope segments
+  // Waveform → Kaleidoscope (ani + mir) → Monitor, LFO clocking the waveform
   'kaleidoscope': {
     tags: ['showcase', 'geometric', 'mirror'],
-    description: 'RadialGen triangle through Kaleidoscope mirror with cut and auto-rotation',
+    description: 'Waveform through Kaleidoscope mirror, LFO-clocked',
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [
+        { type: 'power', id: 'pwr1', offset: 0 },
+        { type: 'perf', id: 'perf1', offset: 4 },
+        { type: 'patch', id: 'patch1', offset: 8 },
+      ]},
       { height: '3u', modules: [
-        { type: 'clock', id: 'clk1', state: { bpm: 74 } },
-        { type: 'lfo', id: 'lfo1', state: { rate: 0, depth: 100, offset: 45, shape: 'saw' } },
-        { type: 'radialGen', id: 'rad1', state: { shape: 'triangle', radius: 80, amplitude: 50, frequency: 3, resolution: 4, scale: 35, rotate: 0, lfoAmount: 0, lfoFrequency: 20, lfoWaveType: 'sine', lfoSync: false, strokeWidth: 40, mirrorX: false, mirrorY: false, fill: false, grid: false, aspectLock: true } },
-        { type: 'kaleidoscope', id: 'kal1', state: { seg: 32, rot: 26, zm: 78, ofs: 17, spd: 25, fold: 50, opa: 100, mir: false, ani: true, cut: true, fil: false } },
-        { type: 'pen', id: 'pen1', state: { thickness: 15, dash: 0, gap: 0, opacity: 100, cap: 'round', lofi: 0 } },
-        { type: 'monitor', id: 'mon1' },
+        { type: 'lfo', id: 'lfo_2', offset: 0, state: { rate: 15, depth: 100, offset: 0, shape: 'sin' } },
+        { type: 'monitor', id: 'monitor_3', offset: 6, state: { overlay: false } },
+        { type: 'kaleidoscope', id: 'kaleidoscope_4', offset: 18, state: { seg: 50, rot: 50, zm: 50, ofs: 0, spd: 50, fold: 50, opa: 100, mir: true, ani: true, cut: false, fil: false, bypass: false } },
+        { type: 'waveform', id: 'waveform_5', offset: 28, state: { freq: 12, amp: 98, speed: 0, shape: 'sin' } },
+      ]},
+      { height: '3u', modules: [] },
+    ],
+    connections: [
+      { fromModuleId: 'waveform_5', fromPort: 'out', toModuleId: 'kaleidoscope_4', toPort: 'in' },
+      { fromModuleId: 'kaleidoscope_4', fromPort: 'out', toModuleId: 'monitor_3', toPort: 'a' },
+      { fromModuleId: 'lfo_2', fromPort: 'out', toModuleId: 'waveform_5', toPort: 'clk' },
+      { fromModuleId: 'lfo_2', fromPort: 'out', toModuleId: 'kaleidoscope_4', toPort: 'clk' },
+    ],
+    on: ['lfo_2', 'monitor_3', 'kaleidoscope_4', 'waveform_5'],
+  },
+
+  // Pitch-synth feel: clock triggers envelope, QVCA gates geometry opacity.
+  // Envelope shape hits like an attack/decay note envelope. Visual: rings
+  // flash in tempo, fading out between beats.
+  'qvcaSynth': {
+    tags: ['showcase', 'envelope', 'qvca'],
+    description: 'Clock-triggered envelope gates LineGen through Quad VCA — rhythmic geometry pulses',
+    rows: [
+      { height: '1u', modules: [
+        { type: 'power', id: 'pwr1', offset: 0 },
+        { type: 'perf', id: 'perf1', offset: 4 },
+        { type: 'patch', id: 'patch1', offset: 8 },
+      ]},
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk', offset: 0, state: { bpm: 96, running: true } },
+        { type: 'envelope', id: 'env', offset: 4, state: { attack: 12, decay: 21, sustain: 0, release: 75, cycle: false } },
+        { type: 'lineGen', id: 'gen', offset: 10, state: { shape: 'circle', freq: 40, density: 60, speed: 40 } },
+        { type: 'quadVca', id: 'qvca', offset: 16, state: { level1: 54, level2: 93, level3: 0, level4: 0, atten1: 23, atten2: 59, atten3: 0, atten4: 0, curve1: 74, curve2: 26, curve3: 0, curve4: 0, boost1: false, boost2: true, boost3: false, boost4: false, bypass: false } },
+        { type: 'pen', id: 'pen', offset: 30, state: { thickness: 30, dash: 0, gap: 0, opacity: 63, cap: 'round', lofi: 78, fill: false } },
+        { type: 'monitor', id: 'mon', offset: 36, state: { overlay: false } },
       ]},
     ],
     connections: [
-      { fromModuleId: 'rad1', fromPort: 'out', toModuleId: 'kal1', toPort: 'in' },
-      { fromModuleId: 'kal1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
-      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
-      { fromModuleId: 'clk1', fromPort: 'd8', toModuleId: 'lfo1', toPort: 'clk' },
+      { fromModuleId: 'gen', fromPort: 'out', toModuleId: 'qvca', toPort: 'in1' },
+      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'qvca', toPort: 'cv1' },
+      { fromModuleId: 'qvca', fromPort: 'out1', toModuleId: 'mon', toPort: 'a' },
+      { fromModuleId: 'clk', fromPort: 'd2', toModuleId: 'env', toPort: 'trig' },
+      { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'mon', toPort: 'pen' },
+      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'qvca', toPort: 'cv2' },
+      { fromModuleId: 'qvca', fromPort: 'out2', toModuleId: 'pen', toPort: 'op' },
     ],
-    on: ['clk1', 'lfo1', 'rad1', 'kal1', 'pen1', 'mon1'],
+    on: ['clk', 'env', 'gen', 'qvca', 'pen', 'mon'],
   },
 }

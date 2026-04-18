@@ -30,7 +30,16 @@ export function newClockSyncState(initialPeriod = 1) {
 }
 
 // Internal: measure period from clock rising edges. Updates state.period / state.locked.
+// When clkInput is null (cable absent or source disabled), drop the lock so the
+// caller's fallback rate takes over — otherwise a previously measured period
+// would linger forever and the knob would appear dead.
 function measureClockPeriod(state, clkInput, t) {
+  if (!clkInput) {
+    state.locked = false
+    state.lastTick = null
+    state.prevClk = false
+    return
+  }
   const clkHigh = readScalar(clkInput) > 0
   if (clkHigh && !state.prevClk) {
     if (state.lastTick !== null) {

@@ -20,13 +20,12 @@ function EnvelopePanel({ attack, decay, sustain, release, cycle, enabled, onTogg
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
-        <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-          <Knob value={attack} onChange={onAttackChange} label="A" />
-          <div style={{ position: 'absolute', left: '50%', marginLeft: -28, top: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <Toggle value={cycle} onChange={onCycleChange} label="cyc" />
-            <LabeledJack type="in" port="trig" moduleId={id} active={clkConnected} signalRef={clkInRef} label="trig" size="sm" />
-          </div>
+        {/* Top row: CYC toggle + TRIG jack — children top-aligned */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12 }}>
+          <Toggle value={cycle} onChange={onCycleChange} label="cyc" padding={0} />
+          <LabeledJack type="in" port="trig" moduleId={id} active={clkConnected} signalRef={clkInRef} label="trig" size="sm" />
         </div>
+        <Knob value={attack} onChange={onAttackChange} label="A" />
         <Knob value={decay} onChange={onDecayChange} label="D" />
         <Knob value={sustain} onChange={onSustainChange} label="S" />
         <Knob value={release} onChange={onReleaseChange} label="R" />
@@ -60,6 +59,8 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
   const levelRef = useRef(0)
   const prevGateRef = useRef(false)
   const prevClkRef = useRef(false)
+  const releaseStartLevelRef = useRef(0)
+  const oneShotRef = useRef(false)
   const outRef = useRef(null)
   const gateInRef = useRef(null)
   const clkInRef = useRef(null)
@@ -94,17 +95,23 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
       const wasOn = prevGateRef.current
       prevGateRef.current = gateOn
 
-      // Trigger: kick into ATTACK on rising edge
+      // Trigger: one-shot, kick into ATTACK on rising edge and auto-run A→D→R
       const trigHigh = readScalar(inputs.trig) > 0
-      if (trigHigh && !prevClkRef.current) stageRef.current = STAGES.ATTACK
+      if (trigHigh && !prevClkRef.current) {
+        stageRef.current = STAGES.ATTACK
+        oneShotRef.current = true
+      }
       prevClkRef.current = trigHigh
 
       // Cycle: start if idle
       if (cycleRef.current && stageRef.current === STAGES.IDLE) stageRef.current = STAGES.ATTACK
 
-      // Gate transitions
-      if (gateOn && !wasOn) stageRef.current = STAGES.ATTACK
-      if (!gateOn && wasOn && stageRef.current !== STAGES.IDLE) stageRef.current = STAGES.RELEASE
+      // Gate transitions — gate takes over (clears one-shot flag so sustain can hold)
+      if (gateOn && !wasOn) { stageRef.current = STAGES.ATTACK; oneShotRef.current = false }
+      if (!gateOn && wasOn && stageRef.current !== STAGES.IDLE) {
+        releaseStartLevelRef.current = levelRef.current
+        stageRef.current = STAGES.RELEASE
+      }
 
       // Time mapping: knob 0-100 → 0.005-2s
       const aTime = 0.005 + (aRef.current / 100) * 1.995
@@ -119,14 +126,43 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
         level += (dt / aTime) * 100
         if (level >= 100) { level = 100; stageRef.current = STAGES.DECAY }
       } else if (stage === STAGES.DECAY) {
-        level -= (dt / dTime) * (100 - sLevel)
-        if (level <= sLevel) { level = sLevel; stageRef.current = STAGES.SUSTAIN }
+        // In one-shot mode with sustain=0, D and R combine into a single long decay.
+        // This is what makes "release hold the decay for a long time" visible when
+        // there's no sustain to release from.
+        const oneShot = oneShotRef.current || (cycleRef.current && !gateOn)
+        const decayTime = (oneShot && sLevel <= 0) ? (dTime + rTime) : dTime
+        level -= (dt / decayTime) * (100 - sLevel)
+        if (level <= sLevel) {
+          level = sLevel
+          if (oneShot) {
+            // sustain=0 case already fell through via combined time → go idle.
+            // sustain>0 case: R decays from sustain to 0 over rTime.
+            if (sLevel > 0) {
+              releaseStartLevelRef.current = level
+              stageRef.current = STAGES.RELEASE
+            } else {
+              stageRef.current = cycleRef.current ? STAGES.ATTACK : STAGES.IDLE
+              oneShotRef.current = false
+            }
+          } else {
+            stageRef.current = STAGES.SUSTAIN
+          }
+        }
       } else if (stage === STAGES.SUSTAIN) {
         level = sLevel
-        if (cycleRef.current && !gateOn) stageRef.current = STAGES.RELEASE
+        if (cycleRef.current && !gateOn) {
+          releaseStartLevelRef.current = level
+          stageRef.current = STAGES.RELEASE
+        }
       } else if (stage === STAGES.RELEASE) {
-        level -= (dt / rTime) * level
-        if (level <= 0.5) { level = 0; stageRef.current = cycleRef.current ? STAGES.ATTACK : STAGES.IDLE }
+        // Linear — rTime = seconds to zero from whatever level release started at
+        const start = releaseStartLevelRef.current || 1
+        level -= (dt / rTime) * start
+        if (level <= 0) {
+          level = 0
+          stageRef.current = cycleRef.current ? STAGES.ATTACK : STAGES.IDLE
+          oneShotRef.current = false
+        }
       }
 
       levelRef.current = level
