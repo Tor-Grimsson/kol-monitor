@@ -253,17 +253,18 @@ export function useRackState() {
     }))
   }, [])
 
-  // Load a preset: builds rows from preset definition
+  // Load a preset: builds rows from preset definition. If saved entries carry
+  // explicit `offset`, honour them (preserves gaps). Otherwise pack left-to-right.
   const loadPreset = useCallback((preset) => {
     if (!preset || !preset.rows) return
     const newRows = preset.rows.map((r, i) => {
-      let offset = 0
+      let nextOffset = 0
       const modules = r.modules.map(m => {
         const def = MODULE_DEFS[m.type]
         const hp = def?.hp || 4
-        const mod = { type: m.type, id: m.id, hp, u: def?.u || 3, offset, state: m.state }
-        offset += hp
-        return mod
+        const offset = typeof m.offset === 'number' ? m.offset : nextOffset
+        nextOffset = offset + hp
+        return { type: m.type, id: m.id, hp, u: def?.u || 3, offset, state: m.state }
       })
       return { id: `row-${i}`, height: r.height, modules }
     })

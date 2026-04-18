@@ -921,25 +921,30 @@ export const patches = {
     ],
   },
 
-  // Life → Monitor — cellular automaton display
-  // Visual: evolving cellular automaton patterns
+  // Life → Monitor — cellular automaton display with RGB colour feed
+  // Visual: evolving cellular automaton patterns, coloured via RGB osc
   'life': {
     tags: ['showcase', 'generative', 'geometric'],
-    description: 'Cellular automaton on Monitor',
+    description: 'Cellular automaton on Monitor, coloured via RGB oscillator',
     rows: [
-      UTIL_ROW,
+      { height: '1u', modules: [
+        { type: 'power', id: 'pwr1', offset: 0 },
+        { type: 'perf', id: 'perf1', offset: 4 },
+        { type: 'patch', id: 'patch1', offset: 8 },
+      ]},
       { height: '3u', modules: [
-        { type: 'clock', id: 'clk1' },
-        { type: 'life', id: 'life1' },
-        { type: 'pen', id: 'pen1' },
-        { type: 'monitor', id: 'mon1' },
+        { type: 'clock', id: 'clk1', offset: 0, state: { bpm: 120, running: true } },
+        { type: 'life', id: 'life1', offset: 4, state: { wrap: true, show: true, density: 30, size: 50, speed: 50, ruleVal: 44, zoom: 50 } },
+        { type: 'pen', id: 'pen1', offset: 16, state: { thickness: 15, dash: 0, gap: 0, opacity: 100, cap: 'round', lofi: 0, fill: false } },
+        { type: 'monitor', id: 'mon1', offset: 22, state: { overlay: false } },
+        { type: 'rgb', id: 'rgb_1', offset: 34, state: { rRate: 0, gRate: 100, bRate: 50, rOsc: false, gOsc: false, bOsc: false, rScl: false, gScl: false, bScl: false } },
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'life1', toPort: 'clk' },
       { fromModuleId: 'life1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
-      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
+      { fromModuleId: 'rgb_1', fromPort: 'out', toModuleId: 'life1', toPort: 'clr' },
     ],
+    on: ['clk1', 'life1', 'pen1', 'mon1', 'rgb_1'],
   },
 
   // LineGen → Transform → Monitor with LFO modulation

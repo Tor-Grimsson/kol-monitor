@@ -207,8 +207,10 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
         if (prevTo !== -1) { ctx.closePath(); ctx.fill() }
       }
 
-      // Stroke — suppressed when pen.fill is on (override: pen.fill flips stroke→fill)
-      if (!p?.fill) {
+      // Stroke — suppressed when pen.fill is on (override: pen.fill flips stroke→fill),
+      // or when the signal explicitly opts out with `stroke: false` (block/pixel producers
+      // like Life that want crisp filled shapes without the pen's round-capped outline).
+      if (!p?.fill && signal.stroke !== false) {
         ctx.strokeStyle = color
         ctx.beginPath()
         const edges = signal.edges
@@ -316,9 +318,23 @@ function drawPointsLofi(ctx, signal, x, y, w, h, p) {
   ctx.globalAlpha = p.opacity / 100
   ctx.fillStyle = penColor(p, signal.edges ? WIRE_COLOR : SCOPE_COLOR)
   const r = Math.max(1.5, p.thickness / 2)
+  // Match drawPoints aspect policy: aspectLock = contain, default = cover.
+  // Both branches produce an isotropic square region so lofi doesn't warp the signal.
+  let dx, dy, dw, dh
+  if (signal.aspectLock) {
+    const side = Math.min(w, h)
+    dx = x + (w - side) / 2
+    dy = y + (h - side) / 2
+    dw = dh = side
+  } else {
+    const side = Math.max(w, h)
+    dx = x + (w - side) / 2
+    dy = y + (h - side) / 2
+    dw = dh = side
+  }
   for (const pt of pts) {
     ctx.beginPath()
-    ctx.arc(x + pt.x * w, y + pt.y * h, r, 0, Math.PI * 2)
+    ctx.arc(dx + pt.x * dw, dy + pt.y * dh, r, 0, Math.PI * 2)
     ctx.fill()
   }
   resetPen(ctx)

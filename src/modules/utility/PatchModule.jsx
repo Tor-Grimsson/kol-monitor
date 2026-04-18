@@ -99,20 +99,31 @@ export default function PatchModule({ id = 'patch1', preview }) {
     setCurrent(name)
     setSaveSlot(s => s + 1)
 
-    // Only list modules that are on + console active channels
     const modules = modulesRef.current
+
+    // Rack placement with per-module state inline. Modules are emitted in
+    // left-to-right visual order (sorted by offset), and each entry carries its
+    // offset so gaps between modules survive a save/load round-trip.
+    const rows = rack.rows.map(row => ({
+      height: row.height,
+      modules: [...row.modules]
+        .sort((a, b) => a.offset - b.offset)
+        .map(m => {
+          const entry = { type: m.type, id: m.id, offset: m.offset }
+          const reg = modules.get(m.id)
+          const state = reg?.stateRef?.current
+          if (state && Object.keys(state).length > 0) entry.state = { ...state }
+          return entry
+        }),
+    }))
+
+    // Enabled modules — capture the actual enabled state, not "has output".
     const on = []
-    const consoleChannels = []
     for (const [id, mod] of modules) {
-      const hasOutput = mod.lastOutputs && Object.values(mod.lastOutputs).some(v => v != null)
-      if (hasOutput) on.push(id)
-      if (mod.stateRef) {
-        const state = mod.stateRef?.current || {}
-        consoleChannels.push({ id, ...state })
-      }
+      if (mod.enabledRef?.current) on.push(id)
     }
 
-    const full = { connections: snapshot, on, console: consoleChannels }
+    const full = { name, rows, connections: snapshot, on }
     navigator.clipboard.writeText(JSON.stringify(full, null, 2)).catch(() => {})
   }
 

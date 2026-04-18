@@ -12,7 +12,7 @@ import Knob from '../parametric/Knob'
 import Toggle from '../parametric/Toggle'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
-function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr, bClr, enabled, onToggle, onRRateChange, onGRateChange, onBRateChange, onROscChange, onGOscChange, onBOscChange, onRClrChange, onGClrChange, onBClrChange, id, rConn, rInRef, gConn, gInRef, bConn, bInRef, clkConn, clkRef, rOutRef, gOutRef, bOutRef, outRef }) {
+function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rScl, gScl, bScl, enabled, onToggle, onRRateChange, onGRateChange, onBRateChange, onROscChange, onGOscChange, onBOscChange, onRSclChange, onGSclChange, onBSclChange, id, rConn, rInRef, gConn, gInRef, bConn, bInRef, clkConn, clkRef, rOutRef, gOutRef, bOutRef, outRef }) {
   const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '0 2px' }
 
   return (
@@ -24,7 +24,7 @@ function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr,
         <div style={rowStyle}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
             <Toggle size="sm" value={rOsc} onChange={onROscChange} label="osc" />
-            <Toggle size="sm" value={rClr} onChange={onRClrChange} label="clr" />
+            <Toggle size="sm" value={rScl} onChange={onRSclChange} label="scl" />
           </div>
           <LabeledJack type="in" port="r" moduleId={id} active={rConn} signalRef={rInRef} label="in" size="sm" />
           <Knob value={rRate} onChange={onRRateChange} label="R" />
@@ -33,7 +33,7 @@ function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr,
         <div style={rowStyle}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
             <Toggle size="sm" value={gOsc} onChange={onGOscChange} label="osc" />
-            <Toggle size="sm" value={gClr} onChange={onGClrChange} label="clr" />
+            <Toggle size="sm" value={gScl} onChange={onGSclChange} label="scl" />
           </div>
           <LabeledJack type="in" port="g" moduleId={id} active={gConn} signalRef={gInRef} label="in" size="sm" />
           <Knob value={gRate} onChange={onGRateChange} label="G" />
@@ -42,7 +42,7 @@ function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr,
         <div style={rowStyle}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
             <Toggle size="sm" value={bOsc} onChange={onBOscChange} label="osc" />
-            <Toggle size="sm" value={bClr} onChange={onBClrChange} label="clr" />
+            <Toggle size="sm" value={bScl} onChange={onBSclChange} label="scl" />
           </div>
           <LabeledJack type="in" port="b" moduleId={id} active={bConn} signalRef={bInRef} label="in" size="sm" />
           <Knob value={bRate} onChange={onBRateChange} label="B" />
@@ -58,27 +58,29 @@ function RGBOscillatorPanel({ rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr,
 }
 
 export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
-  if (preview) return <RGBOscillatorPanel rRate={30} gRate={50} bRate={70} rOsc={false} gOsc={false} bOsc={false} rClr={false} gClr={false} bClr={false} enabled={false} onToggle={() => {}} onRRateChange={() => {}} onGRateChange={() => {}} onBRateChange={() => {}} onROscChange={() => {}} onGOscChange={() => {}} onBOscChange={() => {}} onRClrChange={() => {}} onGClrChange={() => {}} onBClrChange={() => {}} id={id} rConn={false} rInRef={{ current: null }} gConn={false} gInRef={{ current: null }} bConn={false} bInRef={{ current: null }} clkConn={false} clkRef={{ current: null }} rOutRef={{ current: null }} gOutRef={{ current: null }} bOutRef={{ current: null }} outRef={{ current: null }} />
+  if (preview) return <RGBOscillatorPanel rRate={30} gRate={50} bRate={70} rOsc={false} gOsc={false} bOsc={false} rScl={false} gScl={false} bScl={false} enabled={false} onToggle={() => {}} onRRateChange={() => {}} onGRateChange={() => {}} onBRateChange={() => {}} onROscChange={() => {}} onGOscChange={() => {}} onBOscChange={() => {}} onRSclChange={() => {}} onGSclChange={() => {}} onBSclChange={() => {}} id={id} rConn={false} rInRef={{ current: null }} gConn={false} gInRef={{ current: null }} bConn={false} bInRef={{ current: null }} clkConn={false} clkRef={{ current: null }} rOutRef={{ current: null }} gOutRef={{ current: null }} bOutRef={{ current: null }} outRef={{ current: null }} />
 
   const [rRate, setRRate] = useState(init?.rRate ?? 30)
   const [gRate, setGRate] = useState(init?.gRate ?? 50)
   const [bRate, setBRate] = useState(init?.bRate ?? 70)
-  const [rOsc, setROsc] = useState(init?.rOsc ?? true)
-  const [gOsc, setGOsc] = useState(init?.gOsc ?? true)
-  const [bOsc, setBOsc] = useState(init?.bOsc ?? true)
-  const [rClr, setRClr] = useState(init?.rClr ?? false)
-  const [gClr, setGClr] = useState(init?.gClr ?? false)
-  const [bClr, setBClr] = useState(init?.bClr ?? false)
+  const [rOsc, setROsc] = useState(init?.rOsc ?? false)
+  const [gOsc, setGOsc] = useState(init?.gOsc ?? false)
+  const [bOsc, setBOsc] = useState(init?.bOsc ?? false)
+  // Per-channel output mode. Default false = color signal (e.g. R emits color(r,0,0)).
+  // Toggle "scl" to switch that channel to a scalar(channel*100) output.
+  const [rScl, setRScl] = useState(init?.rScl ?? false)
+  const [gScl, setGScl] = useState(init?.gScl ?? false)
+  const [bScl, setBScl] = useState(init?.bScl ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
-  const rOscRef = useRef(true)
-  const gOscRef = useRef(true)
-  const bOscRef = useRef(true)
-  const rClrRef = useRef(false)
-  const gClrRef = useRef(false)
-  const bClrRef = useRef(false)
+  const rOscRef = useRef(false)
+  const gOscRef = useRef(false)
+  const bOscRef = useRef(false)
+  const rSclRef = useRef(false)
+  const gSclRef = useRef(false)
+  const bSclRef = useRef(false)
   const rRateRef = useRef(30)
   const gRateRef = useRef(50)
   const bRateRef = useRef(70)
@@ -98,9 +100,9 @@ export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
   rOscRef.current = rOsc
   gOscRef.current = gOsc
   bOscRef.current = bOsc
-  rClrRef.current = rClr
-  gClrRef.current = gClr
-  bClrRef.current = bClr
+  rSclRef.current = rScl
+  gSclRef.current = gScl
+  bSclRef.current = bScl
   rRateRef.current = rRate
   gRateRef.current = gRate
   bRateRef.current = bRate
@@ -111,7 +113,7 @@ export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
   const clkConn = cp.has('clk')
 
   const saveStateRef = useRef({})
-  saveStateRef.current = { rRate, gRate, bRate, rOsc, gOsc, bOsc, rClr, gClr, bClr }
+  saveStateRef.current = { rRate, gRate, bRate, rOsc, gOsc, bOsc, rScl, gScl, bScl }
 
   useModule({
     id,
@@ -123,9 +125,9 @@ export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
       clk: { type: 'scalar' },
     },
     outputs: {
-      r: { type: 'scalar' },
-      g: { type: 'scalar' },
-      b: { type: 'scalar' },
+      r: { type: 'color' },
+      g: { type: 'color' },
+      b: { type: 'color' },
       out: { type: 'color' },
     },
     process: (inputs, dt, t) => {
@@ -154,9 +156,9 @@ export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
       const g = ch(inputs.g, gRateRef.current, gOscRef.current, syncGRef.current.phase)
       const b = ch(inputs.b, bRateRef.current, bOscRef.current, syncBRef.current.phase)
 
-      const rOut = rClrRef.current ? color(r, 0, 0) : scalar(r * 100)
-      const gOut = gClrRef.current ? color(0, g, 0) : scalar(g * 100)
-      const bOut = bClrRef.current ? color(0, 0, b) : scalar(b * 100)
+      const rOut = rSclRef.current ? scalar(r * 100) : color(r, 0, 0)
+      const gOut = gSclRef.current ? scalar(g * 100) : color(0, g, 0)
+      const bOut = bSclRef.current ? scalar(b * 100) : color(0, 0, b)
       const out = color(r, g, b)
 
       rOutRef.current = rOut
@@ -167,5 +169,5 @@ export default function RGBOscillatorModule({ id = 'rgb1', init, preview }) {
     },
   })
 
-  return <RGBOscillatorPanel rRate={rRate} gRate={gRate} bRate={bRate} rOsc={rOsc} gOsc={gOsc} bOsc={bOsc} rClr={rClr} gClr={gClr} bClr={bClr} enabled={enabled} onToggle={() => setEnabled(!enabled)} onRRateChange={setRRate} onGRateChange={setGRate} onBRateChange={setBRate} onROscChange={setROsc} onGOscChange={setGOsc} onBOscChange={setBOsc} onRClrChange={setRClr} onGClrChange={setGClr} onBClrChange={setBClr} id={id} rConn={rConn} rInRef={rInRef} gConn={gConn} gInRef={gInRef} bConn={bConn} bInRef={bInRef} clkConn={clkConn} clkRef={clkRef} rOutRef={rOutRef} gOutRef={gOutRef} bOutRef={bOutRef} outRef={outRef} />
+  return <RGBOscillatorPanel rRate={rRate} gRate={gRate} bRate={bRate} rOsc={rOsc} gOsc={gOsc} bOsc={bOsc} rScl={rScl} gScl={gScl} bScl={bScl} enabled={enabled} onToggle={() => setEnabled(!enabled)} onRRateChange={setRRate} onGRateChange={setGRate} onBRateChange={setBRate} onROscChange={setROsc} onGOscChange={setGOsc} onBOscChange={setBOsc} onRSclChange={setRScl} onGSclChange={setGScl} onBSclChange={setBScl} id={id} rConn={rConn} rInRef={rInRef} gConn={gConn} gInRef={gInRef} bConn={bConn} bInRef={bInRef} clkConn={clkConn} clkRef={clkRef} rOutRef={rOutRef} gOutRef={gOutRef} bOutRef={bOutRef} outRef={outRef} />
 }

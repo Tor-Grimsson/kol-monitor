@@ -128,20 +128,28 @@ function step(src, dst, cols, rows, rule, wrap) {
   }
 }
 
-function gridToPoints(grid, cols, rows) {
+function gridToPoints(grid, cols, rows, zoom = 0) {
   const pts = []
   const edges = []
   const margin = 0.02
   const cellW = (1 - margin * 2) / cols
   const cellH = (1 - margin * 2) / rows
-  const inset = 0.15
+  // Visible gap between adjacent cells so 2x2 / 3x3 clusters read as distinct blocks,
+  // not merged blobs. Matches Life preview's ~1-px per cluster separation.
+  const inset = 0.18
+  const scale = 1 + (zoom / 100) * 3
+  const hw = cellW * scale * (1 - inset) * 0.5
+  const hh = cellH * scale * (1 - inset) * 0.5
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       if (!grid[y * cols + x]) continue
-      const cx = margin + (x + 0.5) * cellW
-      const cy = margin + (y + 0.5) * cellH
-      const hw = cellW * (1 - inset) * 0.5
-      const hh = cellH * (1 - inset) * 0.5
+      const cx0 = margin + (x + 0.5) * cellW
+      const cy0 = margin + (y + 0.5) * cellH
+      // Scale around [0.5, 0.5] to match drawLife preview.
+      const cx = 0.5 + (cx0 - 0.5) * scale
+      const cy = 0.5 + (cy0 - 0.5) * scale
+      // Skip cells fully outside the [0, 1] unit square.
+      if (cx + hw < 0 || cx - hw > 1 || cy + hh < 0 || cy - hh > 1) continue
       const base = pts.length
       pts.push({ x: cx - hw, y: cy - hh })
       pts.push({ x: cx + hw, y: cy - hh })
@@ -182,7 +190,7 @@ function LifePanel({
   enabled, onToggle, id,
   onWrapChange, onShowChange, onDensityChange, onSizeChange, onSpeedChange, onRuleChange, onZoomChange,
   onSeedA, onSeedB,
-  dnsConn, dnsRef, szConn, szRef, spdConn, spdRef, ruleConn, ruleRef,
+  zoomConn, zoomRef, dnsConn, dnsRef, resConn, resRef, spdConn, spdRef, ruleConn, ruleRef,
   clkConn, clkRef, rstConn, rstRef, clrConn, clrRef, outRef,
 }) {
   return (
@@ -211,9 +219,9 @@ function LifePanel({
 
         {/* Knobs */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
-          <CvKnob port="zoom" moduleId={id} value={zoom} onChange={onZoomChange} label="zoom" direction="vertical" />
+          <CvKnob port="zoom" moduleId={id} active={zoomConn} signalRef={zoomRef} value={zoom} onChange={onZoomChange} label="zoom" direction="vertical" />
           <CvKnob port="dns" moduleId={id} active={dnsConn} signalRef={dnsRef} value={density} onChange={onDensityChange} label="dns" direction="vertical" />
-          <CvKnob port="res" moduleId={id} active={szConn} signalRef={szRef} value={size} onChange={onSizeChange} label="res" direction="vertical" />
+          <CvKnob port="res" moduleId={id} active={resConn} signalRef={resRef} value={size} onChange={onSizeChange} label="res" direction="vertical" />
           <CvKnob port="spd" moduleId={id} active={spdConn} signalRef={spdRef} value={speed} onChange={onSpeedChange} label="spd" direction="vertical" />
           <CvKnob port="rule" moduleId={id} active={ruleConn} signalRef={ruleRef} value={ruleVal} onChange={onRuleChange} label="rule" direction="vertical" />
         </div>
@@ -245,7 +253,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
     canvasRef={{ current: null }} wrap={true} show={true} density={30} size={50} speed={50} ruleVal={44} ruleName="Life" zoom={0}
     enabled={false} onToggle={() => {}} id={id}
     onWrapChange={() => {}} onShowChange={() => {}} onDensityChange={() => {}} onSizeChange={() => {}} onSpeedChange={() => {}} onRuleChange={() => {}} onZoomChange={() => {}} onSeedA={() => {}} onSeedB={() => {}}
-    dnsConn={false} dnsRef={{ current: null }} szConn={false} szRef={{ current: null }}
+    zoomConn={false} zoomRef={{ current: null }} dnsConn={false} dnsRef={{ current: null }} resConn={false} resRef={{ current: null }}
     spdConn={false} spdRef={{ current: null }} ruleConn={false} ruleRef={{ current: null }}
     clkConn={false} clkRef={{ current: null }} rstConn={false} rstRef={{ current: null }}
     clrConn={false} clrRef={{ current: null }} outRef={{ current: null }}
@@ -279,14 +287,17 @@ export default function LifeModule({ id = 'life1', init, preview }) {
 
   const canvasRef = useRef(null)
   const outRef = useRef(null)
+  const zoomCvRef = useRef(null)
   const dnsCvRef = useRef(null)
-  const szCvRef = useRef(null)
+  const resCvRef = useRef(null)
   const spdCvRef = useRef(null)
   const ruleCvRef = useRef(null)
   const clkCvRef = useRef(null)
   const rstCvRef = useRef(null)
   const clrCvRef = useRef(null)
   const clrColorRef = useRef(null)
+  // Tracks the CV-merged zoom value so the preview canvas reflects modulation, not just the knob.
+  const effectiveZoomRef = useRef(50)
 
   enabledRef.current = enabled
   showRef.current = show
@@ -304,8 +315,9 @@ export default function LifeModule({ id = 'life1', init, preview }) {
     setRuleVal(Math.round(Math.round(v / step) * step))
   }
 
+  const zoomConn = cp.has('zoom')
   const dnsConn = cp.has('dns')
-  const szConn = cp.has('sz')
+  const resConn = cp.has('res')
   const spdConn = cp.has('spd')
   const ruleConn = cp.has('rule')
   const clkConn = cp.has('clk')
@@ -321,7 +333,8 @@ export default function LifeModule({ id = 'life1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      dns: { type: 'scalar', cv: 'offset' }, sz: { type: 'scalar', cv: 'offset' }, spd: { type: 'scalar', cv: 'offset' },
+      zoom: { type: 'scalar', cv: 'offset' },
+      dns: { type: 'scalar', cv: 'offset' }, res: { type: 'scalar', cv: 'offset' }, spd: { type: 'scalar', cv: 'offset' },
       rule: { type: 'scalar', cv: 'offset' }, clk: { type: 'scalar' }, rst: { type: 'scalar' },
       clr: { type: 'color' },
     },
@@ -329,16 +342,19 @@ export default function LifeModule({ id = 'life1', init, preview }) {
     process: (inputs, dt) => {
       if (!enabledRef.current) { outRef.current = null; return { out: null } }
 
+      zoomCvRef.current = inputs.zoom
       dnsCvRef.current = inputs.dns
-      szCvRef.current = inputs.sz
+      resCvRef.current = inputs.res
       spdCvRef.current = inputs.spd
       ruleCvRef.current = inputs.rule
       clkCvRef.current = inputs.clk
       rstCvRef.current = inputs.rst
       clrCvRef.current = inputs.clr
 
+      const vZoom = readCv(inputs.zoom, zoomRef.current)
+      effectiveZoomRef.current = vZoom
       const vDensity = readCv(inputs.dns, densityRef.current) / 100
-      const vSize = 8 + Math.round((readCv(inputs.sz, sizeRef.current) / 100) * 248)
+      const vSize = 8 + Math.round((readCv(inputs.res, sizeRef.current) / 100) * 248)
       const vSpeed = readCv(inputs.spd, speedRef.current) / 50
       const vRule = getRule(readCv(inputs.rule, ruleRef.current))
 
@@ -415,11 +431,16 @@ export default function LifeModule({ id = 'life1', init, preview }) {
 
       // Output points
       if (gridRef.current) {
-        const { pts, edges } = gridToPoints(gridRef.current, cols, rows)
+        const { pts, edges } = gridToPoints(gridRef.current, cols, rows, vZoom)
         const out = points(pts, edges)
         out.fill = true
-        out.aspectLock = true
-        if (inputs.clr?.type === 'color') out.color = inputs.clr.value
+        // Crisp blocks — skip the pen's round-capped stroke that was blooming each cell.
+        out.stroke = false
+        // Default to Life's preview green (#2ecc71) so downstream displays
+        // match the in-module canvas unless CLR overrides.
+        out.color = inputs.clr?.type === 'color'
+          ? inputs.clr.value
+          : { r: 0.18, g: 0.8, b: 0.44, a: 1 }
         outRef.current = out
         return { out }
       }
@@ -445,7 +466,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
 
     if (gridRef.current && enabledRef.current && showRef.current) {
       const { cols, rows } = gridDimsRef.current
-      drawLife(ctx, gridRef.current, cols, rows, w, h, clrColorRef.current, zoomRef.current)
+      drawLife(ctx, gridRef.current, cols, rows, w, h, clrColorRef.current, effectiveZoomRef.current)
     }
   })
 
@@ -455,7 +476,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
     enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id}
     onWrapChange={setWrap} onShowChange={setShow} onDensityChange={setDensity} onSizeChange={setSize}
     onSpeedChange={setSpeed} onRuleChange={handleRule} onZoomChange={setZoom} onSeedA={handleSeedA} onSeedB={handleSeedB}
-    dnsConn={dnsConn} dnsRef={dnsCvRef} szConn={szConn} szRef={szCvRef}
+    zoomConn={zoomConn} zoomRef={zoomCvRef} dnsConn={dnsConn} dnsRef={dnsCvRef} resConn={resConn} resRef={resCvRef}
     spdConn={spdConn} spdRef={spdCvRef} ruleConn={ruleConn} ruleRef={ruleCvRef}
     clkConn={clkConn} clkRef={clkCvRef} rstConn={rstConn} rstRef={rstCvRef}
     clrConn={clrConn} clrRef={clrCvRef} outRef={outRef}
