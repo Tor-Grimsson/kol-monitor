@@ -39,7 +39,7 @@ function MonitorPanel({ canvasRef, overlay, onOverlayChange, enabled, onToggle, 
           <LabeledJack type="in" port="a" moduleId={id} active={aConnected} signalRef={inputARef} label="a" />
           <LabeledJack type="in" port="b" moduleId={id} active={bConnected} signalRef={inputBRef} label="b" />
           <LabeledJack type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" />
-          <FlipToggle value={overlay} onChange={onOverlayChange} labelA="spl" labelB="ovr" />
+          <FlipToggle value={overlay} onChange={onOverlayChange} labelA="ovr" labelB="spl" />
           <LabeledJack type="out" port="a" moduleId={id} signalRef={outARef} label="a" />
           <LabeledJack type="out" port="b" moduleId={id} signalRef={outBRef} label="b" />
         </div>

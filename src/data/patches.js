@@ -50,11 +50,11 @@ export const patches = {
       { height: '3u', modules: [
         { type: 'transform', id: 'xform1' }, { type: 'maths', id: 'maths1' }, { type: 'filter', id: 'filt1' },
         { type: 'radialGen', id: 'radial1' }, { type: 'modGen', id: 'modgen1' }, { type: 'monitor', id: 'mon1' },
-        { type: 'magneto', id: 'mag1' }, { type: 'kaleidoscope', id: 'kal1' },
+        { type: 'magneto', id: 'mag1' },
       ]},
       { height: '3u', modules: [
         { type: 'generator', id: 'gen1' }, { type: 'generator2', id: 'gen2' }, { type: 'dither', id: 'dith1' },
-        { type: 'console', id: 'con1' }, { type: 'life', id: 'life1' },
+        { type: 'console', id: 'con1' }, { type: 'life', id: 'life1' }, { type: 'kaleidoscope', id: 'kal1' },
       ]},
       { height: '1u', modules: [
         { type: 'patch', id: 'patch2' }, { type: 'switch', id: 'sw1' }, { type: 'ringMod', id: 'ring1' },
@@ -111,26 +111,26 @@ export const patches = {
     ],
     connections: [
       // Two rhythms into Logic: clock (steady) XOR LFO (varying) = complex pattern
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'xor', toPort: 'a' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'xor', toPort: 'a' },
       { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'xor', toPort: 'b' },
       // AND of same signals = different pattern — drives gen2 density
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'and', toPort: 'a' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'and', toPort: 'a' },
       { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'and', toPort: 'b' },
       { fromModuleId: 'and', fromPort: 'out', toModuleId: 'gen2', toPort: 'dens' },
       // XOR → slew (smooth the 0/100 jumps into gradual transitions)
-      { fromModuleId: 'xor', fromPort: 'out', toModuleId: 'slew', toPort: 'a' },
+      { fromModuleId: 'xor', fromPort: 'out', toModuleId: 'slew', toPort: 'sig1' },
       // Slewed logic → scale/offset → gen1 freq (pattern drives shape complexity)
-      { fromModuleId: 'slew', fromPort: 'out', toModuleId: 'scl', toPort: 'in' },
+      { fromModuleId: 'slew', fromPort: 'out1', toModuleId: 'scl', toPort: 'in' },
       { fromModuleId: 'scl', fromPort: 'out', toModuleId: 'gen1', toPort: 'freq' },
       // XOR gates the switch: alternates which generator is visible
-      { fromModuleId: 'xor', fromPort: 'out', toModuleId: 'sw', toPort: 'cv' },
-      { fromModuleId: 'gen1', fromPort: 'out', toModuleId: 'sw', toPort: 'a' },
-      { fromModuleId: 'gen2', fromPort: 'out', toModuleId: 'sw', toPort: 'b' },
+      { fromModuleId: 'xor', fromPort: 'out', toModuleId: 'sw', toPort: 'cv1' },
+      { fromModuleId: 'gen1', fromPort: 'out', toModuleId: 'sw', toPort: 'a1' },
+      { fromModuleId: 'gen2', fromPort: 'out', toModuleId: 'sw', toPort: 'b1' },
       // Slewed logic → pen thickness (lines thicken during transitions)
-      { fromModuleId: 'slew', fromPort: 'out', toModuleId: 'pen', toPort: 'tk' },
+      { fromModuleId: 'slew', fromPort: 'out1', toModuleId: 'pen', toPort: 'tk' },
       // Display
-      { fromModuleId: 'sw', fromPort: 'out', toModuleId: 'mon', toPort: 'a' },
-      { fromModuleId: 'sw', fromPort: 'out', toModuleId: 'out', toPort: 'a' },
+      { fromModuleId: 'sw', fromPort: 'out1', toModuleId: 'mon', toPort: 'a' },
+      { fromModuleId: 'sw', fromPort: 'out1', toModuleId: 'out', toPort: 'a' },
       { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'out', toPort: 'pen' },
       { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'mon', toPort: 'pen' },
     ],
@@ -157,7 +157,7 @@ export const patches = {
     ],
     connections: [
       // Clock triggers envelope
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'env', toPort: 'gate' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'env', toPort: 'gate' },
       // LFO1 (slow) → transform rZ rotation — whole thing spins
       { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'xfm', toPort: 'rz' },
       // LFO2 (faster) → delay time CV — echo spacing shifts over time
@@ -205,37 +205,15 @@ export const patches = {
         { type: 'sequencer', id: 'seq' },
         { type: 'maths', id: 'slew' },
         { type: 'waveform', id: 'wave' },
-        { type: 'monitor', id: 'mon' },
+        { type: 'monitor', id: 'mon', state: { overlay: true } },
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'seq', toPort: 'clock' },
-      { fromModuleId: 'seq', fromPort: 'out', toModuleId: 'slew', toPort: 'a' },
-      { fromModuleId: 'slew', fromPort: 'out', toModuleId: 'wave', toPort: 'freq' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'seq', toPort: 'clock' },
+      { fromModuleId: 'seq', fromPort: 'out', toModuleId: 'slew', toPort: 'sig1' },
+      { fromModuleId: 'slew', fromPort: 'out1', toModuleId: 'wave', toPort: 'freq' },
       { fromModuleId: 'wave', fromPort: 'out', toModuleId: 'mon', toPort: 'a' },
       { fromModuleId: 'seq', fromPort: 'out', toModuleId: 'mon', toPort: 'b' },
-    ],
-  },
-
-  // Rhythmic burst — envelope shapes waveform amplitude, clock triggers envelope
-  // Visual: waveform appears in bursts, grows and decays with ADSR shape
-  'burst': {
-    rows: [
-      UTIL_ROW,
-      { height: '3u', modules: [
-        { type: 'clock', id: 'clk' },
-        { type: 'envelope', id: 'env' },
-        { type: 'waveform', id: 'wave' },
-        { type: 'pen', id: 'pen' },
-        { type: 'monitor', id: 'mon' },
-      ]},
-    ],
-    connections: [
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'env', toPort: 'gate' },
-      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'wave', toPort: 'amp' },
-      { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'mon', toPort: 'pen' },
-      { fromModuleId: 'wave', fromPort: 'out', toModuleId: 'mon', toPort: 'a' },
-      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'mon', toPort: 'b' },
     ],
   },
 
@@ -254,7 +232,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'wire', toPort: 'scale' },
+      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'wire', toPort: 'scl' },
       { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'out', toPort: 'pen' },
       { fromModuleId: 'wire', fromPort: 'out', toModuleId: 'out', toPort: 'a' },
     ],
@@ -292,10 +270,10 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'env', toPort: 'gate' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'env', toPort: 'gate' },
       { fromModuleId: 'env', fromPort: 'out', toModuleId: 'wire', toPort: 'rx' },
       { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'wire', toPort: 'ry' },
-      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'wire', toPort: 'scale' },
+      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'wire', toPort: 'scl' },
       { fromModuleId: 'pen', fromPort: 'out', toModuleId: 'out', toPort: 'pen' },
       { fromModuleId: 'wire', fromPort: 'out', toModuleId: 'out', toPort: 'a' },
     ],
@@ -314,7 +292,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'seq', toPort: 'clock' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'seq', toPort: 'clock' },
       { fromModuleId: 'seq', fromPort: 'out', toModuleId: 'qt', toPort: 'in' },
       { fromModuleId: 'qt', fromPort: 'out', toModuleId: 'wire', toPort: 'rx' },
       { fromModuleId: 'seq', fromPort: 'out', toModuleId: 'wire', toPort: 'ry' },
@@ -336,12 +314,12 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'mult', toPort: 'in' },
-      { fromModuleId: 'mult', fromPort: 'a', toModuleId: 'rgb', toPort: 'r' },
-      { fromModuleId: 'mult', fromPort: 'b', toModuleId: 'scl', toPort: 'in' },
+      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'mult', toPort: 'in1' },
+      { fromModuleId: 'mult', fromPort: '1a', toModuleId: 'rgb', toPort: 'r' },
+      { fromModuleId: 'mult', fromPort: '1b', toModuleId: 'scl', toPort: 'in' },
       { fromModuleId: 'scl', fromPort: 'out', toModuleId: 'rgb', toPort: 'g' },
-      { fromModuleId: 'mult', fromPort: 'c', toModuleId: 'att', toPort: 'in' },
-      { fromModuleId: 'att', fromPort: 'out', toModuleId: 'rgb', toPort: 'b' },
+      { fromModuleId: 'mult', fromPort: '1c', toModuleId: 'att', toPort: 'a' },
+      { fromModuleId: 'att', fromPort: 'a', toModuleId: 'rgb', toPort: 'b' },
       { fromModuleId: 'rgb', fromPort: 'out', toModuleId: 'out', toPort: 'a' },
     ],
   },
@@ -360,13 +338,13 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'seq', toPort: 'clock' },
-      { fromModuleId: 'seq', fromPort: 'out', toModuleId: 'slew', toPort: 'a' },
-      { fromModuleId: 'slew', fromPort: 'out', toModuleId: 'mult', toPort: 'in' },
-      { fromModuleId: 'mult', fromPort: 'a', toModuleId: 'rgb', toPort: 'r' },
-      { fromModuleId: 'mult', fromPort: 'b', toModuleId: 'scl', toPort: 'in' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'seq', toPort: 'clock' },
+      { fromModuleId: 'seq', fromPort: 'out', toModuleId: 'slew', toPort: 'sig1' },
+      { fromModuleId: 'slew', fromPort: 'out1', toModuleId: 'mult', toPort: 'in1' },
+      { fromModuleId: 'mult', fromPort: '1a', toModuleId: 'rgb', toPort: 'r' },
+      { fromModuleId: 'mult', fromPort: '1b', toModuleId: 'scl', toPort: 'in' },
       { fromModuleId: 'scl', fromPort: 'out', toModuleId: 'rgb', toPort: 'g' },
-      { fromModuleId: 'mult', fromPort: 'c', toModuleId: 'rgb', toPort: 'b' },
+      { fromModuleId: 'mult', fromPort: '1c', toModuleId: 'rgb', toPort: 'b' },
       { fromModuleId: 'rgb', fromPort: 'out', toModuleId: 'out', toPort: 'a' },
     ],
   },
@@ -390,12 +368,12 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'sh1', toPort: 'trig' },
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'sh2', toPort: 'trig' },
-      { fromModuleId: 'clk', fromPort: 'div', toModuleId: 'sh3', toPort: 'trig' },
-      { fromModuleId: 'n1', fromPort: 'out', toModuleId: 'sh1', toPort: 'in' },
-      { fromModuleId: 'n2', fromPort: 'out', toModuleId: 'sh2', toPort: 'in' },
-      { fromModuleId: 'n3', fromPort: 'out', toModuleId: 'sh3', toPort: 'in' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'sh1', toPort: 'trig' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'sh2', toPort: 'trig' },
+      { fromModuleId: 'clk', fromPort: 'd2', toModuleId: 'sh3', toPort: 'trig' },
+      { fromModuleId: 'n1', fromPort: 'white', toModuleId: 'sh1', toPort: 'in' },
+      { fromModuleId: 'n2', fromPort: 'white', toModuleId: 'sh2', toPort: 'in' },
+      { fromModuleId: 'n3', fromPort: 'white', toModuleId: 'sh3', toPort: 'in' },
       { fromModuleId: 'sh1', fromPort: 'out', toModuleId: 'rgb', toPort: 'r' },
       { fromModuleId: 'sh2', fromPort: 'out', toModuleId: 'rgb', toPort: 'g' },
       { fromModuleId: 'sh3', fromPort: 'out', toModuleId: 'rgb', toPort: 'b' },
@@ -403,23 +381,40 @@ export const patches = {
     ],
   },
 
-  // Color matrix — three different sources routed through SMX3
-  // Visual: complex color mixing from independent signal sources
+  // Color matrix — LFO/ramp/noise routed through SMX3, mixed, then dithered
+  // Visual: radial dithered field driven by layered modulation sources
   'matrix': {
     rows: [
-      { height: '1u', modules: [...UTIL_ROW.modules, { type: 'ramp', id: 'ramp' }, { type: 'noise', id: 'noise' }] },
+      { height: '1u', modules: [
+        { type: 'power', id: 'pwr1', offset: 0 },
+        { type: 'perf', id: 'perf1', offset: 4 },
+        { type: 'patch', id: 'patch1', offset: 8 },
+        { type: 'ramp', id: 'ramp', offset: 14, state: { rate: 20, shape: 'up' } },
+        { type: 'noise', id: 'noise', offset: 20, state: { rate: 50, slewTime: 87, randomMode: true, trackMode: true } },
+      ]},
       { height: '3u', modules: [
-        { type: 'lfo', id: 'lfo' },
-        { type: 'smx3', id: 'smx' },
-        { type: 'output', id: 'out' },
+        { type: 'lfo', id: 'lfo', offset: 0, state: { rate: 3, depth: 100, offset: 0, shape: 'sin' } },
+        { type: 'smx3', id: 'smx', offset: 6, state: { k11: 73, k12: 73, k13: 81, k21: 66, k22: 57, k23: 50, k31: 69, k32: 33, k33: 80 } },
+        { type: 'output', id: 'out', offset: 14, state: { bg: 0, trails: 0 } },
+        { type: 'dither', id: 'dither_1', offset: 30, state: { isEngine: true, mode: 'radial', shape: 'oct', isAscii: false, asciiSet: ['dot', 'pipe', 'x', 'hash', 'block', 'back'], cellCount: 50, gap: 10, scale: 89, contrast: 50, angle: 0, intensity: 50, invert: false, animate: false, fill: true, speed: 50, ray: true, blur: 0 } },
+        { type: 'mixer', id: 'mixer_3', offset: 44, state: { la: 100, lb: 75, lc: 95, ld: 100 } },
       ]},
     ],
     connections: [
       { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'smx', toPort: 'a' },
       { fromModuleId: 'ramp', fromPort: 'out', toModuleId: 'smx', toPort: 'b' },
-      { fromModuleId: 'noise', fromPort: 'out', toModuleId: 'smx', toPort: 'c' },
-      { fromModuleId: 'smx', fromPort: 'out', toModuleId: 'out', toPort: 'a' },
+      { fromModuleId: 'noise', fromPort: 'white', toModuleId: 'smx', toPort: 'c' },
+      { fromModuleId: 'smx', fromPort: 'b', toModuleId: 'mixer_3', toPort: 'a' },
+      { fromModuleId: 'mixer_3', fromPort: 'out', toModuleId: 'dither_1', toPort: 'in' },
+      { fromModuleId: 'dither_1', fromPort: 'out', toModuleId: 'out', toPort: 'd' },
+      { fromModuleId: 'smx', fromPort: 'g', toModuleId: 'mixer_3', toPort: 'b' },
+      { fromModuleId: 'smx', fromPort: 'r', toModuleId: 'mixer_3', toPort: 'c' },
+      { fromModuleId: 'noise', fromPort: 'hold', toModuleId: 'dither_1', toPort: 'gap' },
+      { fromModuleId: 'noise', fromPort: 'slew', toModuleId: 'dither_1', toPort: 'size' },
+      { fromModuleId: 'noise', fromPort: 'pink', toModuleId: 'dither_1', toPort: 'scl' },
+      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'noise', toPort: 'slewIn' },
     ],
+    on: ['ramp', 'noise', 'lfo', 'smx', 'out', 'dither_1', 'mixer_3'],
   },
 
   // --- RHYTHM PATCHES ---
@@ -437,9 +432,9 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'div', toPort: 'in' },
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'log', toPort: 'a' },
-      { fromModuleId: 'div', fromPort: 'out', toModuleId: 'log', toPort: 'b' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'div', toPort: 'in' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'log', toPort: 'a' },
+      { fromModuleId: 'div', fromPort: 'd2', toModuleId: 'log', toPort: 'b' },
       { fromModuleId: 'log', fromPort: 'out', toModuleId: 'env', toPort: 'gate' },
       { fromModuleId: 'env', fromPort: 'out', toModuleId: 'mon', toPort: 'a' },
       { fromModuleId: 'log', fromPort: 'out', toModuleId: 'mon', toPort: 'b' },
@@ -461,10 +456,10 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'env', toPort: 'gate' },
-      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'vca', toPort: 'in' },
-      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'vca', toPort: 'cv' },
-      { fromModuleId: 'vca', fromPort: 'out', toModuleId: 'mon', toPort: 'a' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'env', toPort: 'gate' },
+      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'vca', toPort: 'in1' },
+      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'vca', toPort: 'cv1' },
+      { fromModuleId: 'vca', fromPort: 'out1', toModuleId: 'mon', toPort: 'a' },
       { fromModuleId: 'env', fromPort: 'out', toModuleId: 'mon', toPort: 'b' },
     ],
   },
@@ -519,7 +514,7 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'noise', fromPort: 'out', toModuleId: 'verb', toPort: 'in' },
+      { fromModuleId: 'noise', fromPort: 'white', toModuleId: 'verb', toPort: 'in' },
       { fromModuleId: 'verb', fromPort: 'out', toModuleId: 'rgb', toPort: 'r' },
       { fromModuleId: 'verb', fromPort: 'out', toModuleId: 'rgb', toPort: 'g' },
       { fromModuleId: 'verb', fromPort: 'out', toModuleId: 'rgb', toPort: 'b' },
@@ -557,8 +552,8 @@ export const patches = {
       ]},
     ],
     connections: [
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'sh', toPort: 'trig' },
-      { fromModuleId: 'noise', fromPort: 'out', toModuleId: 'sh', toPort: 'in' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'sh', toPort: 'trig' },
+      { fromModuleId: 'noise', fromPort: 'white', toModuleId: 'sh', toPort: 'in' },
       { fromModuleId: 'sh', fromPort: 'out', toModuleId: 'qt', toPort: 'in' },
       { fromModuleId: 'qt', fromPort: 'out', toModuleId: 'mon', toPort: 'a' },
       { fromModuleId: 'sh', fromPort: 'out', toModuleId: 'mon', toPort: 'b' },
@@ -614,24 +609,24 @@ export const patches = {
     ],
     connections: [
       // Timing
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'seq', toPort: 'clock' },
-      { fromModuleId: 'clk', fromPort: 'out', toModuleId: 'div', toPort: 'in' },
-      { fromModuleId: 'div', fromPort: 'out', toModuleId: 'env', toPort: 'gate' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'seq', toPort: 'clock' },
+      { fromModuleId: 'clk', fromPort: 'd1', toModuleId: 'div', toPort: 'in' },
+      { fromModuleId: 'div', fromPort: 'd2', toModuleId: 'env', toPort: 'gate' },
       // Seq → slew → waveshaper chain
-      { fromModuleId: 'seq', fromPort: 'out', toModuleId: 'slew', toPort: 'a' },
-      { fromModuleId: 'slew', fromPort: 'out', toModuleId: 'wshp', toPort: 'in' },
+      { fromModuleId: 'seq', fromPort: 'out', toModuleId: 'slew', toPort: 'sig1' },
+      { fromModuleId: 'slew', fromPort: 'out1', toModuleId: 'wshp', toPort: 'in' },
       // Split shaped signal
-      { fromModuleId: 'wshp', fromPort: 'out', toModuleId: 'mult', toPort: 'in' },
-      { fromModuleId: 'mult', fromPort: 'a', toModuleId: 'smx', toPort: 'a' },
-      { fromModuleId: 'mult', fromPort: 'b', toModuleId: 'wire', toPort: 'rx' },
+      { fromModuleId: 'wshp', fromPort: 'out', toModuleId: 'mult', toPort: 'in1' },
+      { fromModuleId: 'mult', fromPort: '1a', toModuleId: 'smx', toPort: 'a' },
+      { fromModuleId: 'mult', fromPort: '1b', toModuleId: 'wire', toPort: 'rx' },
       // LFO as second color source
       { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'smx', toPort: 'b' },
       // Envelope → VCA → third color source
-      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'vca', toPort: 'cv' },
-      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'vca', toPort: 'in' },
-      { fromModuleId: 'vca', fromPort: 'out', toModuleId: 'smx', toPort: 'c' },
+      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'vca', toPort: 'cv1' },
+      { fromModuleId: 'lfo', fromPort: 'out', toModuleId: 'vca', toPort: 'in1' },
+      { fromModuleId: 'vca', fromPort: 'out1', toModuleId: 'smx', toPort: 'c' },
       // Envelope → wireframe scale
-      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'wire', toPort: 'scale' },
+      { fromModuleId: 'env', fromPort: 'out', toModuleId: 'wire', toPort: 'scl' },
       // Display
       { fromModuleId: 'smx', fromPort: 'out', toModuleId: 'out', toPort: 'a' },
       { fromModuleId: 'wire', fromPort: 'out', toModuleId: 'out', toPort: 'b' },
@@ -779,7 +774,7 @@ export const patches = {
     ],
     connections: [
       { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'gen2', toPort: 'clk' },
-      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'gen2', toPort: 'freq' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'gen2', toPort: 'p1' },
       { fromModuleId: 'gen2', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
       { fromModuleId: 'gen2', fromPort: 'color', toModuleId: 'mon1', toPort: 'b' },
       { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
@@ -961,17 +956,6 @@ export const patches = {
       { fromModuleId: 'smx1', fromPort: 'out', toModuleId: 'mon1', toPort: 'a' },
       { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'mon1', toPort: 'pen' },
     ],
-  },
-
-  // Empty rack with just utilities
-  // Starting point for building new patches
-  'starter': {
-    tags: ['showcase', 'minimal'],
-    description: 'Empty rack with basic utilities.',
-    rows: [
-      UTIL_ROW,
-    ],
-    connections: [],
   },
 
   // --- RECORDER PATCHES ---
