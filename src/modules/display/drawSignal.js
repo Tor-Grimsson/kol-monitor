@@ -83,9 +83,9 @@ export function drawScalar(ctx, history, writeIdx, bufLen, x, y, w, h, p, bipola
 
 // Color: filled rectangle
 export function drawColor(ctx, signal, x, y, w, h, p) {
-  const { r, g, b, a } = signal.value
+  const { a } = signal.value
   ctx.globalAlpha = (p.opacity / 100) * a
-  ctx.fillStyle = `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`
+  ctx.fillStyle = rgbString(signal.value)
   ctx.fillRect(x + 2, y + 2, w - 4, h - 4)
   resetPen(ctx)
 }
@@ -101,8 +101,7 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
 
   // Background fill
   if (signal.bg) {
-    const bg = signal.bg
-    ctx.fillStyle = `rgb(${Math.round(bg.r * 255)},${Math.round(bg.g * 255)},${Math.round(bg.b * 255)})`
+    ctx.fillStyle = rgbString(signal.bg)
     ctx.fillRect(x, y, w, h)
   }
 
@@ -186,7 +185,7 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
 
     if (signal.edges && signal.edges.length > 0) {
       const color = signal.color
-        ? `rgb(${Math.round(signal.color.r * 255)},${Math.round(signal.color.g * 255)},${Math.round(signal.color.b * 255)})`
+        ? rgbString(signal.color)
         : penColor(p, 'strokeWidth' in signal ? '#ffffff' : WIRE_COLOR)
 
       // Fill — trace closed shapes from edges

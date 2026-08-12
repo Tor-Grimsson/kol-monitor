@@ -87,18 +87,27 @@ function hslToRgb(h, s, l) {
   return { r: hue2rgb(p, q, h + 1/3), g: hue2rgb(p, q, h), b: hue2rgb(p, q, h - 1/3) }
 }
 
-function transformPoints(srcPts, srcEdges, rot, scl, jitterX, jitterY, drop) {
+function transformPoints(srcPts, srcEdges, rot, scl, jitterX, jitterY, drop, srcPtsB, frac) {
   if (!srcPts || srcPts.length === 0) return null
   const cos = rot === 0 ? 1 : Math.cos(rot)
   const sin = rot === 0 ? 0 : Math.sin(rot)
+  // Inline tap interpolation: when a bracketing frame with matching topology
+  // is supplied, source coords lerp between the two slots — taps glide instead
+  // of stepping a whole frame at a time. Zero extra allocation.
+  const lerp = !!(srcPtsB && srcPtsB.length === srcPts.length && frac > 0)
   const pts = []
   const edges = []
-  const base = 0
   for (let i = 0; i < srcPts.length; i++) {
     // Random vertex dropout (tape age)
     if (drop > 0 && Math.random() < drop) continue
-    const ox = srcPts[i].x - 0.5
-    const oy = srcPts[i].y - 0.5
+    let sx = srcPts[i].x
+    let sy = srcPts[i].y
+    if (lerp) {
+      sx += (srcPtsB[i].x - sx) * frac
+      sy += (srcPtsB[i].y - sy) * frac
+    }
+    const ox = sx - 0.5
+    const oy = sy - 0.5
     const rx = cos * ox - sin * oy
     const ry = sin * ox + cos * oy
     pts.push({
@@ -118,16 +127,15 @@ function transformPoints(srcPts, srcEdges, rot, scl, jitterX, jitterY, drop) {
 // --- UI ---
 
 function MagnetoPanel({
-  mode, dry, wet, speedPitch, tap,
+  mode, dry, wet, speedPitch,
   recLvl, headLevels, headOn, repeats,
-  fbInf, fbRev, fbFwd, fbPlay, fbPause,
+  fbInf, fbPlay, fbPause,
   lowCut, tapeAge, crinkle, wow, spring, heads, pan,
   scl, ofs,
   transportMode, rev, order, layer, palette, tapMode, tapEditMode,
   enabled, onToggle, id,
   onModeChange, onDryChange, onWetChange, onSpeedPitchChange, onTap,
   onRecLvlChange, onHeadLevelChange, onHeadToggle, onRepeatsChange,
-  onFbInf, onFbRev, onFbFwd, onFbPlay, onFbPause,
   onLowCutChange, onTapeAgeChange, onCrinkleChange, onWowChange, onSpringChange,
   onHeadsChange, onPanChange,
   onSclChange, onOfsChange,
@@ -137,7 +145,7 @@ function MagnetoPanel({
   clk1Ref, clk2Ref, clk3Ref, clk4Ref,
   h1Ref, h2Ref, h3Ref, h4Ref,
   invRef, expRef,
-  clkConn, clkRef, cp,
+  clkConn, clkRef,
 }) {
   return (
     <Module label="Magneto" enabled={enabled} onToggle={onToggle}>
@@ -368,16 +376,15 @@ function MagnetoPanel({
 
 export default function MagnetoModule({ id = 'mag1', init, preview }) {
   if (preview) return <MagnetoPanel
-    mode="echo" dry={50} wet={80} speedPitch={50} tap={false}
+    mode="echo" dry={50} wet={80} speedPitch={50}
     recLvl={80} headLevels={[75, 50, 35, 20]} headOn={[true, true, true, true]} repeats={50}
-    fbInf={false} fbRev={false} fbFwd={false} fbPlay={true} fbPause={false}
+    fbInf={false} fbPlay={true} fbPause={false}
     lowCut={0} tapeAge={0} crinkle={0} wow={0} spring={0}
     scl={50} ofs={0}
     transportMode={false} rev={false} order={0} layer={0} palette={0} tapMode={0} tapEditMode={false}
     enabled={false} onToggle={() => {}} id={id}
     onModeChange={() => {}} onDryChange={() => {}} onWetChange={() => {}} onSpeedPitchChange={() => {}} onTap={() => {}}
     onRecLvlChange={() => {}} onHeadLevelChange={() => {}} onHeadToggle={() => {}} onRepeatsChange={() => {}}
-    onFbInf={() => {}} onFbRev={() => {}} onFbFwd={() => {}} onFbPlay={() => {}} onFbPause={() => {}}
     onLowCutChange={() => {}} onTapeAgeChange={() => {}} onCrinkleChange={() => {}} onWowChange={() => {}} onSpringChange={() => {}}
     heads={0} pan={1} onHeadsChange={() => {}} onPanChange={() => {}}
     onSclChange={() => {}} onOfsChange={() => {}}
@@ -387,7 +394,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
     clk1Ref={{ current: null }} clk2Ref={{ current: null }} clk3Ref={{ current: null }} clk4Ref={{ current: null }}
     h1Ref={{ current: null }} h2Ref={{ current: null }} h3Ref={{ current: null }} h4Ref={{ current: null }}
     invRef={{ current: null }} expRef={{ current: null }}
-    clkConn={false} clkRef={{ current: null }} cp={null}
+    clkConn={false} clkRef={{ current: null }}
   />
 
   const [mode, setMode] = useState(init?.mode ?? 'echo')
@@ -399,7 +406,9 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   const [headOn, setHeadOn] = useState(init?.headOn ?? [true, true, true, true])
   const [repeats, setRepeats] = useState(init?.repeats ?? 50)
   const [fbInf, setFbInf] = useState(init?.fbInf ?? false)
-  const [fbPlay, setFbPlay] = useState(init?.fbPlay ?? true)
+  // fbPlay: record-arm default when recGate is unpatched. Persisted, no UI
+  // setter — recGate (patched) and pause are the live transport controls.
+  const [fbPlay] = useState(init?.fbPlay ?? true)
   const [fbPause, setFbPause] = useState(init?.fbPause ?? false)
   const [lowCut, setLowCut] = useState(init?.lowCut ?? 0)
   const [tapeAge, setTapeAge] = useState(init?.tapeAge ?? 0)
@@ -453,6 +462,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
 
   const bufferRef = useRef(new Array(BUF_SIZE).fill(null))
   const writeHeadRef = useRef(0)
+  const filledRef = useRef(0) // slots written so far, caps at BUF_SIZE — bounds the bracket search
   const tapPhaseRef = useRef(0)
   const prevClkRef = useRef(false)
   const springAccRef = useRef([0, 0, 0, 0]) // per-head spring velocity
@@ -549,8 +559,6 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
     tapPhaseRef.current = 0
   }
   const handleTap = () => recordTap()
-  const handleFbRev = () => setRev(r => !r)
-  const handleFbFwd = () => { writeHeadRef.current = 0; tapPhaseRef.current = 0 } // RESTART per Strymon
   const handleTransportMode = () => setTransportMode(m => !m)
   // Per-head IconButton actions when transportMode is on (per Strymon: head1=inf, 2=rev, 3=restart, 4=pause)
   const handleHeadTransport = (h) => {
@@ -655,16 +663,30 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
         }
         buf[writeHeadRef.current] = { data: recordedInput, t: t }
         writeHeadRef.current = (writeHeadRef.current + 1) % BUF_SIZE
+        filledRef.current = Math.min(filledRef.current + 1, BUF_SIZE)
       }
 
-      // Read the most recent slot whose timestamp is <= targetT (linear scan backward from newest)
-      const readAtTime = (targetT) => {
-        for (let i = 0; i < BUF_SIZE; i++) {
-          const idx = (writeHeadRef.current - 1 - i + BUF_SIZE) % BUF_SIZE
-          const slot = buf[idx]
-          if (slot && slot.t <= targetT) return slot.data
+      // Bracketing read — binary-search the ring by timestamp (slots are
+      // monotonic in write order). Returns the slot at-or-before targetT, the
+      // next-newer slot, and the interpolation fraction between them. Replaces
+      // the O(BUF_SIZE) scan-and-snap: snapping made modulated delays (wow,
+      // spd CV) step a whole frame at a time instead of gliding.
+      const slotAt = (age) => buf[(writeHeadRef.current - 1 - age + BUF_SIZE * 2) % BUF_SIZE]
+      const readBracket = (targetT) => {
+        const n = filledRef.current
+        if (n === 0) return null
+        let lo = 0, hi = n - 1, ans = -1
+        while (lo <= hi) {
+          const mid = (lo + hi) >> 1
+          const s = slotAt(mid)
+          if (s && s.t <= targetT) { ans = mid; hi = mid - 1 } else { lo = mid + 1 }
         }
-        return null
+        if (ans === -1) return null
+        const older = slotAt(ans)
+        if (ans === 0) return { a: older.data, b: null, frac: 0 }
+        const newer = slotAt(ans - 1)
+        const span = newer.t - older.t
+        return { a: older.data, b: newer.data, frac: span > 0 ? (targetT - older.t) / span : 0 }
       }
 
       // EXP — personality scalar, always live (derived from settings, not input)
@@ -700,7 +722,6 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       // Per-head delay taps — each head accumulates all repeats into one group
       const headDelays = HEAD_DELAY_PATTERNS[headsRef.current] || HEAD_DELAY_PATTERNS[0]
       const panSigns = PAN_SIGNS[panRef.current] || PAN_SIGNS[1]
-      const hueRate = lowCutRef.current / 100
       tapPhaseRef.current += dt * spd
 
       // Determine head iteration order based on layer toggle (z-order within wet trails)
@@ -743,27 +764,36 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
             // forward: top band (b=0) = oldest; rev flips
             const delayRatio = revRef.current ? tNorm : (1 - tNorm)
             const targetT = t - delayRatio * slitMaxSeconds
-            const past = readAtTime(targetT)
-            if (!past || past.type !== 'points' || !past.value) continue
+            const br = readBracket(targetT)
+            if (!br || !br.a || br.a.type !== 'points' || !br.a.value) continue
+            const past = br.a
 
             // Build vertex list — keep ALL past vertices (so edges work)
             // Apply composite scale around center (0.5, 0.5) + chromatic offset
-            // Mark which are in-band; only render edges that touch the band
+            // Mark which are in-band; only render edges that touch the band.
+            // Source coords lerp toward the bracketing newer slot when topology
+            // matches — per-band time targets glide instead of snapping.
             const pastValueSlit = past.value
+            const pastB = br.b && br.b.type === 'points' && br.b.value && br.b.value.length === pastValueSlit.length
+              ? br.b.value : null
+            const fr = pastB ? br.frac : 0
             const chromaX = chroma.x
             const chromaY = chroma.y
             const bandPts = new Array(pastValueSlit.length)
-            for (let i = 0; i < pastValueSlit.length; i++) {
-              const pt = pastValueSlit[i]
-              bandPts[i] = {
-                x: 0.5 + (pt.x - 0.5) * sclMul + chromaX,
-                y: 0.5 + (pt.y - 0.5) * sclMul + chromaY,
-              }
-            }
-            const inBand = new Uint8Array(past.value.length)
+            const inBand = new Uint8Array(pastValueSlit.length)
             let anyInBand = false
-            for (let i = 0; i < past.value.length; i++) {
-              if (past.value[i].y >= yMin && past.value[i].y < yMax) {
+            for (let i = 0; i < pastValueSlit.length; i++) {
+              let sx = pastValueSlit[i].x
+              let sy = pastValueSlit[i].y
+              if (pastB) {
+                sx += (pastB[i].x - sx) * fr
+                sy += (pastB[i].y - sy) * fr
+              }
+              bandPts[i] = {
+                x: 0.5 + (sx - 0.5) * sclMul + chromaX,
+                y: 0.5 + (sy - 0.5) * sclMul + chromaY,
+              }
+              if (sy >= yMin && sy < yMax) {
                 inBand[i] = 1
                 anyInBand = true
               }
@@ -800,18 +830,27 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
           const smearStepSeconds = baseDelaySeconds / numSmears
           for (let s = 0; s < numSmears; s++) {
             const targetT = t - (s + 1) * smearStepSeconds * dirSign
-            const past = readAtTime(targetT)
-            if (!past || past.type !== 'points' || !past.value) continue
+            const br = readBracket(targetT)
+            if (!br || !br.a || br.a.type !== 'points' || !br.a.value) continue
+            const past = br.a
             const dropFactor = (1 - s / numSmears)
             const chromaOffX = chroma.x * (s + 1) * 0.3
             const chromaOffY = chroma.y * (s + 1) * 0.3
             const pastValue = past.value
+            const pastB = br.b && br.b.type === 'points' && br.b.value && br.b.value.length === pastValue.length
+              ? br.b.value : null
+            const fr = pastB ? br.frac : 0
             const offsetPts = new Array(pastValue.length)
             for (let i = 0; i < pastValue.length; i++) {
-              const pt = pastValue[i]
+              let sx = pastValue[i].x
+              let sy = pastValue[i].y
+              if (pastB) {
+                sx += (pastB[i].x - sx) * fr
+                sy += (pastB[i].y - sy) * fr
+              }
               offsetPts[i] = {
-                x: 0.5 + (pt.x - 0.5) * sclMul + chromaOffX,
-                y: 0.5 + (pt.y - 0.5) * sclMul + chromaOffY,
+                x: 0.5 + (sx - 0.5) * sclMul + chromaOffX,
+                y: 0.5 + (sy - 0.5) * sclMul + chromaOffY,
               }
             }
             const grp = {
@@ -834,8 +873,10 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
             const tapDelaySeconds = revRef.current
               ? Math.max(0, MAX_DELAY_SECONDS - baseTap)
               : baseTap
-            const tap = readAtTime(t - tapDelaySeconds)
-            if (!tap || tap.type !== 'points' || !tap.value) continue
+            const br = readBracket(t - tapDelaySeconds)
+            if (!br || !br.a || br.a.type !== 'points' || !br.a.value) continue
+            const tap = br.a
+            const tapB = br.b && br.b.type === 'points' && br.b.value ? br.b.value : null
 
             const drift = (1 + wowAmt * 3) * (r + 1)
             const jx = chroma.x * drift
@@ -845,7 +886,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
             const headScl = (1 - sprng * 0.02 * (r + 1)) * (0.5 + sclVal) * shiftMul
             const dropRate = age * 0.3 * (r / rpt)
 
-            const xformed = transformPoints(tap.value, tap.edges, headRot, headScl, jx, jy, dropRate)
+            const xformed = transformPoints(tap.value, tap.edges, headRot, headScl, jx, jy, dropRate, tapB, br.frac)
             if (!xformed) continue
 
             const decay = Math.pow(fbInfRef.current ? 0.98 : 0.7, r) * lvl
@@ -961,15 +1002,14 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
   })
 
   return <MagnetoPanel
-    mode={mode} dry={dry} wet={wet} speedPitch={speedPitch} tap={false}
+    mode={mode} dry={dry} wet={wet} speedPitch={speedPitch}
     recLvl={recLvl} headLevels={headLevels} headOn={headOn} repeats={repeats}
-    fbInf={fbInf} fbRev={false} fbFwd={false} fbPlay={fbPlay} fbPause={fbPause}
+    fbInf={fbInf} fbPlay={fbPlay} fbPause={fbPause}
     lowCut={lowCut} tapeAge={tapeAge} crinkle={crinkle} wow={wow} spring={spring}
     scl={scl} ofs={ofs}
     enabled={enabled} onToggle={() => setEnabled(!enabled)} id={id}
     onModeChange={setMode} onDryChange={setDry} onWetChange={setWet} onSpeedPitchChange={setSpeedPitch} onTap={handleTap}
     onRecLvlChange={setRecLvl} onHeadLevelChange={handleHeadLevel} onHeadToggle={handleHeadToggle} onRepeatsChange={setRepeats}
-    onFbInf={() => setFbInf(!fbInf)} onFbRev={handleFbRev} onFbFwd={handleFbFwd} onFbPlay={() => setFbPlay(!fbPlay)} onFbPause={() => setFbPause(!fbPause)}
     onLowCutChange={setLowCut} onTapeAgeChange={setTapeAge} onCrinkleChange={setCrinkle} onWowChange={setWow} onSpringChange={setSpring}
     heads={heads} pan={pan} onHeadsChange={setHeads} onPanChange={setPan}
     onSclChange={setScl} onOfsChange={setOfs}
@@ -980,6 +1020,6 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
     clk1Ref={clk1Ref} clk2Ref={clk2Ref} clk3Ref={clk3Ref} clk4Ref={clk4Ref}
     h1Ref={h1Ref} h2Ref={h2Ref} h3Ref={h3Ref} h4Ref={h4Ref}
     invRef={invRef} expRef={expRef}
-    clkConn={clkConn} clkRef={clkInRef} cp={cp}
+    clkConn={clkConn} clkRef={clkInRef}
   />
 }

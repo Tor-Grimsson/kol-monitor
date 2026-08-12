@@ -83,7 +83,7 @@ async function main() {
   let browser
   try {
     browser = await puppeteer.launch({
-      headless: false, // headful better mirrors the user's environment for compositor cost
+      headless: true,
       executablePath: CHROME,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1600,1000'],
     })

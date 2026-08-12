@@ -20,6 +20,8 @@ import VCAModule from './math/VCAModule.jsx'
 import QuadVCAModule from './math/QuadVCAModule.jsx'
 import SwitchModule from './math/SwitchModule.jsx'
 import QuantizerModule from './math/QuantizerModule.jsx'
+import ColorizerModule from './math/ColorizerModule.jsx'
+import RuttEtraModule from './math/RuttEtraModule.jsx'
 import ScaleOffsetModule from './math/ScaleOffsetModule.jsx'
 import WindowModule from './math/WindowModule.jsx'
 import RingModModule from './math/RingModModule.jsx'
@@ -53,6 +55,8 @@ import LifeModule from './generators/LifeModule.jsx'
 import ScopeModule from './display/ScopeModule.jsx'
 import OscilloscopeModule from './display/OscilloscopeModule.jsx'
 import MonitorModule from './display/MonitorModule.jsx'
+import RasterModule from './display/RasterModule.jsx'
+import SlitEchoModule from './display/SlitEchoModule.jsx'
 import OutputModule from './display/OutputModule.jsx'
 import ConsoleModule from './display/ConsoleModule.jsx'
 import RecorderModule from './display/RecorderModule.jsx'
@@ -192,6 +196,20 @@ export const MODULE_DEFS = {
     { type: 'knob', name: 'Steps', range: '2–16', description: 'Number of discrete steps' },
     { type: 'input', name: 'in', signal: 'scalar', description: 'Continuous signal input' },
     { type: 'output', name: 'out', signal: 'scalar', description: 'Quantized output' },
+  ] },
+  ruttEtra:  { component: RuttEtraModule,     hp: 10, u: 3, category: 'math',       label: 'Rutt/Etra',   description: 'Scan processor after the 1972 Rutt/Etra — the Vasulka instrument. Rasterizes the input internally, samples luminance, and emits scanlines displaced vertically by brightness: terrain made of light. Chainable — points output feeds any module. Amount knob with CV sets displacement, lines sets scanline count (12-56), gain drives luma sensitivity. Pair with Colorizer for palette work.', controls: [
+    { type: 'knob', name: 'Amount', range: '0–100', description: 'Scanline displacement (CV: amt)' },
+    { type: 'knob', name: 'Lines', range: '0–100', description: 'Scanline count, 12–56' },
+    { type: 'knob', name: 'Gain', range: '0–100', description: 'Luma gain before displacement' },
+    { type: 'input', name: 'in', signal: 'any', description: 'Signal to scan-process' },
+    { type: 'output', name: 'out', signal: 'points', description: 'Displaced scanline geometry' },
+  ] },
+  colorize:  { component: ColorizerModule,    hp: 8,  u: 1, category: 'math',       label: 'Colorize',    description: 'Sandin-style colorizer — maps any scalar onto a color palette gradient. Six palettes (heat, cool, neon, sunset, video, mono), spread gains the mapping around center, offset shifts and wraps it for cycling sweeps. Feed an LFO for palette journeys or an envelope for accent flashes; output drives pen color, backgrounds, or any color input.', controls: [
+    { type: 'selector', name: 'Palette', description: 'heat / cool / neon / sunset / video / mono' },
+    { type: 'knob', name: 'Spread', range: '0–100', description: 'Gain of the scalar→gradient mapping' },
+    { type: 'knob', name: 'Offset', range: '0–100', description: 'Shift along the gradient, wraps' },
+    { type: 'input', name: 'in', signal: 'scalar', description: 'Scalar to colorize' },
+    { type: 'output', name: 'out', signal: 'color', description: 'Palette color' },
   ] },
   scaleOfs:  { component: ScaleOffsetModule,  hp: 4,  u: 1, category: 'math',       label: 'Scale/Ofs',   description: 'Scales and offsets an input signal to map it into a new range. Scale knob goes from 0 to 200% for attenuation or amplification. Offset knob is bipolar (-100 to +100) to shift the signal up or down. Essential for conditioning CV signals before they reach a destination module.', controls: [
     { type: 'knob', name: 'Scale', range: '0–200%', description: 'Signal multiplier' },
@@ -505,6 +523,34 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'pen', signal: 'pen', description: 'Trace drawing style' },
     { type: 'output', name: 'a', signal: 'any', description: 'Pass-through of input A' },
     { type: 'output', name: 'b', signal: 'any', description: 'Pass-through of input B' },
+  ] },
+  raster:    { component: RasterModule,       hp: 12, u: 3, category: 'display',    label: 'Raster',      description: 'Last-stop pixel display. Renders the input signal to pixels and applies raster-domain effects: video feedback, smear, blur, slitscan, ordered dither, and ascii. Amount knob with CV drives the active effect, res sets cell or band density, fade sets feedback persistence. Terminal module — no outputs; the wire protocol stays vector.', controls: [
+    { type: 'selector', name: 'Mode', description: 'fb / smr / blr / slit / dith / ascii' },
+    { type: 'knob', name: 'Amount', range: '0–100', description: 'Effect intensity (CV: amt)' },
+    { type: 'knob', name: 'Res', range: '0–100', description: 'Cell / band density for slit, dith, ascii; feedback rotation in fb (50 = none)' },
+    { type: 'knob', name: 'Fade', range: '0–100', description: 'History persistence for fb and smr' },
+    { type: 'input', name: 'in', signal: 'any', description: 'Signal to rasterize' },
+    { type: 'input', name: 'amt', signal: 'scalar', description: 'Effect amount CV' },
+    { type: 'input', name: 'pen', signal: 'pen', description: 'Vector render style' },
+  ] },
+  slitEcho:  { component: SlitEchoModule,     hp: 24, u: 3, category: 'display',    label: 'Slit-Echo',   description: 'Analog TV emulator — the raster descendant of Magneto. Broadcast repeater chain with per-generation softening, vidicon persistence trails with howl-around spin, slitscan time displacement over a 48-frame ring, and an analog hacking layer: scanline skew, Paik wobbulator wave, vertical roll, chroma split, VHS dropout/tracking, CRT scanline dress, and trigger-kicked sync tear. All sections run simultaneously as knobs, like a real signal chain. Terminal module — no outputs.', controls: [
+    { type: 'knob', name: 'Spin', range: '±100', description: 'Rotation inside the persistence loop (howl-around)' },
+    { type: 'knob', name: 'Wob', range: '0–100', description: 'Wobbulator — vertical scanline wave (CV: wob)' },
+    { type: 'knob', name: 'CRT', range: '0–100', description: 'Scanlines + vignette dress' },
+    { type: 'knob', name: 'VHS', range: '0–100', description: 'Dropout streaks + tracking band' },
+    { type: 'knob', name: 'Trail', range: '0–100', description: 'Vidicon persistence decay' },
+    { type: 'knob', name: 'Echo', range: '0–100', description: 'Repeater generations (0–6 relay hops)' },
+    { type: 'knob', name: 'Space', range: '0–100', description: 'Frames between relay hops' },
+    { type: 'knob', name: 'Fade', range: '0–100', description: 'Per-generation gain loss' },
+    { type: 'knob', name: 'Slit', range: '0–100', description: 'Slitscan time depth (CV: slt)' },
+    { type: 'knob', name: 'Bands', range: '0–100', description: 'Slitscan band count' },
+    { type: 'toggle', name: 'Axis', description: 'Horizontal bands or vertical columns' },
+    { type: 'knob', name: 'Skew', range: '0–100', description: 'Scanline skew wave (CV: skw)' },
+    { type: 'knob', name: 'Roll', range: '0–100', description: 'Vertical roll rate (CV: rll)' },
+    { type: 'knob', name: 'Split', range: '0–100', description: 'Chroma separation (CV: spl)' },
+    { type: 'input', name: 'in', signal: 'any', description: 'Signal to broadcast' },
+    { type: 'input', name: 'trig', signal: 'scalar', description: 'Sync tear kick' },
+    { type: 'input', name: 'pen', signal: 'pen', description: 'Vector render style' },
   ] },
   output:    { component: OutputModule,       hp: 16, u: 3, category: 'display',    label: 'Output',      description: '4-layer compositing display as the final render destination. Inputs a, b, c, and d are layered with background brightness controlled by knob and CV. Pen input styles the rendering. No outputs, making it a terminal module. 128-sample per-channel history for signal monitoring.', controls: [
     { type: 'knob', name: 'Background', range: '0–100', description: 'Background brightness (black to white)' },

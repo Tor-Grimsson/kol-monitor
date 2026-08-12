@@ -5,7 +5,7 @@ import { useRef, useState } from 'react'
 import { useCanvasLoop } from '../../hooks/useCanvasLoop'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
-import { readScalar, readCv } from '../../hooks/signals'
+import { readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
@@ -26,7 +26,7 @@ function scaleSignal(sig, lvl) {
   return { ...sig, opacity: lvl }
 }
 
-function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s2A, s2B, s2C, s2D, rtn1, rtn2, muteA, muteB, muteC, muteD, send1On, send2On, bg, trails, masterLvl, mstS1, mstS2, masterOn, enabled, onToggle, setLvlA, setLvlB, setLvlC, setLvlD, setS1A, setS1B, setS1C, setS1D, setS2A, setS2B, setS2C, setS2D, setRtn1, setRtn2, setMuteA, setMuteB, setMuteC, setMuteD, setSend1On, setSend2On, setBg, setTrails, setMasterLvl, setMstS1, setMstS2, setMasterOn, id, chConns, chRefs, rtn1Conn, rtn1InRef, rtn2Conn, rtn2InRef, penConn, penRef, bgConn, bgInRef, mstPenConn, mstPenRef, mstBgConn, mstBgRef, send1Ref, send2Ref, masterOutRef }) {
+function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s2A, s2B, s2C, s2D, rtn1, rtn2, muteA, muteB, muteC, muteD, send1On, send2On, bg, trails, masterLvl, mstS1, mstS2, masterOn, enabled, onToggle, setLvlA, setLvlB, setLvlC, setLvlD, setS1A, setS1B, setS1C, setS1D, setS2A, setS2B, setS2C, setS2D, setRtn1, setRtn2, setMuteA, setMuteB, setMuteC, setMuteD, setSend1On, setSend2On, setBg, setTrails, setMasterLvl, setMstS1, setMstS2, setMasterOn, id, chConns, chRefs, rtn1Conn, rtn1InRef, rtn2Conn, rtn2InRef, penConn, penRef, bgConn, bgInRef, mstBgConn, mstBgRef, send1Ref, send2Ref, masterOutRef }) {
   const lvls = [lvlA, lvlB, lvlC, lvlD]
   const setLvls = [setLvlA, setLvlB, setLvlC, setLvlD]
   const s1s = [s1A, s1B, s1C, s1D]
@@ -199,7 +199,6 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   const rtn2InRef = useRef(null)
   const penRef = useRef(null)
   const bgInRef = useRef(null)
-  const mstPenRef = useRef(null)
   const mstBgRef = useRef(null)
   const send1Ref = useRef(null)
   const send2Ref = useRef(null)
@@ -214,7 +213,6 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
   const rtn2Conn = cp.has('rtn2')
   const penConn = cp.has('pen')
   const bgConn = cp.has('bgCV')
-  const mstPenConn = cp.has('mstPen')
   const mstBgConn = cp.has('mstBg')
 
   const saveStateRef = useRef({})
@@ -227,7 +225,7 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
       a: { type: 'any' }, b: { type: 'any' }, c: { type: 'any' }, d: { type: 'any' },
       rtn1: { type: 'any' }, rtn2: { type: 'any' },
       pen: { type: 'pen' }, bgCV: { type: 'scalar', cv: 'offset' },
-      mstPen: { type: 'pen' }, mstBg: { type: 'scalar', cv: 'offset' },
+      mstBg: { type: 'scalar', cv: 'offset' },
     },
     outputs: {
       snd1: { type: 'any' }, snd2: { type: 'any' }, out: { type: 'any' },
@@ -244,9 +242,8 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
       for (const ch of CHS) chRefs.current[ch] = muteRefs.current[ch] ? null : inputs[ch]
       rtn1InRef.current = inputs.rtn1
       rtn2InRef.current = inputs.rtn2
-      penRef.current = inputs.pen || inputs.mstPen
+      penRef.current = inputs.pen
       bgInRef.current = inputs.bgCV || inputs.mstBg
-      mstPenRef.current = inputs.mstPen
       mstBgRef.current = inputs.mstBg
 
       // Build send outputs — scale by send level
@@ -334,5 +331,5 @@ export default function ConsoleModule({ id = 'console1', init, preview }) {
     }
   })
 
-  return <ConsolePanel canvasRef={canvasRef} lvlA={lvlA} lvlB={lvlB} lvlC={lvlC} lvlD={lvlD} s1A={s1A} s1B={s1B} s1C={s1C} s1D={s1D} s2A={s2A} s2B={s2B} s2C={s2C} s2D={s2D} rtn1={rtn1} rtn2={rtn2} muteA={muteA} muteB={muteB} muteC={muteC} muteD={muteD} send1On={send1On} send2On={send2On} bg={bg} trails={trails} masterLvl={masterLvl} mstS1={mstS1} mstS2={mstS2} masterOn={masterOn} enabled={enabled} onToggle={() => setEnabled(!enabled)} setLvlA={setLvlA} setLvlB={setLvlB} setLvlC={setLvlC} setLvlD={setLvlD} setS1A={setS1A} setS1B={setS1B} setS1C={setS1C} setS1D={setS1D} setS2A={setS2A} setS2B={setS2B} setS2C={setS2C} setS2D={setS2D} setRtn1={setRtn1} setRtn2={setRtn2} setMuteA={setMuteA} setMuteB={setMuteB} setMuteC={setMuteC} setMuteD={setMuteD} setSend1On={setSend1On} setSend2On={setSend2On} setBg={setBg} setTrails={setTrails} setMasterLvl={setMasterLvl} setMstS1={setMstS1} setMstS2={setMstS2} setMasterOn={setMasterOn} id={id} chConns={chConns} chRefs={chRefs} rtn1Conn={rtn1Conn} rtn1InRef={rtn1InRef} rtn2Conn={rtn2Conn} rtn2InRef={rtn2InRef} penConn={penConn} penRef={penRef} bgConn={bgConn} bgInRef={bgInRef} mstPenConn={mstPenConn} mstPenRef={mstPenRef} mstBgConn={mstBgConn} mstBgRef={mstBgRef} send1Ref={send1Ref} send2Ref={send2Ref} masterOutRef={masterOutRef} />
+  return <ConsolePanel canvasRef={canvasRef} lvlA={lvlA} lvlB={lvlB} lvlC={lvlC} lvlD={lvlD} s1A={s1A} s1B={s1B} s1C={s1C} s1D={s1D} s2A={s2A} s2B={s2B} s2C={s2C} s2D={s2D} rtn1={rtn1} rtn2={rtn2} muteA={muteA} muteB={muteB} muteC={muteC} muteD={muteD} send1On={send1On} send2On={send2On} bg={bg} trails={trails} masterLvl={masterLvl} mstS1={mstS1} mstS2={mstS2} masterOn={masterOn} enabled={enabled} onToggle={() => setEnabled(!enabled)} setLvlA={setLvlA} setLvlB={setLvlB} setLvlC={setLvlC} setLvlD={setLvlD} setS1A={setS1A} setS1B={setS1B} setS1C={setS1C} setS1D={setS1D} setS2A={setS2A} setS2B={setS2B} setS2C={setS2C} setS2D={setS2D} setRtn1={setRtn1} setRtn2={setRtn2} setMuteA={setMuteA} setMuteB={setMuteB} setMuteC={setMuteC} setMuteD={setMuteD} setSend1On={setSend1On} setSend2On={setSend2On} setBg={setBg} setTrails={setTrails} setMasterLvl={setMasterLvl} setMstS1={setMstS1} setMstS2={setMstS2} setMasterOn={setMasterOn} id={id} chConns={chConns} chRefs={chRefs} rtn1Conn={rtn1Conn} rtn1InRef={rtn1InRef} rtn2Conn={rtn2Conn} rtn2InRef={rtn2InRef} penConn={penConn} penRef={penRef} bgConn={bgConn} bgInRef={bgInRef} mstBgConn={mstBgConn} mstBgRef={mstBgRef} send1Ref={send1Ref} send2Ref={send2Ref} masterOutRef={masterOutRef} />
 }

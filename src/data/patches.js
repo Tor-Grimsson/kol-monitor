@@ -812,6 +812,85 @@ export const patches = {
 
   // Wireframe with LFO on rotation → Monitor
   // Visual: slowly rotating 3D wireframe
+  // Rutt/Etra scan processing — wireframe luminance becomes displaced scanline
+  // terrain; LFO breathes the displacement; Colorizer sweeps the pen palette
+  'rutt-etra': {
+    tags: ['showcase', 'analog', 'scan'],
+    description: 'Scan-processor terrain — luminance displaces scanlines',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1', state: { rate: 10, depth: 60 } },
+        { type: 'wireframe', id: 'wire1' },
+        { type: 'ruttEtra', id: 'rutt1', state: { amt: 60, res: 45, gain: 70 } },
+        { type: 'pen', id: 'pen1', state: { thickness: 25, opacity: 90 } },
+        { type: 'output', id: 'out1' },
+      ]},
+      { height: '1u', modules: [
+        { type: 'colorize', id: 'clz1', state: { palette: 'video', spread: 70 } },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'clk' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'wire1', toPort: 'ry' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'rutt1', toPort: 'amt' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'clz1', toPort: 'in' },
+      { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'rutt1', toPort: 'in' },
+      { fromModuleId: 'rutt1', fromPort: 'out', toModuleId: 'out1', toPort: 'a' },
+      { fromModuleId: 'clz1', fromPort: 'out', toModuleId: 'pen1', toPort: 'clr' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'out1', toPort: 'pen' },
+    ],
+  },
+
+  // Lissajous through the Slit-Echo analog TV chain — repeater trails, slitscan
+  // time-warp, LFO-wobbled scanline skew, clock-kicked sync tears
+  'slit-echo': {
+    tags: ['showcase', 'raster', 'analog'],
+    description: 'Analog TV broadcast chain — trails, slitscan, sync tears',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1', state: { bpm: 70 } },
+        { type: 'lfo', id: 'lfo1', state: { rate: 12, depth: 80 } },
+        { type: 'rgb', id: 'rgb1', state: { rOsc: true, gOsc: true, bOsc: true, rRate: 20, gRate: 35, bRate: 55 } },
+        { type: 'lineGen', id: 'gen1', state: { shape: 'lissa', freq: 40, density: 55, speed: 35 } },
+        { type: 'pen', id: 'pen1', state: { thickness: 40, opacity: 95 } },
+        { type: 'slitEcho', id: 'se1', state: { trail: 60, echo: 45, space: 35, fade: 65, slit: 55, bands: 50, axis: false, skew: 30, roll: 8, split: 40, wob: 15, spin: 12, crt: 35, vhs: 20 } },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd6', toModuleId: 'se1', toPort: 'trig' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'se1', toPort: 'skw' },
+      { fromModuleId: 'rgb1', fromPort: 'out', toModuleId: 'pen1', toPort: 'clr' },
+      { fromModuleId: 'gen1', fromPort: 'out', toModuleId: 'se1', toPort: 'in' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'se1', toPort: 'pen' },
+    ],
+  },
+
+  // Wireframe cube through the Raster last-stop — video feedback in pixel space
+  // LFO spins the cube; feedback zoom smears trails outward
+  'raster': {
+    tags: ['showcase', 'raster', 'feedback'],
+    description: 'Wireframe through pixel-space video feedback',
+    rows: [
+      UTIL_ROW,
+      { height: '3u', modules: [
+        { type: 'clock', id: 'clk1' },
+        { type: 'lfo', id: 'lfo1' },
+        { type: 'wireframe', id: 'wire1' },
+        { type: 'pen', id: 'pen1' },
+        { type: 'raster', id: 'ras1', state: { mode: 'fb', amt: 55, res: 50, fade: 82 } },
+      ]},
+    ],
+    connections: [
+      { fromModuleId: 'clk1', fromPort: 'd1', toModuleId: 'lfo1', toPort: 'clk' },
+      { fromModuleId: 'lfo1', fromPort: 'out', toModuleId: 'wire1', toPort: 'rz' },
+      { fromModuleId: 'wire1', fromPort: 'out', toModuleId: 'ras1', toPort: 'in' },
+      { fromModuleId: 'pen1', fromPort: 'out', toModuleId: 'ras1', toPort: 'pen' },
+    ],
+  },
+
   'wireframe': {
     tags: ['showcase', 'geometric', 'minimal'],
     description: 'Wireframe with LFO-driven rotation',

@@ -12,7 +12,7 @@ import Knob from '../parametric/Knob'
 import Toggle from '../parametric/Toggle'
 import Divider from '../../components/atoms/Divider'
 import LED from '../parametric/LED'
-import { usePatchRouting, useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const EOC_DURATION = 0.03
 

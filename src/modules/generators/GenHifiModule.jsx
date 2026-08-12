@@ -191,7 +191,6 @@ function generatePattern(subType, p1, p2, p3, t, animate, speed) {
     }
     case 'checker': {
       const tileSize = cellSize * duty
-      const pad = (cellSize - tileSize) / 2
       for (let gy = -1; gy <= count; gy++) {
         for (let gx = -1; gx <= count; gx++) {
           if ((gx + gy) % 2 !== 0) continue

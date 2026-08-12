@@ -22,6 +22,9 @@ const MODES = [
 ]
 
 const PLOT_LEN = 64
+// ponytail: scratch reused across frames — plot mode was allocating 4× Float32Array
+// per frame just to linearize the ring buffers. Consumed inside one process call.
+const _orderedScratch = [null, null, null, null]
 const COLORS = [
   { r: 0.18, g: 0.8, b: 0.44 },
   { r: 0.2, g: 0.6, b: 1 },
@@ -209,13 +212,15 @@ export default function S2VModule({ id = 's2v1', init, preview }) {
             }
           }
           writeIdxRef.current = (idx + 1) % PLOT_LEN
-          // Build ordered arrays from ring buffer
-          const ordered = historiesRef.current.map(h => {
-            if (!h) return null
-            const out = new Float32Array(PLOT_LEN)
+          // Build ordered arrays from ring buffer (into reusable scratch)
+          const ordered = _orderedScratch
+          for (let ch = 0; ch < 4; ch++) {
+            const h = historiesRef.current[ch]
+            if (!h) { ordered[ch] = null; continue }
+            if (!ordered[ch]) ordered[ch] = new Float32Array(PLOT_LEN)
+            const out = ordered[ch]
             for (let i = 0; i < PLOT_LEN; i++) out[i] = h[(writeIdxRef.current + i) % PLOT_LEN]
-            return out
-          })
+          }
           geom = generatePlot(ordered)
           break
         }

@@ -12,7 +12,7 @@ import Knob from '../parametric/Knob'
 import FlipToggle from '../parametric/FlipToggle'
 import Divider from '../../components/atoms/Divider'
 import Icon from '../../icons/Icon'
-import { usePatchRouting, useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
+import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function AttenPanel({ levels, modes, enabled, onToggle, onLevelChange, onModeChange, id, inConns, inRefs, outRefs }) {
   return (
@@ -64,7 +64,6 @@ export default function AttenuatorModule({ id = 'atten1', init, preview }) {
   const [levels, setLevels] = useState(init?.levels ?? [0, 0, 0, 0])
   const [modes, setModes] = useState(init?.modes ?? [false, false, false, false]) // false = uni, true = bipolar
   const [enabled, setEnabled] = useModuleEnabled()
-  const routing = usePatchRouting()
   const cp = useConnectedPorts(id)
 
   const enabledRef = useRef(true)
@@ -83,14 +82,6 @@ export default function AttenuatorModule({ id = 'atten1', init, preview }) {
     c: cp.has('c'),
     d: cp.has('d'),
   }
-  const conns = routing?.connections || []
-  const outConns = {
-    a: conns.some(c => c.fromModuleId === id && c.fromPort === 'a'),
-    b: conns.some(c => c.fromModuleId === id && c.fromPort === 'b'),
-    c: conns.some(c => c.fromModuleId === id && c.fromPort === 'c'),
-    d: conns.some(c => c.fromModuleId === id && c.fromPort === 'd'),
-  }
-
   const saveStateRef = useRef({})
   saveStateRef.current = { levels, modes }
 

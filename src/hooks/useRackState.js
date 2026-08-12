@@ -107,15 +107,6 @@ export function findFreeOffset(modules, hp) {
   return pos + hp <= TOTAL_HP ? pos : null
 }
 
-// Check if placing a module at offset overlaps any existing module
-function hasOverlap(modules, offset, hp, excludeId) {
-  const end = offset + hp
-  return modules.some(m => {
-    if (m.id === excludeId) return false
-    return offset < m.offset + m.hp && end > m.offset
-  })
-}
-
 export function useRackState() {
   const [rows, setRows] = useState(DEFAULT_ROWS)
   const [workbench, setWorkbench] = useState([])

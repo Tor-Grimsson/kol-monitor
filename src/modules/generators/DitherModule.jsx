@@ -80,15 +80,6 @@ function addRotatedPoly(pts, edges, cx, cy, verts, cos, sin) {
   for (let i = 0; i < n; i++) edges.push([base + i, base + (i + 1) % n])
 }
 
-function addRotatedLine(pts, edges, cx, cy, x1, y1, x2, y2, cos, sin) {
-  const b = pts.length
-  pts.push(
-    { x: cx + cos * x1 - sin * y1, y: cy + sin * x1 + cos * y1 },
-    { x: cx + cos * x2 - sin * y2, y: cy + sin * x2 + cos * y2 },
-  )
-  edges.push([b, b + 1])
-}
-
 // --- Shape geometry generators ---
 
 function scaleUnit(unit, r) {
@@ -371,6 +362,8 @@ function sampleBrightness(nx, ny, mode, isEngine, angle, t, animate) {
 // --- Filter algorithm transforms ---
 
 function applyFilter(mode, brightness, intensity, nx, ny) {
+  // Returns shared scratch — callers consume the fields immediately, never hold it
+  const fx = _fxScratch
   let scX = 1, scY = 1, rot = 0, offX = 0, offY = 0
   const int = intensity / 100
 
@@ -403,17 +396,38 @@ function applyFilter(mode, brightness, intensity, nx, ny) {
       scX = scY = brightness
       break
   }
-  return { scX, scY, rot, offX, offY }
+  fx.scX = scX; fx.scY = scY; fx.rot = rot; fx.offX = offX; fx.offY = offY
+  return fx
 }
 
 // --- Main generation pipeline ---
+
+// File-level scratch reused across frames. Dither rebuilds geometry every frame
+// and was the app's top GC source (28ms GC / 4s window, dither-patch baseline).
+// All of this is consumed inside a single generateDither call and never leaves
+// the module, so sharing across instances is safe (process calls run
+// sequentially). pts/edges stay freshly allocated — consumers may buffer
+// signals. ponytail: bucket edge-records ({i,j,maxX}) still allocate per frame;
+// pool them if a profile ever names buildFillMap again.
+const _layoutCache = { key: '', layout: null }
+const _mapScratch = { size: 0, map: null }
+const _blurScratch = { size: 0, map: null }
+const _fillBuckets = []
+const _asciiCache = { set: null, sorted: null }
+const _fxScratch = { scX: 1, scY: 1, rot: 0, offX: 0, offY: 0 }
+
+function getScratchMap(store, size) {
+  if (store.size !== size) { store.size = size; store.map = new Float32Array(size) }
+  return store.map
+}
 
 // Build per-cell density map from points input (fast, edge-based)
 function buildDensityMap(signal, cellCount) {
   if (!signal || signal.type !== 'points') return null
   const srcPts = signal.value
   if (!srcPts || srcPts.length === 0) return null
-  const map = new Float32Array(cellCount * cellCount)
+  const map = getScratchMap(_mapScratch, cellCount * cellCount)
+  map.fill(0)
   for (const pt of srcPts) {
     const gx = Math.floor(pt.x * cellCount)
     const gy = Math.floor(pt.y * cellCount)
@@ -436,8 +450,9 @@ function buildFillMap(signal, cellCount) {
 
   // Y-bucketed edges, sorted by max X within each row for early exit
   const step = 1 / cellCount
-  const buckets = new Array(cellCount)
-  for (let i = 0; i < cellCount; i++) buckets[i] = []
+  const buckets = _fillBuckets
+  while (buckets.length < cellCount) buckets.push([])
+  for (let i = 0; i < cellCount; i++) buckets[i].length = 0
 
   for (const [i, j] of srcEdges) {
     if (i >= srcPts.length || j >= srcPts.length) continue
@@ -451,7 +466,7 @@ function buildFillMap(signal, cellCount) {
   // Sort each bucket by maxX ascending — edges fully left of cell can be skipped
   for (let r = 0; r < cellCount; r++) buckets[r].sort((a, b) => a.maxX - b.maxX)
 
-  const map = new Float32Array(cellCount * cellCount)
+  const map = getScratchMap(_mapScratch, cellCount * cellCount)
   for (let gy = 0; gy < cellCount; gy++) {
     const cy = (gy + 0.5) * step
     const rowEdges = buckets[gy]
@@ -478,7 +493,7 @@ function buildFillMap(signal, cellCount) {
 function blurMap(map, cellCount, passes) {
   if (passes <= 0) return map
   let src = map
-  let dst = new Float32Array(cellCount * cellCount)
+  let dst = getScratchMap(_blurScratch, cellCount * cellCount)
   for (let p = 0; p < passes; p++) {
     for (let y = 0; y < cellCount; y++) {
       for (let x = 0; x < cellCount; x++) {
@@ -507,17 +522,15 @@ function generateDither(isEngine, mode, isAscii, asciiSet, shape, cellCountVal, 
   // Cell count from SIZE knob (0-100 → 6-24)
   const cellCount = Math.round(4 + (cellCountVal / 100) * 44)
 
-  // Layout
-  let layout
-  if (isEngine) {
-    switch (mode) {
-      case 'hex': layout = layoutHex(cellCount); break
-      case 'radial': layout = layoutRadial(cellCount); break
-      default: layout = layoutGrid(cellCount); break
-    }
-  } else {
-    layout = layoutGrid(cellCount)
+  // Layout — cells depend only on kind + count, cache across frames
+  const layoutKey = (isEngine ? mode : 'grid') + ':' + cellCount
+  if (_layoutCache.key !== layoutKey) {
+    _layoutCache.key = layoutKey
+    if (isEngine && mode === 'hex') _layoutCache.layout = layoutHex(cellCount)
+    else if (isEngine && mode === 'radial') _layoutCache.layout = layoutRadial(cellCount)
+    else _layoutCache.layout = layoutGrid(cellCount)
   }
+  const layout = _layoutCache.layout
 
   const { cells, cellSize } = layout
   const halfCell = cellSize * 0.5
@@ -537,8 +550,12 @@ function generateDither(isEngine, mode, isAscii, asciiSet, shape, cellCountVal, 
   if (inputMap && blurPasses > 0) inputMap = blurMap(inputMap, cellCount, blurPasses)
   const scalarVal = inputSignal ? readScalar(inputSignal) : null
 
-  // Pre-sort ASCII density ramp once (not per cell)
-  const asciiSorted = isAscii ? ASCII_DENSITY_ORDER.filter(c => asciiSet.includes(c)) : null
+  // Pre-sort ASCII density ramp — recompute only when the set identity changes
+  if (isAscii && _asciiCache.set !== asciiSet) {
+    _asciiCache.set = asciiSet
+    _asciiCache.sorted = ASCII_DENSITY_ORDER.filter(c => asciiSet.includes(c))
+  }
+  const asciiSorted = isAscii ? _asciiCache.sorted : null
   const asciiLen = asciiSorted ? asciiSorted.length : 0
 
   for (const cell of cells) {

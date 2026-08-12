@@ -36,6 +36,7 @@ function NoisePanel({
                 <LED active={clockPulse} color="yellow" />
               </div>
             </div>
+            <LabeledJack type="in" port="clk" moduleId={id} active={clkInConn} signalRef={clkInRef} label="clk" />
             <LabeledJack type="out" port="pink" moduleId={id} signalRef={pinkRef} label="pink" />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
@@ -133,7 +134,7 @@ export default function NoiseModule({ id = 'noise1', init, preview }) {
   randomModeRef.current = randomMode
   trackModeRef.current = trackMode
 
-  const clkInConn = cp.has('clkIn')
+  const clkInConn = cp.has('clk')
   const trigInConn = cp.has('trigIn')
   const shInConn = cp.has('shIn')
   const slewInConn = cp.has('slewIn')
@@ -145,7 +146,7 @@ export default function NoiseModule({ id = 'noise1', init, preview }) {
     id,
     stateRef: saveStateRef,
     inputs: {
-      clkIn: { type: 'scalar' },
+      clk: { type: 'scalar' },
       trigIn: { type: 'scalar' },
       shIn: { type: 'scalar' },
       slewIn: { type: 'scalar' },
@@ -164,7 +165,7 @@ export default function NoiseModule({ id = 'noise1', init, preview }) {
         return { pink: null, white: null, pulse: null, hold: null, slew: null }
       }
 
-      clkInRef.current = inputs.clkIn
+      clkInRef.current = inputs.clk
       trigInRef.current = inputs.trigIn
       shInRef.current = inputs.shIn
       slewInRef.current = inputs.slewIn
@@ -193,8 +194,8 @@ export default function NoiseModule({ id = 'noise1', init, preview }) {
       }
 
       // External clock overrides
-      if (inputs.clkIn) {
-        gate = readScalar(inputs.clkIn) > 0
+      if (inputs.clk) {
+        gate = readScalar(inputs.clk) > 0
       }
 
       gateRef.current = gate

@@ -105,6 +105,8 @@ const REFERENCE_GROUPS = [
   ]},
 ]
 const TRACE_COLOR = '#2dd4bf'
+// ponytail: per-frame sample buffer reused across draws (was new Array(w) per frame)
+const _samplesScratch = { w: 0, arr: null }
 const REF_COLOR = 'rgba(231,76,60,0.3)'
 const REF_LABEL = 'rgba(231,76,60,0.4)'
 const GRID_COLOR = 'rgba(255,255,255,0.06)'
@@ -483,7 +485,8 @@ export default function OscilloscopeModule({ id = 'osc1', init, preview }) {
     const playX = ((playT - px) / dur) * w
 
     let vMin = Infinity, vMax = -Infinity
-    const samples = new Array(w)
+    if (_samplesScratch.w !== w) { _samplesScratch.w = w; _samplesScratch.arr = new Float64Array(w) }
+    const samples = _samplesScratch.arr
     for (let i = 0; i < w; i++) {
       const t = toT(i)
       try {

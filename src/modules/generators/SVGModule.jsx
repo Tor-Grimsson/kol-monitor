@@ -403,6 +403,10 @@ export default function SVGModule({ id = 'svg1', init, preview }) {
   const penRef = useRef(null)
   const sclRef = useRef(null)
   const parsedRef = useRef(null) // current parsed SVG data
+  // Rescale only when file or scale changes — SVGs can carry thousands of
+  // vertices and the map ran per frame. Cached array is never mutated after
+  // build, so emitting the same reference across frames is buffer-safe.
+  const scaledCacheRef = useRef({ parsed: null, s: NaN, scaled: null })
   const fileRef = useRef(null)
 
   enabledRef.current = enabled
@@ -466,12 +470,17 @@ export default function SVGModule({ id = 'svg1', init, preview }) {
       const s = readCv(inputs.scl, scaleRef.current) / 50
 
       // Scale vertices around center (0.5, 0.5) — output as {x,y} objects for drawSignal
-      const scaled = parsed.vertices.map(([x, y]) => ({
-        x: 0.5 + (x - 0.5) * s,
-        y: 0.5 + (y - 0.5) * s,
-      }))
+      const cache = scaledCacheRef.current
+      if (cache.parsed !== parsed || cache.s !== s) {
+        cache.parsed = parsed
+        cache.s = s
+        cache.scaled = parsed.vertices.map(([x, y]) => ({
+          x: 0.5 + (x - 0.5) * s,
+          y: 0.5 + (y - 0.5) * s,
+        }))
+      }
 
-      const out = points(scaled, parsed.edges)
+      const out = points(cache.scaled, parsed.edges)
       out.aspectLock = true
       out.strokeWidth = 1
 

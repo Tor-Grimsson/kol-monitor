@@ -5,6 +5,16 @@
 import { useRef, useEffect, useCallback } from 'react'
 import { runAllCanvasDraws, setExternalDriverActive } from './useCanvasLoop'
 
+// Dev-only: a connection naming a port the module doesn't declare is silently
+// dropped by the graceful-degradation branch below — which is how 17 presets
+// died unnoticed across the session-43/47/48 port renames. Warn once per site.
+const _warnedPorts = import.meta.env.DEV ? new Set() : null
+function warnOnce(key, msg) {
+  if (!_warnedPorts || _warnedPorts.has(key)) return
+  _warnedPorts.add(key)
+  console.warn(`[render-loop] ${msg}`)
+}
+
 // Kahn's algorithm — returns sorted IDs, cycle-delayed set, and connection index
 function buildGraph(modulesMap, connections) {
   const ids = [...modulesMap.keys()]
@@ -139,6 +149,11 @@ export function useRenderLoop(modulesRef, connectionsRef, power = true, timingRe
 
         if (source && conn.toPort in inputs) {
           inputs[conn.toPort] = source[conn.fromPort] || null
+          if (_warnedPorts && !(conn.fromPort in source)) {
+            warnOnce(`${conn.fromModuleId}.${conn.fromPort}>`, `unknown fromPort "${conn.fromPort}" on ${conn.fromModuleId} (→ ${id}.${conn.toPort})`)
+          }
+        } else if (_warnedPorts && !(conn.toPort in inputs)) {
+          warnOnce(`>${id}.${conn.toPort}`, `unknown toPort "${conn.toPort}" on ${id} (← ${conn.fromModuleId}.${conn.fromPort})`)
         }
       }
 

@@ -182,7 +182,7 @@ function RadialGenPanel({
 
         {/* Group 3 — stroke + output */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-          <LabeledJack type="in" port="str" moduleId={id} active={strConn} signalRef={strInRef} label="str" />
+          <CvKnob port="str" moduleId={id} active={strConn} signalRef={strInRef} value={strokeWidth} onChange={onStrokeWidthChange} label="str" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>
