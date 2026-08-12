@@ -37,7 +37,7 @@ export default function FlipToggle({ value, onChange, labelA, labelB, labelC, va
       style={{ display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', alignItems: 'center', gap: 2, cursor: 'pointer', userSelect: 'none' }}
     >
       {labelA && (
-        <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
+        <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
           {labelA}
         </span>
       )}
@@ -61,12 +61,12 @@ export default function FlipToggle({ value, onChange, labelA, labelB, labelC, va
         }} />
       </div>
       {labelB && (
-        <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
+        <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
           {labelB}
         </span>
       )}
       {labelC && (
-        <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
+        <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
           {labelC}
         </span>
       )}

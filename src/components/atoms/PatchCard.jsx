@@ -21,8 +21,8 @@ export default function PatchCard({ title, detail, tag, onClick }) {
       style={{ padding: 16, borderRadius: 4, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.06)', minHeight: 64, position: 'relative' }}
     >
       {tagColor && <div style={{ position: 'absolute', top: 10, right: 10, width: 6, height: 6, borderRadius: '50%', backgroundColor: tagColor }} />}
-      <div className="text-fg-96 kol-helper-s" style={{ marginBottom: 8 }}>{title}</div>
-      {detail && <div className="text-fg-32 kol-helper-xxxs">{detail}</div>}
+      <div className="text-fg-96 kol-helper-14" style={{ marginBottom: 8 }}>{title}</div>
+      {detail && <div className="text-fg-32 kol-helper-8">{detail}</div>}
     </div>
   )
 }

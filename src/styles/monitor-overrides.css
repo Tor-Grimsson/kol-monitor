@@ -1,0 +1,26 @@
+/**
+ * monitor-overrides.css — kol-monitor's own bindings on top of @kolkrabbi/kol-theme.
+ *
+ * Deliberately UNLAYERED: the DS ships everything inside @layer components, so
+ * consumer CSS here always wins. Only monitor-specific BINDINGS live here —
+ * no legacy aliases, no copies of DS tokens. Everything else comes from npm.
+ */
+
+:root {
+  /* Accent — monitor binds the brand-neutral DS accent (defaults to surface
+   * ink) to its teal. */
+  --kol-accent-primary: var(--kol-palette-teal);
+  --kol-accent-on-primary: #1E1E21;
+  --kol-accent-primary-strong: var(--kol-palette-orange);
+
+  /* Jack roles — rack-specific, not DS scope. JackSocket.jsx reads these via
+   * getComputedStyle(documentElement), so they must resolve on :root. */
+  --kol-signal-input: #4ade80;
+  --kol-cv-attenuate: #497DA2;
+}
+
+/* .bg-accent-primary — monitor JSX uses it; not a DS utility class. */
+.bg-accent-primary {
+  background-color: var(--kol-accent-primary);
+  color: var(--kol-accent-on-primary);
+}

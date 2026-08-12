@@ -12,6 +12,7 @@ import CreatePage from './pages/CreatePage.jsx'
 import DevCapturePage from './pages/dev/DevCapturePage.jsx'
 
 const ModuleDesign = lazy(() => import('./pages/dev/ModuleDesignPage.jsx'))
+const ColorPickerReview = lazy(() => import('./pages/dev/ColorPickerPage.jsx'))
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           </Route>
           <Route path="/design" element={<ModuleDesign />} />
           <Route path="/dev/capture" element={<DevCapturePage />} />
+          <Route path="/dev/color-picker" element={<ColorPickerReview />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

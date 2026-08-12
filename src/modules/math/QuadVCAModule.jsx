@@ -4,7 +4,7 @@
 // color + pen signals: gain scales the value / opacity / alpha as appropriate.
 // Output normalling: unpatched OUT N sums into OUT N+1 (patch only OUT 4 for
 // a 4-channel mix). CV chain: CV1 normalises to CV2/3/4 when those are
-// unpatched. Design doc: docs/plans/quad-vca-dev.md
+// unpatched. Design doc: .kol/llm-plan/04-quad-vca-dev.md
 
 import { useState, useRef, useEffect } from 'react'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
@@ -190,9 +190,9 @@ function Channel({ ch, level, atten, curve, boost,
           <FlipToggle value={boost} onChange={onBoostChange} variant="horizontal" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Icon name="curve-log" size={8} style={{ color: 'var(--kol-color-brand-red)' }} />
+          <Icon name="curve-log" size={8} style={{ color: 'var(--kol-palette-red)' }} />
           <Knob value={curve} onChange={onCurveChange} size="sm" />
-          <Icon name="curve-exp" size={8} style={{ color: 'var(--kol-color-brand-red)' }} />
+          <Icon name="curve-exp" size={8} style={{ color: 'var(--kol-palette-red)' }} />
         </div>
       </div>
 
@@ -201,7 +201,7 @@ function Channel({ ch, level, atten, curve, boost,
       {/* Right: LEVEL big knob with channel label below */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
         <Knob value={level} onChange={onLevelChange} size="lg" />
-        <span className="kol-helper-xxxs" style={{
+        <span className="kol-helper-8" style={{
           color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1,
         }}>{`channel ${ch}`}</span>
       </div>

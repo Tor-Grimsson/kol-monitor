@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // capture-perf.js — CPU-profile a rack patch via Puppeteer + CDP Profiler.
-// Usage: yarn node scripts/capture-perf.js [--patch <name>] [--seconds 3]
-// Requires: `yarn build` already run (uses `vite preview`).
+// Usage: pnpm exec node scripts/capture-perf.js [--patch <name>] [--seconds 3]
+// Requires: `pnpm build` already run (uses `vite preview`).
 // Writes: a_torg/performance/capture-<patch>-<ts>.json + a stdout summary.
 
 import { spawn } from 'child_process'

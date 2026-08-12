@@ -1,7 +1,7 @@
 // LabeledControl — wraps any control with a text label
-// Matches Knob/Toggle label style: kol-helper-xxxs, 35% opacity, uppercase
+// Matches Knob/Toggle label style: kol-helper-8, 35% opacity, uppercase
 
-export default function LabeledControl({ label, horizontal = false, labelPosition = 'bottom', labelClass = 'kol-helper-xxxs', gap = 0, children }) {
+export default function LabeledControl({ label, horizontal = false, labelPosition = 'bottom', labelClass = 'kol-helper-8', gap = 0, children }) {
   const isRow = horizontal || labelPosition === 'left' || labelPosition === 'right'
   const labelEl = label && (
     <span className={labelClass} style={{

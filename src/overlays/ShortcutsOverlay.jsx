@@ -15,7 +15,7 @@ export default function ShortcutsOverlay({ onClose }) {
       className="fixed inset-0 z-50 select-none bg-fg-inverse-08"
       style={{ display: 'grid', placeItems: 'center', backdropFilter: 'blur(2px)' }}
     >
-      <div className="text-fg-64 kol-helper-xs bg-surface-primary border border-fg-16" style={{ display: 'grid', gridTemplateColumns: 'auto auto', gap: '10px 62px', padding: 24, borderRadius: 4 }}>
+      <div className="text-fg-64 kol-helper-12 bg-surface-primary border border-fg-16" style={{ display: 'grid', gridTemplateColumns: 'auto auto', gap: '10px 62px', padding: 24, borderRadius: 4 }}>
         <span>Shortcuts</span><span className="text-fg-96">S</span>
         <span>Sidebar</span><span className="text-fg-96">H</span>
         <span>Add module</span><span className="text-fg-96">⌘ K</span>

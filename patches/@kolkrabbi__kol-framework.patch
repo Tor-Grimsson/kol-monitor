@@ -1,0 +1,23 @@
+diff --git a/package.json b/package.json
+index fd90f058b9dc7165f029559a37b420d91aef15b1..9e5ab69bc4bbbe54575ac4ab266e43b6af3d676d 100644
+--- a/package.json
++++ b/package.json
+@@ -1,7 +1,7 @@
+ {
+   "name": "@kolkrabbi/kol-framework",
+   "version": "0.18.0",
+-  "description": "KOL app shell — sidenav, layout, theme toggle, footer, heroes + brand color layer. SideNav takes nav data as props so the tree stays app-local.",
++  "description": "KOL app shell \u2014 sidenav, layout, theme toggle, footer, heroes + brand color layer. SideNav takes nav data as props so the tree stays app-local.",
+   "license": "MIT",
+   "type": "module",
+   "main": "./src/index.js",
+@@ -12,7 +12,8 @@
+   "exports": {
+     ".": "./src/index.js",
+     "./kol-framework.css": "./kol-framework.css",
+-    "./kol-brand-color.css": "./kol-brand-color.css"
++    "./kol-brand-color.css": "./kol-brand-color.css",
++    "./src/*": "./src/*"
+   },
+   "files": [
+     "src",

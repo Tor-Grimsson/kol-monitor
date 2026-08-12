@@ -34,12 +34,12 @@ export default function TouchDeviceOverlay() {
         style={{ width: 360, borderRadius: 4, padding: '20px 20px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
       >
         <div className="kol-heading-sm text-fg-96">Desktop recommended</div>
-        <div className="kol-helper-xs text-fg-64" style={{ lineHeight: 1.5 }}>
+        <div className="kol-helper-12 text-fg-64" style={{ lineHeight: 1.5 }}>
           Monitor is built for mouse and keyboard — drag patch cables, tweak knobs, and use keyboard shortcuts. Touch input isn't supported yet.
         </div>
         <button
           onClick={dismiss}
-          className="kol-helper-xs text-fg-96 bg-fg-08 border border-fg-08 cursor-pointer"
+          className="kol-helper-12 text-fg-96 bg-fg-08 border border-fg-08 cursor-pointer"
           style={{ padding: '8px 12px', borderRadius: 4, marginTop: 4, alignSelf: 'flex-end' }}
         >
           Continue anyway

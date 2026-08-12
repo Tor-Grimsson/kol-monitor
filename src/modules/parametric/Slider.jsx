@@ -1,5 +1,5 @@
 // Slider — horizontal range slider for modules
-// Same conventions as Knob: label prop, kol-helper-xxxs, inline styles, pointer drag
+// Same conventions as Knob: label prop, kol-helper-8, inline styles, pointer drag
 
 import { useRef, useCallback } from 'react'
 
@@ -37,7 +37,7 @@ export default function Slider({ value, onChange, min = 0, max = 100, step = 1, 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
         {label && (
-          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
+          <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
             {label}
           </span>
         )}
@@ -78,7 +78,7 @@ export default function Slider({ value, onChange, min = 0, max = 100, step = 1, 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
       {label && (
-        <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1, flexShrink: 0, minWidth: 20 }}>
+        <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1, flexShrink: 0, minWidth: 20 }}>
           {label}
         </span>
       )}
@@ -104,7 +104,7 @@ export default function Slider({ value, onChange, min = 0, max = 100, step = 1, 
           backgroundColor: 'rgba(255,255,255,0.7)',
         }} />
       </div>
-      <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', lineHeight: 1, flexShrink: 0, minWidth: 16, textAlign: 'right' }}>
+      <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', lineHeight: 1, flexShrink: 0, minWidth: 16, textAlign: 'right' }}>
         {Math.round(value ?? 0)}
       </span>
     </div>

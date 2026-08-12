@@ -19,7 +19,7 @@ function NavIcons() {
   const navigate = useNavigate()
   return (
     <>
-      <div onClick={() => navigate('/')} title="Home" style={{ cursor: 'pointer', lineHeight: 0 }}>
+      <div onClick={() => navigate('/')} title="Home" style={{ cursor: 'pointer', lineHeight: 0, marginRight: 8 }}>
         <Logomark svgUrl="/svg/favicon-01.svg" size={16} />
       </div>
       {NAV_ITEMS.map(({ icon, path, label }) => (
@@ -27,7 +27,7 @@ function NavIcons() {
           key={path}
           onClick={() => navigate(path)}
           title={label}
-          style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.48)', lineHeight: 0 }}
+          style={{ cursor: 'pointer', color: 'var(--kol-oq-96)', lineHeight: 0 }}
         >
           <Icon name={icon} size={16} />
         </div>
@@ -84,7 +84,7 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
         </div>
         <span
           onClick={onHide}
-          className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+          className="kol-helper-12 text-fg-32 hover:text-fg-96 cursor-pointer select-none"
         >
           [Hide]
         </span>
@@ -92,25 +92,25 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
 
       {/* CASE — compact row management */}
       <div className="p-4 border-b border-fg-08" style={{ maxHeight: 264, overflowY: 'auto' }}>
-        <div className="kol-helper-xs text-fg-48 mb-3 uppercase">Case</div>
+        <div className="kol-helper-12 text-fg-48 mb-3 uppercase">Case</div>
         <div className="flex flex-col gap-1">
           {rack.rows.map((row, i) => (
             <div key={row.id} className="flex items-center justify-between px-3 h-6">
-              <span className="kol-helper-xs text-fg-64">Row {i + 1}</span>
+              <span className="kol-helper-12 text-fg-64">Row {i + 1}</span>
               <div className="flex items-center gap-2">
                 <span
                   onClick={() => rack.setRowHeight(row.id, row.height === '1u' ? '3u' : '1u')}
-                  className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+                  className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none"
                 >
                   [{row.height.toUpperCase()}]
                 </span>
-                <span className="kol-helper-xs text-fg-32">
+                <span className="kol-helper-12 text-fg-32">
                   {row.modules.reduce((s, m) => s + m.hp, 0)}hp
                 </span>
                 {rack.rows.length > 1 && (
                   <span
                     onClick={() => rack.removeRow(row.id)}
-                    className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+                    className="kol-helper-12 text-fg-32 hover:text-fg-96 cursor-pointer select-none"
                   >x</span>
                 )}
               </div>
@@ -118,18 +118,18 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
           ))}
           <button
             onClick={() => rack.addRow('3u')}
-            className="text-left px-3 h-6 rounded kol-helper-xs text-fg-32 hover:text-fg-96 hover:bg-fg-04 transition-colors flex items-center"
+            className="text-left px-3 h-6 rounded kol-helper-12 text-fg-32 hover:text-fg-96 hover:bg-fg-04 transition-colors flex items-center"
           >
             + add row
           </button>
 
           {/* Zoom */}
           <div className="flex items-center justify-between px-3 h-6 mt-2">
-            <span className="kol-helper-xs text-fg-48">Zoom</span>
+            <span className="kol-helper-12 text-fg-48">Zoom</span>
             <div className="flex items-center gap-2">
               <span
                 onClick={() => onZoomChange?.(Math.max(0.5, (zoom || 1) - 0.1))}
-                className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+                className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none"
               >−</span>
               <input
                 type="text"
@@ -146,13 +146,13 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') e.target.blur()
                 }}
-                className="kol-helper-xs text-fg-64 bg-transparent text-right border-none outline-none"
+                className="kol-helper-12 text-fg-64 bg-transparent text-right border-none outline-none"
                 style={{ width: 32 }}
               />
-              <span className="kol-helper-xs text-fg-32">%</span>
+              <span className="kol-helper-12 text-fg-32">%</span>
               <span
                 onClick={() => onZoomChange?.(Math.min(2, (zoom || 1) + 0.1))}
-                className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+                className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none"
               >+</span>
             </div>
           </div>
@@ -176,11 +176,11 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
         style={{ height: 4, cursor: 'ns-resize', flexShrink: 0, position: 'relative' }}
         className="border-t border-fg-08"
       >
-        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: -4, width: 24, height: 1, backgroundColor: 'rgba(255,255,255,0.15)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: -4, width: 24, height: 1, backgroundColor: 'var(--kol-fg-16)', pointerEvents: 'none' }} />
       </div>
       <div className="p-4" style={{ height: presetHeight, overflowY: 'auto' }}>
         <div className="flex items-center justify-between mb-3">
-          <span className="kol-helper-xs text-fg-48 uppercase">Presets</span>
+          <span className="kol-helper-12 text-fg-48 uppercase">Presets</span>
           <div className="flex gap-2">
             <span
               onClick={() => {
@@ -188,7 +188,7 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
                 const desc = sessionStorage.getItem('caseDescription')?.replace(/^"|"$/g, '') || ''
                 savePatchFile(rack, routing?.connections || [], modulesRef, caseName, desc || undefined)
               }}
-              className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+              className="kol-helper-12 text-fg-32 hover:text-fg-96 cursor-pointer select-none"
             >[Export]</span>
             <span
               onClick={async () => {
@@ -199,7 +199,7 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
                 if (patch.rows) rack.loadPreset(patch)
                 if (patch.connections) routing?.loadPatch(patch.connections)
               }}
-              className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+              className="kol-helper-12 text-fg-32 hover:text-fg-96 cursor-pointer select-none"
             >[Import]</span>
           </div>
         </div>
@@ -214,7 +214,7 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
                   if (p.rows) rack.loadPreset(p)
                   routing?.loadPatch(p.connections || [])
                 }}
-                className="text-left px-3 h-6 rounded kol-helper-xs text-fg-64 hover:text-fg-96 hover:bg-fg-04 transition-colors flex items-center justify-between"
+                className="text-left px-3 h-6 rounded kol-helper-12 text-fg-64 hover:text-fg-96 hover:bg-fg-04 transition-colors flex items-center justify-between"
               >
                 <span>{name}</span>
                 <span className="text-fg-32">{count}</span>
@@ -228,12 +228,12 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
       <div className="mt-auto p-4 border-t border-fg-08 flex items-center justify-between">
         <span
           onClick={() => rack.setEditMode(!rack.editMode)}
-          className="kol-helper-xs cursor-pointer select-none"
+          className="kol-helper-12 cursor-pointer select-none"
           style={{ color: rack.editMode ? 'rgba(231,76,60,0.9)' : undefined }}
         >
           [{rack.editMode ? 'Editing' : 'Modules'}]
         </span>
-        <div className="kol-helper-xs text-fg-48" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div className="kol-helper-12 text-fg-48" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           [Cables
           <span onClick={() => onCableLocked?.(!cableLocked)} className="hover:text-fg-96 cursor-pointer" style={{ color: cableLocked ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
             <Icon name={cableLocked ? 'cable-lock' : 'cable-unlock'} size={14} />

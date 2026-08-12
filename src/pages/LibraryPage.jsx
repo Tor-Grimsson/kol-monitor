@@ -118,16 +118,16 @@ export default function LibraryPage() {
                           <>
                             <div>
                               <h2 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>{m.label}</h2>
-                              <p className="text-fg-48 kol-helper-xs" style={{ marginBottom: 16, textTransform: 'capitalize' }}>{m.hp}HP — {m.u}U — {m.category}</p>
-                              <p className="text-fg-48 kol-helper-xxs" style={{ lineHeight: 1.6 }}>
+                              <p className="text-fg-48 kol-helper-12" style={{ marginBottom: 16, textTransform: 'capitalize' }}>{m.hp}HP — {m.u}U — {m.category}</p>
+                              <p className="text-fg-48 kol-helper-10" style={{ lineHeight: 1.6 }}>
                                 {m.description || 'No description yet.'}
                               </p>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-                              <div className="text-fg-48 kol-helper-xs" style={{ textTransform: 'capitalize' }}>Category: {m.category}</div>
-                              <div className="text-fg-48 kol-helper-xs">Width: {m.hp}HP</div>
-                              <div className="text-fg-48 kol-helper-xs">Height: {m.u}U</div>
-                              <Button variant="secondary" size="sm" style={{ alignSelf: 'flex-start', background: 'var(--kol-surface-primary)', marginTop: 16 }}
+                              <div className="text-fg-48 kol-helper-12" style={{ textTransform: 'capitalize' }}>Category: {m.category}</div>
+                              <div className="text-fg-48 kol-helper-12">Width: {m.hp}HP</div>
+                              <div className="text-fg-48 kol-helper-12">Height: {m.u}U</div>
+                              <Button variant="grey" size="md" style={{ alignSelf: 'flex-start', background: 'var(--kol-surface-primary)', marginTop: 16 }}
                                 onClick={(e) => { e.stopPropagation(); navigate(`/library/${m.type}`) }}
                               >Details</Button>
                             </div>
@@ -184,18 +184,18 @@ export default function LibraryPage() {
                           <>
                             <div>
                               <h2 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>{p.title}</h2>
-                              <p className="text-fg-48 kol-helper-xs" style={{ marginBottom: 16 }}>{p.detail}</p>
-                              <p className="text-fg-48 kol-helper-xxs" style={{ lineHeight: 1.6 }}>
+                              <p className="text-fg-48 kol-helper-12" style={{ marginBottom: 16 }}>{p.detail}</p>
+                              <p className="text-fg-48 kol-helper-10" style={{ lineHeight: 1.6 }}>
                                 {patches[p.name]?.description || ''}
                               </p>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-                              {p.tags.length > 0 && <div className="text-fg-48 kol-helper-xs">Tags: {p.tags.join(', ')}</div>}
+                              {p.tags.length > 0 && <div className="text-fg-48 kol-helper-12">Tags: {p.tags.join(', ')}</div>}
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                                <Button variant="secondary" size="sm" style={{ background: 'var(--kol-surface-primary)' }}
+                                <Button variant="grey" size="md" style={{ background: 'var(--kol-surface-primary)' }}
                                   onClick={(e) => { e.stopPropagation(); navigate(`/library/patch/${p.name}`) }}
                                 >Details</Button>
-                                <Button variant="secondary" size="sm" style={{ background: 'var(--kol-surface-primary)' }}
+                                <Button variant="grey" size="md" style={{ background: 'var(--kol-surface-primary)' }}
                                   onClick={(e) => { e.stopPropagation(); navigate(`/rack/patch/${p.name}`) }}
                                 >Open in Rack</Button>
                               </div>
@@ -212,7 +212,7 @@ export default function LibraryPage() {
         )}
       </div>
 
-      <Button variant="secondary" size="sm" onClick={() => navigate('/create')} style={{ marginTop: 48, alignSelf: 'flex-start' }}>
+      <Button variant="grey" size="md" onClick={() => navigate('/create')} style={{ marginTop: 48, alignSelf: 'flex-start' }}>
         New Rack
       </Button>
     </div>

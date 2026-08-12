@@ -6,6 +6,7 @@ import { usePatchRouting } from '../hooks/usePatchRouting.jsx'
 import { useCasePower } from '../hooks/useCasePower.jsx'
 import { useRack } from '../hooks/useRackContext.jsx'
 import { useKeybindings } from '../hooks/useKeybindings'
+import { useDotGrid, DOT_GRID_BG } from '../hooks/useDotGrid.js'
 import { patches } from '../data/patches'
 import { ROW_WIDTH } from '../modules/utility/eurorack'
 import RackViewport from './RackViewport.jsx'
@@ -20,6 +21,7 @@ function VideoModuloInner() {
   const { presetName } = useParams()
   const navigate = useNavigate()
   const routing = usePatchRouting()
+  const dotGrid = useDotGrid(false) // off by default in the rack; `g` toggles
   const { toggleAll } = useCasePower()
   const rack = useRack()
   const nav = useNavHidden()
@@ -79,10 +81,10 @@ function VideoModuloInner() {
   }, [presetName, rack, routing])
 
   return (
-    <div className="bg-surface-primary flex relative" style={{ overflow: 'hidden', height: '100vh' }}>
+    <div className="bg-surface-primary flex relative" style={{ overflow: 'hidden', height: '100vh', ...(dotGrid ? DOT_GRID_BG : {}) }}>
       {sidebarOpen && (
         <div className="sidebar-width flex-shrink-0 border-r border-fg-08 overflow-y-auto" style={{
-          backgroundColor: 'var(--kol-bg-surface-primary, #0a0a0a)',
+          backgroundColor: 'var(--kol-surface-primary)',
           height: '100vh',
           position: 'fixed',
           top: 0,
@@ -91,7 +93,7 @@ function VideoModuloInner() {
         }}>
           <ModuloSidebar
             rack={rack}
-            routing={usePatchRouting()}
+            routing={routing}
             zoom={zoom}
             onZoomChange={setZoom}
             onZoomFit={() => {
@@ -110,7 +112,7 @@ function VideoModuloInner() {
       {!sidebarOpen && !displayHidden && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="fixed z-50 kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+          className="fixed z-50 kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none"
           style={{ left: 60, top: 16, background: 'none', border: 'none', padding: 0 }}
         >
           [Show]
@@ -118,7 +120,7 @@ function VideoModuloInner() {
       )}
 
       {!sidebarOpen && !displayHidden && <div className="fixed z-50 select-none" style={{ bottom: 16, left: 60, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, transition: 'left 0.15s' }}>
-        <div className="kol-helper-xs text-fg-48" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div className="kol-helper-12 text-fg-48" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           [Cables
           <span onClick={() => setCableLocked(v => !v)} className="hover:text-fg-96 cursor-pointer" style={{ color: cableLocked ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
             <Icon name={cableLocked ? 'cable-lock' : 'cable-unlock'} size={14} />
@@ -141,7 +143,7 @@ function VideoModuloInner() {
 
       {!displayHidden && <button
         onClick={() => setViewLocked(v => { viewLockedRef.current = !v; return !v })}
-        className="fixed z-50 kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+        className="fixed z-50 kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none"
         style={{ bottom: 16, right: 16, background: 'none', border: 'none', padding: 0, color: viewLocked ? 'rgba(231,76,60,0.9)' : undefined }}
       >
         [{viewLocked ? 'Locked' : 'Lock'}]

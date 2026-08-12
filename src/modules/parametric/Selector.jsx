@@ -25,7 +25,7 @@ export default function Selector({ value, options, onChange }) {
     }}>
       <span
         onClick={prev}
-        className="kol-helper-xxxs"
+        className="kol-helper-8"
         style={{
           cursor: 'pointer',
           color: 'rgba(255,255,255,0.4)',
@@ -34,7 +34,7 @@ export default function Selector({ value, options, onChange }) {
       >
         ‹
       </span>
-      <span className="kol-helper-xxxs" style={{
+      <span className="kol-helper-8" style={{
         color: 'rgba(255,255,255,0.6)',
         textTransform: 'uppercase',
         minWidth: 24,
@@ -44,7 +44,7 @@ export default function Selector({ value, options, onChange }) {
       </span>
       <span
         onClick={next}
-        className="kol-helper-xxxs"
+        className="kol-helper-8"
         style={{
           cursor: 'pointer',
           color: 'rgba(255,255,255,0.4)',

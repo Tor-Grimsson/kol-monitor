@@ -1,7 +1,7 @@
 // Module registration context — ref-based Map, no React re-renders
 
 import { createContext, useContext, useRef, useEffect, useMemo } from 'react'
-import { getLastEnabledRef } from './useModuleEnabled'
+import { getLastEnabledRef, getLastSetEnabled } from './useModuleEnabled'
 import { getLastBypassRef } from './useModuleBypass'
 
 const ModuleRegistryContext = createContext(null)
@@ -46,6 +46,7 @@ export function useModule({ id, inputs, outputs, process, stateRef, bypass }) {
   processRef.current = process
   // Auto-grab enabledRef from useModuleEnabled (called before useModule in every module)
   const capturedEnabledRef = useRef(getLastEnabledRef())
+  const capturedSetEnabled = useRef(getLastSetEnabled())
   // Auto-grab bypassRef from useModuleBypass — only consult when bypass config
   // was declared (otherwise _lastBypassRef leaks from another module's render)
   const capturedBypassRef = useRef(bypass ? getLastBypassRef() : null)
@@ -73,6 +74,7 @@ export function useModule({ id, inputs, outputs, process, stateRef, bypass }) {
       outputs,
       stateRef,
       enabledRef: capturedEnabledRef.current,
+      setEnabled: capturedSetEnabled.current,
       process: wrappedProcess,
     }
     registry.register(descriptor)

@@ -626,18 +626,18 @@ function DitherPanel({
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
             <span
               onClick={() => onIsEngineChange(true)}
-              className="kol-helper-xxxs"
+              className="kol-helper-8"
               style={{ color: isEngine ? 'rgba(231,76,60,0.9)' : 'rgba(255,255,255,0.25)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
             >engine</span>
             <span
               onClick={() => onIsEngineChange(false)}
-              className="kol-helper-xxxs"
+              className="kol-helper-8"
               style={{ color: !isEngine ? 'rgba(231,76,60,0.9)' : 'rgba(255,255,255,0.25)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
             >filter</span>
             <div style={{ width: 1, height: 10, backgroundColor: 'rgba(255,255,255,0.1)' }} />
             <div onClick={() => onRayChange(!ray)} style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#f1c40f', opacity: ray ? 1 : 0.3 }} />
-              <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>raycast</span>
+              <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>raycast</span>
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
@@ -656,12 +656,12 @@ function DitherPanel({
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
             <span
               onClick={() => onIsAsciiChange(false)}
-              className="kol-helper-xxxs"
+              className="kol-helper-8"
               style={{ color: !isAscii ? 'rgba(231,76,60,0.9)' : 'rgba(255,255,255,0.25)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
             >shape</span>
             <span
               onClick={() => onIsAsciiChange(true)}
-              className="kol-helper-xxxs"
+              className="kol-helper-8"
               style={{ color: isAscii ? 'rgba(231,76,60,0.9)' : 'rgba(255,255,255,0.25)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
             >ascii</span>
           </div>

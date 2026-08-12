@@ -36,7 +36,7 @@ function PatchPanel({ tab, onTabChange, current, names, cableCount, onCurrentCha
             <span
               key={t}
               onClick={() => onTabChange(t)}
-              className={`kol-helper-xxxs cursor-pointer select-none ${tab === t ? 'text-fg-64' : 'text-fg-32'}`}
+              className={`kol-helper-8 cursor-pointer select-none ${tab === t ? 'text-fg-64' : 'text-fg-32'}`}
               style={{ textTransform: 'capitalize' }}
             >{t === 'preset' ? 'Preset' : 'File'}</span>
           ))}
@@ -49,10 +49,10 @@ function PatchPanel({ tab, onTabChange, current, names, cableCount, onCurrentCha
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '0 2px' }}>
               <div style={{ display: 'flex', gap: 3 }}>
-                <button className="kol-helper-xxxs" style={{ ...btnStyle, flex: 1 }} onClick={onLoad}>Load</button>
-                <button className="kol-helper-xxxs" style={{ ...btnStyle, flex: 1 }} onClick={onSave}>Save</button>
+                <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onLoad}>Load</button>
+                <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onSave}>Save</button>
               </div>
-              <button className="kol-helper-xxxs" style={{ ...btnStyle, flex: 1 }} onClick={onClear}>Clear</button>
+              <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onClear}>Clear</button>
             </div>
             <span className="kol-helper-xxxxs" style={{ color: 'rgba(255,255,255,0.25)', padding: '0 4px' }}>
               {cableCount} cables
@@ -62,8 +62,8 @@ function PatchPanel({ tab, onTabChange, current, names, cableCount, onCurrentCha
 
         {tab === 'file' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '0 2px' }}>
-            <button className="kol-helper-xxxs" style={{ ...btnStyle, flex: 1 }} onClick={onExport}>Export</button>
-            <button className="kol-helper-xxxs" style={{ ...btnStyle, flex: 1 }} onClick={onImport}>Import</button>
+            <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onExport}>Export</button>
+            <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onImport}>Import</button>
           </div>
         )}
       </div>

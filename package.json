@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@11.10.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,8 +16,12 @@
     "generate-videos": "node scripts/generate-videos.js"
   },
   "dependencies": {
+    "@kolkrabbi/kol-component": "^0.37.0",
+    "@kolkrabbi/kol-framework": "^0.18.0",
+    "@kolkrabbi/kol-theme": "^0.37.0",
     "@tailwindcss/vite": "^4.2.1",
     "react": "^19.2.0",
+    "react-colorful": "^5.8.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.2",
     "tailwindcss": "^4.2.1",

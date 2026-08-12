@@ -85,8 +85,8 @@ export default function HomePage() {
             maxWidth: 960, width: '100%', zIndex: 10,
           }}>
             <Button
-              variant="secondary"
-              size="sm"
+              variant="grey"
+              size="md"
               iconOnly="chevron-left"
               disabled={step === 0}
               onClick={() => setStep(s => Math.max(0, s - 1))}
@@ -102,8 +102,8 @@ export default function HomePage() {
             >
               {WALKTHROUGH_STEPS[step].actions ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                  <Button variant="secondary" size="sm" onClick={() => { setShowWalkthrough(false); navigate('/create') }}>Create Rack</Button>
-                  <Button variant="secondary" size="sm" onClick={() => { setShowWalkthrough(false); navigate('/library') }}>Browse Library</Button>
+                  <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(false); navigate('/create') }}>Create Rack</Button>
+                  <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(false); navigate('/library') }}>Browse Library</Button>
                 </div>
               ) : (
                 <>
@@ -111,10 +111,10 @@ export default function HomePage() {
                     <div>
                       <h3 className="text-fg-80 kol-text-sm" style={{ marginBottom: 12 }}>{WALKTHROUGH_STEPS[step].title}</h3>
                       {(Array.isArray(WALKTHROUGH_STEPS[step].text) ? WALKTHROUGH_STEPS[step].text : [WALKTHROUGH_STEPS[step].text]).map((t, i) => (
-                        <p key={i} className="text-fg-48 kol-helper-xs" style={{ lineHeight: 1.8, marginTop: i > 0 ? 12 : 0 }}>{t}</p>
+                        <p key={i} className="text-fg-48 kol-helper-12" style={{ lineHeight: 1.8, marginTop: i > 0 ? 12 : 0 }}>{t}</p>
                       ))}
                     </div>
-                    <span className="text-fg-48 kol-helper-xs">{step + 1} / {WALKTHROUGH_STEPS.length}</span>
+                    <span className="text-fg-48 kol-helper-12">{step + 1} / {WALKTHROUGH_STEPS.length}</span>
                   </div>
                   <div style={{ flex: '0 0 50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.48)' }}>
                     <Illustration name={WALKTHROUGH_STEPS[step].svg} />
@@ -124,8 +124,8 @@ export default function HomePage() {
             </div>
 
             <Button
-              variant="secondary"
-              size="sm"
+              variant="grey"
+              size="md"
               iconOnly="chevron-right"
               disabled={step === WALKTHROUGH_STEPS.length - 1}
               onClick={() => setStep(s => Math.min(WALKTHROUGH_STEPS.length - 1, s + 1))}
@@ -187,10 +187,10 @@ export default function HomePage() {
       </div>
 
       <div style={{ display: 'flex', gap: 12, marginTop: 48, alignSelf: 'flex-start' }}>
-        <Button variant="secondary" size="sm" onClick={() => navigate('/create')}>
+        <Button variant="grey" size="md" onClick={() => navigate('/create')}>
           New Rack
         </Button>
-        <Button variant="secondary" size="sm" onClick={() => { setShowWalkthrough(!showWalkthrough); setStep(0) }}>
+        <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(!showWalkthrough); setStep(0) }}>
           {showWalkthrough ? 'Close' : 'Walkthrough'}
         </Button>
       </div>

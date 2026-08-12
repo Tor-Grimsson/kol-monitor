@@ -59,15 +59,15 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
           <div style={{ flex: 1, display: 'flex', gap: 16, alignItems: 'center' }}>
           <span
             onClick={(e) => { e.stopPropagation(); setTab('library') }}
-            className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'library' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+            className={`kol-helper-12 uppercase select-none cursor-pointer ${tab === 'library' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
           >Library</span>
           <span
             onClick={(e) => { e.stopPropagation(); setTab('workbench') }}
-            className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'workbench' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+            className={`kol-helper-12 uppercase select-none cursor-pointer ${tab === 'workbench' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
           >Workbench</span>
           <span
             onClick={(e) => { e.stopPropagation(); setTab('case') }}
-            className={`kol-helper-xs uppercase select-none cursor-pointer ${tab === 'case' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+            className={`kol-helper-12 uppercase select-none cursor-pointer ${tab === 'case' ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
           >Case</span>
           {tab !== 'case' && (
             <div
@@ -75,7 +75,7 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
               style={{
                 height: 20,
                 width: searchOpen ? 180 : 20,
-                background: searchOpen ? 'var(--kol-opacity-hex-04, rgba(255,255,255,0.04))' : 'transparent',
+                background: searchOpen ? 'var(--kol-fg-04, rgba(255,255,255,0.04))' : 'transparent',
                 transition: 'width 400ms cubic-bezier(0.16, 1, 0.3, 1), background 300ms cubic-bezier(0.16, 1, 0.3, 1)',
                 overflow: 'hidden',
                 color: searchOpen || searchText ? 'rgba(255,255,255,0.64)' : 'rgba(255,255,255,0.32)',
@@ -105,7 +105,7 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
                   onChange={e => setSearchText(e.target.value)}
                   onClick={e => e.stopPropagation()}
                   placeholder="Search…"
-                  className="bg-transparent outline-none kol-helper-xxs flex-1 text-fg-80 caret-current px-3"
+                  className="bg-transparent outline-none kol-helper-10 flex-1 text-fg-80 caret-current px-3"
                   onBlur={() => { if (!searchText) setSearchOpen(false) }}
                   onKeyDown={e => { if (e.key === 'Escape') { setSearchOpen(false); setSearchText('') } }}
                 />
@@ -116,7 +116,7 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
           {onEditCase && (
             <span
               onClick={(e) => { e.stopPropagation(); onEditCase() }}
-              className="kol-helper-xs uppercase select-none cursor-pointer text-fg-32 hover:text-fg-48"
+              className="kol-helper-12 uppercase select-none cursor-pointer text-fg-32 hover:text-fg-48"
             >Edit</span>
           )}
         </div>
@@ -141,7 +141,7 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
               <div style={{ padding: '4px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 2px' }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'rgba(180,175,165,0.25)', flexShrink: 0 }} />
-                  <span className="kol-helper-xxs" style={{ color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Placeholder</span>
+                  <span className="kol-helper-10" style={{ color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Placeholder</span>
                 </div>
               </div>
             </Module>
@@ -184,18 +184,18 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
           <div style={{ paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {rows?.map((row, i) => (
               <div key={row.id} className="flex items-center gap-4" style={{ height: 28 }}>
-                <span className="kol-helper-xs text-fg-64" style={{ width: 48 }}>Row {i + 1}</span>
+                <span className="kol-helper-12 text-fg-64" style={{ width: 48 }}>Row {i + 1}</span>
                 <span
                   onClick={() => onSetRowHeight?.(row.id, row.height === '1u' ? '3u' : '1u')}
-                  className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none"
+                  className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none"
                 >[{row.height.toUpperCase()}]</span>
-                <span className="kol-helper-xs text-fg-32">
+                <span className="kol-helper-12 text-fg-32">
                   {row.modules.reduce((s, m) => s + m.hp, 0)}hp
                 </span>
                 {rows.length > 1 && (
                   <span
                     onClick={() => onRemoveRow?.(row.id)}
-                    className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+                    className="kol-helper-12 text-fg-32 hover:text-fg-96 cursor-pointer select-none"
                   >x</span>
                 )}
               </div>
@@ -203,11 +203,11 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
             <div className="flex gap-4" style={{ marginTop: 4 }}>
               <span
                 onClick={() => onAddRow?.('3u')}
-                className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+                className="kol-helper-12 text-fg-32 hover:text-fg-96 cursor-pointer select-none"
               >+ 3U row</span>
               <span
                 onClick={() => onAddRow?.('1u')}
-                className="kol-helper-xs text-fg-32 hover:text-fg-96 cursor-pointer select-none"
+                className="kol-helper-12 text-fg-32 hover:text-fg-96 cursor-pointer select-none"
               >+ 1U row</span>
             </div>
           </div>

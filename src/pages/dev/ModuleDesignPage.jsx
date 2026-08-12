@@ -98,7 +98,7 @@ function NoiseToolsDesign() {
 function NoiseToolsReference() {
   const jack = (label, dark) => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-      {label && <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{label}</span>}
+      {label && <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{label}</span>}
       <div style={{
         width: 20, height: 20, borderRadius: '50%',
         backgroundColor: dark ? 'rgba(40,20,15,0.9)' : 'rgba(20,20,20,0.9)',
@@ -121,7 +121,7 @@ function NoiseToolsReference() {
       }}>
         <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.6)' }} />
       </div>
-      {label && <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{label}</span>}
+      {label && <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{label}</span>}
     </div>
   )
 
@@ -134,7 +134,7 @@ function NoiseToolsReference() {
       }}>
         <div style={{ width: 2, height: 10, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 1 }} />
       </div>
-      <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{label}</span>
+      <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{label}</span>
     </div>
   )
 
@@ -144,11 +144,11 @@ function NoiseToolsReference() {
 
   const toggle = (a, b) => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-      <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{a}</span>
+      <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{a}</span>
       <div style={{ width: 8, height: 16, borderRadius: 4, backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.12)', position: 'relative' }}>
         <div style={{ width: 6, height: 8, borderRadius: 3, backgroundColor: 'rgba(180,175,165,0.6)', position: 'absolute', left: 0, top: 0 }} />
       </div>
-      <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{b}</span>
+      <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{b}</span>
     </div>
   )
 
@@ -159,7 +159,7 @@ function NoiseToolsReference() {
   return (
     <div style={{
       width: 440, height: 100,
-      backgroundColor: 'var(--kol-bg-surface-secondary, #1a1a1a)',
+      backgroundColor: 'var(--kol-surface-secondary)',
       borderRadius: 2,
       padding: '8px 12px',
       display: 'flex',
@@ -309,9 +309,9 @@ function SequencerStepsDesign() {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 4, padding: '4px 0' }}>
         {/* Controls row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.6)' }}>‹</span>
-          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.6)' }}>1-8</span>
-          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.6)' }}>›</span>
+          <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.6)' }}>‹</span>
+          <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.6)' }}>1-8</span>
+          <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.6)' }}>›</span>
           <Knob value={8} onChange={() => {}} label="len" variant="row-right" />
           <Toggle value={show16} onChange={() => {}} label="16" size="sm" horizontal />
         </div>
@@ -720,9 +720,9 @@ function QVCAChannel({ idx, id, ledOn }) {
           <FlipToggle value={false} onChange={() => {}} variant="horizontal" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Icon name="curve-log" size={8} style={{ color: 'var(--kol-color-brand-red)' }} />
+          <Icon name="curve-log" size={8} style={{ color: 'var(--kol-palette-red)' }} />
           <Knob value={50} onChange={() => {}} size="sm" />
-          <Icon name="curve-exp" size={8} style={{ color: 'var(--kol-color-brand-red)' }} />
+          <Icon name="curve-exp" size={8} style={{ color: 'var(--kol-palette-red)' }} />
         </div>
       </div>
 
@@ -732,7 +732,7 @@ function QVCAChannel({ idx, id, ledOn }) {
       {/* Right: LEVEL big knob with channel label below */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
         <Knob value={100} onChange={() => {}} size="lg" />
-        <span className="kol-helper-xxxs" style={{
+        <span className="kol-helper-8" style={{
           color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1,
         }}>{`channel ${idx}`}</span>
       </div>
@@ -800,19 +800,19 @@ export default function ModuleDesign() {
       <PatchRoutingProvider>
         <CasePowerProvider>
           <div className="min-h-screen bg-surface-primary p-8">
-            <h1 className="kol-helper-xs text-fg-48 uppercase mb-8">Module Design</h1>
+            <h1 className="kol-helper-12 text-fg-48 uppercase mb-8">Module Design</h1>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
 
               {/* Quad VCA — wireframe reference beside our 3U templated version */}
               <div>
-                <span className="kol-helper-xs text-fg-32 uppercase">Quad VCA — wireframe (Claude Design) vs our 3U template</span>
+                <span className="kol-helper-12 text-fg-32 uppercase">Quad VCA — wireframe (Claude Design) vs our 3U template</span>
                 <div className="mt-4" style={{ display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                   <div>
-                    <span className="kol-helper-xxs text-fg-32 uppercase" style={{ display: 'block', marginBottom: 8 }}>Wireframe</span>
+                    <span className="kol-helper-10 text-fg-32 uppercase" style={{ display: 'block', marginBottom: 8 }}>Wireframe</span>
                     <QuadVCAReference />
                   </div>
                   <div>
-                    <span className="kol-helper-xxs text-fg-32 uppercase" style={{ display: 'block', marginBottom: 8 }}>Our template (3U × 16HP)</span>
+                    <span className="kol-helper-10 text-fg-32 uppercase" style={{ display: 'block', marginBottom: 8 }}>Our template (3U × 16HP)</span>
                     <QuadVCATemplated />
                   </div>
                 </div>
@@ -820,7 +820,7 @@ export default function ModuleDesign() {
 
               {/* Reference mockup — pure visual */}
               <div>
-                <span className="kol-helper-xs text-fg-32 uppercase">Reference — Noise Tools (Intellijel style)</span>
+                <span className="kol-helper-12 text-fg-32 uppercase">Reference — Noise Tools (Intellijel style)</span>
                 <div className="mt-4">
                   <NoiseToolsReference />
                 </div>
@@ -828,7 +828,7 @@ export default function ModuleDesign() {
 
               {/* System mockup — using actual components */}
               <div>
-                <span className="kol-helper-xs text-fg-32 uppercase">System — Noise Tools 20HP 1U</span>
+                <span className="kol-helper-12 text-fg-32 uppercase">System — Noise Tools 20HP 1U</span>
                 <div className="mt-4">
                   <NoiseToolsDesign />
                 </div>
@@ -836,7 +836,7 @@ export default function ModuleDesign() {
 
               {/* Quadratt / Attenuator */}
               <div>
-                <span className="kol-helper-xs text-fg-32 uppercase">System — Quadratt (Attenuverter) 22HP 1U</span>
+                <span className="kol-helper-12 text-fg-32 uppercase">System — Quadratt (Attenuverter) 22HP 1U</span>
                 <div className="mt-4">
                   <QuadrattDesign />
                 </div>
@@ -844,7 +844,7 @@ export default function ModuleDesign() {
 
               {/* I/O grid test */}
               <div>
-                <span className="kol-helper-xs text-fg-32 uppercase">I/O Grid</span>
+                <span className="kol-helper-12 text-fg-32 uppercase">I/O Grid</span>
                 <div className="mt-4" style={{ display: 'inline-grid', gridTemplateColumns: 'repeat(4, auto)', columnGap: 20, rowGap: 16 }}>
                   {/* Row 1: inputs with down arrows */}
                   {['a', 'b', 'c', 'd'].map(ch => (
@@ -866,13 +866,13 @@ export default function ModuleDesign() {
               {/* Sequencer step faders — v1 + v2 side by side */}
               <div style={{ display: 'flex', gap: 48 }}>
                 <div>
-                  <span className="kol-helper-xs text-fg-32 uppercase">System — Sequencer v1</span>
+                  <span className="kol-helper-12 text-fg-32 uppercase">System — Sequencer v1</span>
                   <div className="mt-4">
                     <SequencerStepsDesign />
                   </div>
                 </div>
                 <div>
-                  <span className="kol-helper-xs text-fg-32 uppercase">System — Sequencer v2</span>
+                  <span className="kol-helper-12 text-fg-32 uppercase">System — Sequencer v2</span>
                   <div className="mt-4">
                     <SequencerStepsV2 />
                   </div>
@@ -882,7 +882,7 @@ export default function ModuleDesign() {
               {/* StepSlider v1 + v2 side by side */}
               <div style={{ display: 'flex', gap: 48 }}>
                 <div>
-                  <span className="kol-helper-xs text-fg-32 uppercase">Component — StepSlider v1</span>
+                  <span className="kol-helper-12 text-fg-32 uppercase">Component — StepSlider v1</span>
                   <div className="mt-4" style={{ display: 'flex', gap: 24, alignItems: 'flex-end' }}>
                     {[80, 45, 20, 60].map((val, i) => {
                       const ticks = 10
@@ -919,7 +919,7 @@ export default function ModuleDesign() {
                   </div>
                 </div>
                 <div>
-                  <span className="kol-helper-xs text-fg-32 uppercase">Component — StepSlider v2</span>
+                  <span className="kol-helper-12 text-fg-32 uppercase">Component — StepSlider v2</span>
                   <div className="mt-4" style={{ height: 160, position: 'relative', width: 200 }}>
                     {Array.from({ length: 11 }).map((_, t) => (
                       <div key={t} style={{
@@ -957,7 +957,7 @@ export default function ModuleDesign() {
                   </div>
                 </div>
                 <div>
-                  <span className="kol-helper-xs text-fg-32 uppercase">Component — StepSlider v3</span>
+                  <span className="kol-helper-12 text-fg-32 uppercase">Component — StepSlider v3</span>
                   <div className="mt-4" style={{ height: 180, position: 'relative', width: 280, padding: '16px 0' }}>
                     {Array.from({ length: 9 }).map((_, t) => (
                       <div key={t} style={{

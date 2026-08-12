@@ -84,13 +84,13 @@ const Slider = ({
     return (
       <div className={`${variantClass} gap-3 shadow-none ${className}`}>
         {label && (
-          <label className="kol-helper-xs whitespace-nowrap shrink-0 w-fit" style={fontSize ? { fontSize } : undefined}>
+          <label className="kol-helper-12 whitespace-nowrap shrink-0 w-fit" style={fontSize ? { fontSize } : undefined}>
             {label}
           </label>
         )}
         <div className="flex-1">
           {showLabels && (
-            <div className="flex items-center justify-between kol-helper-xs text-fg-32" style={{ marginBottom: '-2px' }}>
+            <div className="flex items-center justify-between kol-helper-12 text-fg-32" style={{ marginBottom: '-2px' }}>
               <span>{label1 || fmt(v1)}</span>
               <span>{label2 || fmt(v2)}</span>
             </div>
@@ -132,7 +132,7 @@ const Slider = ({
   return (
     <div className={`${variantClass} gap-3 shadow-none ${className}`} onClick={(e) => { if (e.altKey && onChange) { e.preventDefault(); onChange(defaultValue ?? min) } }}>
       {label && (
-        <label className="kol-helper-xs whitespace-nowrap shrink-0 w-fit" style={fontSize ? { fontSize } : undefined}>
+        <label className="kol-helper-12 whitespace-nowrap shrink-0 w-fit" style={fontSize ? { fontSize } : undefined}>
           {label}
         </label>
       )}
@@ -145,7 +145,7 @@ const Slider = ({
         onChange={handleChange}
         className="slider-black flex-1 w-full cursor-pointer"
       />
-      {displayValue != null && <span className="kol-helper-xs text-right shrink-0 w-fit" style={fontSize ? { fontSize } : undefined}>
+      {displayValue != null && <span className="kol-helper-12 text-right shrink-0 w-fit" style={fontSize ? { fontSize } : undefined}>
         {displayValue}
       </span>}
     </div>

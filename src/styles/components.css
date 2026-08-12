@@ -13,161 +13,9 @@
    ═══════════════════════════════════════════════════════════════ */
 
 /* ---------------------------------------------------------------------------
-   1a. Buttons
+   1a. Card previews + detail-page chrome
+   (buttons left for @kolkrabbi/kol-theme 2026-08-12; these stayed local)
    --------------------------------------------------------------------------- */
-
-.kol-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--kol-radius-full);
-  text-transform: uppercase;
-  font-family: var(--kol-font-family-mono, monospace);
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 100%;
-  letter-spacing: 0.03em;
-  transition: background-color var(--kol-transition-base),
-              color var(--kol-transition-base),
-              border-color var(--kol-transition-base);
-  cursor: pointer;
-}
-
-.kol-btn-primary {
-  background: var(--kol-surface-on-primary);
-  color: var(--kol-surface-primary);
-  border: 1px solid transparent;
-}
-
-.kol-btn-primary:not(.kol-btn-animate):hover {
-  background-color: color-mix(in srgb, var(--kol-surface-on-primary) 20%, transparent);
-  color: var(--kol-surface-on-primary);
-  border-color: transparent;
-}
-
-.kol-btn-secondary {
-  background: color-mix(in srgb, var(--kol-surface-on-primary) 4%, transparent);
-  color: var(--kol-surface-on-primary);
-  border: none;
-}
-
-.kol-btn-secondary:not(.kol-btn-animate):hover {
-  background-color: color-mix(in srgb, var(--kol-surface-on-primary) 20%, transparent);
-  color: var(--kol-surface-on-primary);
-}
-
-.kol-btn-outline {
-  background: transparent;
-  color: var(--kol-surface-on-primary);
-  border: 1px solid var(--kol-border-default);
-}
-
-.kol-btn-outline:not(.kol-btn-animate):hover {
-  background-color: var(--kol-opacity-hex-08);
-  border-color: color-mix(in srgb, var(--kol-surface-on-primary) 25%, transparent);
-  color: var(--kol-surface-on-primary);
-}
-
-.kol-btn-accent {
-  background: var(--kol-accent-primary);
-  color: var(--kol-accent-on-primary);
-  border: 1px solid transparent;
-}
-
-.kol-btn-accent:not(.kol-btn-animate):hover {
-  background-color: var(--kol-accent-primary);
-  color: var(--kol-surface-on-primary);
-}
-
-.kol-btn-control {
-  background: transparent;
-  color: var(--kol-surface-on-primary);
-  border: 1px solid var(--kol-border-default);
-}
-
-.kol-btn-control:not(.kol-btn-animate):hover {
-  background-color: var(--kol-opacity-hex-08);
-  border-color: transparent;
-}
-
-.kol-btn-nav {
-  background: transparent;
-  color: var(--kol-surface-on-primary);
-  border: none;
-}
-
-.kol-btn-nav:not(.kol-btn-animate):hover {
-  background-color: var(--kol-opacity-hex-08);
-}
-
-.input-outline {
-  border-radius: var(--kol-radius-full);
-  background: var(--kol-surface-primary);
-  color: var(--kol-surface-on-primary);
-  border: 1px solid var(--kol-border-default);
-  transition: border-color 0.3s, background-color 0.3s;
-}
-
-.input-outline:focus {
-  outline: none;
-  border-color: color-mix(in srgb, var(--kol-surface-on-primary) 18%, transparent);
-  background: var(--kol-surface-secondary);
-}
-
-.input-outline::placeholder {
-  color: var(--kol-surface-on-primary);
-  opacity: 0.5;
-}
-
-.input-sm {
-  height: 28px;
-  padding: 0 16px;
-  font-family: var(--kol-font-family-mono);
-  font-weight: 470;
-  font-size: 14px;
-  line-height: 1;
-  letter-spacing: 0.03em;
-}
-
-.input-md {
-  height: 32px;
-  padding: 0 20px;
-  font-family: var(--kol-font-family-mono);
-  font-weight: 470;
-  font-size: 14px;
-  line-height: 1;
-  letter-spacing: 0.03em;
-}
-
-.input-lg {
-  height: 36px;
-  padding: 0 24px;
-  font-family: var(--kol-font-family-mono);
-  font-weight: 470;
-  font-size: 18px;
-  line-height: 1;
-  letter-spacing: 0.03em;
-}
-
-.library-search {
-  background: color-mix(in srgb, var(--kol-surface-on-primary) 4%, transparent);
-  color: var(--kol-surface-on-primary);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: var(--kol-radius-full);
-  padding: 6px 16px;
-  font-family: var(--kol-font-family-mono, monospace);
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 100%;
-  letter-spacing: 0.03em;
-  outline: none;
-  width: 200px;
-  transition: background-color var(--kol-transition-base);
-}
-
-.library-search::placeholder {
-  color: var(--kol-surface-on-primary);
-}
 
 .gridcard-preview img {
   object-position: top left;
@@ -192,89 +40,8 @@
   opacity: 1 !important;
 }
 
-.patch-link {
-  color: #facc15;
-  text-decoration: none;
-  text-underline-offset: 4px;
-  cursor: pointer;
-}
-
-.patch-link:hover {
-  text-decoration: underline;
-}
-
 .module-detail-code-link:hover {
   color: #facc15;
-}
-
-.library-search:hover {
-  background-color: color-mix(in srgb, var(--kol-surface-on-primary) 20%, transparent);
-}
-
-.kol-btn-sm { padding: 6px 16px; }
-.kol-btn-md { padding: 8px 20px; }
-.kol-btn-lg { padding: 10px 24px; font-size: 18px; }
-
-@media (min-width: 768px) {
-  .kol-btn-sm { padding: 8px 20px; }
-  .kol-btn-md { padding: 12px 28px; }
-  .kol-btn-lg { padding: 14px 36px; }
-  .library-search { padding: 8px 20px; }
-}
-
-@media (min-width: 1024px) {
-  .kol-btn-sm { padding: 10px 24px; }
-  .kol-btn-md { padding: 14px 32px; }
-  .kol-btn-lg { padding: 16px 40px; }
-  .library-search { padding: 10px 24px; }
-}
-
-.kol-btn:disabled,
-.kol-btn[disabled] {
-  opacity: var(--kol-opacity-disabled);
-  cursor: not-allowed;
-}
-
-.kol-btn-normal-case {
-  text-transform: none;
-}
-
-.kol-btn-animate {
-  /* Disables default hover states when custom icon animations are applied */
-}
-
-/* ---------------------------------------------------------------------------
-   1b. Icon swap animation (for buttons)
-   --------------------------------------------------------------------------- */
-
-.kol-icon-swap-container {
-  position: relative;
-  display: inline-flex;
-  overflow: hidden;
-}
-
-.kol-icon-default {
-  position: absolute;
-  transition: opacity var(--kol-transition-base),
-              transform var(--kol-transition-base);
-}
-
-.kol-icon-hover {
-  position: absolute;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity var(--kol-transition-base),
-              transform var(--kol-transition-base);
-}
-
-.kol-btn:hover .kol-icon-default {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-
-.kol-btn:hover .kol-icon-hover {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* ---------------------------------------------------------------------------
@@ -896,7 +663,6 @@
 }
 
 .kol-label-compact-lg {
-  font-family: var(--kol-font-family-rgrot-narrow);
   font-weight: 470;
   font-stretch: condensed;
   font-size: clamp(24px, 2vw, 28px);
@@ -907,7 +673,6 @@
 }
 
 .kol-label-compact-md {
-  font-family: var(--kol-font-family-rgrot-narrow);
   font-weight: 470;
   font-stretch: condensed;
   font-size: clamp(12px, 1vw, 16px);
@@ -928,7 +693,6 @@
 }
 
 .kol-label-compact {
-  font-family: var(--kol-font-family-rgrot-narrow);
   font-weight: 470;
   font-stretch: condensed;
   font-size: clamp(12px, 1vw, 16px);

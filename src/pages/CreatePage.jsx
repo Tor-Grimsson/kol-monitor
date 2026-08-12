@@ -12,6 +12,7 @@ import GridCard from '../components/atoms/GridCard'
 import CaseHpDialog from '../components/CaseHpDialog'
 import usePersistedState from '../hooks/usePersistedState'
 import { useRack } from '../hooks/useRackContext.jsx'
+import { useDotGrid, DOT_GRID_BG } from '../hooks/useDotGrid.js'
 import { usePatchRouting } from '../hooks/usePatchRouting.jsx'
 
 const allModules = Object.entries(MODULE_DEFS).map(([type, def]) => ({
@@ -26,6 +27,7 @@ const MODULE_FILTER_GROUPS = [
 
 export default function CreatePage() {
   const navigate = useNavigate()
+  const dotGrid = useDotGrid(true) // on by default here; `g` toggles
   const [caseName, setCaseName] = usePersistedState('caseName', 'Untitled')
   const [caseDescription, setCaseDescription] = usePersistedState('caseDescription', 'Design a new case')
   const [editingName, setEditingName] = useState(false)
@@ -131,8 +133,7 @@ export default function CreatePage() {
       style={{
         padding: '48px 48px', height: '100vh', overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
-        backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
-        backgroundSize: '24px 24px',
+        ...(dotGrid ? DOT_GRID_BG : {}),
       }}
     >
       <h1 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>
@@ -247,10 +248,10 @@ export default function CreatePage() {
                       action={
                         <span
                           onClick={(e) => { e.stopPropagation(); if (justDraggedRef.current) return; addModule(m.type) }}
-                          className="cursor-pointer flex items-center gap-2 kol-helper-xxs text-fg-80"
+                          className="cursor-pointer flex items-center gap-2 kol-helper-10 text-fg-80"
                         >
                           INSERT
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--kol-color-brand-red)', flexShrink: 0 }} />
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--kol-palette-red)', flexShrink: 0 }} />
                         </span>
                       }
                     />
@@ -263,7 +264,7 @@ export default function CreatePage() {
 
         <div className="fixed flex items-center justify-between" style={{ bottom: 24, left: 72, right: 24 }}>
         <div className="flex items-center gap-2">
-          <span onClick={() => setCaseZoom(z => Math.max(0.1, z - 0.1))} className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none">−</span>
+          <span onClick={() => setCaseZoom(z => Math.max(0.1, z - 0.1))} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">−</span>
           <input
             type="text"
             inputMode="numeric"
@@ -277,12 +278,12 @@ export default function CreatePage() {
               else setZoomInput(String(Math.round(caseZoom * 100)))
             }}
             onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }}
-            className="kol-helper-xs text-fg-64 bg-transparent text-right border-none outline-none"
+            className="kol-helper-12 text-fg-64 bg-transparent text-right border-none outline-none"
             style={{ width: 32 }}
           />
-          <span className="kol-helper-xs text-fg-32">%</span>
-          <span onClick={() => setCaseZoom(z => Math.min(2, z + 0.1))} className="kol-helper-xs text-fg-48 hover:text-fg-96 cursor-pointer select-none">+</span>
-          <span onClick={() => navigate('/rack')} className="kol-helper-xs text-fg-48 module-detail-code-link cursor-pointer select-none" style={{ marginLeft: 16 }}>[Open in Rack]</span>
+          <span className="kol-helper-12 text-fg-32">%</span>
+          <span onClick={() => setCaseZoom(z => Math.min(2, z + 0.1))} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">+</span>
+          <span onClick={() => navigate('/rack')} className="kol-helper-12 text-fg-48 module-detail-code-link cursor-pointer select-none" style={{ marginLeft: 16 }}>[Open in Rack]</span>
         </div>
         <div className="flex items-center gap-1">
         <button
@@ -318,7 +319,7 @@ export default function CreatePage() {
           className="fixed z-50 pointer-events-none"
           style={{ left: dragPos.x + 12, top: dragPos.y - 12 }}
         >
-          <span className="kol-helper-s text-fg-96 bg-fg-08 px-3 py-1 rounded" style={{ whiteSpace: 'nowrap' }}>
+          <span className="kol-helper-14 text-fg-96 bg-fg-08 px-3 py-1 rounded" style={{ whiteSpace: 'nowrap' }}>
             {MODULE_DEFS[draggingModule]?.label}
           </span>
         </div>

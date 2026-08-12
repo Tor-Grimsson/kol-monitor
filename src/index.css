@@ -1,5 +1,12 @@
 @import "tailwindcss";
-@import "./styles/theme.css";
+/* Tailwind never scans node_modules — point it at the DS package sources so
+   the utility classes their JSX emits (ThemeToggle's roll, Button chrome)
+   actually get generated. Same pattern as the DS showcase. */
+@source "../node_modules/@kolkrabbi/kol-framework/src";
+@source "../node_modules/@kolkrabbi/kol-component/src";
+@import "@kolkrabbi/kol-theme";
+@import "./styles/kol-typography-mono.css";
+@import "./styles/monitor-overrides.css";
 @import "./styles/components.css";
 
 :root {

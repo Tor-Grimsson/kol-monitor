@@ -37,38 +37,38 @@ export default function PatchDetailPage() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'auto', paddingTop: 4, paddingBottom: 4 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             <div>
-              <h2 className="text-fg-80 kol-helper-s" style={{ marginBottom: 16 }}>Description</h2>
+              <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Description</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {(patch.description || '').split('. ').filter(Boolean).map((s, i) => (
-                  <div key={i} className="text-fg-48 kol-helper-xxs">
+                  <div key={i} className="text-fg-48 kol-helper-10">
                     {s.endsWith('.') ? s : s + '.'}
                   </div>
                 ))}
               </div>
             </div>
             <div>
-              <h2 className="text-fg-80 kol-helper-s" style={{ marginBottom: 16 }}>Specifications</h2>
+              <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Specifications</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div className="text-fg-48 kol-helper-xxs">Modules: {moduleCount}</div>
-                <div className="text-fg-48 kol-helper-xxs">Connections: {connCount}</div>
-                {patch.tags && <div className="text-fg-48 kol-helper-xxs">Tags: {patch.tags.join(', ')}</div>}
+                <div className="text-fg-48 kol-helper-10">Modules: {moduleCount}</div>
+                <div className="text-fg-48 kol-helper-10">Connections: {connCount}</div>
+                {patch.tags && <div className="text-fg-48 kol-helper-10">Tags: {patch.tags.join(', ')}</div>}
               </div>
             </div>
 
             <div>
-              <h2 className="text-fg-80 kol-helper-s" style={{ marginBottom: 16 }}>Modules</h2>
+              <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Modules</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {patch.rows?.map((row, ri) => (
                   <div key={ri}>
-                    <div className="text-fg-32 kol-helper-xxs" style={{ marginBottom: 8 }}>Row {ri + 1} — {row.height.toUpperCase()}</div>
+                    <div className="text-fg-32 kol-helper-10" style={{ marginBottom: 8 }}>Row {ri + 1} — {row.height.toUpperCase()}</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 12 }}>
                       {row.modules?.map((m, mi) => {
                         const def = MODULE_DEFS[m.type]
                         if (!def) return null
                         return (
                           <div key={mi} style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-                            <span className="text-fg-64 kol-helper-xxs" style={{ width: 72, flexShrink: 0 }}>{def.label}</span>
-                            <span className="text-fg-32 kol-helper-xxs">{def.hp}HP — {def.category}</span>
+                            <span className="text-fg-64 kol-helper-10" style={{ width: 72, flexShrink: 0 }}>{def.label}</span>
+                            <span className="text-fg-32 kol-helper-10">{def.hp}HP — {def.category}</span>
                           </div>
                         )
                       })}
@@ -82,10 +82,10 @@ export default function PatchDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Divider />
             <div style={{ display: 'flex', gap: 12 }}>
-              <Button variant="secondary" size="sm" onClick={() => navigate('/library', { state: { expandedPatch: patchName } })}>
+              <Button variant="grey" size="md" onClick={() => navigate('/library', { state: { expandedPatch: patchName } })}>
                 Back
               </Button>
-              <Button variant="secondary" size="sm" onClick={() => navigate(rackUrl)}>
+              <Button variant="grey" size="md" onClick={() => navigate(rackUrl)}>
                 Open in Rack
               </Button>
             </div>
@@ -109,7 +109,7 @@ export default function PatchDetailPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             opacity: 0, transition: 'opacity 0.2s',
           }}>
-            <span className="kol-helper-xs text-fg-64">Click to expand</span>
+            <span className="kol-helper-12 text-fg-64">Click to expand</span>
           </div>
         </div>
       </div>
@@ -127,7 +127,7 @@ export default function PatchDetailPage() {
         >
           <span
             onClick={(e) => { e.stopPropagation(); setFullView(false) }}
-            className="text-fg-48 module-detail-code-link kol-helper-xs"
+            className="text-fg-48 module-detail-code-link kol-helper-12"
             style={{ position: 'absolute', top: 24, right: 24, cursor: 'pointer' }}
           >Close</span>
           <img

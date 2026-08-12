@@ -48,7 +48,7 @@ export default function ClockModule({ id = 'clk1', init, preview }) {
   if (preview) return <ClockPanel bpm={120} running={true} clockPulse={false} enabled={false} onToggle={() => {}} onBpmChange={() => {}} onRunningChange={() => {}} id={id} outRefs={NULL_REFS} />
 
   const [bpm, setBpm] = useState(init?.bpm ?? 120)
-  const [running, setRunning] = useState(true)
+  const [running, setRunning] = useState(init?.running ?? true)
   const [clockPulse, setClockPulse] = useState(false)
   const [enabled, setEnabled] = useModuleEnabled()
   const enabledRef = useRef(true)

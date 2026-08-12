@@ -8,7 +8,7 @@ export default function LabeledJack({ label, icon, iconSize = 8, labelPosition =
   const labelEl = icon
     ? <Icon name={icon} size={iconSize} style={{ opacity: 0.35 }} />
     : label && (
-      <span className="kol-helper-xxxs" style={{
+      <span className="kol-helper-8" style={{
         color: 'rgba(255,255,255,0.35)',
         textTransform: 'uppercase',
         lineHeight: 1,

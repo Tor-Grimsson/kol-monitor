@@ -114,7 +114,7 @@ const PREVIEW_COLOR = 'rgba(255,255,255,0.15)'
 function NumField({ label, value, onChange }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-      {label ? <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.48)', textTransform: 'uppercase', lineHeight: 1 }}>{label}</span> : null}
+      {label ? <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.48)', textTransform: 'uppercase', lineHeight: 1 }}>{label}</span> : null}
       <input
         type="text"
         inputMode="numeric"
@@ -133,7 +133,7 @@ function NumField({ label, value, onChange }) {
             onChange((Number(value) || 0) + step * dir)
           }
         }}
-        className="kol-helper-xxxs"
+        className="kol-helper-8"
         style={{
           width: 36, height: 20, textAlign: 'right',
           background: 'var(--kol-surface-primary)', color: '#fff',
@@ -169,7 +169,7 @@ function RefDropdown({ label, groups, onSelect }) {
     <>
       <button
         ref={triggerRef}
-        className="kol-helper-xxxs"
+        className="kol-helper-8"
         onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); toggle() }}
         style={{
           color: 'rgba(255,255,255,0.6)',
@@ -196,7 +196,7 @@ function RefDropdown({ label, groups, onSelect }) {
           >
             {groups.map(({ group, items }) => (
               <div key={group}>
-                <div className="kol-helper-xxxs" style={{
+                <div className="kol-helper-8" style={{
                   color: 'rgba(255,255,255,0.4)', padding: '4px 8px 2px',
                   textTransform: 'uppercase', letterSpacing: '0.5px',
                 }}>{group}</div>
@@ -204,7 +204,7 @@ function RefDropdown({ label, groups, onSelect }) {
                   <div
                     key={`${group}-${i}`}
                     onPointerDown={() => { if (expr != null) { onSelect(expr); setOpen(false) } }}
-                    className="kol-helper-xxxs"
+                    className="kol-helper-8"
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
                       padding: '3px 8px',
@@ -231,7 +231,7 @@ function IconAction({ label, onClick }) {
   return (
     <span
       onClick={onClick}
-      className="kol-helper-xxxs"
+      className="kol-helper-8"
       style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.48)', textTransform: 'uppercase', userSelect: 'none', lineHeight: 1 }}
     >{label}</span>
   )

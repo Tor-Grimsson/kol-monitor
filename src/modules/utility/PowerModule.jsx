@@ -51,7 +51,7 @@ export default function PowerModule({ id = 'power1' }) {
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <span className="kol-helper-xxxs" style={{
+            <span className="kol-helper-8" style={{
               color: on ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)',
               lineHeight: 1,
             }}>

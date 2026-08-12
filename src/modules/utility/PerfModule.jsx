@@ -54,13 +54,13 @@ export default function PerfModule({ id = 'perf1' }) {
 
         {/* Stats readout */}
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 48 }}>
-          <span ref={msRef} className="kol-helper-xxxs" style={{ color: '#4ade80', lineHeight: 1.2 }}>
+          <span ref={msRef} className="kol-helper-8" style={{ color: '#4ade80', lineHeight: 1.2 }}>
             0.0ms
           </span>
-          <span ref={fpsRef} className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1.2 }}>
+          <span ref={fpsRef} className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1.2 }}>
             60fps
           </span>
-          <span ref={modRef} className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1.2 }}>
+          <span ref={modRef} className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1.2 }}>
             0mod
           </span>
         </div>

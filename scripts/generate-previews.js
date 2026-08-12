@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // generate-previews.js — Captures module and patch preview PNGs via Puppeteer
-// Usage: yarn generate-previews
+// Usage: pnpm generate-previews
 // Starts dev server, captures all modules and patches, saves to public/previews/
 
 import { spawn } from 'child_process'
@@ -18,7 +18,7 @@ const MODULES_DIR = join(ROOT, 'public/previews/modules')
 const PATCHES_DIR = join(ROOT, 'public/previews/patches')
 
 // --only flag: capture a single module and/or patch by name
-// Usage: yarn generate-previews --only kaleidoscope
+// Usage: pnpm generate-previews --only kaleidoscope
 const onlyIdx = process.argv.indexOf('--only')
 const ONLY = onlyIdx !== -1 ? process.argv[onlyIdx + 1] : null
 

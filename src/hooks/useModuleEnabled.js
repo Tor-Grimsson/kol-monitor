@@ -7,7 +7,9 @@ export const ModuleInitContext = createContext(null)
 
 // Shared ref accessible by useModule for render loop skip
 let _lastEnabledRef = null
+let _lastSetEnabled = null
 export function getLastEnabledRef() { return _lastEnabledRef }
+export function getLastSetEnabled() { return _lastSetEnabled }
 
 export function useModuleEnabled(initial) {
   const initCtx = useContext(ModuleInitContext)
@@ -19,6 +21,7 @@ export function useModuleEnabled(initial) {
 
   // Expose for useModule to pick up
   _lastEnabledRef = enabledRef
+  _lastSetEnabled = setEnabled
 
   useEffect(() => {
     if (lastAll.current === allEnabled) return

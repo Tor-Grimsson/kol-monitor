@@ -8,7 +8,7 @@ export default function TextInput({
   onChange,
   onCommit,
   placeholder,
-  className = 'kol-helper-xxxs',
+  className = 'kol-helper-8',
   style,
   mono = true,
 }) {

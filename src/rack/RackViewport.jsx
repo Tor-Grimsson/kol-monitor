@@ -36,8 +36,10 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
 
   const { controlRef } = useRenderLoop(modulesRef, connectionsRef, power, timingRef)
 
-  // Spacebar + drag to pan
+  // Spacebar + drag to pan; a clean tap (no drag, <250ms) toggles the transport
   const spaceDown = useRef(false)
+  const spacePressAt = useRef(0)
+  const spaceDragged = useRef(false)
   const [panOffset, setPanOffset] = usePersistedState('rack-pan', { x: 0, y: 0 })
   const panStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
   const panOffsetRef = useRef(panOffset)
@@ -45,6 +47,7 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
 
   const handlePanDown = useCallback((e) => {
     if (!spaceDown.current) return
+    spaceDragged.current = true
     e.preventDefault()
     const el = rackOuterRef.current
     const po = panOffsetRef.current
@@ -91,6 +94,8 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
       if (e.code === 'Space' && !e.repeat && noInput(e)) {
         e.preventDefault()
         spaceDown.current = true
+        spacePressAt.current = performance.now()
+        spaceDragged.current = false
         if (rackOuterRef.current) rackOuterRef.current.style.cursor = 'grab'
       }
       if (noInput(e) && !e.metaKey && !e.ctrlKey) {
@@ -126,8 +131,36 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
         setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }))
       }
     }
+    // Transport: a clean space tap toggles the patch's timing roots. Anything
+    // driving a clk/trig/gate input is a clock regardless of module type, so
+    // walk upstream from those drivers through every inbound cable to the
+    // sources with no inputs patched — those are the masters; followers stop
+    // by proxy. ponytail: rootless cycles are skipped; multiple roots all flip.
+    const TEMPO_PORTS = new Set(['clk', 'trig', 'gate'])
+    const toggleTransport = () => {
+      const conns = connectionsRef.current
+      const inbound = new Map()
+      conns.forEach(c => {
+        if (!inbound.has(c.toModuleId)) inbound.set(c.toModuleId, [])
+        inbound.get(c.toModuleId).push(c.fromModuleId)
+      })
+      const roots = new Set()
+      const seen = new Set()
+      const visit = (id) => {
+        if (seen.has(id)) return
+        seen.add(id)
+        const ins = inbound.get(id)
+        if (!ins || ins.length === 0) { roots.add(id); return }
+        ins.forEach(visit)
+      }
+      conns.forEach(c => { if (TEMPO_PORTS.has(c.toPort)) visit(c.fromModuleId) })
+      roots.forEach(id => modulesRef.current.get(id)?.setEnabled?.(v => !v))
+    }
     const onKeyUp = (e) => {
       if (e.code === 'Space') {
+        if (spaceDown.current && !spaceDragged.current && performance.now() - spacePressAt.current < 250) {
+          toggleTransport()
+        }
         spaceDown.current = false
         if (rackOuterRef.current) rackOuterRef.current.style.cursor = ''
       }

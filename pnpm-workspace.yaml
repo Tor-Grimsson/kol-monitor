@@ -1,0 +1,10 @@
+# pnpm 11 reads settings from here, not the "pnpm" field in package.json.
+# esbuild ships a platform binary via its postinstall — vite is unusable without it.
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@kolkrabbi/kol-component@0.37.0'
+  - '@kolkrabbi/kol-icons@0.15.0'
+  - '@kolkrabbi/kol-theme@0.37.0'
+patchedDependencies:
+  '@kolkrabbi/kol-framework': patches/@kolkrabbi__kol-framework.patch

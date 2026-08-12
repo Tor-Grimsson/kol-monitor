@@ -78,7 +78,7 @@ export default function LibrarySearchOverlay({ rows, onAddModule, onClose }) {
           onChange={e => setSearchText(e.target.value)}
           onKeyDown={onKey}
           placeholder="Search modules…"
-          className="bg-transparent outline-none kol-helper-xs text-fg-80 caret-current"
+          className="bg-transparent outline-none kol-helper-12 text-fg-80 caret-current"
           style={{ padding: '14px 16px', border: 'none', flexShrink: 0 }}
         />
         <div className="border-t border-fg-08" />
@@ -91,7 +91,7 @@ export default function LibrarySearchOverlay({ rows, onAddModule, onClose }) {
                 key={mod.type}
                 onClick={() => insert(i)}
                 onMouseEnter={() => setSelectedIdx(i)}
-                className={`kol-helper-xs flex items-center justify-between ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} ${i === selectedIdx && !disabled ? 'text-fg-96 bg-fg-08' : disabled ? 'text-fg-32' : 'text-fg-64'}`}
+                className={`kol-helper-12 flex items-center justify-between ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} ${i === selectedIdx && !disabled ? 'text-fg-96 bg-fg-08' : disabled ? 'text-fg-32' : 'text-fg-64'}`}
                 style={{ padding: '6px 16px' }}
               >
                 <span>{mod.label}</span>
@@ -100,7 +100,7 @@ export default function LibrarySearchOverlay({ rows, onAddModule, onClose }) {
             )
           })}
           {filtered.length === 0 && (
-            <div className="kol-helper-xs text-fg-32" style={{ padding: '12px 16px' }}>No matches</div>
+            <div className="kol-helper-12 text-fg-32" style={{ padding: '12px 16px' }}>No matches</div>
           )}
         </div>
       </div>

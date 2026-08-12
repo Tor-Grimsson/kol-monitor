@@ -2,8 +2,6 @@
 logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
@@ -27,6 +25,8 @@ a_torg
 .claude
 src/components-mirrors
 docs
+.kol
+_tmp/
 LLM_RULES.md
 public/videos
 

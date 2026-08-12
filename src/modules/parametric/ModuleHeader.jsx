@@ -11,7 +11,7 @@ export default function ModuleHeader({ label, enabled, onToggle, editMode, onRem
   return (
     <div onClick={() => onToggle?.()} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '0 2px', flexShrink: 0, cursor: 'pointer', userSelect: 'none' }}>
       <Toggle value={isOn} size="sm" onChange={() => {}} padding={0} />
-      <span className="kol-helper-xxs" style={{
+      <span className="kol-helper-10" style={{
         color: 'rgba(255,255,255,0.5)',
         textTransform: 'uppercase',
         letterSpacing: '0.5px',

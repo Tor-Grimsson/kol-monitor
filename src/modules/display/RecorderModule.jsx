@@ -96,7 +96,7 @@ function RecorderPanel({
             <button
               onClick={onRecord}
               disabled={isActive}
-              className="kol-helper-xxxs"
+              className="kol-helper-8"
               style={{
                 background: isActive ? 'rgba(231,76,60,0.9)' : 'rgba(231,76,60,0.4)',
                 color: '#fff', border: 'none', borderRadius: 2,
@@ -107,7 +107,7 @@ function RecorderPanel({
             </button>
             <button
               onClick={isActive ? onStop : onClear}
-              className="kol-helper-xxxs"
+              className="kol-helper-8"
               style={{
                 background: 'rgba(255,255,255,0.1)',
                 color: (isActive || status === 'done') ? '#fff' : 'rgba(255,255,255,0.3)',
@@ -122,7 +122,7 @@ function RecorderPanel({
               <a
                 href={blobUrl}
                 download={`${fileName || 'kol'}-${mode === 'offline' ? 'render' : 'realtime'}.webm`}
-                className="kol-helper-xxxs"
+                className="kol-helper-8"
                 style={{
                   background: 'rgba(46,204,113,0.4)', color: '#fff',
                   borderRadius: 2, padding: '2px 8px', textDecoration: 'none',
@@ -133,7 +133,7 @@ function RecorderPanel({
               </a>
             )}
             {status === 'done' && fileSize != null && (
-              <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.4)' }}>
                 {(fileSize / 1024 / 1024).toFixed(1)}MB
               </span>
             )}
@@ -148,7 +148,7 @@ function RecorderPanel({
                   transition: 'width 0.1s',
                 }} />
               </div>
-              <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.5)', minWidth: 28, textAlign: 'right' }}>
+              <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.5)', minWidth: 28, textAlign: 'right' }}>
                 {Math.round(progress * 100)}%
               </span>
             </div>

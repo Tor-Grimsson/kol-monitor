@@ -167,7 +167,7 @@ function MagnetoPanel({
                 <Knob value={dry} onChange={onDryChange} label="dry" size="lg" />
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flex: 1, padding: '0 8px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 16 }}>
-                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>modes</span>
+                    <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>modes</span>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <Toggle value={true} onChange={() => { const modes = ['echo','slit','smear']; onModeChange(modes[(modes.indexOf(mode) + 1) % 3]) }} size="md" />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -181,7 +181,7 @@ function MagnetoPanel({
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 16 }} title="Palette: 70s / neon / mono">
-                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>palette</span>
+                    <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>palette</span>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <Toggle value={true} onChange={() => onPaletteChange((palette + 1) % 3)} size="md" />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -196,7 +196,7 @@ function MagnetoPanel({
                   </div>
                   <Knob value={speedPitch} onChange={onSpeedPitchChange} label="spd/pitch" size="xl" />
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 16 }}>
-                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>tap</span>
+                    <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>tap</span>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <Toggle value={true} onChange={tapEditMode ? () => onTapModeCycle() : onTap} size="md" momentary blink={!tapEditMode} blinkPeriodMs={Math.max(40, 0.3 * (2 - speedPitch / 50) * 1000)} forceLit={tapEditMode} color={tapEditMode ? '#497DA2' : '#FFE32E'} onLongPress={onTapEditToggle} />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -221,7 +221,7 @@ function MagnetoPanel({
                     <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: recLvl >= 90 ? '#e74c3c' : recLvl >= 60 ? '#FFE32E' : '#66A44C', opacity: (recLvl > 0 && fbPlay && !fbPause && !fbInf && inConn) ? 1 : 0.3, transition: 'opacity 0.1s, background-color 0.15s' }} />
                   </div>
                   <div style={{ paddingTop: 24, alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>heads</span>
+                    <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>heads</span>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <FlipToggle value={heads} onChange={onHeadsChange} positions={3} />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
@@ -233,7 +233,7 @@ function MagnetoPanel({
                   </div>
                   {/* Layer — head z-order within wet trails */}
                   <div style={{ paddingTop: 8, alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }} title="Head z-order: 1234 / 4321 / alternating">
-                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>layer</span>
+                    <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>layer</span>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <FlipToggle value={layer} onChange={onLayerChange} positions={3} />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
@@ -251,7 +251,7 @@ function MagnetoPanel({
                     <LabeledJack type="out" port="h1" moduleId={id} signalRef={h1Ref} size="sm" />
                     <Knob value={headLevels[0]} onChange={v => onHeadLevelChange(0, v)} size="lg" />
                     <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: 'rgba(180,175,165,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span className="kol-helper-xxxs" style={{ color: '#1a1a1a', lineHeight: 1 }}>1</span>
+                      <span className="kol-helper-8" style={{ color: '#1a1a1a', lineHeight: 1 }}>1</span>
                     </div>
                     <Toggle value={headOn[0]} onChange={() => onHeadToggle(0)} size="md" />
                     <IconButton icon="tr-inf" active={fbInf} onClick={() => onHeadTransport(0)} disabled={!transportMode} title="Infinite (toggle)" />
@@ -260,7 +260,7 @@ function MagnetoPanel({
                     <LabeledJack type="out" port="h2" moduleId={id} signalRef={h2Ref} size="sm" />
                     <Knob value={headLevels[1]} onChange={v => onHeadLevelChange(1, v)} size="lg" />
                     <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: 'rgba(180,175,165,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span className="kol-helper-xxxs" style={{ color: '#1a1a1a', lineHeight: 1 }}>2</span>
+                      <span className="kol-helper-8" style={{ color: '#1a1a1a', lineHeight: 1 }}>2</span>
                     </div>
                     <Toggle value={headOn[1]} onChange={() => onHeadToggle(1)} size="md" />
                     <IconButton icon="tr-carets" active={rev} onClick={() => onHeadTransport(1)} disabled={!transportMode} title="Reverse (toggle)" />
@@ -269,7 +269,7 @@ function MagnetoPanel({
                     <LabeledJack type="out" port="h3" moduleId={id} signalRef={h3Ref} size="sm" />
                     <Knob value={headLevels[2]} onChange={v => onHeadLevelChange(2, v)} size="lg" />
                     <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: 'rgba(180,175,165,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span className="kol-helper-xxxs" style={{ color: '#1a1a1a', lineHeight: 1 }}>3</span>
+                      <span className="kol-helper-8" style={{ color: '#1a1a1a', lineHeight: 1 }}>3</span>
                     </div>
                     <Toggle value={headOn[2]} onChange={() => onHeadToggle(2)} size="md" />
                     <IconButton icon="tr-skip" momentary onClick={() => onHeadTransport(2)} disabled={!transportMode} title="Restart (trigger)" />
@@ -278,7 +278,7 @@ function MagnetoPanel({
                     <LabeledJack type="out" port="h4" moduleId={id} signalRef={h4Ref} size="sm" />
                     <Knob value={headLevels[3]} onChange={v => onHeadLevelChange(3, v)} size="lg" />
                     <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: 'rgba(180,175,165,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span className="kol-helper-xxxs" style={{ color: '#1a1a1a', lineHeight: 1 }}>4</span>
+                      <span className="kol-helper-8" style={{ color: '#1a1a1a', lineHeight: 1 }}>4</span>
                     </div>
                     <Toggle value={headOn[3]} onChange={() => onHeadToggle(3)} size="md" />
                     <IconButton icon="tr-pause" active={fbPause} onClick={() => onHeadTransport(3)} disabled={!transportMode} title="Pause (toggle)" />
@@ -288,7 +288,7 @@ function MagnetoPanel({
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <Knob value={repeats} onChange={onRepeatsChange} label="repeats" size="lg" />
                   <div style={{ paddingTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>pan</span>
+                    <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>pan</span>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <FlipToggle value={pan} onChange={onPanChange} positions={3} />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
@@ -300,7 +300,7 @@ function MagnetoPanel({
                   </div>
                   {/* Order — controls z-layering of dry vs wet trails */}
                   <div style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }} title="Layer order: wet on top / mix (tbd) / dry on top (disco)">
-                    <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>order</span>
+                    <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>order</span>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <FlipToggle value={order} onChange={onOrderChange} positions={3} />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>

@@ -18,14 +18,14 @@ const CONTROL_TYPE_LABELS = {
 function ControlRow({ ctrl }) {
   return (
     <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-      <span className="text-fg-32 kol-helper-xxs" style={{ width: 48, flexShrink: 0 }}>
+      <span className="text-fg-32 kol-helper-10" style={{ width: 48, flexShrink: 0 }}>
         {CONTROL_TYPE_LABELS[ctrl.type] || ctrl.type}
       </span>
-      <span className="text-fg-64 kol-helper-xxs" style={{ width: 56, flexShrink: 0 }}>{ctrl.name}</span>
-      <span className="text-fg-48 kol-helper-xxs" style={{ flex: 1 }}>{ctrl.description}</span>
-      {ctrl.range && <span className="text-fg-32 kol-helper-xxs" style={{ flexShrink: 0 }}>{ctrl.range}</span>}
-      {ctrl.signal && <span className="text-fg-32 kol-helper-xxs" style={{ flexShrink: 0 }}>{ctrl.signal}</span>}
-      {ctrl.options && <span className="text-fg-32 kol-helper-xxs" style={{ flexShrink: 0 }}>{ctrl.options}</span>}
+      <span className="text-fg-64 kol-helper-10" style={{ width: 56, flexShrink: 0 }}>{ctrl.name}</span>
+      <span className="text-fg-48 kol-helper-10" style={{ flex: 1 }}>{ctrl.description}</span>
+      {ctrl.range && <span className="text-fg-32 kol-helper-10" style={{ flexShrink: 0 }}>{ctrl.range}</span>}
+      {ctrl.signal && <span className="text-fg-32 kol-helper-10" style={{ flexShrink: 0 }}>{ctrl.signal}</span>}
+      {ctrl.options && <span className="text-fg-32 kol-helper-10" style={{ flexShrink: 0 }}>{ctrl.options}</span>}
     </div>
   )
 }
@@ -82,10 +82,10 @@ export default function ModuleDetailPage() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'auto', paddingTop: 4, paddingBottom: 4 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             <div>
-              <h2 className="text-fg-80 kol-helper-s" style={{ marginBottom: 16 }}>Description</h2>
+              <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Description</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {(mod.description || 'No description yet.').split('. ').filter(Boolean).map((s, i) => (
-                  <div key={i} className="text-fg-48 kol-helper-xxs">
+                  <div key={i} className="text-fg-48 kol-helper-10">
                     {s.endsWith('.') ? s : s + '.'}
                   </div>
                 ))}
@@ -94,7 +94,7 @@ export default function ModuleDetailPage() {
 
             {mod.controls && (
               <div>
-                <h2 className="text-fg-80 kol-helper-s" style={{ marginBottom: 16 }}>Controls</h2>
+                <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Controls</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {mod.controls.map((ctrl, i) => <ControlRow key={i} ctrl={ctrl} />)}
                 </div>
@@ -102,23 +102,23 @@ export default function ModuleDetailPage() {
             )}
 
             <div>
-              <h2 className="text-fg-80 kol-helper-s" style={{ marginBottom: 16 }}>Specifications</h2>
+              <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Specifications</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div className="text-fg-48 kol-helper-xxs" style={{ textTransform: 'capitalize' }}>Category: {mod.category}</div>
-                <div className="text-fg-48 kol-helper-xxs">Width: {mod.hp}HP</div>
-                <div className="text-fg-48 kol-helper-xxs">Height: {mod.u}U</div>
+                <div className="text-fg-48 kol-helper-10" style={{ textTransform: 'capitalize' }}>Category: {mod.category}</div>
+                <div className="text-fg-48 kol-helper-10">Width: {mod.hp}HP</div>
+                <div className="text-fg-48 kol-helper-10">Height: {mod.u}U</div>
               </div>
             </div>
 
             {source && (
               <div>
-                <h2 className="text-fg-80 kol-helper-s" style={{ marginBottom: 16 }}>Code</h2>
+                <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Code</h2>
                 <pre className="text-fg-32" style={{
                   margin: 0, fontSize: 11, lineHeight: 1.5, fontFamily: 'monospace',
                   overflow: 'hidden',
                 }}>{source.split('\n').slice(0, 5).join('\n')}</pre>
                 <span
-                  className="text-fg-48 kol-helper-xxs module-detail-code-link"
+                  className="text-fg-48 kol-helper-10 module-detail-code-link"
                   onClick={loadSource}
                   style={{ cursor: 'pointer', marginTop: 8, display: 'inline-block' }}
                 >View full source</span>
@@ -129,11 +129,11 @@ export default function ModuleDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Divider />
             <div style={{ display: 'flex', gap: 12 }}>
-              <Button variant="secondary" size="sm" onClick={() => navigate('/library', { state: { expandedModule: moduleType } })}>
+              <Button variant="grey" size="md" onClick={() => navigate('/library', { state: { expandedModule: moduleType } })}>
                 Back
               </Button>
               {sourceKey && (
-                <Button variant="secondary" size="sm" onClick={loadSource}>
+                <Button variant="grey" size="md" onClick={loadSource}>
                   Code
                 </Button>
               )}
@@ -158,7 +158,7 @@ export default function ModuleDetailPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             opacity: 0, transition: 'opacity 0.2s',
           }}>
-            <span className="kol-helper-xs text-fg-64">Click to expand</span>
+            <span className="kol-helper-12 text-fg-64">Click to expand</span>
           </div>
         </div>
       </div>
@@ -176,7 +176,7 @@ export default function ModuleDetailPage() {
         >
           <span
             onClick={(e) => { e.stopPropagation(); setFullView(false) }}
-            className="text-fg-48 module-detail-code-link kol-helper-xs"
+            className="text-fg-48 module-detail-code-link kol-helper-12"
             style={{ position: 'absolute', top: 24, right: 24, cursor: 'pointer' }}
           >Close</span>
           <img
@@ -201,12 +201,12 @@ export default function ModuleDetailPage() {
           <div style={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
             <span
               onClick={(e) => { e.stopPropagation(); downloadSource() }}
-              className="text-fg-48 module-detail-code-link kol-helper-xs"
+              className="text-fg-48 module-detail-code-link kol-helper-12"
               style={{ cursor: 'pointer' }}
             >Download</span>
             <span
               onClick={(e) => { e.stopPropagation(); setCodeView(false) }}
-              className="text-fg-48 module-detail-code-link kol-helper-xs"
+              className="text-fg-48 module-detail-code-link kol-helper-12"
               style={{ cursor: 'pointer' }}
             >Close</span>
           </div>

@@ -363,8 +363,8 @@ function SVGPanel({ enabled, onToggle, current, names, onSelect, scale, onScaleC
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1, minWidth: 0, height: '100%' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Dropdown value={current || 'library'} options={names} onChange={onSelect} />
-            <button className="kol-helper-xxxs" style={{ ...btnStyle }} onClick={onLoad}>Load</button>
-            <button className="kol-helper-xxxs" style={{ ...btnStyle }} onClick={() => onSelect(null)}>Clr</button>
+            <button className="kol-helper-8" style={{ ...btnStyle }} onClick={onLoad}>Load</button>
+            <button className="kol-helper-8" style={{ ...btnStyle }} onClick={() => onSelect(null)}>Clr</button>
           </div>
           <CvKnob port="scl" moduleId={id} signalRef={sclRef} value={scale} onChange={onScaleChange} label="scale" variant="row-right" direction="horizontal" />
         </div>

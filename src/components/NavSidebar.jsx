@@ -1,6 +1,9 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import Icon from '../icons/Icon'
 import Logomark from './atoms/Logomark'
+import Button from './atoms/Button'
+// Deep import via the local patch (patches/@kolkrabbi__kol-framework.patch):
+// the framework barrel drags the kol-component barrel into the bundle.
+import ThemeToggle from '@kolkrabbi/kol-framework/src/ThemeToggle.jsx'
 
 const NAV_ITEMS = [
   { icon: 'nav-library', path: '/library', label: 'Library' },
@@ -12,10 +15,32 @@ const BOTTOM_ITEMS = [
   { icon: 'nav-settings', path: '/settings', label: 'Settings' },
 ]
 
-export default function NavSidebar({ hidden = false }) {
+// Rail item (user ruling 2026-08-12): DS Button, nav variant — oq-96 ink,
+// the button's own hover wash, active route stays lit via `selected`.
+function RailItem({ icon, path, label }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const isRack = location.pathname.startsWith('/rack')
+  const isActive = path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
+  return (
+    <Button
+      iconOnly={icon}
+      iconSize={20}
+      variant="nav"
+      size="md"
+      onClick={() => navigate(path)}
+      title={label}
+      style={{
+        color: 'var(--kol-oq-96)',
+        // active = the nav hover wash held on (same token), never the
+        // inverted pressed tile; ink constant at oq-96 in every state
+        backgroundColor: isActive ? 'var(--kol-oq-04)' : undefined,
+      }}
+    />
+  )
+}
+
+export default function NavSidebar({ hidden = false }) {
+  const navigate = useNavigate()
 
   if (hidden) return null
 
@@ -35,48 +60,11 @@ export default function NavSidebar({ hidden = false }) {
       >
         <Logomark svgUrl="/svg/favicon-01.svg" size={20} />
       </div>
-      {NAV_ITEMS.map(({ icon, path, label }) => {
-        const isActive = path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
-        return (
-          <div
-            key={path}
-            onClick={() => navigate(path)}
-            title={label}
-            style={{
-              cursor: 'pointer',
-              color: isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.48)',
-              lineHeight: 0,
-              padding: 8,
-              borderRadius: 4,
-            }}
-            className="hover:bg-fg-04 transition-colors"
-          >
-            <Icon name={icon} size={20} />
-          </div>
-        )
-      })}
+      {NAV_ITEMS.map((item) => <RailItem key={item.path} {...item} />)}
       <div style={{ flex: 1 }} />
-      {BOTTOM_ITEMS.map(({ icon, path, label }) => {
-        const isActive = path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
-        return (
-          <div
-            key={path}
-            onClick={() => navigate(path)}
-            title={label}
-            style={{
-              cursor: 'pointer',
-              color: isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.48)',
-              lineHeight: 0,
-              padding: 8,
-              borderRadius: 4,
-              marginBottom: 8,
-            }}
-            className="hover:bg-fg-04 transition-colors"
-          >
-            <Icon name={icon} size={20} />
-          </div>
-        )
-      })}
+      <ThemeToggle label={false} style={{ color: 'var(--kol-oq-96)' }} />
+      {BOTTOM_ITEMS.map((item) => <RailItem key={item.path} {...item} />)}
+      <div style={{ height: 8 }} />
     </div>
   )
 }

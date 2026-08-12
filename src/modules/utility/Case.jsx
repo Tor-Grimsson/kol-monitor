@@ -57,11 +57,11 @@ export const RackRow = memo(function RackRow({ height = '3u', children }) {
 export default memo(function Case({ children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'row', padding: '3px 0' }}>
-      <div className="bg-opacity-hex-12" style={{ width: 24, flexShrink: 0, borderRadius: 4, margin: '-3px 0' }} />
+      <div className="bg-fg-12" style={{ width: 24, flexShrink: 0, borderRadius: 4, margin: '-3px 0' }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '0 2px' }}>
         {children}
       </div>
-      <div className="bg-opacity-hex-12" style={{ width: 24, flexShrink: 0, borderRadius: 4, margin: '-3px 0' }} />
+      <div className="bg-fg-12" style={{ width: 24, flexShrink: 0, borderRadius: 4, margin: '-3px 0' }} />
     </div>
   )
 })

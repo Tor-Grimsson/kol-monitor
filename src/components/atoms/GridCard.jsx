@@ -12,8 +12,8 @@ export default function GridCard({ title, detail, preview, expanded, expandedCon
         className="flex items-center justify-between px-3 cursor-pointer bg-surface-tertiary hover:bg-fg-04 rounded border border-fg-04 transition-colors select-none"
         style={{ height: 36 }}
       >
-        <span className="kol-helper-xs text-fg-64">{title}</span>
-        {action || (detail && <span className="kol-helper-xxs text-fg-32" style={{ textTransform: 'capitalize' }}>{detail}</span>)}
+        <span className="kol-helper-12 text-fg-64">{title}</span>
+        {action || (detail && <span className="kol-helper-10 text-fg-32" style={{ textTransform: 'capitalize' }}>{detail}</span>)}
       </div>
     )
   }
@@ -50,8 +50,8 @@ export default function GridCard({ title, detail, preview, expanded, expandedCon
         </div>
       ) : (
         <div className="bg-surface-primary" style={{ padding: '12px 16px', width: '100%', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="text-fg-96 kol-helper-s" style={{ marginBottom: 4 }}>{title}</div>
-          {detail && <div className="text-fg-32 kol-helper-xxxs">{detail}</div>}
+          <div className="text-fg-96 kol-helper-14" style={{ marginBottom: 4 }}>{title}</div>
+          {detail && <div className="text-fg-32 kol-helper-8">{detail}</div>}
         </div>
       )}
     </div>

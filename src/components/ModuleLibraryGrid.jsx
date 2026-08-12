@@ -49,12 +49,12 @@ function ModuleCard({ type, hp, u, selected, rows, onSelect, onAddToRow }) {
           {compatibleRows.map(row => (
             <span
               key={row.id}
-              className="text-fg-48 hover:text-fg-96 kol-helper-xxs cursor-pointer"
+              className="text-fg-48 hover:text-fg-96 kol-helper-10 cursor-pointer"
               onPointerDown={(e) => { e.stopPropagation(); onAddToRow(type, row.id); onSelect(null) }}
             >Row {rows.indexOf(row) + 1}</span>
           ))}
           {compatibleRows.length === 0 && (
-            <span className="text-fg-32 kol-helper-xxs">No {targetHeight.toUpperCase()} row</span>
+            <span className="text-fg-32 kol-helper-10">No {targetHeight.toUpperCase()} row</span>
           )}
         </div>
       )}
@@ -93,23 +93,23 @@ export default function ModuleLibraryGrid({
           <div className="flex gap-2">
             <span
               onClick={() => setUFilter(uFilter === 3 ? null : 3)}
-              className={`kol-helper-xs select-none cursor-pointer ${uFilter === 3 ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+              className={`kol-helper-12 select-none cursor-pointer ${uFilter === 3 ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
             >3U</span>
             <span
               onClick={() => setUFilter(uFilter === 1 ? null : 1)}
-              className={`kol-helper-xs select-none cursor-pointer ${uFilter === 1 ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+              className={`kol-helper-12 select-none cursor-pointer ${uFilter === 1 ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
             >1U</span>
           </div>
           <div className="border-t border-fg-08" />
           <span
             onClick={() => setCategory(null)}
-            className={`kol-helper-xs select-none cursor-pointer ${category === null ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+            className={`kol-helper-12 select-none cursor-pointer ${category === null ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
           >All</span>
           {CATEGORIES.map(cat => (
             <span
               key={cat}
               onClick={() => setCategory(category === cat ? null : cat)}
-              className={`kol-helper-xs select-none cursor-pointer ${category === cat ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
+              className={`kol-helper-12 select-none cursor-pointer ${category === cat ? 'text-fg-64' : 'text-fg-32 hover:text-fg-48'}`}
             >{CATEGORY_LABELS[cat]}</span>
           ))}
         </div>

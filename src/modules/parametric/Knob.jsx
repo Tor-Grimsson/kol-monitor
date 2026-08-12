@@ -56,7 +56,7 @@ export default function Knob({ value, onChange, min, max, label, variant = 'colu
         style={{ cursor: 'ns-resize', touchAction: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
       >
         {label && (
-          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
+          <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
             {label}
           </span>
         )}
@@ -73,7 +73,7 @@ export default function Knob({ value, onChange, min, max, label, variant = 'colu
       >
         {knobSvg}
         {label && (
-          <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1, minWidth: labelMinWidth }}>
+          <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1, minWidth: labelMinWidth }}>
             {label}
           </span>
         )}
@@ -87,13 +87,13 @@ export default function Knob({ value, onChange, min, max, label, variant = 'colu
       style={{ cursor: 'ns-resize', touchAction: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
     >
       {bipolar && (
-        <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', lineHeight: 1 }}>
+        <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', lineHeight: 1 }}>
           -/+
         </span>
       )}
       {knobSvg}
       {label && (
-        <span className="kol-helper-xxxs" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
+        <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>
           {label}
         </span>
       )}

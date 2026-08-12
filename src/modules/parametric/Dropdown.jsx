@@ -41,7 +41,7 @@ export default function Dropdown({ value, options, onChange, label }) {
   return (
     <>
       {label && (
-        <span className="kol-helper-xxxs" style={{
+        <span className="kol-helper-8" style={{
           color: 'rgba(255,255,255,0.35)',
           textTransform: 'capitalize',
           lineHeight: 1,
@@ -51,7 +51,7 @@ export default function Dropdown({ value, options, onChange, label }) {
       )}
       <button
         ref={triggerRef}
-        className="kol-helper-xxxs"
+        className="kol-helper-8"
         style={triggerStyle}
         onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); handleToggle() }}
       >
@@ -85,7 +85,7 @@ export default function Dropdown({ value, options, onChange, label }) {
               <div
                 key={opt}
                 onPointerDown={() => { onChange(opt); setOpen(false) }}
-                className="kol-helper-xxxs"
+                className="kol-helper-8"
                 style={{
                   color: opt === value ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)',
                   backgroundColor: opt === value ? 'rgba(255,255,255,0.06)' : 'transparent',

@@ -6,7 +6,7 @@ export default function CaseHpDialog({ caseHp, onSetHp }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24, width: '100%' }}>
-      <span onClick={() => setShowSlider(v => !v)} className="kol-helper-md text-fg-80 hover:text-fg-96 cursor-pointer select-none">[Width]</span>
+      <span onClick={() => setShowSlider(v => !v)} className="kol-helper-16 text-fg-80 hover:text-fg-96 cursor-pointer select-none">[Width]</span>
       {showSlider && (
         <div style={{ width: 400 }}>
           <Slider
@@ -21,7 +21,7 @@ export default function CaseHpDialog({ caseHp, onSetHp }) {
           />
         </div>
       )}
-      <span className="kol-helper-md text-fg-80">[{caseHp}HP]</span>
+      <span className="kol-helper-16 text-fg-80">[{caseHp}HP]</span>
     </div>
   )
 }

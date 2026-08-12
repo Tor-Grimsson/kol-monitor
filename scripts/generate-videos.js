@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // generate-videos.js — Captures rack videos via CDP screencast + ffmpeg
 // Usage:
-//   yarn generate-videos --patch kaleidoscope                    # full case
-//   yarn generate-videos --patch kaleidoscope --focus kal1       # zoom on module
-//   yarn generate-videos --batch                                 # all showcase patches
-//   yarn generate-videos --patch kaleidoscope --duration 5
+//   pnpm generate-videos --patch kaleidoscope                    # full case
+//   pnpm generate-videos --patch kaleidoscope --focus kal1       # zoom on module
+//   pnpm generate-videos --batch                                 # all showcase patches
+//   pnpm generate-videos --patch kaleidoscope --duration 5
 
 import { spawn, execSync, execFileSync } from 'child_process'
 import { join, dirname } from 'path'
@@ -34,8 +34,8 @@ const BATCH = hasFlag('batch')
 
 if (!PATCH && !BATCH) {
   console.log('Usage:')
-  console.log('  yarn generate-videos --patch <name> [--focus <moduleId>] [--duration <s>]')
-  console.log('  yarn generate-videos --batch [--duration <s>]')
+  console.log('  pnpm generate-videos --patch <name> [--focus <moduleId>] [--duration <s>]')
+  console.log('  pnpm generate-videos --batch [--duration <s>]')
   process.exit(1)
 }
 
