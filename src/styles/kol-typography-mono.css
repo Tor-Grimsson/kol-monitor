@@ -2,7 +2,11 @@
  * Kolkrabbi Typography - Mono (JetBrains Mono)
  * Version: 1.1
  *
- * Standalone mono typography using JetBrains Mono.
+ * The JetBrains Mono @font-face + `--kol-font-family-mono` (fonts are per-app by
+ * DS design) and the one below-floor helper. The t-shirt stops (display/heading/
+ * text/helper-xl/lg) were retired 2026-08-27 to _tmp/2026-08-27-shell-home-adoption/
+ * — they were the accidental reason the masthead rendered mono; `PageHeader
+ * voice="mono"` and the `kol-mono-heading-03` rung are the real seams.
  *
  * Font location: /fonts/jetbrains-mono/
  * Weight hierarchy:
@@ -59,113 +63,8 @@
 }
 
 /* =============================================================================
- * DISPLAY (Largest Headings)
- * ============================================================================= */
-
-.kol-display-lg {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(48px, 6vw, 96px);
-  line-height: 100%;
-  font-weight: 600;
-}
-
-.kol-display-section {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(40px, 5vw, 64px);
-  line-height: 100%;
-  font-weight: 600;
-}
-
-.kol-display-subsection {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(32px, 4vw, 48px);
-  line-height: 100%;
-  font-weight: 600;
-}
-
-/* =============================================================================
- * HEADINGS
- * ============================================================================= */
-
-.kol-heading-xl {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(40px, 5vw, 64px);
-  line-height: 110%;
-  font-weight: 500;
-}
-
-.kol-heading-lg {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(32px, 4vw, 48px);
-  line-height: 110%;
-  font-weight: 500;
-}
-
-.kol-heading-md {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(28px, 3.5vw, 40px);
-  line-height: 120%;
-  font-weight: 500;
-}
-
-.kol-heading-sm {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(20px, 2.5vw, 32px);
-  line-height: 100%;
-  font-weight: 500;
-}
-
-.kol-heading-xs {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(18px, 2vw, 28px);
-  line-height: 125%;
-  font-weight: 500;
-}
-
-/* =============================================================================
- * TEXT (Body Copy)
- * ============================================================================= */
-
-.kol-text-lg {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(18px, 2vw, 20px);
-  line-height: 160%;
-  font-weight: 400;
-}
-
-.kol-text-md {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(14px, 1.5vw, 18px);
-  line-height: 160%;
-  font-weight: 400;
-}
-
-.kol-text-sm {
-  font-family: var(--kol-font-family-mono);
-  font-size: clamp(12px, 1.25vw, 16px);
-  line-height: 150%;
-  font-weight: 400;
-}
-
-/* =============================================================================
  * HELPERS
  * ============================================================================= */
-
-/* Use Tailwind "uppercase" / "font-light" to compose variants inline */
-
-.kol-helper-xl {
-  font-family: var(--kol-font-family-mono);
-  font-size: 20px;
-  line-height: 100%;
-  font-weight: 500;
-}
-
-.kol-helper-lg {
-  font-family: var(--kol-font-family-mono);
-  font-size: 18px;
-  line-height: 100%;
-  font-weight: 500;
-}
 
 .kol-helper-xxxxs {
   font-family: var(--kol-font-family-mono);

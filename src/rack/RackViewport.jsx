@@ -1,7 +1,7 @@
 // RackViewport — the core rack canvas with pan, zoom, snap, cables, workbench
 // Used by both VideoModulo (full page) and CreatePage (embedded)
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import usePersistedState from '../hooks/usePersistedState'
 import { useModuleRegistry } from '../hooks/useModuleRegistry.jsx'
 import { usePatchRouting } from '../hooks/usePatchRouting.jsx'
@@ -13,11 +13,17 @@ import { MODULE_DEFS } from '../modules/registry'
 import { ROW_WIDTH } from '../modules/utility/eurorack'
 import PatchCableOverlay from '../modules/utility/PatchCableOverlay.jsx'
 import RackView from './RackView.jsx'
+import { useDotGrid, DOT_GRID_SIZE, DOT_GRID_IMAGE } from '../hooks/useDotGrid.js'
 import Workbench from './Workbench.jsx'
 
 const BASE_WIDTH = ROW_WIDTH + 52
 
-export default function RackViewport({ style, onEditCase, editMode: editModeOverride, viewLockedRef: viewLockedRefProp, snapPadding = 48 }) {
+export default function RackViewport({ style, onEditCase, editMode: editModeOverride, viewLockedRef: viewLockedRefProp, snapPadding = 48, gridRef }) {
+  // The grid is the rack's SURFACE, not page chrome — it rides the same zoom and
+  // pan the rack does. `zoom` scales the inner element and its `translate`, so the
+  // visual pan is panOffset * zoom; the background matches by scaling its cell and
+  // offsetting its position by the same product.
+  const dotGrid = useDotGrid(true)
   const { modulesRef } = useModuleRegistry()
   const routing = usePatchRouting()
   const { connectionsRef } = routing
@@ -188,12 +194,31 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
     }))
   })
 
+  // `gridRef`: a consumer may host the grid on a bigger box than this viewport
+  // (Create paints it on the whole page — user, 2026-08-27: the dots are not
+  // clipped, at all). Same cell, same offset, so it still rides zoom and pan.
+  useLayoutEffect(() => {
+    const el = gridRef?.current
+    if (!el || !dotGrid) return
+    el.style.setProperty('background-image', DOT_GRID_IMAGE)
+    el.style.setProperty('background-size', `${DOT_GRID_SIZE * zoom}px ${DOT_GRID_SIZE * zoom}px`)
+    el.style.setProperty('background-position', `${panOffset.x * zoom}px ${panOffset.y * zoom}px`)
+  }, [gridRef, dotGrid, zoom, panOffset.x, panOffset.y])
+
   return (
     <RenderControlProvider value={controlRef}>
       <div
         ref={rackOuterRef}
         onPointerDown={handlePanDown}
-        style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'grid', placeItems: 'center', position: 'relative', ...style }}
+        style={{
+          flex: 1, minHeight: 0, overflow: 'hidden', display: 'grid', placeItems: 'center', position: 'relative',
+          ...(dotGrid && !gridRef ? {
+            backgroundImage: DOT_GRID_IMAGE,
+            backgroundSize: `${DOT_GRID_SIZE * zoom}px ${DOT_GRID_SIZE * zoom}px`,
+            backgroundPosition: `${panOffset.x * zoom}px ${panOffset.y * zoom}px`,
+          } : null),
+          ...style,
+        }}
       >
         <div ref={rackRef} className="relative" style={{ zoom, width: BASE_WIDTH, transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}>
           <PatchCableOverlay containerRef={rackRef} cableVisibility={cableVisibility} cableLocked={cableLocked} onCableUnlock={() => setCableLocked(false)} />

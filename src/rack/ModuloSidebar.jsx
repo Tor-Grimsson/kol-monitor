@@ -1,13 +1,15 @@
 // ModuloSidebar — sections: Case, Modules, Presets
 
 import { useState, useRef, useEffect } from 'react'
+import logomarkUrl from '@kolkrabbi/kol-brand/svg/favicon-01.svg?url'
 import { useNavigate } from 'react-router-dom'
 import { CATEGORIES, getModulesByCategory, MODULE_DEFS } from '../modules/registry'
 import { patches } from '../data/patches'
 import { savePatchFile, loadPatchFile } from '../hooks/usePatchFile.js'
 import { useModuleRegistry } from '../hooks/useModuleRegistry.jsx'
 import Icon from '../icons/Icon'
-import Logomark from '../components/atoms/Logomark'
+import { Icon as DsIcon } from '@kolkrabbi/kol-icons' // nav-* glyphs, promoted 2026-08-27
+import { Logomark } from '@kolkrabbi/kol-shell'
 
 const NAV_ITEMS = [
   { icon: 'nav-library', path: '/library', label: 'Library' },
@@ -20,7 +22,7 @@ function NavIcons() {
   return (
     <>
       <div onClick={() => navigate('/')} title="Home" style={{ cursor: 'pointer', lineHeight: 0, marginRight: 8 }}>
-        <Logomark svgUrl="/svg/favicon-01.svg" size={16} />
+        <Logomark svgUrl={logomarkUrl} size={16} />
       </div>
       {NAV_ITEMS.map(({ icon, path, label }) => (
         <div
@@ -29,7 +31,7 @@ function NavIcons() {
           title={label}
           style={{ cursor: 'pointer', color: 'var(--kol-oq-96)', lineHeight: 0 }}
         >
-          <Icon name={icon} size={16} />
+          <DsIcon name={icon} size={16} />
         </div>
       ))}
     </>

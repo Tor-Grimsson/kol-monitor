@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { MODULE_DEFS } from '../modules/registry'
 import Divider from '../components/atoms/Divider'
 import Button from '../components/atoms/Button'
+import { PageShell, PageHeader } from '@kolkrabbi/kol-shell'
 
 const MODULE_SOURCES = import.meta.glob('../modules/**/*.jsx', { query: '?raw', import: 'default' })
 
@@ -64,16 +65,18 @@ export default function ModuleDetailPage() {
 
   if (!mod) {
     return (
-      <div style={{ padding: '48px 48px', paddingTop: 48, minHeight: '100vh' }} className="bg-surface-primary">
-        <h1 className="text-fg-96 kol-heading-sm" style={{ marginTop: 24 }}>Module not found</h1>
-      </div>
+      <PageShell>
+        {/* the subtitle is not decoration: without one the masthead is 35.2 tall
+            against every other page's 65.2, and the requested id is the one fact
+            the reader is missing */}
+        <PageHeader size="sm" voice="mono" title="Module not found" subtitle={moduleType} />
+      </PageShell>
     )
   }
 
   return (
-    <div style={{ padding: '48px 48px', paddingTop: 48, overflow: 'hidden', height: '100vh', display: 'flex', flexDirection: 'column' }} className="bg-surface-primary">
-      <h1 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>{mod.label}</h1>
-      <p className="text-fg-48 kol-text-sm" style={{ marginBottom: 40, textTransform: 'capitalize' }}>{mod.hp}HP — {mod.u}U — {mod.category}</p>
+    <PageShell mode="fixed">
+      <PageHeader size="sm" voice="mono" title={mod.label} subtitle={`${mod.hp}HP — ${mod.u}U — ${mod.category.charAt(0).toUpperCase() + mod.category.slice(1)}`} />
 
       <Divider className="mb-6" />
 
@@ -222,6 +225,6 @@ export default function ModuleDetailPage() {
           >{source}</pre>
         </div>
       )}
-    </div>
+    </PageShell>
   )
 }

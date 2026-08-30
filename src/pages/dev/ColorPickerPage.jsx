@@ -37,7 +37,7 @@ function Board({ theme }) {
         color: 'var(--kol-surface-on-primary)',
       }}
     >
-      <div className="kol-heading-sm" style={{ marginBottom: 4 }}>{theme}</div>
+      <div className="kol-mono-heading-03" style={{ marginBottom: 4 }}>{theme}</div>
       <div className="kol-helper-10" style={{ opacity: 0.5, marginBottom: 16 }}>
         Click a swatch to open. Alt-click resets to defaultValue where one is set.
       </div>
@@ -55,7 +55,7 @@ export default function ColorPickerPage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--kol-surface-primary)' }}>
       <div style={{ padding: '24px 24px 0' }}>
-        <div className="kol-heading-md">ColorPicker</div>
+        <div className="kol-mono-heading-03">ColorPicker</div>
         <div className="kol-helper-12" style={{ opacity: 0.6, marginTop: 4, maxWidth: 620 }}>
           16px swatch + portalled react-colorful popover. Both themes side by side.
           The popover flips upward when there is under 260px below the swatch — scroll down

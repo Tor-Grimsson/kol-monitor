@@ -1,0 +1,33 @@
+- generic [ref=f2e3]:
+  - generic [ref=f2e4]:
+    - generic "Monitor" [ref=f2e5] [cursor=pointer]
+    - button "Button" [ref=f2e7] [cursor=pointer]
+    - button "Button" [ref=f2e11] [cursor=pointer]
+    - button "Button" [ref=f2e15] [cursor=pointer]
+    - button "Switch to dark mode" [ref=f2e19] [cursor=pointer]
+    - button "Button" [ref=f2e30] [cursor=pointer]
+  - generic [ref=f2e37]:
+    - banner [ref=f2e38]:
+      - heading "Monitor" [level=1] [ref=f2e39]
+      - paragraph [ref=f2e40]: Video synthesis workstation
+    - generic [ref=f2e42]:
+      - generic [ref=f2e43]:
+        - generic [ref=f2e44]:
+          - heading "All Presets" [level=2] [ref=f2e45]
+          - generic [ref=f2e49]:
+            - button "Toggle filters" [ref=f2e50] [cursor=pointer]
+            - button "Search" [ref=f2e55]
+        - generic [ref=f2e61]:
+          - generic [ref=f2e62] [cursor=pointer]: RECENT
+          - generic [ref=f2e63] [cursor=pointer]: SAVED
+      - generic [ref=f2e68]:
+        - generic [ref=f2e69] [cursor=pointer]: LIST
+        - generic [ref=f2e70] [cursor=pointer]: GRID
+      - button "Empty 7U Empty 7U 7U — power, perf, patch" [ref=f2e74] [cursor=pointer]:
+        - img "Empty 7U" [ref=f2e77]
+        - generic [ref=f2e79]:
+          - generic [ref=f2e80]: Empty 7U
+          - generic [ref=f2e81]: 7U — power, perf, patch
+    - generic [ref=f2e82]:
+      - button "New Rack" [ref=f2e83] [cursor=pointer]
+      - button "Walkthrough" [ref=f2e84] [cursor=pointer]

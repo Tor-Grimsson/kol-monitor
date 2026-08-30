@@ -2,11 +2,15 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { patches } from '../data/patches'
 import Button from '../components/atoms/Button'
-import Icon from '../icons/Icon'
-import GridCard from '../components/atoms/GridCard'
-import PageHeader from '../components/PageHeader'
-import ContentFilters from '../components/organisms/filters/ContentFilters'
 import { Illustration } from '../walkthrough'
+import { CatalogPage } from '@kolkrabbi/kol-shell'
+
+/**
+ * HomePage — the front door, at `/`, on kol-shell's `CatalogPage`
+ * (ShellHomeSystem, kol-shell 0.8.0 — this page was one of its three sources;
+ * adopted 2026-08-27 on kol-fxr's wiring). Semantics stay the consumer's:
+ * RECENT is the one empty case, SAVED is every preset, a click opens the rack.
+ */
 
 const WALKTHROUGH_STEPS = [
   {
@@ -54,146 +58,85 @@ const allPresets = PRESET_NAMES.map(name => {
     name,
     title: name.replace(/([A-Z])/g, ' $1').replace(/[-_]/g, ' ').trim(),
     detail: `${moduleCount} modules, ${connCount} connections`,
+    // ponytail: no preset carries a type yet — all read 'patches' until `type: 'envelope' | 'effects'` is set on one in patches.js
+    type: p.type ?? 'patches',
     tags: p.tags || [],
     tag: p.tags?.[0],
   }
 })
 
 const TAGS = [...new Set(PRESET_NAMES.flatMap(n => patches[n].tags || []))]
+/* TYPE stacks as a narrow column (`stack`), TAGS wraps beside it — the DS's own group shapes */
 const FILTER_GROUPS = [
+  { label: 'Type', key: 'type', values: ['envelope', 'effects', 'patches'], stack: true },
   { label: 'Tags', key: 'tags', values: TAGS },
 ]
+
+const VIEWS = [
+  { value: 'recent', label: 'RECENT' },
+  { value: 'saved', label: 'SAVED' },
+]
+
+/* RECENT shows the one empty case; SAVED shows every preset — the hand-written
+   page's semantics, now driven through CatalogPage's controlled view. */
+const EMPTY_CASE = { name: 'empty', title: 'Empty 7U', detail: '7U — power, perf, patch', type: 'patches', tags: [] }
 
 export default function HomePage() {
   const navigate = useNavigate()
   const [showWalkthrough, setShowWalkthrough] = useState(false)
-  const [step, setStep] = useState(0)
+  const [view, setView] = useState('recent')
+  const items = view === 'recent' ? [EMPTY_CASE] : allPresets
+
+  const steps = WALKTHROUGH_STEPS.map(s => s.actions
+    ? {
+        ...s,
+        actions: (
+          <>
+            <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(false); navigate('/create') }}>Create Rack</Button>
+            <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(false); navigate('/library') }}>Browse Library</Button>
+          </>
+        ),
+      }
+    : {
+        title: s.title,
+        text: Array.isArray(s.text) ? s.text : [s.text],
+        illustration: (
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="text-fg-48">
+            <Illustration name={s.svg} />
+          </div>
+        ),
+      })
 
   return (
-    <div style={{ padding: '48px 48px', overflow: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column' }} className="bg-surface-primary">
-      <PageHeader
-        title="Monitor"
-        subtitle="Video synthesis workstation"
-      />
-
-      <div style={{ flex: 1, position: 'relative' }}>
-        {showWalkthrough && (
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            display: 'flex', alignItems: 'center', gap: 16,
-            maxWidth: 960, width: '100%', zIndex: 10,
-          }}>
-            <Button
-              variant="grey"
-              size="md"
-              iconOnly="chevron-left"
-              disabled={step === 0}
-              onClick={() => setStep(s => Math.max(0, s - 1))}
-              style={{ padding: 8 }}
-            />
-
-            <div
-              className="bg-surface-tertiary border border-fg-08"
-              style={{
-                flex: 1, display: 'flex', borderRadius: 4, minHeight: 480,
-                overflow: 'hidden',
-              }}
-            >
-              {WALKTHROUGH_STEPS[step].actions ? (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                  <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(false); navigate('/create') }}>Create Rack</Button>
-                  <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(false); navigate('/library') }}>Browse Library</Button>
-                </div>
-              ) : (
-                <>
-                  <div style={{ flex: 1, padding: '64px 24px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div>
-                      <h3 className="text-fg-80 kol-text-sm" style={{ marginBottom: 12 }}>{WALKTHROUGH_STEPS[step].title}</h3>
-                      {(Array.isArray(WALKTHROUGH_STEPS[step].text) ? WALKTHROUGH_STEPS[step].text : [WALKTHROUGH_STEPS[step].text]).map((t, i) => (
-                        <p key={i} className="text-fg-48 kol-helper-12" style={{ lineHeight: 1.8, marginTop: i > 0 ? 12 : 0 }}>{t}</p>
-                      ))}
-                    </div>
-                    <span className="text-fg-48 kol-helper-12">{step + 1} / {WALKTHROUGH_STEPS.length}</span>
-                  </div>
-                  <div style={{ flex: '0 0 50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.48)' }}>
-                    <Illustration name={WALKTHROUGH_STEPS[step].svg} />
-                  </div>
-                </>
-              )}
-            </div>
-
-            <Button
-              variant="grey"
-              size="md"
-              iconOnly="chevron-right"
-              disabled={step === WALKTHROUGH_STEPS.length - 1}
-              onClick={() => setStep(s => Math.min(WALKTHROUGH_STEPS.length - 1, s + 1))}
-              style={{ padding: 8 }}
-            />
-          </div>
-        )}
-        <ContentFilters
-            items={allPresets}
-            title="All Presets"
-            totalCount={allPresets.length}
-            filterGroups={FILTER_GROUPS}
-            showCountOnlyWhenFiltering
-            viewModeOptions={[
-              { value: 'recent', label: 'Recent' },
-              { value: 'saved', label: 'Saved' },
-            ]}
-            defaultViewMode="recent"
-            layoutOptions={showWalkthrough ? undefined : [
-              { value: 'list', label: 'List' },
-              { value: 'grid', label: 'Grid' },
-            ]}
-            defaultLayout="grid"
-            renderItem={(items, viewMode, layout) => {
-              if (showWalkthrough) return null
-
-              if (viewMode === 'recent') {
-                return (
-                  <div style={{ display: 'grid', gridTemplateColumns: layout === 'list' ? 'repeat(4, 1fr)' : 'repeat(6, 1fr)', gap: layout === 'list' ? 8 : 24 }}>
-                    <GridCard
-                      variant={layout === 'list' ? 'list' : undefined}
-                      title="Empty 7U"
-                      detail="7U — power, perf, patch"
-                      previewFit="compact"
-                      preview={layout !== 'list' ? <img src="/previews/patches/empty.png" alt="Empty 7U" /> : undefined}
-                      onClick={() => navigate('/rack/patch/empty')}
-                    />
-                  </div>
-                )
-              }
-
-              return (
-                <div style={{ display: 'grid', gridTemplateColumns: layout === 'list' ? 'repeat(4, 1fr)' : 'repeat(6, 1fr)', gap: layout === 'list' ? 8 : 24 }}>
-                  {items.map(p => (
-                    <GridCard
-                      key={p.name}
-                      variant={layout === 'list' ? 'list' : undefined}
-                      title={p.title}
-                      detail={p.detail}
-                      previewFit="compact"
-                      preview={layout !== 'list' ? <img src={`/previews/patches/${p.name}.png`} alt={p.title} /> : undefined}
-                      onClick={() => navigate(`/rack/preset/${p.name}`)}
-                    />
-                  ))}
-                </div>
-              )
-            }}
-          />
-      </div>
-
-      <div style={{ display: 'flex', gap: 12, marginTop: 48, alignSelf: 'flex-start' }}>
-        <Button variant="grey" size="md" onClick={() => navigate('/create')}>
-          New Rack
-        </Button>
-        <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(!showWalkthrough); setStep(0) }}>
-          {showWalkthrough ? 'Close' : 'Walkthrough'}
-        </Button>
-      </div>
-    </div>
+    <CatalogPage
+      className="no-card-hover"
+      header={{ title: 'Monitor', subtitle: 'Video synthesis workstation', size: 'sm', voice: 'mono' }}
+      items={items}
+      filtersTitle="All Presets"
+      filterGroups={FILTER_GROUPS}
+      views={VIEWS}
+      view={view}
+      onViewChange={setView}
+      filtersProps={{ mutuallyExclusiveFilters: ['type'], tone: 'sunken' }}
+      toCard={(p) => ({
+        key: p.name,
+        title: p.title,
+        detail: p.detail,
+        fit: 'compact',
+        media: <img src={`/previews/patches/${p.name}.png`} alt={p.title} />,
+        onClick: () => navigate(p.name === 'empty' ? '/rack/patch/empty' : `/rack/preset/${p.name}`),
+      })}
+      walkthrough={{ open: showWalkthrough, steps }}
+      actions={
+        <>
+          <Button variant="grey" size="md" onClick={() => navigate('/create')}>
+            New Rack
+          </Button>
+          <Button variant="grey" size="md" onClick={() => setShowWalkthrough(!showWalkthrough)}>
+            {showWalkthrough ? 'Close' : 'Walkthrough'}
+          </Button>
+        </>
+      }
+    />
   )
 }

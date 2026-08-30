@@ -17,24 +17,8 @@
    (buttons left for @kolkrabbi/kol-theme 2026-08-12; these stayed local)
    --------------------------------------------------------------------------- */
 
-.gridcard-preview img {
-  object-position: top left;
-}
-.gridcard-preview--cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.gridcard-preview--natural img {
-  max-width: none;
-  transform: scale(0.5);
-  transform-origin: top left;
-}
-.gridcard-preview--compact img {
-  max-width: none;
-  transform: scale(0.3);
-  transform-origin: top left;
-}
+/* .gridcard-preview-* retired 2026-08-15 — the DS GridCard uses kol-theme's
+   .kol-shell-card-preview-* (file copy in _tmp/2026-08-15-shell-adoption/). */
 
 *:hover > .patch-preview-overlay {
   opacity: 1 !important;

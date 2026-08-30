@@ -4,6 +4,7 @@ import { patches } from '../data/patches'
 import { MODULE_DEFS } from '../modules/registry'
 import Divider from '../components/atoms/Divider'
 import Button from '../components/atoms/Button'
+import { PageShell, PageHeader } from '@kolkrabbi/kol-shell'
 
 export default function PatchDetailPage() {
   const { patchName } = useParams()
@@ -13,9 +14,10 @@ export default function PatchDetailPage() {
 
   if (!patch) {
     return (
-      <div style={{ padding: '48px 48px', paddingTop: 48, minHeight: '100vh' }} className="bg-surface-primary">
-        <h1 className="text-fg-96 kol-heading-sm" style={{ marginTop: 24 }}>Patch not found</h1>
-      </div>
+      <PageShell>
+        {/* subtitle keeps the masthead on the 65.2 rung every other page sits on */}
+        <PageHeader size="sm" voice="mono" title="Patch not found" subtitle={patchName} />
+      </PageShell>
     )
   }
 
@@ -26,9 +28,8 @@ export default function PatchDetailPage() {
   const rackUrl = `/rack/patch/${patchName.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`
 
   return (
-    <div style={{ padding: '48px 48px', paddingTop: 48, overflow: 'hidden', height: '100vh', display: 'flex', flexDirection: 'column' }} className="bg-surface-primary">
-      <h1 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>{title}</h1>
-      <p className="text-fg-48 kol-text-sm" style={{ marginBottom: 40 }}>{moduleCount} modules, {connCount} connections</p>
+    <PageShell mode="fixed">
+      <PageHeader size="sm" voice="mono" title={title} subtitle={`${moduleCount} modules, ${connCount} connections`} />
 
       <Divider className="mb-6" />
 
@@ -137,6 +138,6 @@ export default function PatchDetailPage() {
           />
         </div>
       )}
-    </div>
+    </PageShell>
   )
 }

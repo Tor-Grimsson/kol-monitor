@@ -13,6 +13,13 @@
   --kol-accent-on-primary: #1E1E21;
   --kol-accent-primary-strong: var(--kol-palette-orange);
 
+  /* Media focus — where a card's image is pinned for its fit AND where the
+   * hover zoom grows from (one transform-origin, shared). Monitor's previews
+   * read their modules at the top-left (ContentMediaFocusBinding, kol-component
+   * 0.111.0). DS default for the natural/compact fits is already `top left`;
+   * bound explicitly so the rack previews do not depend on that default. */
+  --kol-media-focus: top left;
+
   /* Jack roles — rack-specific, not DS scope. JackSocket.jsx reads these via
    * getComputedStyle(documentElement), so they must resolve on :root. */
   --kol-signal-input: #4ade80;
@@ -23,4 +30,23 @@
 .bg-accent-primary {
   background-color: var(--kol-accent-primary);
   color: var(--kol-accent-on-primary);
+}
+
+/* Cards hold still on Home + Library (user ruling 2026-08-27). The DS catalog
+ * card steps its fill and frame, zooms the media 1.06 and dims the title on
+ * hover; each is pinned back to its rest value here. Keyed on the two
+ * CatalogPage roots (`className="no-card-hover"`) — Create's picker keeps the
+ * DS hover. The cursor stays: the card still opens on click. */
+.no-card-hover .kol-card.kol-content-hover:hover {
+  background-color: var(--kol-card-bg);
+}
+.no-card-hover .kol-card.kol-content-hover-frame:hover {
+  border-color: var(--kol-card-border);
+}
+.no-card-hover .kol-card:hover .kol-media-zoom > img,
+.no-card-hover .kol-card:hover .kol-media-zoom > video {
+  transform: none;
+}
+.no-card-hover .kol-card:hover .kol-content-title-dim {
+  opacity: 1;
 }

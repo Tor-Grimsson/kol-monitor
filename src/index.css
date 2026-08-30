@@ -1,10 +1,12 @@
 @import "tailwindcss";
-/* Tailwind never scans node_modules — point it at the DS package sources so
-   the utility classes their JSX emits (ThemeToggle's roll, Button chrome)
-   actually get generated. Same pattern as the DS showcase. */
-@source "../node_modules/@kolkrabbi/kol-framework/src";
-@source "../node_modules/@kolkrabbi/kol-component/src";
-@import "@kolkrabbi/kol-theme";
+/* The app tier only — kol-theme minus the five domain packs (chess · workshop ·
+   foundry · dashboards · styleguide), none of which a rack app renders.
+   Requires kol-theme >=0.77.0 (FullConsumptionContract Part 1). */
+@import "@kolkrabbi/kol-theme/core";
+/* Tailwind never scans node_modules — the DS @source manifest points it at
+   every raw-JSX package. Requires kol-theme ≥0.42.2: earlier manifests were
+   a silent no-op under pnpm (KolSourcesPnpmResolution). */
+@import "@kolkrabbi/kol-theme/kol-sources.css";
 @import "./styles/kol-typography-mono.css";
 @import "./styles/monitor-overrides.css";
 @import "./styles/components.css";

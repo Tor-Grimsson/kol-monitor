@@ -1,0 +1,35 @@
+- generic [ref=f4e3]:
+  - generic [ref=f4e4]:
+    - generic "Monitor" [ref=f4e5] [cursor=pointer]
+    - button "Button" [ref=f4e9] [cursor=pointer]
+    - button "Button" [ref=f4e13] [cursor=pointer]
+    - button "Button" [ref=f4e17] [cursor=pointer]
+    - button "Switch to dark mode" [ref=f4e21] [cursor=pointer]
+    - button "Button" [ref=f4e32] [cursor=pointer]
+  - generic [ref=f4e39]:
+    - heading "Untitled" [level=1] [ref=f4e40]:
+      - textbox: Untitled
+    - paragraph [ref=f4e41]:
+      - textbox: Design a new case
+    - generic [ref=f4e42]:
+      - generic [ref=f4e44]:
+        - generic [ref=f4e45]:
+          - heading "Case" [level=2] [ref=f4e46]
+          - generic [ref=f4e50]:
+            - button "Toggle filters" [ref=f4e51] [cursor=pointer]
+            - button "Search" [ref=f4e56]
+            - button "Rename case" [ref=f4e61] [cursor=pointer]
+        - generic [ref=f4e66]:
+          - generic [ref=f4e67] [cursor=pointer]: CASE
+          - generic [ref=f4e68] [cursor=pointer]: MODULES
+      - generic [ref=f4e929]:
+        - generic [ref=f4e930]:
+          - generic [ref=f4e931] [cursor=pointer]: −
+          - textbox [ref=f4e932]: "100"
+          - generic [ref=f4e933]: "%"
+          - generic [ref=f4e934] [cursor=pointer]: +
+          - generic [ref=f4e935] [cursor=pointer]: "[Open in Rack]"
+        - generic [ref=f4e936]:
+          - button "Rows" [ref=f4e937] [cursor=pointer]
+          - button "HP" [ref=f4e941] [cursor=pointer]
+          - button "Case preview" [ref=f4e945] [cursor=pointer]

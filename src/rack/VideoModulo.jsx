@@ -1,17 +1,20 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useNavHidden } from '../components/AppLayout'
 import usePersistedState from '../hooks/usePersistedState'
 import { usePatchRouting } from '../hooks/usePatchRouting.jsx'
 import { useCasePower } from '../hooks/useCasePower.jsx'
 import { useRack } from '../hooks/useRackContext.jsx'
+import { useRailSlot } from '../hooks/useRailSlot.jsx'
 import { useKeybindings } from '../hooks/useKeybindings'
-import { useDotGrid, DOT_GRID_BG } from '../hooks/useDotGrid.js'
 import { patches } from '../data/patches'
 import { ROW_WIDTH } from '../modules/utility/eurorack'
 import RackViewport from './RackViewport.jsx'
 import ModuloSidebar from './ModuloSidebar.jsx'
-import ShortcutsOverlay from '../overlays/ShortcutsOverlay.jsx'
+import RackRailPanel from './RackRailPanel.jsx'
+import { ShortcutsOverlay } from '@kolkrabbi/kol-shell'
+import { SHORTCUT_SECTIONS } from '../data/shortcuts.js'
 import LibrarySearchOverlay from '../overlays/LibrarySearchOverlay.jsx'
 import Icon from '../icons/Icon.jsx'
 
@@ -21,10 +24,10 @@ function VideoModuloInner() {
   const { presetName } = useParams()
   const navigate = useNavigate()
   const routing = usePatchRouting()
-  const dotGrid = useDotGrid(false) // off by default in the rack; `g` toggles
   const { toggleAll } = useCasePower()
   const rack = useRack()
   const nav = useNavHidden()
+  const rail = useRailSlot()
   const [zoom, setZoom] = usePersistedState('rack-zoom', 1)
   const [sidebarOpen, setSidebarOpenRaw] = useState(false)
   const sidebarOpenRef = useRef(false)
@@ -55,6 +58,15 @@ function VideoModuloInner() {
   navRef.current = nav
   useEffect(() => () => navRef.current?.setNavHidden(false), [])
 
+  // Sidebar and rail are variants of one thing and never show together (user
+  // ruling 2026-08-27). Forward sync lives in setSidebarOpen; this is the
+  // reverse: the rail coming back on its own (`\` key, route change) closes
+  // the sidebar. No loop — setSidebarOpen(false) writes navHidden=false, a no-op.
+  const navHidden = nav?.navHidden
+  useEffect(() => {
+    if (navHidden === false && sidebarOpenRef.current) setSidebarOpen(false)
+  }, [navHidden, setSidebarOpen])
+
   // Load preset from URL param on mount, or init if bare /rack
   const presetLoadedRef = useRef(null)
   useEffect(() => {
@@ -81,7 +93,8 @@ function VideoModuloInner() {
   }, [presetName, rack, routing])
 
   return (
-    <div className="bg-surface-primary flex relative" style={{ overflow: 'hidden', height: '100vh', ...(dotGrid ? DOT_GRID_BG : {}) }}>
+    /* the rack root is not a PageShell — it reads the shell's page wash itself (kol-shell 0.11.0) */
+    <div className="flex relative" style={{ '--kol-shell-page-wash': 'var(--kol-fg-04)', backgroundColor: 'var(--kol-shell-page-wash, var(--kol-surface-primary))', overflow: 'hidden', height: '100vh' }}>
       {sidebarOpen && (
         <div className="sidebar-width flex-shrink-0 border-r border-fg-08 overflow-y-auto" style={{
           backgroundColor: 'var(--kol-surface-primary)',
@@ -131,7 +144,13 @@ function VideoModuloInner() {
         </div>
       </div>}
 
-      {showShortcuts && <ShortcutsOverlay onClose={() => setShowShortcuts(false)} />}
+      {/* the module catalog, rendered here (inside RackProvider) but painted
+        * inside the rail's opened width. The rail is outside this tree, so the
+        * slot's node travels out through `useRailSlot` and the content goes
+        * back in through the portal. */}
+      {rail?.slot && createPortal(<RackRailPanel rack={rack} />, rail.slot)}
+
+      {showShortcuts && <ShortcutsOverlay shortcuts={SHORTCUT_SECTIONS} onClose={() => setShowShortcuts(false)} />}
 
       {showLibrarySearch && (
         <LibrarySearchOverlay

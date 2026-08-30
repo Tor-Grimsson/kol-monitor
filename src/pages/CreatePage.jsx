@@ -4,20 +4,20 @@ import { MODULE_DEFS, CATEGORIES } from '../modules/registry'
 import Button from '../components/atoms/Button'
 import Divider from '../components/atoms/Divider'
 import Icon from '../icons/Icon'
-import PageHeader from '../components/PageHeader'
-import ContentFilters from '../components/organisms/filters/ContentFilters'
+import { PageShell, PageHeader } from '@kolkrabbi/kol-shell'
+import { ContentFilters, ContentCard, ContentRow } from '@kolkrabbi/kol-component'
 import CaseRowDialog from '../components/CaseRowDialog'
 import RackViewport from '../rack/RackViewport.jsx'
-import GridCard from '../components/atoms/GridCard'
 import CaseHpDialog from '../components/CaseHpDialog'
 import usePersistedState from '../hooks/usePersistedState'
 import { useRack } from '../hooks/useRackContext.jsx'
-import { useDotGrid, DOT_GRID_BG } from '../hooks/useDotGrid.js'
 import { usePatchRouting } from '../hooks/usePatchRouting.jsx'
 
 const allModules = Object.entries(MODULE_DEFS).map(([type, def]) => ({
   type, ...def,
   u_label: `${def.u}U`,
+  // Authored case — the DS cards render strings as written (no auto-casing)
+  categoryLabel: def.category.charAt(0).toUpperCase() + def.category.slice(1),
 }))
 
 const MODULE_FILTER_GROUPS = [
@@ -27,11 +27,11 @@ const MODULE_FILTER_GROUPS = [
 
 export default function CreatePage() {
   const navigate = useNavigate()
-  const dotGrid = useDotGrid(true) // on by default here; `g` toggles
   const [caseName, setCaseName] = usePersistedState('caseName', 'Untitled')
   const [caseDescription, setCaseDescription] = usePersistedState('caseDescription', 'Design a new case')
   const [editingName, setEditingName] = useState(false)
   const titleRef = useRef(null)
+  const dotGridRef = useRef(null)
   const [view, setView] = useState('case')
   const [addingRow, setAddingRow] = useState(false)
   const [showHpPicker, setShowHpPicker] = useState(false)
@@ -128,40 +128,47 @@ export default function CreatePage() {
   const openInRack = () => navigate('/rack')
 
   return (
-    <div
-      className="bg-surface-primary"
-      style={{
-        padding: '48px 48px', height: '100vh', overflow: 'hidden',
-        display: 'flex', flexDirection: 'column',
-        ...(dotGrid ? DOT_GRID_BG : {}),
-      }}
-    >
-      <h1 className="text-fg-96 kol-heading-sm" style={{ marginBottom: 8 }}>
-        <input
-          ref={titleRef}
-          type="text"
-          value={caseName}
-          onChange={e => setCaseName(e.target.value)}
-          readOnly={!editingName}
-          className="bg-transparent outline-none text-fg-96 kol-heading-sm"
-          style={{ width: `${caseName.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', boxShadow: editingName ? 'inset 0 -1px 0 rgba(255,255,255,0.12)' : 'none', caretColor: editingName ? 'auto' : 'transparent', pointerEvents: editingName ? 'auto' : 'none' }}
-        />
-      </h1>
-      <p style={{ marginBottom: 40 }}>
-        <input
-          type="text"
-          value={caseDescription}
-          onChange={e => setCaseDescription(e.target.value)}
-          onBlur={() => setEditingName(false)}
-          onKeyDown={e => { if (e.key === 'Enter') setEditingName(false) }}
-          readOnly={!editingName}
-          className="bg-transparent outline-none text-fg-48 kol-text-sm"
-          style={{ width: `${caseDescription.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', boxShadow: editingName ? 'inset 0 -1px 0 rgba(255,255,255,0.12)' : 'none', caretColor: editingName ? 'auto' : 'transparent', pointerEvents: editingName ? 'auto' : 'none' }}
-        />
-      </p>
+    /* Create sits on the app tier's fg-02 (AppLayout); only the rack steps up to fg-04 */
+    <PageShell mode="fixed" style={{ '--kol-shell-page-wash': 'var(--kol-fg-02)', position: 'relative', isolation: 'isolate' }}>
+      {/* the dot grid on the WHOLE page — over the wash, under the chrome, the
+        * padding ignored (inset 0 spans the padding box). RackViewport drives it
+        * through gridRef so it still rides zoom/pan (user, 2026-08-27). */}
+      {showCase && <div ref={dotGridRef} aria-hidden style={{ position: 'absolute', inset: 0, zIndex: -1, pointerEvents: 'none' }} />}
+      {/* the masthead is `PageHeader`, not an h1 + p pair copied off its classes
+        * — the hand-rolled version sat at 61.2 (mb 8 instead of the role's 12)
+        * against every other page's 65.2. `title` and `subtitle` take nodes, so
+        * the editable inputs drop straight in and the rhythm comes from the DS. */}
+      <PageHeader
+        size="sm"
+        voice="mono"
+        title={
+          <input
+            ref={titleRef}
+            type="text"
+            value={caseName}
+            onChange={e => setCaseName(e.target.value)}
+            readOnly={!editingName}
+            className="block p-0 h-[35.2px] leading-[35.2px] bg-transparent outline-none text-fg-96 kol-mono-heading-03"
+            style={{ width: `${caseName.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', boxShadow: editingName ? 'inset 0 -1px 0 rgba(255,255,255,0.12)' : 'none', caretColor: editingName ? 'auto' : 'transparent', pointerEvents: editingName ? 'auto' : 'none' }}
+          />
+        }
+        subtitle={
+          <input
+            type="text"
+            value={caseDescription}
+            onChange={e => setCaseDescription(e.target.value)}
+            onBlur={() => setEditingName(false)}
+            onKeyDown={e => { if (e.key === 'Enter') setEditingName(false) }}
+            readOnly={!editingName}
+            className="block p-0 h-[18px] leading-[18px] bg-transparent outline-none text-fg-48 kol-mono-14"
+            style={{ width: `${caseDescription.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', boxShadow: editingName ? 'inset 0 -1px 0 rgba(255,255,255,0.12)' : 'none', caretColor: editingName ? 'auto' : 'transparent', pointerEvents: editingName ? 'auto' : 'none' }}
+          />
+        }
+      />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <ContentFilters
+          tone="sunken"
           items={view === 'case' ? [] : allModules}
           title={view === 'case' ? 'Case' : 'All Modules'}
           totalCount={view === 'case' ? totalModules : allModules.length}
@@ -169,7 +176,12 @@ export default function CreatePage() {
           mutuallyExclusiveFilters={['category', 'u_label']}
           showCountOnlyWhenFiltering
           headerActions={
-            <button
+            <Button
+              variant="nav"
+              size="md"
+              iconOnly="edit"
+              aria-label="Rename case"
+              title="Rename case"
               onPointerDown={(e) => {
                 e.preventDefault()
                 setEditingName(prev => {
@@ -182,22 +194,17 @@ export default function CreatePage() {
                   return true
                 })
               }}
-              className="p-2 hover:bg-container-secondary rounded-sm transition-colors leading-none"
-              aria-label="Rename case"
-              title="Rename case"
-            >
-              <Icon name="edit" size={16} />
-            </button>
+            />
           }
           viewModeOptions={[
-            { value: 'case', label: 'Case' },
-            { value: 'modules', label: 'Modules' },
+            { value: 'case', label: 'CASE' },
+            { value: 'modules', label: 'MODULES' },
           ]}
           viewMode={view}
           onViewModeChange={setView}
           layoutOptions={view === 'modules' ? [
-            { value: 'list', label: 'List' },
-            { value: 'grid', label: 'Grid' },
+            { value: 'list', label: 'LIST' },
+            { value: 'grid', label: 'GRID' },
           ] : undefined}
           defaultLayout="list"
           renderItem={(items, viewMode, layout) => {
@@ -216,7 +223,7 @@ export default function CreatePage() {
                     <CaseHpDialog caseHp={caseHp} onSetHp={setCaseHp} />
                   )}
                   {(addingRow || showHpPicker) && <Divider className="mb-4" />}
-                  {showCase && <RackViewport style={{ flex: 1, margin: '0 -48px' }} editMode={false} />}
+                  {showCase && <RackViewport gridRef={dotGridRef} style={{ flex: 1, margin: '0 calc(var(--kol-shell-page-pad) * -1)' }} editMode={false} />}
                 </div>
               )
             }
@@ -226,10 +233,12 @@ export default function CreatePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
                   {items.map(m => (
                     <div key={m.type} onPointerDown={(e) => handleModuleDragStart(m.type, e)}>
-                      <GridCard
+                      <ContentCard
+                        variant="catalog"
+                        fit="natural"
                         title={m.label}
-                        detail={`${m.hp}HP ${m.u}U — ${m.category}`}
-                        preview={<img src={`/previews/modules/${m.type}.png`} alt={m.label} />}
+                        detail={`${m.hp}HP ${m.u}U — ${m.categoryLabel}`}
+                        media={<img src={`/previews/modules/${m.type}.png`} alt={m.label} />}
                         onClick={() => { if (justDraggedRef.current) return; addModule(m.type) }}
                       />
                     </div>
@@ -242,10 +251,10 @@ export default function CreatePage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {items.map(m => (
                   <div key={m.type} onPointerDown={(e) => handleModuleDragStart(m.type, e)}>
-                    <GridCard
-                      variant="list"
+                    <ContentRow
+                      variant="catalog"
                       title={m.label}
-                      action={
+                      actions={
                         <span
                           onClick={(e) => { e.stopPropagation(); if (justDraggedRef.current) return; addModule(m.type) }}
                           className="cursor-pointer flex items-center gap-2 kol-helper-10 text-fg-80"
@@ -262,7 +271,8 @@ export default function CreatePage() {
           }}
         />
 
-        <div className="fixed flex items-center justify-between" style={{ bottom: 24, left: 72, right: 24 }}>
+        {/* `--monitor-rail` (AppLayout): the rail's width or 0 when hidden — a fixed layer must follow it itself */}
+        <div className="fixed flex items-center justify-between" style={{ bottom: 24, left: 'calc(var(--monitor-rail, var(--kol-shell-rail-width)) + 24px)', right: 24 }}>
         <div className="flex items-center gap-2">
           <span onClick={() => setCaseZoom(z => Math.max(0.1, z - 0.1))} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">−</span>
           <input
@@ -324,6 +334,6 @@ export default function CreatePage() {
           </span>
         </div>
       )}
-    </div>
+    </PageShell>
   )
 }

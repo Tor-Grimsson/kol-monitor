@@ -9,6 +9,7 @@ import ModuleDetailPage from './pages/ModuleDetailPage.jsx'
 import PatchDetailPage from './pages/PatchDetailPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import CreatePage from './pages/CreatePage.jsx'
+import StagePage from './pages/StagePage.jsx'
 import DevCapturePage from './pages/dev/DevCapturePage.jsx'
 
 const ModuleDesign = lazy(() => import('./pages/dev/ModuleDesignPage.jsx'))
@@ -26,6 +27,12 @@ function App() {
               <Route path="/rack/preset/:presetName" element={<VideoModulo />} />
               <Route path="/rack/patch/:presetName" element={<VideoModulo />} />
               <Route path="/create" element={<CreatePage />} />
+            </Route>
+            {/* the stage gets its OWN RackProvider — sharing the rack's would
+                mean loading a stage silently replaces whatever is in the rack */}
+            <Route element={<RackProvider />}>
+              <Route path="/stage" element={<StagePage />} />
+              <Route path="/stage/:stageName" element={<StagePage />} />
             </Route>
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/library/:moduleType" element={<ModuleDetailPage />} />
