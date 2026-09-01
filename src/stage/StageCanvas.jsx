@@ -36,6 +36,9 @@ export default function StageCanvas({ tap, trails = 0, background = '#000000' })
   trailsRef.current = trails
   const bgRef = useRef(rgbOf(background))
   bgRef.current = rgbOf(background)
+  // Clear-fill string cached by (bg, trails) — it was a template + Math.pow
+  // per frame for a value that only changes on a knob (G2, fable-audit-2)
+  const fillRef = useRef({ bg: '', trails: -1, style: '' })
 
   useCanvasLoop(canvasRef, () => {
     const canvas = canvasRef.current
@@ -45,7 +48,14 @@ export default function StageCanvas({ tap, trails = 0, background = '#000000' })
     const h = canvas.height
 
     ctx.globalAlpha = 1
-    ctx.fillStyle = `rgba(${bgRef.current},${1 - Math.pow(Math.max(0, Math.min(100, trailsRef.current)) / 100, 0.3)})`
+    const fc = fillRef.current
+    if (fc.bg !== bgRef.current || fc.trails !== trailsRef.current) {
+      fc.bg = bgRef.current
+      fc.trails = trailsRef.current
+      const a = 1 - Math.pow(Math.max(0, Math.min(100, fc.trails)) / 100, 0.3)
+      fc.style = `rgba(${fc.bg},${a})`
+    }
+    ctx.fillStyle = fc.style
     ctx.fillRect(0, 0, w, h)
 
     const t = tapRef.current

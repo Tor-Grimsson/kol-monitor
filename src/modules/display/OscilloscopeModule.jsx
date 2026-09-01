@@ -135,10 +135,10 @@ function NumField({ label, value, onChange }) {
             onChange((Number(value) || 0) + step * dir)
           }
         }}
-        className="kol-helper-8"
+        className="kol-helper-8 bg-surface-primary"
         style={{
           width: 36, height: 20, textAlign: 'right',
-          background: 'var(--kol-surface-primary)', color: '#fff',
+          color: '#fff',
           border: 'none', borderRadius: 2,
           padding: '0 6px', outline: 'none', fontFamily: 'var(--kol-font-family-mono)',
         }}
@@ -171,11 +171,10 @@ function RefDropdown({ label, groups, onSelect }) {
     <>
       <button
         ref={triggerRef}
-        className="kol-helper-8"
+        className="kol-helper-8 bg-surface-primary"
         onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); toggle() }}
         style={{
           color: 'rgba(255,255,255,0.6)',
-          background: 'var(--kol-surface-primary)',
           border: 'none', borderRadius: 2,
           padding: '0 8px', height: 24, cursor: 'pointer',
           textTransform: 'uppercase', letterSpacing: '0.5px',

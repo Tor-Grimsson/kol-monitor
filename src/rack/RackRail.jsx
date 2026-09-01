@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import Button from '@kolkrabbi/kol-component/atoms/Button'
 import { GRAB } from '@kolkrabbi/kol-component/utilities/motion'
+/* the grab pill's proximity wake is the DS's now — lifted out of NavRail so
+ * both rails on a screen feel the same; the local copy this replaced was
+ * byte-identical. Under hooks/ since 0.150.1 (ComponentUseGrabEdgeSubpath —
+ * it is a hook, and ./hooks/* already resolves .js; 0.150.0 shipped the move
+ * with a broken relative import and is deprecated). */
+import useGrabEdge from '@kolkrabbi/kol-component/hooks/useGrabEdge'
 import { Icon } from '@kolkrabbi/kol-icons'
 import { Logomark } from '@kolkrabbi/kol-shell'
 import { useRailSlot } from '../hooks/useRailSlot.jsx'
@@ -19,8 +25,9 @@ import { useRailSlot } from '../hooks/useRailSlot.jsx'
  *
  * So this fork adds ONE thing to NavRail: a slot in the opened rail that a page
  * portals its own content into (`useRailSlot`). Everything else — the grab
- * edge, the drag, the width variable, the rows — is NavRail's, copied because
- * `useGrabEdge` / `useRailDrag` are module-private upstream.
+ * edge, the drag, the width variable, the rows — is NavRail's. `useGrabEdge`
+ * is now IMPORTED (kol-component ships it since 0.147.0); `useRailDrag` is
+ * still module-private upstream and still copied.
  *
  * THE TICKET THIS PROVES (to file at kol-ds-ui once the user has seen it):
  *   1. a sub row that carries an action instead of a path
@@ -29,7 +36,11 @@ import { useRailSlot } from '../hooks/useRailSlot.jsx'
  * When that ships, this file is retired to `_tmp/` and `railComponent` goes
  * back to the default.
  *
- * KEEP IN SYNC: copied from @kolkrabbi/kol-shell@0.17.0 `src/NavRail.jsx`.
+ * KEEP IN SYNC: copied from @kolkrabbi/kol-shell@0.17.0 `src/NavRail.jsx`,
+ * re-diffed against 0.31.0 (2026-09-01). Upstream has since gained two things
+ * this fork deliberately does NOT take: `drawer` mode (monitor is on
+ * `touch="overlay"`, so it never runs) and a section row that opens the rail on
+ * press (`sub` is navigation-only upstream — the whole reason for the fork).
  */
 const RAIL_W = '--kol-shell-rail-width'
 const CLOSED = 48
@@ -42,41 +53,18 @@ const openWidth = () => {
   return Number.isFinite(px) ? (v.endsWith('rem') ? px * 16 : px) : 264
 }
 
-/* THE GRAB EDGE — proximity, not contact; along the line it dwells at the
- * pointer and re-targets past `GRAB.stick`. NavRail's, verbatim. */
-function useGrabEdge(ref) {
-  useEffect(() => {
-    let raf = 0
-    const onMove = ({ clientX, clientY }) => {
-      if (raf) return
-      raf = requestAnimationFrame(() => {
-        raf = 0
-        const h = ref.current
-        if (!h) return
-        const r = h.getBoundingClientRect()
-        const dist = Math.abs(clientX - (r.left + r.width / 2))
-        const near = dist <= GRAB.near || (h.classList.contains('is-near') && dist <= GRAB.sleep)
-        h.classList.toggle('is-near', near)
-        if (!near) return
-        const edge = (r.height * (1 - GRAB.range)) / 2
-        const along = Math.min(Math.max(clientY - r.top, edge), r.height - edge)
-        if (h.dataset.grabSeeded && Math.abs(along - Number(h.dataset.grabTarget)) < GRAB.stick) return
-        h.dataset.grabTarget = String(along)
-        const vars = { '--kol-rail-grab-y': `${along}px` }
-        if (h.dataset.grabSeeded) gsap.to(h, { ...vars, ...GRAB.travel, overwrite: 'auto' })
-        else { gsap.set(h, vars); h.dataset.grabSeeded = '1' }
-      })
-    }
-    window.addEventListener('pointermove', onMove)
-    return () => { window.removeEventListener('pointermove', onMove); cancelAnimationFrame(raf) }
-  }, [ref])
-}
-
 /* THE DRAG — the width follows the pointer between closed and open; release
  * snaps to the nearer state, a click toggles. NavRail's, verbatim. */
-function useRailDrag(railRef, grabRef, onSnap) {
+function useRailDrag(railRef, grabRef, onSnap, enabled = true) {
   useEffect(() => {
     const strip = grabRef.current, rail = railRef.current, root = document.documentElement
+    /* A DRAWER IS NOT A DRAGGABLE RAIL (NavRail 0.31.0, ShellRailNoDrawerOnMobile).
+     * Off-canvas at a fixed width, the content owns the viewport — and this
+     * effect writes `--kol-shell-rail-width` on `:root`, the very token AppShell
+     * zeroes in drawer mode. Running it would fight the shell from the first
+     * frame: `gsap.set` below re-inflates the rail to 48px before a pointer has
+     * moved. */
+    if (!enabled) return undefined
     if (!strip || !rail) return undefined
     gsap.set(root, { [RAIL_W]: `${CLOSED}px` })
     let drag = null
@@ -114,7 +102,7 @@ function useRailDrag(railRef, grabRef, onSnap) {
       strip.removeEventListener('pointerup', onUp)
       strip.removeEventListener('pointercancel', onUp)
     }
-  }, [railRef, grabRef, onSnap])
+  }, [railRef, grabRef, onSnap, enabled])
 }
 
 /* one row: the rung exactly where the closed rail had it, then the label — the
@@ -155,14 +143,23 @@ export default function RackRail({
   onNavigate,
   iconComponent = Icon,
   hidden = false,
+  /* OFF-CANVAS MODE, passed by AppShell from `touch="drawer"` (kol-shell
+   * 0.31.0). Without taking it this fork renders at the token AppShell has
+   * just zeroed — a hamburger that opens a 0px rail. Three things change and
+   * they are NavRail's three: no grab strip, no drag, and the width comes from
+   * `--kol-shell-drawer-width` instead of the live rail token. Rows are always
+   * labelled, because a drawer is never the 48px column. */
+  drawer = false,
 }) {
   const railRef = useRef(null)
   const grabRef = useRef(null)
   const slotRef = useRef(null)
   const ctx = useRailSlot()
   const [railOpen, setRailOpen] = useState(false)
+  /* the grab strip is not rendered in drawer mode, so the hook's ref stays null
+   * and it no-ops on its own — no second argument needed */
   useGrabEdge(grabRef)
-  useRailDrag(railRef, grabRef, setRailOpen)
+  useRailDrag(railRef, grabRef, setRailOpen, !drawer)
 
   /* publish the slot node and the open state to whoever wants to portal in */
   const setSlot = ctx?.setSlot
@@ -178,9 +175,11 @@ export default function RackRail({
     <div
       ref={railRef}
       className="kol-shell-rail bg-surface-primary border-r border-fg-08 fixed inset-y-0 left-0 flex flex-col items-start pt-4 pb-4 px-2 gap-2"
-      style={{ width: `var(${RAIL_W})` }}
+      /* a drawer takes its OWN width — the rail token is zeroed in that mode so
+       * the content gets the whole viewport back */
+      style={{ width: drawer ? 'var(--kol-shell-drawer-width, 240px)' : `var(${RAIL_W})` }}
     >
-      <div ref={grabRef} className="kol-rail-grab" />
+      {!drawer && <div ref={grabRef} className="kol-rail-grab" />}
       {logomark && (
         <div
           onClick={() => onNavigate?.('/')}

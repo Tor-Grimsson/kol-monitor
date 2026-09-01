@@ -13,6 +13,11 @@ import LED from '../parametric/LED'
 
 const GATE_DURATION = 0.03
 const DIVS = [1, 2, 3, 4, 5, 6, 7, 8]
+// Port-key strings hoisted (G9, fable-audit-2) — a clock is in every patch and
+// was building 8 template strings + pair arrays per frame. The result OBJECT
+// stays fresh each frame: the render loop double-buffers by reference, so a
+// reused object would let cycle-delayed reads see current-frame values.
+const PORTS = Object.fromEntries(DIVS.map(d => [d, `d${d}`]))
 
 function ClockPanel({ bpm, running, clockPulse, enabled, onToggle, onBpmChange, onRunningChange, id, outRefs }) {
   return (
@@ -76,7 +81,8 @@ export default function ClockModule({ id = 'clk1', init, preview }) {
     inputs: {},
     outputs,
     process: (inputs, dt) => {
-      const result = Object.fromEntries(DIVS.map(d => [`d${d}`, null]))
+      const result = {}
+      DIVS.forEach(d => { result[PORTS[d]] = null })
 
       if (!enabledRef.current || !runningRef.current) {
         DIVS.forEach(d => { outRefs[d].current = null })
@@ -107,7 +113,7 @@ export default function ClockModule({ id = 'clk1', init, preview }) {
       DIVS.forEach(d => {
         const out = scalar(divTimers.current[d] > 0 ? 100 : 0)
         outRefs[d].current = out
-        result[`d${d}`] = out
+        result[PORTS[d]] = out
       })
 
       return result

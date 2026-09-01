@@ -125,7 +125,10 @@ export default function RasterModule({ id = 'raster1', init, preview }) {
       px.fresh = makeCanvas(w, h)
       px.histA = makeCanvas(w, h)
       px.histB = makeCanvas(w, h)
-      px.ring = Array.from({ length: SLIT_RING }, () => makeCanvas(w, h))
+      // The 24-canvas slit ring is ~3MB at panel size and only slit reads it —
+      // allocated on the first slit frame instead of in every mode (G5,
+      // fable-audit-2). Nulled here so a resize re-sizes it on next use.
+      px.ring = null
       px.ringIdx = 0
       px.sample = makeCanvas(96, 54)
     }
@@ -183,6 +186,7 @@ export default function RasterModule({ id = 'raster1', init, preview }) {
     }
 
     if (m === 'slit') {
+      if (!px.ring) px.ring = Array.from({ length: SLIT_RING }, () => makeCanvas(w, h))
       // Push fresh into the ring, compose output from per-band delayed frames
       px.ringIdx = (px.ringIdx + 1) % SLIT_RING
       const rctx = px.ring[px.ringIdx].getContext('2d')

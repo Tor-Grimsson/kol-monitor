@@ -71,11 +71,10 @@ export default function Workbench({ modules, rows, onReturn, onAddModule, onAddR
           >Case</span>
           {tab !== 'case' && (
             <div
-              className="flex items-center rounded-full cursor-pointer"
+              className={`flex items-center rounded-full cursor-pointer ${searchOpen ? 'bg-fg-04' : ''}`}
               style={{
                 height: 20,
                 width: searchOpen ? 180 : 20,
-                background: searchOpen ? 'var(--kol-fg-04, rgba(255,255,255,0.04))' : 'transparent',
                 transition: 'width 400ms cubic-bezier(0.16, 1, 0.3, 1), background 300ms cubic-bezier(0.16, 1, 0.3, 1)',
                 overflow: 'hidden',
                 color: searchOpen || searchText ? 'rgba(255,255,255,0.64)' : 'rgba(255,255,255,0.32)',

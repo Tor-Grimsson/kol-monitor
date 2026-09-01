@@ -140,6 +140,7 @@ export default function ColorPicker({ color, onChange, className = '', defaultVa
                 const v = e.target.value
                 if (/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(v)) onChange(v)
               }}
+              className="bg-surface-primary"
               style={{
                 width: '180px',
                 height: '28px',
@@ -147,8 +148,6 @@ export default function ColorPicker({ color, onChange, className = '', defaultVa
                 padding: '0 8px',
                 fontSize: '12px',
                 fontFamily: 'var(--kol-font-family-mono)',
-                color: 'var(--kol-surface-on-primary)',
-                backgroundColor: 'var(--kol-surface-primary)',
                 border: '1px solid var(--kol-border-default)',
                 borderRadius: '4px',
                 outline: 'none',

@@ -28,6 +28,12 @@ const TEAR_SECONDS = 0.3
 const SKEW_BANDS = 24
 const WOB_BANDS = 24
 const DUMMY_HIST = new Float32Array(2)
+// Echo-generation filter strings are deterministic in g — built once instead
+// of a template per drawImage per frame (G6's free half, fable-audit-2)
+const ECHO_FILTERS = [null, ...Array.from({ length: 6 }, (_, i) => {
+  const g = i + 1
+  return `blur(${(g * 0.5).toFixed(1)}px) saturate(${Math.max(40, 100 - g * 12)}%)`
+})]
 
 function makeCanvas(w, h) {
   const c = document.createElement('canvas')
@@ -129,7 +135,7 @@ export default function SlitEchoModule({ id = 'slitEcho1', init, preview }) {
   const rollPosRef = useRef(0)
 
   // Pixel machinery, sized lazily to the visible canvas
-  const pixRef = useRef({ w: 0, h: 0, fresh: null, live: null, accA: null, accB: null, hackA: null, hackB: null, vig: null, ring: null, ringIdx: 0 })
+  const pixRef = useRef({ w: 0, h: 0, fresh: null, live: null, accA: null, accB: null, hackA: null, hackB: null, vig: null, scan: null, ring: null, ringIdx: 0 })
 
   const cp = useConnectedPorts(id)
   const saveStateRef = useRef({})
@@ -205,6 +211,13 @@ export default function SlitEchoModule({ id = 'slitEcho1', init, preview }) {
       grad.addColorStop(1, 'rgba(0,0,0,0.55)')
       vctx.fillStyle = grad
       vctx.fillRect(0, 0, w, h)
+      // Cached scanlines, same trick as the vignette: opaque black lines drawn
+      // once, intensity applied at draw time via globalAlpha — h/3 fillRects
+      // per frame become one drawImage (G7, fable-audit-2)
+      px.scan = makeCanvas(w, h)
+      const sctx = px.scan.getContext('2d')
+      sctx.fillStyle = '#000'
+      for (let y = 1; y < h; y += 3) sctx.fillRect(0, y, w, 1)
     }
 
     // ---- 1. fresh: vector render of the input ----
@@ -279,7 +292,7 @@ export default function SlitEchoModule({ id = 'slitEcho1', init, preview }) {
         const alpha = Math.pow(g0, g) * 0.55
         if (alpha < 0.02) break
         nctx.globalAlpha = alpha
-        nctx.filter = `blur(${(g * 0.5).toFixed(1)}px) saturate(${Math.max(40, 100 - g * 12)}%)`
+        nctx.filter = ECHO_FILTERS[g]
         nctx.drawImage(ringAt(g * hop), 0, 0)
       }
       nctx.filter = 'none'
@@ -373,10 +386,10 @@ export default function SlitEchoModule({ id = 'slitEcho1', init, preview }) {
       }
     }
 
-    // crt dress: scanlines + vignette
+    // crt dress: scanlines + vignette (both cached at resize)
     if (crtVal >= 0.02) {
-      ctx.fillStyle = `rgba(0,0,0,${(crtVal * 0.35).toFixed(3)})`
-      for (let y = 1; y < h; y += 3) ctx.fillRect(0, y, w, 1)
+      ctx.globalAlpha = crtVal * 0.35
+      ctx.drawImage(px.scan, 0, 0)
       ctx.globalAlpha = crtVal * 0.7
       ctx.drawImage(px.vig, 0, 0)
       ctx.globalAlpha = 1

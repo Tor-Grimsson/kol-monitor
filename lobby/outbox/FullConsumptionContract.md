@@ -56,6 +56,34 @@ shadow kol-theme class names** unlayered, so no DS upgrade to `.kol-badge*` /
 
 ---
 
+## 📌 GREPS RUN — 2026-08-30 · theme 0.96.0 · component 0.131.0
+
+**4 of 6 clean.** 1 (no unrendered domain pack) · 3 (`:root` — 5 hits, all
+bindings) · 5 (0 `z-[…]`, 0 `bg-black/`; the 47 `rgba(0,0,0,…)` are inset panel
+shadows on eurorack hardware, not scrims) · **6 closed in the same sitting** —
+`text-[10px]` → `kol-helper-10` in `ToggleCheckbox.jsx:34` / `ToggleSwitch.jsx:29`,
+and `ToggleCheckbox.jsx:32`'s `kol-mono-xs` (a retired t-shirt name resolving to
+**no rule** anywhere, while `.toggle-checkbox-label` defines no type of its own —
+that label rendered unstyled) → `kol-mono-10`. Build green.
+
+**Open — 2 of 6:** check 2, **56** JSX `var(--kol-*)` reads across 18 files (~33
+are findings; the rest are font-family, shell-var reads, canvas `fillStyle`
+colours and `:root` bindings, which check 3 blesses). Check 4, **3 forks** —
+`Tag.jsx` (70 lines) is the true one; `parametric/Slider.jsx` + `Dropdown.jsx`
+are rack panel hardware, not the DS's app atoms, and are a rename-or-adopt call.
+`Button.jsx` (13 lines, `iconComponent` only) is the legal seam the check allows.
+Local CSS **1160 lines**, and **31 of `components.css`'s 69 selectors shadow
+kol-theme** unlayered — the `.kol-badge*` / `.pill-*` / `.toggle-*` / `.tag-control`
+families cannot receive a DS upgrade until they are adopted or renamed.
+
+**Remainder here:** filed as a self-ticket — `lobby/inbox/RackTierFullConsumption.md`,
+with the per-check breakdown, the token→class map for all 12 classes (verified
+present in kol-theme 0.96.0), the 31 shadowed selectors listed by name, and the
+specificity warning that every conversion moves a declaration out of inline
+`style` into `@layer components`, where an unlayered local selector can now win.
+
+---
+
 ## ✅ RETURNED — 2026-08-27 · kol-theme 0.77.0 · docs
 
 🟢 `closed` in **kol-ds-ui** — Part 1 — `@kolkrabbi/kol-theme/core` (theme 0.77.0): the app tier in the umbrella's order, the five domain packs import after it, umbrella unchanged (core = umbrella minus exactly those five, order checked). Part 2 — not a certificate, a checklist (user, 2026-08-27: "it's just for repos to know if they are fully using KOL"): `docs/documentation/00-overview/04-full-consumption.md` — the six checks as monitor shaped them, each with the grep to run from a consumer's root; a repo is fully consuming when every grep comes back empty, and records it as one line in its own ledger history. No script, no roster, no badge. 21 gates clean.

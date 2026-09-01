@@ -157,9 +157,8 @@ function NoiseToolsReference() {
   )
 
   return (
-    <div style={{
+    <div className="bg-surface-secondary" style={{
       width: 440, height: 100,
-      backgroundColor: 'var(--kol-surface-secondary)',
       borderRadius: 2,
       padding: '8px 12px',
       display: 'flex',

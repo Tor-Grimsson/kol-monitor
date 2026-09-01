@@ -1,7 +1,8 @@
 // Shared Canvas2D drawing primitives for display modules
 // All draw functions accept an optional pen object for style control
 
-import { PEN_DEFAULTS } from '../../hooks/signals'
+// .js extension so bare node can load this module too (scripts/check-drawsignal-alpha.mjs)
+import { PEN_DEFAULTS } from '../../hooks/signals.js'
 
 const SCOPE_COLOR = '#2ecc71'
 const WIRE_COLOR = '#ffffff'
@@ -84,7 +85,11 @@ export function drawScalar(ctx, history, writeIdx, bufLen, x, y, w, h, p, bipola
 // Color: filled rectangle
 export function drawColor(ctx, signal, x, y, w, h, p) {
   const { a } = signal.value
-  ctx.globalAlpha = (p.opacity / 100) * a
+  // Capture-then-multiply — a caller's baseline (Console fader) scales the
+  // fill; overwriting it absolutely both ignored the fader and left resetPen
+  // restoring a STALE baseline from some earlier applyPen (G1, fable-audit-2).
+  ctx._baseAlpha = ctx.globalAlpha
+  ctx.globalAlpha = ctx._baseAlpha * (p.opacity / 100) * a
   ctx.fillStyle = rgbString(signal.value)
   ctx.fillRect(x + 2, y + 2, w - 4, h - 4)
   resetPen(ctx)
@@ -153,9 +158,13 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
     ctx.moveTo(x, y + h / 2)
     ctx.lineTo(x + w, y + h / 2)
     ctx.stroke()
-    // Restore stroke width
+    // Restore stroke width ONLY — the grid touched lineWidth and strokeStyle,
+    // never alpha. The old `applyPen(ctx, p)` here re-captured an already
+    // pen-multiplied alpha as the new baseline: pen opacity applied twice, and
+    // on displays that never reset alpha per frame (Monitor/Output) the error
+    // COMPOUNDED frame over frame (G1, fable-audit-2).
     if (signal.strokeWidth != null) ctx.lineWidth = signal.strokeWidth
-    else applyPen(ctx, p)
+    else ctx.lineWidth = p.thickness
   }
 
   // Optional instancing: signal.instances = [{rotation?, mirror?, offsetX?}, ...] replays
@@ -169,6 +178,12 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
   const instCount = instances ? instances.length : 1
   const centerX = dx + dw * 0.5
   const centerY = dy + dh * 0.5
+
+  // The one alpha every branch below multiplies FROM (base × pen × signal
+  // opacity, settled above). Groups and axes used to assign absolutes here,
+  // which leaked: a group's 0.3 bled into the next group, axes' 0.5 into the
+  // next instance (G1, fable-audit-2).
+  const drawAlpha = ctx.globalAlpha
 
   for (let ii = 0; ii < instCount; ii++) {
     if (instances) {
@@ -238,7 +253,9 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
       for (const g of signal.groups) {
         if (!g.pts || g.pts.length === 0) continue
         const gc = g.color ? rgbString(g.color) : penColor(p, WIRE_COLOR)
-        if (g.opacity != null) ctx.globalAlpha = g.opacity
+        // multiplicative, and reset per group — no opacity means drawAlpha,
+        // not whatever the previous group left behind
+        ctx.globalAlpha = g.opacity != null ? drawAlpha * g.opacity : drawAlpha
         ctx.strokeStyle = gc
         ctx.fillStyle = gc
         if (g.edges && g.edges.length > 0) {
@@ -276,18 +293,21 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
           ctx.stroke()
         }
       }
+      ctx.globalAlpha = drawAlpha
     }
 
-    // Per-axis colored lines (from Gen 3D)
+    // Per-axis colored lines (from Gen 3D) — dimmed relative to the baseline,
+    // and restored, so a later instance doesn't inherit the dim
     if (signal.axes) {
+      ctx.globalAlpha = drawAlpha * 0.5
       for (const axis of signal.axes) {
         ctx.strokeStyle = rgbString(axis.color)
-        ctx.globalAlpha = 0.5
         ctx.beginPath()
         ctx.moveTo(dx + axis.pts[0].x * dw, dy + axis.pts[0].y * dh)
         ctx.lineTo(dx + axis.pts[1].x * dw, dy + axis.pts[1].y * dh)
         ctx.stroke()
       }
+      ctx.globalAlpha = drawAlpha
     }
 
     if (instances) ctx.restore()
@@ -298,7 +318,9 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
 
 // Lo-fi scalar: chunky bar
 function drawScalarLofi(ctx, signal, x, y, w, h, p) {
-  ctx.globalAlpha = p.opacity / 100
+  // capture-then-multiply, same discipline as drawColor (G1, fable-audit-2)
+  ctx._baseAlpha = ctx.globalAlpha
+  ctx.globalAlpha = ctx._baseAlpha * (p.opacity / 100)
   const norm = signal.value / 100
   const barH = norm * h
   ctx.fillStyle = penColor(p, SCOPE_COLOR)

@@ -57,6 +57,12 @@ export default function RuttEtraModule({ id = 'rutt1', init, preview }) {
   const outRef = useRef(null)
   // Internal sampling surface (created lazily — process can run before DOM is warm)
   const sampleRef = useRef(null)
+  const sctxRef = useRef(null)
+  // Edge topology is a pure function of `rows` — same [i,j] ladder every frame
+  // until the lines knob moves. Cached and SHARED across frames: safe against
+  // downstream ring buffers because nothing ever mutates an edges array (G3,
+  // fable-audit-2). pts stay fresh per the F1 law.
+  const edgeCacheRef = useRef({ rows: 0, edges: null })
 
   const saveStateRef = useRef({})
   saveStateRef.current = { amt, res, gain }
@@ -75,10 +81,13 @@ export default function RuttEtraModule({ id = 'rutt1', init, preview }) {
       amtInRef.current = inputs.amt
 
       const rows = Math.max(12, Math.round(12 + (resRef.current / 100) * 44))
-      if (!sampleRef.current) sampleRef.current = document.createElement('canvas')
+      if (!sampleRef.current) {
+        sampleRef.current = document.createElement('canvas')
+        sctxRef.current = sampleRef.current.getContext('2d', { willReadFrequently: true })
+      }
       const cv = sampleRef.current
       if (cv.width !== COLS || cv.height !== rows) { cv.width = COLS; cv.height = rows }
-      const sctx = cv.getContext('2d', { willReadFrequently: true })
+      const sctx = sctxRef.current
       sctx.fillStyle = '#000'
       sctx.fillRect(0, 0, COLS, rows)
       drawSignal(sctx, inputs.in, 0, 0, COLS, rows, DUMMY_HIST, 0, DUMMY_HIST.length, null)
@@ -88,16 +97,25 @@ export default function RuttEtraModule({ id = 'rutt1', init, preview }) {
       const g = 0.25 + (gainRef.current / 100) * 3.75
       const lift = amtVal * 0.35
 
+      const ec = edgeCacheRef.current
+      if (ec.rows !== rows) {
+        const built = []
+        for (let r = 0; r < rows; r++) {
+          const base = r * COLS
+          for (let c = 1; c < COLS; c++) built.push([base + c - 1, base + c])
+        }
+        ec.rows = rows
+        ec.edges = built
+      }
+      const edges = ec.edges
+
       const pts = []
-      const edges = []
       for (let r = 0; r < rows; r++) {
         const rowY = 0.08 + (r / (rows - 1)) * 0.84
-        const base = pts.length
         for (let c = 0; c < COLS; c++) {
           const i = (r * COLS + c) * 4
           const luma = Math.min(1, ((img[i] * 0.299 + img[i + 1] * 0.587 + img[i + 2] * 0.114) / 255) * g)
           pts.push({ x: 0.04 + (c / (COLS - 1)) * 0.92, y: rowY - luma * lift })
-          if (c > 0) edges.push([base + c - 1, base + c])
         }
       }
 

@@ -29,12 +29,11 @@ function Board({ theme }) {
   return (
     <div
       data-theme={theme}
+      className="bg-surface-primary"
       style={{
         flex: 1,
         minWidth: 380,
         padding: 24,
-        backgroundColor: 'var(--kol-surface-primary)',
-        color: 'var(--kol-surface-on-primary)',
       }}
     >
       <div className="kol-mono-heading-03" style={{ marginBottom: 4 }}>{theme}</div>
@@ -53,7 +52,7 @@ function Board({ theme }) {
 
 export default function ColorPickerPage() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--kol-surface-primary)' }}>
+    <div className="bg-surface-primary" style={{ minHeight: '100vh' }}>
       <div style={{ padding: '24px 24px 0' }}>
         <div className="kol-mono-heading-03">ColorPicker</div>
         <div className="kol-helper-12" style={{ opacity: 0.6, marginTop: 4, maxWidth: 620 }}>

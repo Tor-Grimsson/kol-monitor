@@ -131,7 +131,12 @@ function StageView({ stageKey }) {
 
   /* Fit the board on load. Measured after layout, at zoom 1, off the objects'
      own boxes — the dock is as wide as the patch's HP and the CRT as tall as its
-     aspect makes it, so neither is a number this file can know up front. */
+     aspect makes it, so neither is a number this file can know up front.
+     Keyed on rack.rows as well as stage: the preset lands its rows on its OWN
+     rAF, so a [stage]-only fit measured a half-built board once and never
+     re-ran — first browser look (2026-09-01) found the whole stage at zoom
+     0.16 against a phantom measurement. Rows landing = re-measure. */
+  const rackRows = rack.rows
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       const el = boardRef.current
@@ -152,17 +157,31 @@ function StageView({ stageKey }) {
       })
     })
     return () => cancelAnimationFrame(id)
-  }, [stage, setZoom, setPan])
+  }, [stage, rackRows, setZoom, setPan])
 
-  // `h` hides the patch — the whole point is to get the modules off the picture.
+  /* `h` hides the patch — the whole point is to get the modules off the picture.
+     `,` opens THIS page's drawer instead of leaving for /settings. AppShell binds
+     `,` globally (`settingsKey`, kol-shell 0.25.0) and it navigates; on a
+     full-bleed performance view that throws away the picture, which is the case
+     kol-shell 0.26.0's `useSettingsToggle` seam was cut for — fxr's `/editor`
+     hit it first. CAPTURE phase + `stopImmediatePropagation` so the shell's
+     window listener never sees it; the same preemption AppLayout uses for the
+     ⌥-digit prefix. Matched on `e.code` too: ⌥+`,` is `≤` on macOS. */
   useEffect(() => {
     const onKey = (e) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return
-      if (e.target.closest('input, textarea')) return
+      if (e.metaKey || e.ctrlKey) return
+      if (e.target.closest('input, textarea, [contenteditable]')) return
+      if (e.key === ',' || e.code === 'Comma') {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        setSettingsOpen(v => !v)
+        return
+      }
+      if (e.altKey) return
       if (e.key === 'h') { e.preventDefault(); setDockOpen(v => !v) }
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
   }, [])
 
   return (

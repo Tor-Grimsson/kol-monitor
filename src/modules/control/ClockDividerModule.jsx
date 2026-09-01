@@ -12,6 +12,11 @@ import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const GATE_DURATION = 0.03
 const DIVS = [1, 2, 3, 4, 5, 6, 7, 8]
+// Port-key strings hoisted (G9, fable-audit-2) — a clock is in every patch and
+// was building 8 template strings + pair arrays per frame. The result OBJECT
+// stays fresh each frame: the render loop double-buffers by reference, so a
+// reused object would let cycle-delayed reads see current-frame values.
+const PORTS = Object.fromEntries(DIVS.map(d => [d, `d${d}`]))
 
 function ClockDividerPanel({ enabled, onToggle, id, inConn, inRef, rotConn, rotRef, rstConn, rstRef, outRefs }) {
   return (
@@ -69,7 +74,8 @@ export default function ClockDividerModule({ id = 'cdiv1', preview }) {
     inputs: { in: { type: 'scalar' }, rot: { type: 'scalar', cv: 'offset' }, rst: { type: 'scalar' } },
     outputs,
     process: (inputs, dt) => {
-      const result = Object.fromEntries(DIVS.map(d => [`d${d}`, null]))
+      const result = {}
+      DIVS.forEach(d => { result[PORTS[d]] = null })
 
       if (!enabledRef.current) {
         DIVS.forEach(d => { outRefs[d].current = null })
@@ -117,7 +123,7 @@ export default function ClockDividerModule({ id = 'cdiv1', preview }) {
         const rotatedDiv = DIVS[(i + rot) % DIVS.length]
         const out = scalar(divTimers.current[rotatedDiv] > 0 ? 100 : 0)
         outRefs[d].current = out
-        result[`d${d}`] = out
+        result[PORTS[d]] = out
       })
 
       return result

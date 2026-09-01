@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AppShell, useNavHidden } from '@kolkrabbi/kol-shell'
 import logomarkUrl from '@kolkrabbi/kol-brand/svg/favicon-01.svg?url'
@@ -60,16 +60,6 @@ function RailFrame({ children }) {
 export default function AppLayout() {
   const location = useLocation()
   const navigate = useNavigate()
-
-  /* Settings is a TOGGLE: clicking the rung while already on /settings goes
-     back where you came from. The rail fires onNavigate on the active item too,
-     so the swap lives here. Ref (not state) — nothing renders from it. */
-  const lastPathRef = useRef('/')
-  useEffect(() => {
-    if (location.pathname !== '/settings') lastPathRef.current = location.pathname
-  }, [location.pathname])
-  const handleNavigate = (path) =>
-    navigate(path === '/settings' && location.pathname === '/settings' ? lastPathRef.current : path)
 
   /* ⌥ works BOTH ways (user, 2026-08-28): the chord ⌥+1, and tmux-style —
      tap ⌥ alone, let go, then press a digit. kol-shell's `navKeys` does only
@@ -136,8 +126,15 @@ export default function AppLayout() {
       bottomItems={BOTTOM_ITEMS}
       logomark={{ svgUrl: logomarkUrl, title: 'Monitor' }}
       currentPath={location.pathname}
-      onNavigate={handleNavigate}
+      onNavigate={navigate}
       railToggleKey={'\\'}
+      /* Settings TOGGLES rather than navigates — the rung and the key both return
+         you where you came from (kol-shell 0.25.0, `SettingsToggleGesture`). This
+         was a local carry (a `lastPathRef` + a `handleNavigate` swap) until the
+         shell took it; three repos had built the same thing. `settingsKey` is the
+         half monitor never had. */
+      settingsPath="/settings"
+      settingsKey=","
       /* `navKeys` is OFF: it fires on the ⌥+digit CHORD and the local prefix
          listener above replaces it. Both listen on window, so they cannot both
          be on. The prefix form is a local carry — it belongs upstream beside
@@ -146,7 +143,19 @@ export default function AppLayout() {
          FORK that adds a slot to the opened width so the rack can portal its
          module catalog in; see `RackRail.jsx` for the ticket it proves. */
       railComponent={RackRail}
-      touch="overlay"
+      /* THE RAIL FOLDS BELOW 768 (kol-shell 0.31.0, `ShellRailNoDrawerOnMobile`).
+         `touch` takes ONE value, so this REPLACES `overlay` and its "Desktop
+         recommended" panel — deliberate: the phone gets a simplified app now
+         rather than a notice telling it to leave. At 390 the 48px rail was
+         12.3% of the viewport and `railToggleKey` is a KEY, so on the device
+         where it cost most it could not be dismissed at all.
+         `drawerBelow` is a WIDTH, not a pointer test: an iPad is coarse and has
+         room, a narrow desktop window is fine-pointered and does not.
+         `RackRail` takes the `drawer` prop AppShell passes down — without that
+         the fork would size itself from the rail token AppShell has just zeroed
+         and the hamburger would open nothing. */
+      touch="drawer"
+      drawerBelow={768}
       appName="Monitor"
       /* the main background: surface-primary is the back of the back (AppShell
          paints it), the wash is the transparent step over it (kol-shell 0.11.0,

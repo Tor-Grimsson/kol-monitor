@@ -29,7 +29,8 @@ function NavIcons() {
           key={path}
           onClick={() => navigate(path)}
           title={label}
-          style={{ cursor: 'pointer', color: 'var(--kol-oq-96)', lineHeight: 0 }}
+          className="cursor-pointer text-oq-96"
+          style={{ lineHeight: 0 }}
         >
           <DsIcon name={icon} size={16} />
         </div>
@@ -178,7 +179,7 @@ export default function ModuloSidebar({ rack, routing, zoom, onZoomChange, onZoo
         style={{ height: 4, cursor: 'ns-resize', flexShrink: 0, position: 'relative' }}
         className="border-t border-fg-08"
       >
-        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: -4, width: 24, height: 1, backgroundColor: 'var(--kol-fg-16)', pointerEvents: 'none' }} />
+        <div className="bg-fg-16" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: -4, width: 24, height: 1, pointerEvents: 'none' }} />
       </div>
       <div className="p-4" style={{ height: presetHeight, overflowY: 'auto' }}>
         <div className="flex items-center justify-between mb-3">

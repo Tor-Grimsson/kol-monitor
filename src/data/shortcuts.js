@@ -9,6 +9,8 @@ export const SHORTCUT_SECTIONS = [
     section: 'App',
     items: [
       { label: 'Jump to rail item (Home first)', combo: '⌥ then 1–5' },
+      { label: 'Settings (toggles back)', combo: ',' },
+      { label: 'Settings on the stage (its own drawer)', combo: ',' },
     ],
   },
   {

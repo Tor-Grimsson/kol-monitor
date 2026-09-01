@@ -96,8 +96,7 @@ function VideoModuloInner() {
     /* the rack root is not a PageShell — it reads the shell's page wash itself (kol-shell 0.11.0) */
     <div className="flex relative" style={{ '--kol-shell-page-wash': 'var(--kol-fg-04)', backgroundColor: 'var(--kol-shell-page-wash, var(--kol-surface-primary))', overflow: 'hidden', height: '100vh' }}>
       {sidebarOpen && (
-        <div className="sidebar-width flex-shrink-0 border-r border-fg-08 overflow-y-auto" style={{
-          backgroundColor: 'var(--kol-surface-primary)',
+        <div className="sidebar-width flex-shrink-0 border-r border-fg-08 overflow-y-auto bg-surface-primary" style={{
           height: '100vh',
           position: 'fixed',
           top: 0,

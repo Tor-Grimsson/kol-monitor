@@ -45,7 +45,7 @@ const Slider = ({
   }
 
   const isDual = variant === 'dual'
-  const variantClass = (variant === 'minimal' || isDual) ? 'control-slider-minimal' : 'control-slider'
+  const variantClass = (variant === 'minimal' || isDual) ? 'monitor-slider-minimal' : 'monitor-slider'
   const decimals = useMemo(() => {
     if (formatValue) return null
     if (!Number.isFinite(step)) return 0
@@ -143,7 +143,7 @@ const Slider = ({
         step={step}
         value={value}
         onChange={handleChange}
-        className="slider-black flex-1 w-full cursor-pointer"
+        className="monitor-slider-black flex-1 w-full cursor-pointer"
       />
       {displayValue != null && <span className="kol-helper-12 text-right shrink-0 w-fit" style={fontSize ? { fontSize } : undefined}>
         {displayValue}

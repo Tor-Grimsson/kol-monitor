@@ -39,10 +39,9 @@ export default function TextInput({
       onBlur={onCommit ? commit : undefined}
       onKeyDown={onCommit ? handleKeyDown : undefined}
       placeholder={placeholder}
-      className={className}
+      className={`bg-surface-primary ${className}`}
       style={{
         flex: 1,
-        background: 'var(--kol-surface-primary)',
         color: '#fff',
         border: 'none',
         borderRadius: 2,

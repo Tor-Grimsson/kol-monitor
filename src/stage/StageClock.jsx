@@ -29,10 +29,8 @@ export function Clock({ t = 0 }) {
   const led = { gridArea: '1 / 1', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.08em', fontSize: 22, lineHeight: 1 }
   return (
     <div
-      className="flex items-center justify-center"
+      className="flex items-center justify-center bg-oq-12 border border-fg-08"
       style={{
-        background: 'var(--kol-oq-12)',
-        border: '1px solid var(--kol-fg-08)',
         borderRadius: 'var(--kol-radius-xs)',
         padding: '6px 10px',
         boxShadow: 'inset 0 1px 3px rgb(0 0 0 / 0.5)',
@@ -52,10 +50,12 @@ export function Clock({ t = 0 }) {
 function Key({ down, onClick, title, height = 30, children }) {
   return (
     <div
-      className={`flex flex-1 items-center justify-center cursor-pointer select-none ${down ? 'text-accent-primary' : 'text-fg-64 hover:text-fg-96'}`}
+      className={`flex flex-1 items-center justify-center cursor-pointer select-none ${down ? 'text-accent-primary bg-oq-12' : 'text-fg-64 hover:text-fg-96'}`}
       style={{
         height,
-        background: down ? 'var(--kol-oq-12)' : 'var(--kol-surface-tertiary)',
+        /* ponytail: `surface-tertiary` stays inline — `.bg-surface-*` is an
+           ink+ground PAIR, and this key drives its own ink above. */
+        background: down ? undefined : 'var(--kol-surface-tertiary)',
         boxShadow: down
           ? 'inset 0 1px 2px rgb(0 0 0 / 0.45)'
           : 'inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 0 rgb(0 0 0 / 0.4)',
@@ -73,8 +73,8 @@ function Key({ down, onClick, title, height = 30, children }) {
 function Gang({ width, children }) {
   return (
     <div
-      className="flex"
-      style={{ width, gap: 1, padding: 1, background: 'var(--kol-oq-24)', borderRadius: 3, boxShadow: 'inset 0 1px 2px rgb(0 0 0 / 0.5)', overflow: 'hidden' }}
+      className="flex bg-oq-24"
+      style={{ width, gap: 1, padding: 1, borderRadius: 3, boxShadow: 'inset 0 1px 2px rgb(0 0 0 / 0.5)', overflow: 'hidden' }}
     >{children}</div>
   )
 }
@@ -87,13 +87,14 @@ function Switch({ on, onClick, label, title }) {
       <div
         onClick={onClick}
         title={title}
-        className="cursor-pointer select-none"
-        style={{ width: 36, height: 18, padding: 2, borderRadius: 3, background: 'var(--kol-oq-24)', boxShadow: 'inset 0 1px 2px rgb(0 0 0 / 0.5)' }}
+        className="cursor-pointer select-none bg-oq-24"
+        style={{ width: 36, height: 18, padding: 2, borderRadius: 3, boxShadow: 'inset 0 1px 2px rgb(0 0 0 / 0.5)' }}
       >
+        {/* The lever carries no text, so `.bg-*`'s paired ink is inert here. */}
         <div
+          className={on ? 'bg-accent-primary' : 'bg-surface-tertiary'}
           style={{
             width: 16, height: 14, borderRadius: 2,
-            background: on ? 'var(--kol-accent-primary)' : 'var(--kol-surface-tertiary)',
             boxShadow: 'inset 0 1px 0 rgb(255 255 255 / 0.10), 0 1px 0 rgb(0 0 0 / 0.4)',
             transform: on ? 'translateX(16px)' : 'none',
             transition: 'transform 120ms ease, background 120ms ease',
