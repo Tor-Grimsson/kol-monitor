@@ -3,7 +3,7 @@
 import { memo, useMemo, useState, useRef, useEffect } from 'react'
 import { ModuleInitContext } from '../hooks/useModuleEnabled'
 import { MODULE_DEFS } from '../modules/registry'
-import { TOTAL_HP, hpToPx } from '../modules/utility/eurorack'
+import { hpToPx, ROW_HEIGHT } from '../modules/utility/eurorack'
 import { findFreeOffset } from '../hooks/useRackState'
 import Case, { RackRow } from '../modules/utility/Case.jsx'
 import { ModuleEditContext } from '../modules/utility/Module.jsx'
@@ -80,7 +80,6 @@ const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, editMode, 
   if (!def) return null
   const Comp = def.component
   const u = def.u || 3
-  const aspectDiv = u === 1 ? 12 : 4
   const editCtx = editMode ? { editMode: true, onRemove: () => onSendToWorkbench(mod.id), hp: mod.hp } : null
   const active = editMode && activeArrowsId === mod.id
 
@@ -106,7 +105,10 @@ const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, editMode, 
       onMouseLeave={() => { if (editMode) cancelActivate(mod.id) }}
       style={{
         width: hpToPx(mod.hp),
-        aspectRatio: `${mod.hp * aspectDiv} / ${TOTAL_HP}`,
+        /* a definite px height, not an aspect-ratio: WebKit does not resolve the
+           module's `height: 100%` against an aspect-ratio box, so on iOS a 3U
+           module sized to its content and ran past the rails (2026-09-02) */
+        height: ROW_HEIGHT[u === 1 ? '1u' : '3u'],
         flexShrink: 0,
         // Clip module internals by default; lift the clip while reposition arrows
         // are showing so edge-centred chevrons can overflow the panel border.

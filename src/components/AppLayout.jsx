@@ -154,6 +154,11 @@ export default function AppLayout() {
          `RackRail` takes the `drawer` prop AppShell passes down — without that
          the fork would size itself from the rail token AppShell has just zeroed
          and the hamburger would open nothing. */
+      /* THE DRAWER ON EVERY ROUTE, Home included (user, 2026-09-02): mirror lands
+         Home on the collapsed 48px rail, but here that 48px pushes the catalog at
+         390 under its two-column floor (160px/col) — one card the width of the
+         screen. Hidden, the grid snaps back to two. Monitor's Home is a catalog;
+         the rail is a tap away. */
       touch="drawer"
       drawerBelow={768}
       appName="Monitor"

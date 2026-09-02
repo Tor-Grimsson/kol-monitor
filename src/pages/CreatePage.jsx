@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { useNarrow } from '../hooks/useNarrow.js'
 import { MODULE_DEFS, CATEGORIES } from '../modules/registry'
 import Button from '../components/atoms/Button'
 import Divider from '../components/atoms/Divider'
@@ -27,6 +28,7 @@ const MODULE_FILTER_GROUPS = [
 
 export default function CreatePage() {
   const navigate = useNavigate()
+  const narrow = useNarrow()
   const [caseName, setCaseName] = usePersistedState('caseName', 'Untitled')
   const [caseDescription, setCaseDescription] = usePersistedState('caseDescription', 'Design a new case')
   const [editingName, setEditingName] = useState(false)
@@ -36,7 +38,9 @@ export default function CreatePage() {
   const [addingRow, setAddingRow] = useState(false)
   const [showHpPicker, setShowHpPicker] = useState(false)
   const [showCase, setShowCase] = useState(true)
-  const [caseZoom, setCaseZoom] = useState(1)
+  const [caseZoom, setCaseZoom] = useState(1) // mirrors the viewport's zoom (onZoomChange)
+  const zoomSetterRef = useRef(null) // the viewport's setZoom — the bar writes through it
+  const applyZoom = (fn) => zoomSetterRef.current?.(fn)
   const [zoomInput, setZoomInput] = useState('100')
   const [lastInserted, setLastInserted] = useState(null)
   const [draggingModule, setDraggingModule] = useState(null)
@@ -48,30 +52,39 @@ export default function CreatePage() {
     if (!zoomInputEditing.current) setZoomInput(String(Math.round(caseZoom * 100)))
   }, [caseZoom])
 
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.target.closest('input, textarea')) return
-      if (e.key === '=' || e.key === '+') { e.preventDefault(); setCaseZoom(z => Math.min(2, z + 0.1)) }
-      if (e.key === '-') { e.preventDefault(); setCaseZoom(z => Math.max(0.1, z - 0.1)) }
-      if (e.key === '0') { e.preventDefault(); setCaseZoom(1) }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  /* +/−/0 are the viewport's own keys (RackViewport) — no second listener here. */
   const rack = useRack()
   const routing = usePatchRouting()
   const [searchParams] = useSearchParams()
-  const resetDone = useRef(false)
+  const location = useLocation()
+  /* Runs per ARRIVAL (location.key), not per mount: Create tapped in the rail
+     while already on Create is a new key on the same component — a new case.
+     A fresh arrival is a new case. RETURNING is not: history back lands on the
+     same key it left, so a key seen before keeps the case (a module's page →
+     Back, 2026-09-02). `from=rack` / `from=create` / `insert=` keep it too. */
   useLayoutEffect(() => {
-    if (resetDone.current) return
-    resetDone.current = true
-    if (searchParams.get('from') !== 'rack') {
+    const from = searchParams.get('from')
+    let returning = false
+    try { returning = sessionStorage.getItem('create-key') === location.key; sessionStorage.setItem('create-key', location.key) } catch { /* storage blocked */ }
+    if (!returning && from !== 'rack' && from !== 'create' && !searchParams.get('insert')) {
       rack.resetRack()
       routing.loadPatch([])
+      setView('case')
     }
-  }, [])
+  }, [location.key]) // eslint-disable-line react-hooks/exhaustive-deps
   const rows = rack.rows
   const [caseHp, setCaseHp] = usePersistedState('caseHp', 104)
+
+  /* `/create?insert=<type>` — the module page's INSERT (2026-09-02): add it once,
+     then clean the URL so a reload does not add it again */
+  const insertDone = useRef(false)
+  useEffect(() => {
+    const type = searchParams.get('insert')
+    if (!type || insertDone.current) return
+    insertDone.current = true
+    addModule(type)
+    navigate('/create?from=create', { replace: true })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const addModule = (type) => {
     const def = MODULE_DEFS[type]
@@ -82,7 +95,20 @@ export default function CreatePage() {
     setView('case')
   }
 
+  /* INSERT — the one explicit way to add from the list (touch has no drag). Its own
+     tap; the card / row itself opens the module's page (user, 2026-09-02). */
+  const InsertAction = ({ type }) => (
+    <span
+      onClick={(e) => { e.stopPropagation(); if (justDraggedRef.current) return; addModule(type) }}
+      className="cursor-pointer flex items-center gap-2 kol-helper-10 text-fg-80"
+    >
+      INSERT
+      <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--kol-palette-red)', flexShrink: 0 }} />
+    </span>
+  )
+
   const handleModuleDragStart = (type, e) => {
+    if (e.pointerType === 'touch') return // a finger on the list scrolls it; INSERT is the touch action (2026-09-02)
     const startX = e.clientX
     const startY = e.clientY
     let started = false
@@ -129,7 +155,7 @@ export default function CreatePage() {
 
   return (
     /* Create sits on the app tier's fg-02 (AppLayout); only the rack steps up to fg-04 */
-    <PageShell mode="fixed" style={{ '--kol-shell-page-wash': 'var(--kol-fg-02)', position: 'relative', isolation: 'isolate' }}>
+    <PageShell mode={view === 'case' ? 'fixed' : 'scroll'} /* the case is a fixed canvas; the modules list is a page that scrolls (2026-09-02) */ style={{ '--kol-shell-page-wash': 'var(--kol-fg-02)', position: 'relative', isolation: 'isolate' }}>
       {/* the dot grid on the WHOLE page — over the wash, under the chrome, the
         * padding ignored (inset 0 spans the padding box). RackViewport drives it
         * through gridRef so it still rides zoom/pan (user, 2026-08-27). */}
@@ -138,6 +164,8 @@ export default function CreatePage() {
         * — the hand-rolled version sat at 61.2 (mb 8 instead of the role's 12)
         * against every other page's 65.2. `title` and `subtitle` take nodes, so
         * the editable inputs drop straight in and the rhythm comes from the DS. */}
+      {/* chrome floats ABOVE the canvas: the case runs under the masthead and the filter row (user, 2026-09-02) */}
+      <div style={{ position: 'relative', zIndex: 'var(--kol-z-sticky)' }}>
       <PageHeader
         size="sm"
         voice="mono"
@@ -165,8 +193,9 @@ export default function CreatePage() {
           />
         }
       />
+      </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className="create-canvas" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <ContentFilters
           tone="sunken"
           items={view === 'case' ? [] : allModules}
@@ -223,24 +252,28 @@ export default function CreatePage() {
                     <CaseHpDialog caseHp={caseHp} onSetHp={setCaseHp} />
                   )}
                   {(addingRow || showHpPicker) && <Divider className="mb-4" />}
-                  {showCase && <RackViewport gridRef={dotGridRef} style={{ flex: 1, margin: '0 calc(var(--kol-shell-page-pad) * -1)' }} editMode={false} />}
+                  {showCase && <RackViewport gridRef={dotGridRef} style={{ flex: 1, margin: '0 calc(var(--kol-shell-page-pad) * -1)', overflow: 'visible' /* the canvas is the whole page: the case is never cut by the viewport's box; the chrome above it is lifted (below), not the case sunk — a sunk case sits under its own wrappers and stops receiving touches (2026-09-02) */ }} editMode={false} onZoomChange={setCaseZoom} zoomSetterRef={zoomSetterRef} />}
                 </div>
               )
             }
 
             if (layout === 'grid') {
               return (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))', gap: 24 }}>
                   {items.map(m => (
                     <div key={m.type} onPointerDown={(e) => handleModuleDragStart(m.type, e)}>
                       <ContentCard
                         variant="catalog"
-                        fit="natural"
+                        fit={narrow ? 'compact' : 'natural'} /* 0.3 on a 163px card, 0.5 on a desk */
                         title={m.label}
                         detail={`${m.hp}HP ${m.u}U — ${m.categoryLabel}`}
                         media={<img src={`/previews/modules/${m.type}.png`} alt={m.label} />}
-                        onClick={() => { if (justDraggedRef.current) return; addModule(m.type) }}
+                        onClick={() => { if (justDraggedRef.current) return; navigate(`/library/${m.type}`, { state: { from: 'create' } }) }}
                       />
+                      {/* INSERT gets its own strip under the card's text (user, 2026-09-02) */}
+                      <div className="bg-surface-primary flex items-center justify-end" style={{ padding: '8px var(--kol-pad-card-md)', marginTop: 1 }}>
+                        <InsertAction type={m.type} />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -248,21 +281,14 @@ export default function CreatePage() {
             }
 
             return (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: 8 }}>
                 {items.map(m => (
                   <div key={m.type} onPointerDown={(e) => handleModuleDragStart(m.type, e)}>
                     <ContentRow
                       variant="catalog"
                       title={m.label}
-                      actions={
-                        <span
-                          onClick={(e) => { e.stopPropagation(); if (justDraggedRef.current) return; addModule(m.type) }}
-                          className="cursor-pointer flex items-center gap-2 kol-helper-10 text-fg-80"
-                        >
-                          INSERT
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--kol-palette-red)', flexShrink: 0 }} />
-                        </span>
-                      }
+                      actions={<InsertAction type={m.type} />}
+                      onClick={() => { if (justDraggedRef.current) return; navigate(`/library/${m.type}`, { state: { from: 'create' } }) }}
                     />
                   </div>
                 ))}
@@ -272,9 +298,9 @@ export default function CreatePage() {
         />
 
         {/* `--monitor-rail` (AppLayout): the rail's width or 0 when hidden — a fixed layer must follow it itself */}
-        <div className="fixed flex items-center justify-between" style={{ bottom: 24, left: 'calc(var(--monitor-rail, var(--kol-shell-rail-width)) + 24px)', right: 24 }}>
+        {view === 'case' && <div className="fixed flex items-center justify-between" style={{ bottom: 24, left: 'calc(var(--monitor-rail, var(--kol-shell-rail-width)) + 24px)', right: 24 }}>
         <div className="flex items-center gap-2">
-          <span onClick={() => setCaseZoom(z => Math.max(0.1, z - 0.1))} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">−</span>
+          <span onClick={() => applyZoom(z => Math.max(0.1, z - 0.1))} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">−</span>
           <input
             type="text"
             inputMode="numeric"
@@ -284,7 +310,7 @@ export default function CreatePage() {
             onBlur={() => {
               zoomInputEditing.current = false
               const v = parseInt(zoomInput, 10)
-              if (!isNaN(v)) setCaseZoom(Math.min(2, Math.max(0.1, v / 100)))
+              if (!isNaN(v)) applyZoom(Math.min(2, Math.max(0.1, v / 100)))
               else setZoomInput(String(Math.round(caseZoom * 100)))
             }}
             onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }}
@@ -292,7 +318,7 @@ export default function CreatePage() {
             style={{ width: 32 }}
           />
           <span className="kol-helper-12 text-fg-32">%</span>
-          <span onClick={() => setCaseZoom(z => Math.min(2, z + 0.1))} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">+</span>
+          <span onClick={() => applyZoom(z => Math.min(2, z + 0.1))} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">+</span>
           <span onClick={() => navigate('/rack')} className="kol-helper-12 text-fg-48 module-detail-code-link cursor-pointer select-none" style={{ marginLeft: 16 }}>[Open in Rack]</span>
         </div>
         <div className="flex items-center gap-1">
@@ -321,7 +347,7 @@ export default function CreatePage() {
           <Icon name="grid-03" size={20} />
         </button>
         </div>
-        </div>
+        </div>}
       </div>
 
       {draggingModule && (

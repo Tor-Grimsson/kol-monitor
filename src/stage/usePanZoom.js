@@ -12,8 +12,11 @@
 // that has no Case, no snap and no workbench.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTouchGestures } from '../hooks/useTouchGestures.js'
 
-const MIN_ZOOM = 0.3
+// 0.3 → 0.1 with touch (2026-09-01): the fit at 390 is ~0.19, and a pinch
+// clamped to 0.3 could never return to it. `0` still resets to the fit.
+const MIN_ZOOM = 0.1
 const MAX_ZOOM = 2.5
 
 export function usePanZoom(surfaceRef, initialPan = { x: 0, y: 0 }, initialZoom = 1) {
@@ -22,6 +25,27 @@ export function usePanZoom(surfaceRef, initialPan = { x: 0, y: 0 }, initialZoom 
   const panRef = useRef(pan)
   panRef.current = pan
   const spaceDown = useRef(false)
+
+  // Two fingers pan + pinch (touch only) — the rack's gesture, same ÷zoom
+  const zoomRef = useRef(zoom)
+  zoomRef.current = zoom
+  const onTouchPan = useCallback((dx, dy) => setPan(p => ({ x: p.x + dx / zoomRef.current, y: p.y + dy / zoomRef.current })), [])
+  // Anchored on the fingers: the board sits at the surface's top-left and
+  // translate rides inside the zoom, so a content point c paints at
+  // (c + pan) · z — keep the point under the midpoint fixed across z0 → z1.
+  // zoomRef is written EAGERLY here: a pinch fires one pointermove per finger,
+  // two per frame, and a render-synced ref made the second step restart from
+  // the stale zoom while the pan correction stacked — measured 537px of drift.
+  const onTouchZoom = useCallback((f, mid) => {
+    const z0 = zoomRef.current
+    const z1 = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z0 * f))
+    zoomRef.current = z1
+    const r = surfaceRef.current.getBoundingClientRect()
+    const mx = mid.x - r.left, my = mid.y - r.top
+    setPan(p => ({ x: p.x + mx / z1 - mx / z0, y: p.y + my / z1 - my / z0 }))
+    setZoom(z1)
+  }, [surfaceRef])
+  useTouchGestures(surfaceRef, { onPan: onTouchPan, onZoom: onTouchZoom })
 
   const onPointerDown = useCallback((e) => {
     if (!spaceDown.current || e.button !== 0) return

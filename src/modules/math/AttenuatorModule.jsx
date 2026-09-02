@@ -37,13 +37,13 @@ function AttenPanel({ levels, modes, enabled, onToggle, onLevelChange, onModeCha
           {['a', 'b', 'c', 'd'].map(ch => (
             <div key={`in-${ch}`} style={{ position: 'relative' }}>
               <LabeledJack type="in" port={ch} moduleId={id} active={inConns[ch]} signalRef={inRefs[ch]} label={ch} labelPosition="top" />
-              <Icon name="caret-down" size={8} style={{ color: 'rgba(255,255,255,0.25)', position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)' }} />
+              <Icon name="caret-down" size={8} style={{ color: 'var(--kol-fg-24)', position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)' }} />
             </div>
           ))}
           {['a', 'b', 'c', 'd'].map((ch, i) => (
             <div key={`out-${ch}`} style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
               <JackSocket type="out" port={ch} moduleId={id} signalRef={outRefs[ch]} />
-              {i < 3 && <Icon name="caret-right" size={8} style={{ color: 'rgba(255,255,255,0.25)', position: 'absolute', right: -14, top: '50%', transform: 'translateY(-50%)' }} />}
+              {i < 3 && <Icon name="caret-right" size={8} style={{ color: 'var(--kol-fg-24)', position: 'absolute', right: -14, top: '50%', transform: 'translateY(-50%)' }} />}
             </div>
           ))}
         </div>

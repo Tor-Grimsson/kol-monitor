@@ -26,8 +26,8 @@ export default function PowerModule({ id = 'power1' }) {
             width: 28,
             height: 38,
             borderRadius: 3,
-            backgroundColor: '#1a1a1a',
-            border: '2px solid #333',
+            backgroundColor: 'var(--kol-ctl-hw-cap)',
+            border: '2px solid var(--kol-ctl-hw-cap-edge)',
             cursor: 'pointer',
             position: 'relative',
             overflow: 'hidden',
@@ -42,17 +42,17 @@ export default function PowerModule({ id = 'power1' }) {
             height: '50%',
             top: on ? 0 : '50%',
             borderRadius: 2,
-            backgroundColor: on ? '#c0392b' : '#444',
+            backgroundColor: on ? 'var(--kol-ctl-led-red)' : 'var(--kol-ctl-hw-cap-edge)',
             boxShadow: on
-              ? '0 0 8px rgba(231,76,60,0.5), inset 0 1px 0 rgba(255,255,255,0.15)'
-              : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+              ? '0 0 8px color-mix(in srgb, var(--kol-ctl-led-red) 50%, transparent), inset 0 1px 0 var(--kol-ctl-hw-cap-edge)'
+              : 'inset 0 1px 0 var(--kol-ctl-hw-cap-edge)',
             transition: 'top 0.1s, background-color 0.15s, box-shadow 0.15s',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}>
             <span className="kol-helper-8" style={{
-              color: on ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)',
+              color: on ? 'var(--kol-color-ab-white)' : 'var(--kol-ctl-hw-on-cap)',
               lineHeight: 1,
             }}>
               {on ? 'I' : 'O'}
@@ -63,13 +63,13 @@ export default function PowerModule({ id = 'power1' }) {
           <span className="kol-helper-xxxxs" style={{
             position: 'absolute', top: 3, left: 0, right: 0,
             textAlign: 'center',
-            color: on ? 'transparent' : 'rgba(255,255,255,0.15)',
+            color: on ? 'transparent' : 'var(--kol-ctl-hw-cap-edge)',
             pointerEvents: 'none',
           }}>I</span>
           <span className="kol-helper-xxxxs" style={{
             position: 'absolute', bottom: 3, left: 0, right: 0,
             textAlign: 'center',
-            color: on ? 'rgba(255,255,255,0.15)' : 'transparent',
+            color: on ? 'var(--kol-ctl-hw-cap-edge)' : 'transparent',
             pointerEvents: 'none',
           }}>O</span>
         </div>

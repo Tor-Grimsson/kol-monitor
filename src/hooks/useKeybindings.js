@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 
 // VideoModulo-specific keybindings (sidebar, edit, mute, cables, shortcuts, display, library search)
 // Viewport keybindings (space, zoom, snap) are handled by RackViewport
-export function useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden, setShowLibrarySearch }) {
+export function useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden, setShowLibrarySearch, setShowPatchTable }) {
   useEffect(() => {
     const noInput = (e) => !e.target.closest('input, textarea')
 
@@ -35,6 +35,9 @@ export function useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, r
 
       // Shortcuts overlay
       if (noInput(e) && !mod && e.key === 's') { e.preventDefault(); setShowShortcuts(v => !v) }
+
+      // Patch table (P)
+      if (noInput(e) && !mod && e.key === 'p') { e.preventDefault(); setShowPatchTable(v => !v) }
 
       // Clear display — hide all UI controls
       if (noInput(e) && !mod && e.key === 'd') { e.preventDefault(); setDisplayHidden(v => !v) }

@@ -56,7 +56,7 @@ shadow kol-theme class names** unlayered, so no DS upgrade to `.kol-badge*` /
 
 ---
 
-## 📌 GREPS RUN — 2026-08-30 · theme 0.96.0 · component 0.131.0
+## 🟢 GREPS RUN — 2026-08-30 · theme 0.96.0 · component 0.131.0
 
 **4 of 6 clean.** 1 (no unrendered domain pack) · 3 (`:root` — 5 hits, all
 bindings) · 5 (0 `z-[…]`, 0 `bg-black/`; the 47 `rgba(0,0,0,…)` are inset panel
@@ -76,7 +76,7 @@ Local CSS **1160 lines**, and **31 of `components.css`'s 69 selectors shadow
 kol-theme** unlayered — the `.kol-badge*` / `.pill-*` / `.toggle-*` / `.tag-control`
 families cannot receive a DS upgrade until they are adopted or renamed.
 
-**Remainder here:** filed as a self-ticket — `lobby/inbox/RackTierFullConsumption.md`,
+**Remainder here:** discharged 2026-09-01 — filed as a self-ticket, `lobby/inbox/RackTierFullConsumption.md`,
 with the per-check breakdown, the token→class map for all 12 classes (verified
 present in kol-theme 0.96.0), the 31 shadowed selectors listed by name, and the
 specificity warning that every conversion moves a declaration out of inline
@@ -88,4 +88,4 @@ specificity warning that every conversion moves a declaration out of inline
 
 🟢 `closed` in **kol-ds-ui** — Part 1 — `@kolkrabbi/kol-theme/core` (theme 0.77.0): the app tier in the umbrella's order, the five domain packs import after it, umbrella unchanged (core = umbrella minus exactly those five, order checked). Part 2 — not a certificate, a checklist (user, 2026-08-27: "it's just for repos to know if they are fully using KOL"): `docs/documentation/00-overview/04-full-consumption.md` — the six checks as monitor shaped them, each with the grep to run from a consumer's root; a repo is fully consuming when every grep comes back empty, and records it as one line in its own ledger history. No script, no roster, no badge. 21 gates clean.
 
-**Remainder here:** swap the umbrella for `@import "@kolkrabbi/kol-theme/core"`; run the six greps and work the rack tier's list (the 47 JSX `var()` reads, the 7 duplicate atoms, the 996-line `components.css`). The LLM_RULES bulletin is the user's to post.
+**Remainder here:** none — closed 2026-09-01. Part 1 adopted 2026-08-27 (umbrella → `@kolkrabbi/kol-theme/core`, built CSS 283.7 → 230.4 kB). Part 2 run 2026-08-30: the 47 JSX `var()` reads worked to 6 stated deviations, the 7 dead atoms retired to `_tmp/2026-08-30-dead-atoms/`, `components.css` 996 → 677 lines. What was left of checks 2 + 4 lives in `inbox/RackTierFullConsumption.md` and is tracked by that row only — this receipt owes nothing.

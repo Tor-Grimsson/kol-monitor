@@ -95,3 +95,16 @@ server. The `sunken` re-grounding in kol-theme 0.106.0 is what makes the row
 sit below the page rather than above it, and that is the thing to look at:
 whether the toggle reads as a well on both themes, and whether it lands on the
 subtitle's baseline right of the tab row.
+
+---
+
+## ✅ CLOSED — 2026-09-01 · browser-verified
+
+The ⚠️ above is discharged. The first real browser pass in this repo (user
+override of the no-server law; preview on 4317, PID killed after) rendered
+`/settings` at **1440** and **390**:
+`_tmp/2026-09-01-mobile-qa/qa-settings-1440.png` · `qa-settings-390.png`.
+
+The cluster renders in the masthead, the toggle appears **exactly once** on the
+page (the body's `Display → Theme` row is gone as intended), and it lands right
+of the tab row on the subtitle's line. Both themes read. Nothing owed.

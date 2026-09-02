@@ -3,6 +3,9 @@
    foundry · dashboards · styleguide), none of which a rack app renders.
    Requires kol-theme >=0.77.0 (FullConsumptionContract Part 1). */
 @import "@kolkrabbi/kol-theme/core";
+/* the controls pack — hardware + LED tokens for @kolkrabbi/kol-controls; a
+   core consumer imports the packs it renders (kol-theme 0.124.0) */
+@import "@kolkrabbi/kol-theme/kol-components-controls.css" layer(components);
 /* Tailwind never scans node_modules — the DS @source manifest points it at
    every raw-JSX package. Requires kol-theme ≥0.42.2: earlier manifests were
    a silent no-op under pnpm (KolSourcesPnpmResolution). */

@@ -108,7 +108,7 @@ const KNOBS = [
   ['contrast', 0, 300, 100],
 ]
 
-function ControlStrip({ picture, setPicture, marker, setMarker, blue, setBlue, mono, setMono, tally, onPower }) {
+function ControlStrip({ picture, setPicture, marker, setMarker, blue, setBlue, mono, setMono, tally, onPower, jack }) {
   const LOWER = [
     { on: marker, onClick: () => setMarker(v => !v), title: 'Safe-area guides' },
     { on: blue, onClick: () => setBlue(v => !v), title: 'Blue channel only' },
@@ -147,6 +147,10 @@ function ControlStrip({ picture, setPicture, marker, setMarker, blue, setBlue, m
             {LOWER.map((k, i) => <PanelKey key={i} {...k} w={24} />)}
           </div>
         </div>
+        {/* THE INPUT — the monitor's own jack, on the monitor (user, 2026-09-02:
+            "why not just use the actual monitor?"). Whatever is patched here is
+            what the tube shows. */}
+        {jack && <div className="flex flex-col items-center justify-center shrink-0">{jack}</div>}
         {/* POWER — the tall cream cap, and it works: it runs the stage. The cap
             latches down while on, the way a deck's power key does, and the lamp
             above is the tally. */}
@@ -170,7 +174,7 @@ function ControlStrip({ picture, setPicture, marker, setMarker, blue, setBlue, m
   )
 }
 
-export default function StageBezel({ tally, onPower, aspect = '16 / 9', style, children }) {
+export default function StageBezel({ tally, onPower, aspect = '16 / 9', style, jack, children }) {
   /* MARKER / BLUE / MONO and the picture knobs live HERE, not in stage state:
      they change the tube, never the signal. */
   const [marker, setMarker] = useState(false)
@@ -217,7 +221,7 @@ export default function StageBezel({ tally, onPower, aspect = '16 / 9', style, c
         marker={marker} setMarker={setMarker}
         blue={blue} setBlue={setBlue}
         mono={mono} setMono={setMono}
-        tally={tally} onPower={onPower}
+        tally={tally} onPower={onPower} jack={jack}
       />
     </div>
   )

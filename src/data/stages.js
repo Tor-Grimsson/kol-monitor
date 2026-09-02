@@ -26,6 +26,11 @@
 
 export const STAGE_CV_ID = 'stagecv'
 
+// The monitor is a patch DESTINATION, not a fixed tap (user, 2026-09-02). Each
+// stage's `tap` is only the cable the stage LOADS with — the screen follows
+// whatever is patched here after that.
+export const STAGE_OUT_ID = 'monitor'
+
 export const stages = {
   tape: {
     label: 'Tape',

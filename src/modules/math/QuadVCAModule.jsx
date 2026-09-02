@@ -125,7 +125,7 @@ function stopLedLoop() {
 }
 
 // LED bound to a signal ref — brightness tracks signal intensity.
-// Green palette (#2ecc71) to match our LED component's 'green' color.
+// The palette green, the same one LED's 'green' resolves to.
 function SignalLED({ signalRef }) {
   const divRef = useRef(null)
   useEffect(() => {
@@ -136,9 +136,9 @@ function SignalLED({ signalRef }) {
       prev = n
       const el = divRef.current
       if (!el) return
-      const alpha = n.toFixed(2)
-      el.style.backgroundColor = n > 0.02 ? `rgba(46, 204, 113, ${alpha})` : 'rgba(180,175,165,0.15)'
-      el.style.boxShadow = n > 0.02 ? `0 0 4px rgba(46, 204, 113, ${alpha})` : 'none'
+      const lit = `color-mix(in srgb, var(--kol-ctl-led-green) ${Math.round(n * 100)}%, transparent)`
+      el.style.backgroundColor = n > 0.02 ? lit : 'var(--kol-fg-16)'
+      el.style.boxShadow = n > 0.02 ? `0 0 4px ${lit}` : 'none'
     }
     ledCallbacks.add(cb)
     startLedLoop()
@@ -149,7 +149,7 @@ function SignalLED({ signalRef }) {
   }, [signalRef])
   return <div ref={divRef} style={{
     width: 6, height: 6, borderRadius: '50%',
-    backgroundColor: 'rgba(180,175,165,0.15)',
+    backgroundColor: 'var(--kol-fg-16)',
     transition: 'background-color 0.05s, box-shadow 0.05s',
     flexShrink: 0,
   }} />
@@ -159,7 +159,7 @@ function DashedSpacer() {
   return (
     <div style={{
       flex: 1, height: 1,
-      background: 'repeating-linear-gradient(to right, rgba(255,255,255,0.20) 0 2px, transparent 2px 5px)',
+      background: 'repeating-linear-gradient(to right, var(--kol-fg-16) 0 2px, transparent 2px 5px)',
     }} />
   )
 }
@@ -171,7 +171,7 @@ function Channel({ ch, level, atten, curve, boost,
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 6, padding: '8px 6px',
-      borderBottom: ch < 4 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+      borderBottom: ch < 4 ? '1px solid var(--kol-fg-08)' : 'none',
     }}>
       {/* Left cluster: CV jack (sm) · CV LED · CV atten knob.
           LED reflects the CV arriving at this channel's CV jack — not the output. */}
@@ -190,9 +190,9 @@ function Channel({ ch, level, atten, curve, boost,
           <FlipToggle value={boost} onChange={onBoostChange} variant="horizontal" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Icon name="curve-log" size={8} style={{ color: 'var(--kol-palette-red)' }} />
+          <Icon name="curve-log" size={8} style={{ color: 'var(--kol-ctl-led-red)' }} />
           <Knob value={curve} onChange={onCurveChange} size="sm" />
-          <Icon name="curve-exp" size={8} style={{ color: 'var(--kol-palette-red)' }} />
+          <Icon name="curve-exp" size={8} style={{ color: 'var(--kol-ctl-led-red)' }} />
         </div>
       </div>
 
@@ -201,8 +201,8 @@ function Channel({ ch, level, atten, curve, boost,
       {/* Right: LEVEL big knob with channel label below */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
         <Knob value={level} onChange={onLevelChange} size="lg" />
-        <span className="kol-helper-8" style={{
-          color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1,
+        <span className="kol-helper-8 text-fg-32" style={{
+          textTransform: 'uppercase', lineHeight: 1,
         }}>{`channel ${ch}`}</span>
       </div>
     </div>
@@ -252,7 +252,7 @@ function QuadVCAPanel({
             <div key={`in${ch}`} style={{ position: 'relative' }}>
               <LabeledJack type="in" port={`in${ch}`} moduleId={id} active={inConns[ch]} signalRef={inRefs[ch]} label={`${ch}`} labelPosition="top" />
               <Icon name="caret-down" size={8} style={{
-                color: 'rgba(255,255,255,0.25)',
+                color: 'var(--kol-fg-24)',
                 position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)',
               }} />
             </div>
@@ -262,7 +262,7 @@ function QuadVCAPanel({
               <JackSocket type="out" port={`out${ch}`} moduleId={id} signalRef={outRefs[ch]} />
               {i < 3 && (
                 <Icon name="caret-right" size={8} style={{
-                  color: 'rgba(255,255,255,0.25)',
+                  color: 'var(--kol-fg-24)',
                   position: 'absolute', right: -14, top: '50%', transform: 'translateY(-50%)',
                 }} />
               )}

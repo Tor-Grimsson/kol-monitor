@@ -77,23 +77,21 @@ function JoystickPanel({ x, y, z, snap, enabled, onToggle, onMove, onZChange, on
         <div
           ref={padRef}
           onPointerDown={handleDown}
+          className="bg-fg-02 border border-fg-08"
           style={{
             width: 96, height: 96, flexShrink: 0,
-            backgroundColor: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 2,
             position: 'relative',
             cursor: 'crosshair',
             touchAction: 'none',
           }}
         >
-          <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, backgroundColor: 'rgba(255,255,255,0.06)' }} />
-          <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, backgroundColor: 'rgba(255,255,255,0.06)' }} />
-          <div style={{
+          <div className="bg-fg-04" style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1 }} />
+          <div className="bg-fg-04" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1 }} />
+          <div className="bg-fg-72" style={{
             position: 'absolute',
             left: `${x}%`, top: `${y}%`,
             width: 8, height: 8, borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.7)',
             transform: 'translate(-50%, -50%)',
             pointerEvents: 'none',
           }} />
@@ -104,12 +102,11 @@ function JoystickPanel({ x, y, z, snap, enabled, onToggle, onMove, onZChange, on
           onPointerDown={handleSliderDown}
           style={{ width: 10, height: 96, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'ns-resize', touchAction: 'none' }}
         >
-          <div style={{ width: 2, height: '100%', backgroundColor: 'rgba(255,255,255,0.15)', position: 'relative' }}>
-            <div style={{
+          <div className="bg-fg-16" style={{ width: 2, height: '100%', position: 'relative' }}>
+            <div className="bg-fg-72" style={{
               position: 'absolute',
               bottom: `calc(${z}% - 4px)`, left: -3,
               width: 8, height: 8, borderRadius: '50%',
-              backgroundColor: 'rgba(255,255,255,0.7)',
               pointerEvents: 'none',
             }} />
           </div>

@@ -14,8 +14,8 @@ export function useRack() {
   return useContext(RackContext)
 }
 
-export function RackProvider() {
-  const rack = useRackState()
+export function RackProvider({ initialRows }) {
+  const rack = useRackState(initialRows)
   return (
     <RackContext.Provider value={rack}>
       <ModuleRegistryProvider>

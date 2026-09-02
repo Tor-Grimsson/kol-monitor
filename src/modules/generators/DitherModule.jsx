@@ -13,7 +13,7 @@ import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
 import IconButton from '../parametric/IconButton'
 import IconSelect from '../parametric/IconSelect'
-import LabeledControl from '../parametric/LabeledControl'
+import { PanelLabel } from '@kolkrabbi/kol-controls'
 import Toggle from '../parametric/Toggle'
 import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
@@ -644,24 +644,24 @@ function DitherPanel({
             <span
               onClick={() => onIsEngineChange(true)}
               className="kol-helper-8"
-              style={{ color: isEngine ? 'rgba(231,76,60,0.9)' : 'rgba(255,255,255,0.25)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
+              style={{ color: isEngine ? 'var(--kol-ctl-led-red)' : 'var(--kol-fg-24)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
             >engine</span>
             <span
               onClick={() => onIsEngineChange(false)}
               className="kol-helper-8"
-              style={{ color: !isEngine ? 'rgba(231,76,60,0.9)' : 'rgba(255,255,255,0.25)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
+              style={{ color: !isEngine ? 'var(--kol-ctl-led-red)' : 'var(--kol-fg-24)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
             >filter</span>
-            <div style={{ width: 1, height: 10, backgroundColor: 'rgba(255,255,255,0.1)' }} />
+            <div className="bg-fg-08" style={{ width: 1, height: 10 }} />
             <div onClick={() => onRayChange(!ray)} style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#f1c40f', opacity: ray ? 1 : 0.3 }} />
-              <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', lineHeight: 1 }}>raycast</span>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--kol-ctl-led-yellow)', opacity: ray ? 1 : 0.3 }} />
+              <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>raycast</span>
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
             {modes.map(item => (
-              <LabeledControl key={item.value} label={item.text}>
+              <PanelLabel key={item.value} label={item.text}>
                 <IconButton icon={item.icon} title={item.value} active={mode === item.value} onClick={() => onModeChange(item.value)} />
-              </LabeledControl>
+              </PanelLabel>
             ))}
           </div>
         </div>
@@ -674,12 +674,12 @@ function DitherPanel({
             <span
               onClick={() => onIsAsciiChange(false)}
               className="kol-helper-8"
-              style={{ color: !isAscii ? 'rgba(231,76,60,0.9)' : 'rgba(255,255,255,0.25)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
+              style={{ color: !isAscii ? 'var(--kol-ctl-led-red)' : 'var(--kol-fg-24)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
             >shape</span>
             <span
               onClick={() => onIsAsciiChange(true)}
               className="kol-helper-8"
-              style={{ color: isAscii ? 'rgba(231,76,60,0.9)' : 'rgba(255,255,255,0.25)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
+              style={{ color: isAscii ? 'var(--kol-ctl-led-red)' : 'var(--kol-fg-24)', textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1 }}
             >ascii</span>
           </div>
           {!isAscii ? (

@@ -31,7 +31,7 @@ function MonitorPanel({ canvasRef, overlay, onOverlayChange, enabled, onToggle, 
             flex: 1,
             width: '100%',
             borderRadius: 2,
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid var(--kol-fg-08)',
           }}
         />
 

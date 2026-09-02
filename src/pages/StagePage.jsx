@@ -17,7 +17,7 @@ import { useCasePower } from '../hooks/useCasePower.jsx'
 import { useRack } from '../hooks/useRackContext.jsx'
 import { useRenderLoop } from '../hooks/useRenderLoop'
 import { RenderControlProvider } from '../hooks/useRenderControl'
-import { stages, STAGE_KEYS, cvConnections } from '../data/stages'
+import { stages, STAGE_KEYS, cvConnections, STAGE_OUT_ID } from '../data/stages'
 import Button from '@kolkrabbi/kol-component/atoms/Button'
 import Dropdown from '@kolkrabbi/kol-component/molecules/Dropdown'
 import { SettingsRow, SettingsSwitch } from '@kolkrabbi/kol-component/organisms/SettingsPanel'
@@ -30,7 +30,12 @@ import StageParams from '../stage/StageParams.jsx'
 import StageDock from '../stage/StageDock.jsx'
 import StageBezel from '../stage/StageBezel.jsx'
 import StageClock from '../stage/StageClock.jsx'
+import PatchTableOverlay from '../overlays/PatchTableOverlay.jsx'
+import PatchCableOverlay from '../modules/utility/PatchCableOverlay.jsx'
+import LabeledJack from '../modules/parametric/LabeledJack'
 import { usePanZoom } from '../stage/usePanZoom'
+import { useNarrow } from '../hooks/useNarrow.js'
+import Icon from '../icons/Icon'
 import { useFloating } from '../stage/useFloating'
 import { useDotGrid, DOT_GRID_SIZE, DOT_GRID_IMAGE } from '../hooks/useDotGrid.js'
 
@@ -56,16 +61,35 @@ function StageView({ stageKey }) {
   const stage = stages[stageKey]
   const navigate = useNavigate()
 
-  const { modulesRef } = useModuleRegistry()
+  const registry = useModuleRegistry()
+  const { modulesRef } = registry
   const routing = usePatchRouting()
   const { connectionsRef } = routing
   const { power, timingRef, allEnabled, toggleAll } = useCasePower()
+  /* The monitor is a headless one-input module: registering it is what lets a
+     cable land on it and what names it in the patch table. It consumes only —
+     the picture is read from whatever is patched in, below. */
+  useEffect(() => {
+    // registry identity is stable — this registers once per stage view
+    registry.register({ id: STAGE_OUT_ID, inputs: { in: { type: 'any' } }, outputs: {}, process: () => ({}) })
+    return () => registry.unregister(STAGE_OUT_ID)
+  }, [registry])
+
+  /* what the screen shows = whatever is patched into the monitor's input */
+  const monitorCable = routing.connections.find(c => c.toModuleId === STAGE_OUT_ID && c.toPort === 'in')
+  const tap = monitorCable ? { module: monitorCable.fromModuleId, port: monitorCable.fromPort } : null
   const rack = useRack()
 
   const { controlRef } = useRenderLoop(modulesRef, connectionsRef, power, timingRef)
 
   const [dockOpen, setDockOpen] = useState(true)
+  /* two pictures, two switches (user, 2026-09-02): the bezel's power button is the
+     MONITOR's — it lights the CRT and nothing else; the background video has its
+     own button in the bottom row. Neither starts or stops the case. */
+  const [monitorOn, setMonitorOn] = useState(true)
+  const [bgVideo, setBgVideo] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [showPatchTable, setShowPatchTable] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const elapsedRef = useRef(0)
   elapsedRef.current = elapsed
@@ -82,6 +106,10 @@ function StageView({ stageKey }) {
   const boardRef = useRef(null)
 
   /* every object moves on its own — grab its body, no handle (user, 2026-08-28) */
+  /* THE PHONE STAGE (2026-09-02): the video, the dock at a readable zoom, the faders,
+     a Play button. The CRT bezel (900px) and the clock (300px) are desk objects —
+     fitting them shrank the whole board to a 0.07 stamp at 390. */
+  const narrow = useNarrow()
   const bezel = useFloating({ ...AT.bezel, scale: 1 })
   const clock = useFloating({ ...AT.clock, scale: 1 })
   const dock = useFloating({ ...AT.dock, scale: 1 })
@@ -116,7 +144,12 @@ function StageView({ stageKey }) {
   routingRef.current = routing
   useEffect(() => {
     const id = requestAnimationFrame(() => {
-      routingRef.current.loadPatch([...stage.connections, ...cvConnections(marks)])
+      routingRef.current.loadPatch([
+        ...stage.connections,
+        ...cvConnections(marks),
+        // the stage's own `tap` is just the monitor's LOAD cable now
+        { fromModuleId: stage.tap.module, fromPort: stage.tap.port, toModuleId: STAGE_OUT_ID, toPort: 'in' },
+      ])
     })
     return () => cancelAnimationFrame(id)
   }, [stage, marks])
@@ -141,9 +174,25 @@ function StageView({ stageKey }) {
     const id = requestAnimationFrame(() => {
       const el = boardRef.current
       if (!el) return
+      if (narrow) {
+        /* the CRT and the dock (the clock is hidden), fitted to the WIDTH and
+           pinned to the top — the height scrolls by pan, the bottom-right cluster
+           stays clear (user, 2026-09-02: "where is the monitor, like on desktop") */
+        let w = 0
+        // HTMLElement only — the cable overlay is an <svg> and has no offsetLeft,
+        // which turned the whole measurement into NaN and skipped the fit (2026-09-02)
+        for (const child of el.children) { if (!(child instanceof HTMLElement)) continue; w = Math.max(w, child.offsetLeft + child.offsetWidth) }
+        if (!w) return
+        const pad = 12
+        const fit = Math.min(1, (window.innerWidth - pad * 2) / w)
+        setZoom(fit)
+        setPan({ x: (window.innerWidth / fit - w) / 2, y: 64 / fit })
+        return
+      }
       let w = 0
       let h = 0
       for (const child of el.children) {
+        if (!(child instanceof HTMLElement)) continue
         w = Math.max(w, child.offsetLeft + child.offsetWidth)
         h = Math.max(h, child.offsetTop + child.offsetHeight)
       }
@@ -157,7 +206,7 @@ function StageView({ stageKey }) {
       })
     })
     return () => cancelAnimationFrame(id)
-  }, [stage, rackRows, setZoom, setPan])
+  }, [stage, rackRows, narrow, setZoom, setPan])
 
   /* `h` hides the patch — the whole point is to get the modules off the picture.
      `,` opens THIS page's drawer instead of leaving for /settings. AppShell binds
@@ -179,6 +228,7 @@ function StageView({ stageKey }) {
       }
       if (e.altKey) return
       if (e.key === 'h') { e.preventDefault(); setDockOpen(v => !v) }
+      if (e.key === 'p') { e.preventDefault(); setShowPatchTable(v => !v) }
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
@@ -189,11 +239,20 @@ function StageView({ stageKey }) {
       {/* fixed, not in flow: the video is the whole window, rail included — the
           rail carries its own z-index and paints over it */}
       <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#1f1f1f]">
-        <StageCanvas tap={stage.tap} trails={stage.trails ?? 0} background="#1f1f1f" />
+        {bgVideo && <StageCanvas tap={tap} trails={stage.trails ?? 0} background="#1f1f1f" />}
 
-        <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2">
-          <StageParams marks={marks} onMarks={setMarks} rows={rack.rows} />
-          <Button variant="grey" size="sm" iconOnly="settings-01" aria-label="Stage settings" onClick={() => setSettingsOpen(true)} />
+        {/* one rung for the whole row — md, the MenuItem trigger's own h-8. Spans the
+            bottom instead of shrink-to-fit: WebKit measures a DS icon-only button's
+            intrinsic width as its glyph (22px, not the 32px rule) and squeezed the
+            row; pointer-transparent so the empty run still pans (2026-09-02). */}
+        <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-end gap-2 pointer-events-none *:pointer-events-auto">
+          {narrow && <Button variant="grey" size="md" onClick={toggleAll}>{allEnabled ? 'Stop' : 'Play'}</Button>}
+          <Button variant="grey" size="md" iconOnly={bgVideo ? 'video' : 'video-off'} iconComponent={Icon} aria-label="Background video" aria-pressed={bgVideo} onClick={() => setBgVideo(v => !v)} />
+          {/* the rack's patch table (P) — cables by name, the sure path on a phone */}
+          <Button variant="grey" size="md" iconOnly="list-02" iconComponent={Icon} aria-label="Patch table" aria-pressed={showPatchTable} onClick={() => setShowPatchTable(v => !v)} />
+          {/* MenuItem's root is w-full — boxed so it takes the trigger's width, not the row's */}
+          <div className="shrink-0"><StageParams marks={marks} onMarks={setMarks} rows={rack.rows} /></div>
+          <Button variant="grey" size="md" iconOnly="settings-01" aria-label="Stage settings" onClick={() => setSettingsOpen(true)} />
         </div>
 
         {/* `ShellDrawer` directly, not `SettingsPanel`, for ONE reason: the
@@ -202,6 +261,8 @@ function StageView({ stageKey }) {
             2026-08-28). `backdrop={false}` is ShellDrawer's own seam. The rows
             are still the organism's approved `SettingsRow` / `SettingsSwitch`.
             Worth a DS ask: SettingsPanel should forward `backdrop`. */}
+        <PatchTableOverlay open={showPatchTable} rows={rack.rows} onClose={() => setShowPatchTable(false)} />
+
         {settingsOpen && (
           <ShellDrawer
             open
@@ -238,22 +299,30 @@ function StageView({ stageKey }) {
           ref={surfaceRef}
           onPointerDown={onPointerDown}
           className="absolute inset-0 z-10 overflow-hidden"
-          style={dotGrid ? {
+          style={{ touchAction: 'none', ...(dotGrid ? {
             backgroundImage: DOT_GRID_IMAGE,
             backgroundSize: `${DOT_GRID_SIZE * zoom}px ${DOT_GRID_SIZE * zoom}px`,
             backgroundPosition: `${pan.x * zoom}px ${pan.y * zoom}px`,
-          } : undefined}
+          } : null) }}
         >
           <div ref={boardRef} className="relative w-max" style={{ zoom, transform: `translate(${pan.x}px, ${pan.y}px)` }}>
+            {/* board level, not the dock: a cable runs from a module to the MONITOR,
+                and the two are separate objects on this board (2026-09-02) */}
+            <PatchCableOverlay containerRef={boardRef} />
             <div className="absolute cursor-grab" onPointerDown={bezel.onDrag} style={{ left: bezel.box.x, top: bezel.box.y }}>
-              <StageBezel tally={allEnabled} onPower={toggleAll} style={{ width: 900 }}>
-                <StageCanvas tap={stage.tap} trails={stage.trails ?? 0} background="#1f1f1f" />
+              <StageBezel
+                tally={monitorOn}
+                onPower={() => setMonitorOn(v => !v)}
+                style={{ width: 900 }}
+                jack={<LabeledJack type="in" port="in" moduleId={STAGE_OUT_ID} active={!!monitorCable} label="in" />}
+              >
+                {monitorOn && <StageCanvas tap={tap} trails={stage.trails ?? 0} background="#1f1f1f" />}
               </StageBezel>
             </div>
-            <div className="absolute cursor-grab" onPointerDown={clock.onDrag} style={{ left: clock.box.x, top: clock.box.y }}>
+            {!narrow && <div className="absolute cursor-grab" onPointerDown={clock.onDrag} style={{ left: clock.box.x, top: clock.box.y }}>
               <StageClock running={allEnabled} onToggle={toggleAll} onReset={() => setElapsed(0)} t={elapsed} />
-            </div>
-            <div className="absolute" style={{ left: dock.box.x, top: dock.box.y }}>
+            </div>}
+            <div className="absolute" data-stage-dock style={{ left: dock.box.x, top: dock.box.y }}>
               <StageDock rows={rack.rows} open={dockOpen} onGrab={dock.onDrag} />
             </div>
           </div>

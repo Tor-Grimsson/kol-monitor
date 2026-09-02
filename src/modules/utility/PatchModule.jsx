@@ -9,7 +9,7 @@ import { savePatchFile, loadPatchFile } from '../../hooks/usePatchFile.js'
 import { patches } from '../../data/patches.js'
 import Module from './Module'
 
-import Dropdown from '../parametric/Dropdown'
+import Dropdown from '@kolkrabbi/kol-component/molecules/Dropdown'
 
 function PatchPanel({ tab, onTabChange, current, names, cableCount, onCurrentChange, onLoad, onSave, onClear, onExport, onImport }) {
   const btnStyle = {
@@ -18,10 +18,8 @@ function PatchPanel({ tab, onTabChange, current, names, cableCount, onCurrentCha
     justifyContent: 'center',
     padding: 3,
     borderRadius: 3,
-    border: '1px solid rgba(255,255,255,0.08)',
     backgroundColor: 'transparent',
     cursor: 'pointer',
-    color: 'rgba(255,255,255,0.3)',
   }
 
   return (
@@ -45,16 +43,16 @@ function PatchPanel({ tab, onTabChange, current, names, cableCount, onCurrentCha
         {tab === 'preset' && (
           <>
             <div style={{ padding: '0 2px' }}>
-              <Dropdown value={current} options={names} onChange={onCurrentChange} />
+              <Dropdown size="xs" variant="grey" value={current} options={names.map((o) => ({ value: o, label: o }))} onChange={onCurrentChange} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '0 2px' }}>
               <div style={{ display: 'flex', gap: 3 }}>
-                <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onLoad}>Load</button>
-                <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onSave}>Save</button>
+                <button className="kol-helper-8 text-fg-32 border border-fg-08" style={{ ...btnStyle, flex: 1 }} onClick={onLoad}>Load</button>
+                <button className="kol-helper-8 text-fg-32 border border-fg-08" style={{ ...btnStyle, flex: 1 }} onClick={onSave}>Save</button>
               </div>
-              <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onClear}>Clear</button>
+              <button className="kol-helper-8 text-fg-32 border border-fg-08" style={{ ...btnStyle, flex: 1 }} onClick={onClear}>Clear</button>
             </div>
-            <span className="kol-helper-xxxxs" style={{ color: 'rgba(255,255,255,0.25)', padding: '0 4px' }}>
+            <span className="kol-helper-xxxxs text-fg-24" style={{ padding: '0 4px' }}>
               {cableCount} cables
             </span>
           </>
@@ -62,8 +60,8 @@ function PatchPanel({ tab, onTabChange, current, names, cableCount, onCurrentCha
 
         {tab === 'file' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '0 2px' }}>
-            <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onExport}>Export</button>
-            <button className="kol-helper-8" style={{ ...btnStyle, flex: 1 }} onClick={onImport}>Import</button>
+            <button className="kol-helper-8 text-fg-32 border border-fg-08" style={{ ...btnStyle, flex: 1 }} onClick={onExport}>Export</button>
+            <button className="kol-helper-8 text-fg-32 border border-fg-08" style={{ ...btnStyle, flex: 1 }} onClick={onImport}>Import</button>
           </div>
         )}
       </div>

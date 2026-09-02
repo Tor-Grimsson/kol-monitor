@@ -13,8 +13,8 @@ import { startOfflineRecording } from './recordOffline'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
-import TextInput from '../parametric/TextInput'
-import Selector from '../parametric/Selector'
+import Input from '@kolkrabbi/kol-component/atoms/Input'
+import Stepper from '@kolkrabbi/kol-component/molecules/Stepper'
 import FlipToggle from '../parametric/FlipToggle'
 import Divider from '../../components/atoms/Divider'
 
@@ -66,7 +66,7 @@ function RecorderPanel({
             width: '100%',
             minHeight: 0,
             borderRadius: 2,
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid var(--kol-fg-08)',
           }}
         />
 
@@ -74,13 +74,13 @@ function RecorderPanel({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '4px 0', overflow: 'hidden' }}>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            <TextInput value={fileName} onChange={setFileName} placeholder="filename" mono={false} />
+            <Input size="xs" variant="outline" value={fileName} onChange={(e) => setFileName(e.target.value)} placeholder="filename" />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <Selector value={resolution} options={RES_OPTIONS} onChange={setResolution} />
-            <Selector value={fps} options={FPS_OPTIONS} onChange={setFps} />
-            <Selector value={aspect} options={ASPECT_OPTIONS} onChange={setAspect} />
+            <Stepper size="xs" layout="inline" className="uppercase" options={RES_OPTIONS} value={resolution} onChange={(e) => setResolution(e.target.value)} />
+            <Stepper size="xs" layout="inline" className="uppercase" options={FPS_OPTIONS} value={fps} onChange={(e) => setFps(e.target.value)} />
+            <Stepper size="xs" layout="inline" className="uppercase" options={ASPECT_OPTIONS} value={aspect} onChange={(e) => setAspect(e.target.value)} />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -98,8 +98,8 @@ function RecorderPanel({
               disabled={isActive}
               className="kol-helper-8"
               style={{
-                background: isActive ? 'rgba(231,76,60,0.9)' : 'rgba(231,76,60,0.4)',
-                color: '#fff', border: 'none', borderRadius: 2,
+                background: isActive ? 'var(--kol-ctl-led-red)' : 'color-mix(in srgb, var(--kol-ctl-led-red) 40%, transparent)',
+                color: 'var(--kol-color-ab-white)', border: 'none', borderRadius: 2,
                 padding: '2px 8px', cursor: isActive ? 'default' : 'pointer', minWidth: 36,
               }}
             >
@@ -107,10 +107,8 @@ function RecorderPanel({
             </button>
             <button
               onClick={isActive ? onStop : onClear}
-              className="kol-helper-8"
+              className={`kol-helper-8 bg-fg-08 ${(isActive || status === 'done') ? 'text-fg-96' : 'text-fg-32'}`}
               style={{
-                background: 'rgba(255,255,255,0.1)',
-                color: (isActive || status === 'done') ? '#fff' : 'rgba(255,255,255,0.3)',
                 border: 'none', borderRadius: 2,
                 padding: '2px 8px',
                 cursor: (isActive || status === 'done') ? 'pointer' : 'default', minWidth: 36,
@@ -124,7 +122,7 @@ function RecorderPanel({
                 download={`${fileName || 'kol'}-${mode === 'offline' ? 'render' : 'realtime'}.webm`}
                 className="kol-helper-8"
                 style={{
-                  background: 'rgba(46,204,113,0.4)', color: '#fff',
+                  background: 'color-mix(in srgb, var(--kol-ctl-led-green) 40%, transparent)', color: 'var(--kol-color-ab-white)',
                   borderRadius: 2, padding: '2px 8px', textDecoration: 'none',
                   minWidth: 36, textAlign: 'center',
                 }}
@@ -133,7 +131,7 @@ function RecorderPanel({
               </a>
             )}
             {status === 'done' && fileSize != null && (
-              <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              <span className="kol-helper-8 text-fg-40">
                 {(fileSize / 1024 / 1024).toFixed(1)}MB
               </span>
             )}
@@ -141,14 +139,14 @@ function RecorderPanel({
 
           {isActive && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+              <div className="bg-fg-04" style={{ flex: 1, height: 4, borderRadius: 2, overflow: 'hidden' }}>
                 <div style={{
                   width: `${Math.round(progress * 100)}%`, height: '100%',
-                  background: status === 'rendering' ? 'rgba(231,76,60,0.8)' : 'rgba(46,204,113,0.6)',
+                  background: status === 'rendering' ? 'var(--kol-ctl-led-red)' : 'var(--kol-ctl-led-green)',
                   transition: 'width 0.1s',
                 }} />
               </div>
-              <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.5)', minWidth: 28, textAlign: 'right' }}>
+              <span className="kol-helper-8 text-fg-48" style={{ minWidth: 28, textAlign: 'right' }}>
                 {Math.round(progress * 100)}%
               </span>
             </div>

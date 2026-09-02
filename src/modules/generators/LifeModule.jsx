@@ -207,7 +207,7 @@ function LifePanel({
             flex: 1,
             width: '100%',
             borderRadius: 2,
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid var(--kol-fg-08)',
             cursor: 'pointer',
           }}
         />
@@ -436,7 +436,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
         out.fill = true
         // Crisp blocks — skip the pen's round-capped stroke that was blooming each cell.
         out.stroke = false
-        // Default to Life's preview green (#2ecc71) so downstream displays
+        // Default to Life's preview green (SCOPE green) so downstream displays
         // match the in-module canvas unless CLR overrides.
         out.color = inputs.clr?.type === 'color'
           ? inputs.clr.value

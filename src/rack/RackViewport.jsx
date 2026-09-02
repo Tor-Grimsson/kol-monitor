@@ -15,10 +15,16 @@ import PatchCableOverlay from '../modules/utility/PatchCableOverlay.jsx'
 import RackView from './RackView.jsx'
 import { useDotGrid, DOT_GRID_SIZE, DOT_GRID_IMAGE } from '../hooks/useDotGrid.js'
 import Workbench from './Workbench.jsx'
+import { useTouchGestures } from '../hooks/useTouchGestures.js'
 
 const BASE_WIDTH = ROW_WIDTH + 52
+// Floor was 0.5 until touch (2026-09-01), then 0.25 — still 429px for a 1716px rack,
+// wider than a 390 phone at any zoom, so the case was always cut on the right
+// (user, 2026-09-02: "it's clipping"). 0.1 — the stage's floor — lets it fit.
+const MIN_ZOOM = 0.1
+const MAX_ZOOM = 2
 
-export default function RackViewport({ style, onEditCase, editMode: editModeOverride, viewLockedRef: viewLockedRefProp, snapPadding = 48, gridRef }) {
+export default function RackViewport({ style, onEditCase, editMode: editModeOverride, viewLockedRef: viewLockedRefProp, snapPadding = 48, gridRef, onZoomChange, zoomSetterRef }) {
   // The grid is the rack's SURFACE, not page chrome — it rides the same zoom and
   // pan the rack does. `zoom` scales the inner element and its `translate`, so the
   // visual pan is panOffset * zoom; the background matches by scaling its cell and
@@ -84,7 +90,7 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
       e.preventDefault()
       if (viewLockedRef.current) return
       if (e.altKey) {
-        setZoom(z => Math.min(2, Math.max(0.5, z - e.deltaY * 0.002)))
+        setZoom(z => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z - e.deltaY * 0.002)))
       } else {
         setPanOffset(prev => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }))
       }
@@ -92,6 +98,46 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
   }, [])
+
+  // Two fingers pan + pinch-zoom (touch only — see useTouchGestures). Screen
+  // delta ÷ zoom so the rack sticks to the fingers; the workbench keeps its own
+  // native touch scroll.
+  const zoomRef = useRef(zoom)
+  zoomRef.current = zoom
+  // The zoom the DOM was last laid out with — the size measurement below must
+  // divide by this, not by the eager gesture zoom.
+  const renderedRef = useRef({ z: zoom })
+  renderedRef.current = { z: zoom }
+  const onTouchPan = useCallback((dx, dy) => setPanOffset(p => ({ x: p.x + dx / zoomRef.current, y: p.y + dy / zoomRef.current })), [])
+  // Anchored on the fingers. The outer is a centring grid whose one auto
+  // track sizes to the rack: while the rack is SMALLER than the box the track
+  // stretches and the rack sits at (W − w·z)/2; once it overflows, the track is
+  // the rack and start-aligns — origin 0 (measured, not assumed: the negative
+  // "unsafe centre" never happens here). Translate rides inside the zoom.
+  // Predict the origin at z0 and z1 and shift pan so the content point under
+  // the midpoint stays put. zoomRef is written EAGERLY: a pinch fires one
+  // pointermove per finger, two per frame — a render-synced ref made the second
+  // step restart from the stale zoom while the pan correction stacked.
+  const onTouchZoom = useCallback((f, mid) => {
+    const z0 = zoomRef.current
+    const z1 = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z0 * f))
+    zoomRef.current = z1
+    const cr = rackOuterRef.current.getBoundingClientRect()
+    const rr = rackRef.current.getBoundingClientRect()
+    const zr = renderedRef.current.z
+    const w = rr.width / zr, h = rr.height / zr
+    const o = (z) => ({ x: Math.max(0, (cr.width - w * z) / 2), y: Math.max(0, (cr.height - h * z) / 2) })
+    const o0 = o(z0), o1 = o(z1)
+    const mx = mid.x - cr.left, my = mid.y - cr.top
+    setPanOffset(p => ({ x: p.x + (mx - o1.x) / z1 - (mx - o0.x) / z0, y: p.y + (my - o1.y) / z1 - (my - o0.y) / z0 }))
+    setZoom(z1)
+  }, [])
+  useTouchGestures(rackOuterRef, { onPan: onTouchPan, onZoom: onTouchZoom, ignore: '[data-workbench]' })
+
+  // A consumer's zoom control (Create's − % + bar) drives THIS zoom, and reads
+  // it back — one store, the one the keys, wheel and pinch already write.
+  useEffect(() => { onZoomChange?.(zoom) }, [zoom, onZoomChange])
+  useEffect(() => { if (zoomSetterRef) zoomSetterRef.current = setZoom }, [zoomSetterRef, setZoom])
 
   // Keybindings: space pan, 1-9 snap, +/-/0 zoom
   useEffect(() => {
@@ -105,8 +151,8 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
         if (rackOuterRef.current) rackOuterRef.current.style.cursor = 'grab'
       }
       if (noInput(e) && !e.metaKey && !e.ctrlKey) {
-        if (e.key === '=' || e.key === '+') { e.preventDefault(); setZoom(z => Math.min(2, z + 0.1)) }
-        if (e.key === '-') { e.preventDefault(); setZoom(z => Math.max(0.5, z - 0.1)) }
+        if (e.key === '=' || e.key === '+') { e.preventDefault(); setZoom(z => Math.min(MAX_ZOOM, z + 0.1)) }
+        if (e.key === '-') { e.preventDefault(); setZoom(z => Math.max(MIN_ZOOM, z - 0.1)) }
         if (e.key === '0') { e.preventDefault(); setZoom(1) }
       }
       // Snap view: 7 8 9 = top, 4 5 6 = middle, 1 2 3 = bottom
@@ -212,6 +258,11 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
         onPointerDown={handlePanDown}
         style={{
           flex: 1, minHeight: 0, overflow: 'hidden', display: 'grid', placeItems: 'center', position: 'relative',
+          /* every touch on the viewport is ours — including the margin around the
+             rack, which on Create is most of the screen. A scroller INSIDE (the
+             workbench list) keeps its own gesture: touch-action is resolved only up
+             to the nearest scroll container, not through it. */
+          touchAction: 'none',
           ...(dotGrid && !gridRef ? {
             backgroundImage: DOT_GRID_IMAGE,
             backgroundSize: `${DOT_GRID_SIZE * zoom}px ${DOT_GRID_SIZE * zoom}px`,
@@ -220,7 +271,7 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
           ...style,
         }}
       >
-        <div ref={rackRef} className="relative" style={{ zoom, width: BASE_WIDTH, transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}>
+        <div ref={rackRef} className="relative" style={{ zoom, width: BASE_WIDTH, transform: `translate(${panOffset.x}px, ${panOffset.y}px)`, touchAction: 'none' }}>
           <PatchCableOverlay containerRef={rackRef} cableVisibility={cableVisibility} cableLocked={cableLocked} onCableUnlock={() => setCableLocked(false)} />
           <RackView
             rows={rack.rows}

@@ -61,11 +61,10 @@ function StepGrid({ steps, gates, page, currentStep, onChange, onGateChange }) {
       <div style={{ flex: 1, padding: '8px 0' }}>
         <div style={{ height: '100%', position: 'relative', padding: '0 4px' }}>
           {Array.from({ length: NUM_STOPS }).map((_, t) => (
-            <div key={t} style={{
+            <div key={t} className="bg-fg-08" style={{
               position: 'absolute',
               bottom: `${((t + 1) / (NUM_STOPS + 1)) * 100}%`,
               left: 4, right: 4, height: 1,
-              backgroundColor: 'rgba(255,255,255,0.08)',
             }} />
           ))}
           <div style={{ position: 'relative', display: 'flex', height: '100%', justifyContent: 'space-evenly', zIndex: 1 }}>
@@ -80,7 +79,7 @@ function StepGrid({ steps, gates, page, currentStep, onChange, onGateChange }) {
                 >
                   <div style={{
                     position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
-                    backgroundColor: '#0a0a0a', borderRadius: 4,
+                    backgroundColor: 'var(--kol-ctl-hw-well)', borderRadius: 4,
                     boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)', zIndex: 1,
                   }} />
                   <div style={{
@@ -88,7 +87,7 @@ function StepGrid({ steps, gates, page, currentStep, onChange, onGateChange }) {
                     bottom: `calc(${norm * 100}% - 8px)`,
                     left: -1, right: -1,
                     height: 16, borderRadius: 1,
-                    backgroundColor: isActive ? '#e74c3c' : 'rgba(180,175,165,0.7)',
+                    backgroundColor: isActive ? 'var(--kol-ctl-led-red)' : 'var(--kol-ctl-hw-on-cap)',
                     boxShadow: '0 1px 2px rgba(0,0,0,0.3)', zIndex: 2,
                   }} />
                 </div>

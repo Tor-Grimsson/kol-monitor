@@ -75,7 +75,7 @@ function ModulatorGenPanel({
 
         {/* Group 1 — toggles + sliders */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', padding: '0 4px' }}>
-          <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase' }}>Shape</span>
+          <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase' }}>Shape</span>
           <CvSlider port="int" moduleId={id} active={intConn} signalRef={intRef} value={intensity} onChange={onIntensityChange} label="Int" />
           <CvSlider port="frq" moduleId={id} active={frqConn} signalRef={frqRef} value={frequency} onChange={onFrequencyChange} label="Frq" />
           <CvSlider port="sep" moduleId={id} active={sepConn} signalRef={sepRef} value={separation} onChange={onSeparationChange} label="Sep" />
@@ -92,7 +92,7 @@ function ModulatorGenPanel({
 
         {/* Group 2 — breath (internal LFO) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', padding: '0 4px' }}>
-          <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase' }}>Breath</span>
+          <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase' }}>Breath</span>
           <CvSlider port="brt" moduleId={id} active={brtConn} signalRef={brtRef} value={breathTime} onChange={onBreathTimeChange} label="Brt" />
           <CvSlider port="bam" moduleId={id} active={bamConn} signalRef={bamRef} value={breathAmp} onChange={onBreathAmpChange} label="Bam" />
           <CvSlider port="spd" moduleId={id} active={spdConn} signalRef={spdRef} value={speed} onChange={onSpeedChange} label="Spd" />

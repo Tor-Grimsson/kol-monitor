@@ -10,7 +10,7 @@ import { compile } from '../../hooks/useExpressionValue'
 import { newClockSyncState, measureClockRate } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
-import TextInput from '../parametric/TextInput'
+import Input from '@kolkrabbi/kol-component/atoms/Input'
 import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
@@ -24,7 +24,7 @@ function ExprPanel({ expr1, expr2, onExpr1Change, onExpr2Change, enabled, onTogg
         {/* Row 1: A | expr1 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <LabeledJack type="in" port="a" moduleId={id} active={aConn} signalRef={aRef} label="a" labelPosition="left" />
-          <TextInput value={expr1} onCommit={onExpr1Change} placeholder="wave(t)" style={{ flex: 1 }} />
+          <Input size="xs" variant="outline" className="flex-1" value={expr1} onCommit={onExpr1Change} placeholder="wave(t)" />
         </div>
 
         <Divider />
@@ -32,7 +32,7 @@ function ExprPanel({ expr1, expr2, onExpr1Change, onExpr2Change, enabled, onTogg
         {/* Row 2: B | expr2 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <LabeledJack type="in" port="b" moduleId={id} active={bConn} signalRef={bRef} label="b" labelPosition="left" />
-          <TextInput value={expr2} onCommit={onExpr2Change} placeholder="sin(t*PI)*100" style={{ flex: 1 }} />
+          <Input size="xs" variant="outline" className="flex-1" value={expr2} onCommit={onExpr2Change} placeholder="sin(t*PI)*100" />
         </div>
 
         {/* Row 3: Clk / rst + outputs on the right */}

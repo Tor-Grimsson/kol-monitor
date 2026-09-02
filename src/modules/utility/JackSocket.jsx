@@ -1,196 +1,72 @@
-// JackSocket — 3.5mm eurorack jack socket
-// Drag from output to input to connect
+// JackSocket — the WIRING seam over @kolkrabbi/kol-controls' presentational jack
+// (KolControlsPackage, adopted 2026-09-01). Drag-to-patch, the registry, the
+// pending cable and cable visibility are this repo's; they become the package's
+// `active · pending · dimPending · cablesHidden · color · onPointerDown` props.
+// The local implementation is retired to _tmp/2026-09-01-controls-adoption/.
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
+import { JackSocket as CtlJackSocket } from '@kolkrabbi/kol-controls'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { useModuleRegistry } from '../../hooks/useModuleRegistry.jsx'
 
-const DEFAULT_COLOR = '#e74c3c'
-
-// Read CSS vars once, lazily — keeps tokens as single source of truth
-let _cvAttenuateHex = null
-function getCvAttenuateColor() {
-  if (_cvAttenuateHex) return _cvAttenuateHex
-  if (typeof window === 'undefined') return '#497DA2'
-  const v = getComputedStyle(document.documentElement).getPropertyValue('--kol-cv-attenuate').trim()
-  _cvAttenuateHex = v || '#497DA2'
-  return _cvAttenuateHex
+// Role colours — HEX, read once (the glow appends a hex alpha). The values are
+// kol-theme's kol-components-controls.css.
+const _hex = {}
+function token(name) {
+  if (!_hex[name]) _hex[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return _hex[name]
 }
 
-let _signalInputHex = null
-function getSignalInputColor() {
-  if (_signalInputHex) return _signalInputHex
-  if (typeof window === 'undefined') return '#4ade80'
-  const v = getComputedStyle(document.documentElement).getPropertyValue('--kol-signal-input').trim()
-  _signalInputHex = v || '#4ade80'
-  return _signalInputHex
-}
-
-// Shared jack animation loop — single rAF, throttled to ~15fps, dirty-checked
-const jackCallbacks = new Set()
-let jackRafId = null
-let jackFrame = 0
-function jackTick() {
-  jackFrame++
-  if (jackFrame % 4 === 0) {
-    for (const cb of jackCallbacks) cb()
-  }
-  jackRafId = requestAnimationFrame(jackTick)
-}
-function startJackLoop() {
-  if (jackRafId == null) jackRafId = requestAnimationFrame(jackTick)
-}
-function stopJackLoop() {
-  if (jackRafId != null) { cancelAnimationFrame(jackRafId); jackRafId = null }
-}
-
-export default function JackSocket({
-  type = 'out',
-  port,
-  moduleId,
-  signalRef,
-  active = false,
-  size = 'md',
-  label,
-  labelSize = 'xxs',
-  category = 'utility',
-  bg,
-}) {
+export default function JackSocket({ type = 'out', port, moduleId, signalRef, active = false, size = 'md', label, labelSize = 'xxs', bg }) {
   const routing = usePatchRouting()
   const registry = useModuleRegistry()
-  const ref = useRef(null)
-  const ringRef = useRef(null)
   const jackId = `${moduleId}:${type === 'out' ? 'out' : 'in'}:${port}`
 
-  const isPending = type === 'out'
+  const pending = type === 'out'
     && routing?.pendingOutput?.port === port
     && routing?.pendingOutput?.moduleId === moduleId
-  const hasPending = !!routing?.pendingOutput
-  const isConnected = active || (type === 'out' && routing?.connections?.some(c => c.fromModuleId === moduleId && c.fromPort === port))
+  const dimPending = !!routing?.pendingOutput
+  const connected = active || (type === 'out' && routing?.connections?.some(c => c.fromModuleId === moduleId && c.fromPort === port))
 
-  const cvMode = type === 'in'
-    ? registry?.modulesRef?.current?.get(moduleId)?.inputs?.[port]?.cv
-    : null
-  // Inputs with no `cv` metadata = primary signal jacks (green)
-  // `cv: 'attenuate'` = blue. `cv: 'offset'` (or any other CV value) and outputs = red default.
-  const catColor = cvMode === 'attenuate'
-    ? getCvAttenuateColor()
+  // Inputs with no `cv` metadata = primary signal jacks (green); `cv: 'attenuate'`
+  // = blue; `cv: 'offset'` (or any other CV value) and outputs = the LED red.
+  const cvMode = type === 'in' ? registry?.modulesRef?.current?.get(moduleId)?.inputs?.[port]?.cv : null
+  const color = cvMode === 'attenuate'
+    ? token('--kol-ctl-cv-attenuate')
     : type === 'in' && cvMode == null
-      ? getSignalInputColor()
-      : DEFAULT_COLOR
+      ? token('--kol-ctl-signal-input')
+      : token('--kol-ctl-led-red')
 
-  // Register jack element for hit testing
-  useEffect(() => {
-    routing?.registerJack(jackId, ringRef.current)
-    return () => routing?.registerJack(jackId, null)
-  }, [routing, jackId])
+  // Register the RING for hit testing (pointerup finds the nearest input ring
+  // centre) — the package hands it over through `ringRef` (kol-controls 0.2.0,
+  // ControlsJackSeams); null on unmount unregisters.
+  const ringRef = useCallback((el) => routing?.registerJack(jackId, el), [routing, jackId])
 
-  // Animate ring glow proportional to signal value (shared rAF, ~15fps, dirty-checked)
-  useEffect(() => {
-    if (!signalRef || !ringRef.current) return
-    let prevNorm = -1
-    const cb = () => {
-      const signal = signalRef.current
-      let val = 0
-      if (!signal) val = 0
-      else if (signal.type === 'scalar') val = signal.value
-      else if (signal.type === 'color') { const c = signal.value; val = Math.max(c.r, c.g, c.b) * 100 }
-      else if (signal.type === 'points') val = signal.value?.length > 0 ? (signal.opacity ?? 1) * 100 : 0
-      const norm = Math.min(1, val / 100)
-      if (norm === prevNorm) return
-      prevNorm = norm
-      const ring = ringRef.current
-      if (ring) {
-        const alpha = Math.round(norm * 255).toString(16).padStart(2, '0')
-        ring.style.borderColor = norm > 0.01 ? `${catColor}${alpha}` : 'rgba(180,175,165,0.25)'
-        ring.style.boxShadow = norm > 0.01
-          ? `0 0 ${2 + norm * 6}px ${catColor}${alpha}`
-          : 'inset 0 1px 2px rgba(0,0,0,0.5)'
-      }
-    }
-    jackCallbacks.add(cb)
-    startJackLoop()
-    return () => {
-      jackCallbacks.delete(cb)
-      if (jackCallbacks.size === 0) stopJackLoop()
-    }
-  }, [signalRef, catColor])
-
-  const handlePointerDown = useCallback((e) => {
+  const onPointerDown = useCallback((e) => {
     if (routing?.lockedRef?.current) return
+    e.nativeEvent._kolJack = true
+    // touch holds the cable between taps (usePatchRouting `sticky`); mouse drags it
+    const sticky = e.pointerType === 'touch'
     if (type === 'out') {
       e.preventDefault()
-      routing?.selectOutput(moduleId, port)
-    } else if (type === 'in' && active) {
-      // Grab the connected cable at its input end — detach and start pending
-      // drag from the original source. Release on a new input = re-route;
-      // release on empty space or on same input = disconnect.
-      e.preventDefault()
-      routing?.grabInput(moduleId, port)
+      if (pending) routing?.cancelPending() // tap the held output again = let go
+      else routing?.selectOutput(moduleId, port, sticky)
+    } else if (type === 'in') {
+      // A held cable lands here first; otherwise grab the connected cable at its
+      // input end — detach and start a pending drag from the original source.
+      // Release on a new input = re-route; on empty space or the same input = disconnect.
+      if (routing?.completeInput(moduleId, port)) { e.preventDefault(); return }
+      if (active) { e.preventDefault(); routing?.grabInput(moduleId, port, sticky) }
     }
-  }, [type, port, moduleId, active, routing])
-
-
-  const s = size === 'sm' ? 12 : 16
-  const hole = size === 'sm' ? 4 : 6
+  }, [type, port, moduleId, active, pending, routing])
 
   return (
-    <div
-      ref={ref}
-      className="inline-flex flex-col items-center gap-0.5 select-none"
-      style={{ cursor: type === 'out' ? 'grab' : (hasPending ? 'pointer' : 'default'), touchAction: 'none' }}
-      onPointerDown={handlePointerDown}
+    <CtlJackSocket
+      type={type} size={size} label={label} labelSize={labelSize} bg={bg}
+      active={connected} pending={pending} dimPending={dimPending}
+      cablesHidden={routing?.visibilityRef?.current !== 'on'}
+      color={color} signalRef={signalRef} onPointerDown={onPointerDown} ringRef={ringRef}
       title={label || port}
-    >
-      <div
-        className={(bg ?? type === 'out') ? 'bg-fg-04' : ''}
-        style={{
-          width: `${s + 4}px`,
-          height: `${s + 4}px`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: 3,
-        }}
-      >
-        <div
-          ref={ringRef}
-          style={{
-            width: `${s}px`,
-            height: `${s}px`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(20,20,20,0.9)',
-            border: `1.5px solid ${
-              isPending ? catColor
-              : active ? catColor
-              : hasPending && type === 'in' ? `${catColor}66`
-              : 'rgba(180,175,165,0.25)'
-            }`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
-            transition: 'border-color 0.1s',
-          }}
-        >
-          <div style={{
-            width: `${hole}px`,
-            height: `${hole}px`,
-            borderRadius: '50%',
-            backgroundColor: routing?.visibilityRef?.current !== 'on' && isConnected ? catColor : isConnected || isPending ? `${catColor}66` : 'rgba(0,0,0,0.6)',
-            border: type === 'in' ? '1px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.3)',
-          }} />
-        </div>
-      </div>
-      {label && (
-        <span className={`kol-helper-${labelSize}`} style={{
-          color: 'rgba(255,255,255,0.35)',
-          textTransform: 'uppercase',
-          lineHeight: 1,
-        }}>
-          {label}
-        </span>
-      )}
-    </div>
+    />
   )
 }

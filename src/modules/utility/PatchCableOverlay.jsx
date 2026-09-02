@@ -3,14 +3,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
-const WIRE_COLOR = '#f59e0b'
+const WIRE_COLOR = 'var(--kol-ctl-cable)'
 
 function getJackCenter(element, container) {
   if (!element || !container) return null
   const er = element.getBoundingClientRect()
   const cr = container.getBoundingClientRect()
-  // CSS zoom scales getBoundingClientRect but SVG coords are in unzoomed space
-  const zoom = parseFloat(container.style.zoom) || 1
+  // CSS zoom scales getBoundingClientRect but SVG coords are in unzoomed space.
+  // The zoom may sit on an ANCESTOR (the stage board zooms the whole dock), so
+  // read the cumulative factor off the container itself: rendered ÷ layout
+  // width. `style.zoom` alone was 1 on the stage and every cable shrank toward
+  // the dock's corner at any zoom but 1 (2026-09-02).
+  const zoom = (container.offsetWidth && cr.width / container.offsetWidth) || parseFloat(container.style.zoom) || 1
   return {
     x: (er.left + er.width / 2 - cr.left) / zoom + container.scrollLeft,
     y: (er.top + er.height / 2 - cr.top) / zoom,
@@ -152,14 +156,14 @@ export default function PatchCableOverlay({ containerRef, cableVisibility = 'on'
               } : undefined}
             />
             {/* Visible cable */}
-            <path d={cable.path} fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="4" strokeLinecap="round" />
-            <path d={cable.path} fill="none" stroke={isHovered ? '#ffffff' : cable.color} strokeWidth="2.5" strokeLinecap="round" filter="url(#vm-cable-shadow)" />
+            <path d={cable.path} fill="none" style={{ stroke: 'var(--kol-ctl-hw-shade)' }} strokeWidth="4" strokeLinecap="round" />
+            <path d={cable.path} fill="none" style={{ stroke: isHovered ? 'var(--kol-color-ab-white)' : cable.color }} strokeWidth="2.5" strokeLinecap="round" filter="url(#vm-cable-shadow)" />
           </g>
         )
       })}
 
       {!cableLocked && pendingCable && (
-        <path d={pendingCable} fill="none" stroke="rgba(231,76,60,0.4)" strokeWidth="2" strokeLinecap="round" strokeDasharray="6,4" />
+        <path d={pendingCable} fill="none" style={{ stroke: 'color-mix(in srgb, var(--kol-ctl-led-red) 40%, transparent)' }} strokeWidth="2" strokeLinecap="round" strokeDasharray="6,4" />
       )}
     </svg>
   )

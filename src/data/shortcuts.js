@@ -34,6 +34,7 @@ export const SHORTCUT_SECTIONS = [
     items: [
       { label: 'Cable lock', combo: 'C' },
       { label: 'Cable visibility', combo: 'O' },
+      { label: 'Patch table', combo: 'P' },
       { label: 'Clear display', combo: 'D' },
     ],
   },

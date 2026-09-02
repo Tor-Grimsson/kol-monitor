@@ -30,7 +30,7 @@ function ScopePanel({ canvasRef, overlay, onOverlayChange, bipolar, onBipolarCha
           ref={canvasRef}
           width={200}
           height={80}
-          style={{ flex: 1, minWidth: 0, height: '100%', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ flex: 1, minWidth: 0, height: '100%', borderRadius: 2, border: '1px solid var(--kol-fg-08)' }}
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
           <JackSocket type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} />

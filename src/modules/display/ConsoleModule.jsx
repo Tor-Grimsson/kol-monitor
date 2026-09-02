@@ -9,7 +9,7 @@ import { readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
-import Slider from '../parametric/Slider'
+import { Fader } from '@kolkrabbi/kol-controls'
 import Toggle from '../parametric/Toggle'
 import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
@@ -50,7 +50,7 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
               <Knob value={s1s[i]} onChange={setS1s[i]} label="s1" />
               <Knob value={s2s[i]} onChange={setS2s[i]} label="s2" />
               <div style={{ flex: 1, display: 'flex', alignItems: 'stretch', padding: '16px 0' }}>
-                <Slider value={lvls[i]} onChange={setLvls[i]} direction="vertical" height="100%" />
+                <Fader value={lvls[i]} onChange={setLvls[i]} direction="vertical" height="100%" />
               </div>
               <Toggle value={!mutes[i]} onChange={() => setMutes[i](!mutes[i])} label="on" size="sm" />
             </div>
@@ -85,7 +85,7 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
           <Knob value={mstS1} onChange={setMstS1} label="s1" />
           <Knob value={mstS2} onChange={setMstS2} label="s2" />
           <div style={{ flex: 1, display: 'flex', alignItems: 'stretch', padding: '16px 0' }}>
-            <Slider value={masterLvl} onChange={setMasterLvl} direction="vertical" height="100%" />
+            <Fader value={masterLvl} onChange={setMasterLvl} direction="vertical" height="100%" />
           </div>
           <Toggle value={masterOn} onChange={setMasterOn} label="on" size="sm" />
         </div>
@@ -96,7 +96,7 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
             ref={canvasRef}
             width={200}
             height={120}
-            style={{ flex: 1, minHeight: 0, width: '100%', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ flex: 1, minHeight: 0, width: '100%', borderRadius: 2, border: '1px solid var(--kol-fg-08)' }}
           />
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <LabeledJack type="in" port="bgCV" moduleId={id} active={bgConn} signalRef={bgInRef} label="cv" />

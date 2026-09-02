@@ -21,7 +21,7 @@ function SampleHoldPanel({ smooth, enabled, onToggle, onSmoothChange, id, inConn
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <LabeledJack type="in" port="in" moduleId={id} active={inConnected} signalRef={inRef} label="in" />
           <LabeledJack type="in" port="trig" moduleId={id} active={trigConnected} signalRef={trigRef} label="trig" />
-          <div style={{ width: 1, height: 16, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <div className="bg-fg-08" style={{ width: 1, height: 16 }} />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>

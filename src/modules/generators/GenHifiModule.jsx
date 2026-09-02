@@ -13,7 +13,7 @@ import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
 import Knob from '../parametric/Knob'
 import IconButton from '../parametric/IconButton'
-import LabeledControl from '../parametric/LabeledControl'
+import { PanelLabel } from '@kolkrabbi/kol-controls'
 import Toggle from '../parametric/Toggle'
 import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
@@ -342,9 +342,9 @@ function Generator2Panel({
           {MODE_ITEMS.map((item, i) => (
             <React.Fragment key={item.value}>
               {i === 3 && <Divider variant="vertical" className="py-1" />}
-              <LabeledControl label={item.text}>
+              <PanelLabel label={item.text}>
                 <IconButton icon={item.icon} title={item.value} active={mode === item.value} onClick={() => onModeChange(item.value)} />
-              </LabeledControl>
+              </PanelLabel>
             </React.Fragment>
           ))}
         </div>
@@ -354,9 +354,9 @@ function Generator2Panel({
         {subs.length > 0 && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
             {subs.map(item => (
-              <LabeledControl key={item.value} label={item.text}>
+              <PanelLabel key={item.value} label={item.text}>
                 <IconButton icon={item.icon} title={item.value} active={isColor ? colorSub === item.value : subType === item.value} onClick={() => isColor ? onColorSubChange(item.value) : onSubTypeChange(item.value)} />
-              </LabeledControl>
+              </PanelLabel>
             ))}
           </div>
         )}

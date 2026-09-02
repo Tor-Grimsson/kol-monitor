@@ -12,7 +12,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
 import IconButton from '../parametric/IconButton'
-import LabeledControl from '../parametric/LabeledControl'
+import { PanelLabel } from '@kolkrabbi/kol-controls'
 import Toggle from '../parametric/Toggle'
 import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
@@ -171,9 +171,9 @@ function GeneratorPanel({
         {/* Mode tabs — all always run, tab selects sub-type view */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
           {MODE_ITEMS.map(item => (
-            <LabeledControl key={item.value} label={item.text}>
+            <PanelLabel key={item.value} label={item.text}>
               <IconButton icon={item.icon} title={item.value} active={tab === item.value} onClick={() => onTabChange(item.value)} />
-            </LabeledControl>
+            </PanelLabel>
           ))}
         </div>
 
@@ -183,9 +183,9 @@ function GeneratorPanel({
         {subs.length > 0 && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
             {subs.map(item => (
-              <LabeledControl key={item.value} label={item.text}>
+              <PanelLabel key={item.value} label={item.text}>
                 <IconButton icon={item.icon} title={item.value} active={activeSub === item.value} onClick={() => onSubChange(item.value)} />
-              </LabeledControl>
+              </PanelLabel>
             ))}
           </div>
         )}

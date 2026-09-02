@@ -16,6 +16,7 @@ import RackRailPanel from './RackRailPanel.jsx'
 import { ShortcutsOverlay } from '@kolkrabbi/kol-shell'
 import { SHORTCUT_SECTIONS } from '../data/shortcuts.js'
 import LibrarySearchOverlay from '../overlays/LibrarySearchOverlay.jsx'
+import PatchTableOverlay from '../overlays/PatchTableOverlay.jsx'
 import Icon from '../icons/Icon.jsx'
 
 const BASE_WIDTH = ROW_WIDTH + 52
@@ -45,13 +46,14 @@ function VideoModuloInner() {
   const [cableVisibility, setCableVisibility] = usePersistedState('rack-cableVis', 'trans')
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showLibrarySearch, setShowLibrarySearch] = useState(false)
+  const [showPatchTable, setShowPatchTable] = useState(false)
   const [displayHidden, setDisplayHidden] = usePersistedState('rack-displayHidden', true)
 
   const rackRef2 = useRef(rack)
   rackRef2.current = rack
   const rackOuterRef = useRef(null)
 
-  useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden, setShowLibrarySearch })
+  useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden, setShowLibrarySearch, setShowPatchTable })
 
   // Reset nav visibility when leaving rack
   const navRef = useRef(nav)
@@ -150,6 +152,8 @@ function VideoModuloInner() {
       {rail?.slot && createPortal(<RackRailPanel rack={rack} />, rail.slot)}
 
       {showShortcuts && <ShortcutsOverlay shortcuts={SHORTCUT_SECTIONS} onClose={() => setShowShortcuts(false)} />}
+
+      <PatchTableOverlay open={showPatchTable} rows={rack.rows} onClose={() => setShowPatchTable(false)} />
 
       {showLibrarySearch && (
         <LibrarySearchOverlay

@@ -14,6 +14,7 @@ import DevCapturePage from './pages/dev/DevCapturePage.jsx'
 
 const ModuleDesign = lazy(() => import('./pages/dev/ModuleDesignPage.jsx'))
 const ColorPickerReview = lazy(() => import('./pages/dev/ColorPickerPage.jsx'))
+const ControlsAbPage = lazy(() => import('./pages/dev/ControlsAbPage.jsx'))
 
 function App() {
   return (
@@ -27,21 +28,24 @@ function App() {
               <Route path="/rack/preset/:presetName" element={<VideoModulo />} />
               <Route path="/rack/patch/:presetName" element={<VideoModulo />} />
               <Route path="/create" element={<CreatePage />} />
+              {/* the library lives INSIDE the rack's provider so a case being built
+                  on /create survives a trip to a module's page and Back (2026-09-02) */}
+              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/library/:moduleType" element={<ModuleDetailPage />} />
+              <Route path="/library/patch/:patchName" element={<PatchDetailPage />} />
             </Route>
             {/* the stage gets its OWN RackProvider — sharing the rack's would
                 mean loading a stage silently replaces whatever is in the rack */}
-            <Route element={<RackProvider />}>
+            <Route element={<RackProvider initialRows={[]} />}>
               <Route path="/stage" element={<StagePage />} />
               <Route path="/stage/:stageName" element={<StagePage />} />
             </Route>
-            <Route path="/library" element={<LibraryPage />} />
-            <Route path="/library/:moduleType" element={<ModuleDetailPage />} />
-            <Route path="/library/patch/:patchName" element={<PatchDetailPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="/design" element={<ModuleDesign />} />
           <Route path="/dev/capture" element={<DevCapturePage />} />
           <Route path="/dev/color-picker" element={<ColorPickerReview />} />
+          <Route path="/dev/controls-ab" element={<ControlsAbPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

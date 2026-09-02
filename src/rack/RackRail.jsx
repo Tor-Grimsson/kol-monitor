@@ -55,7 +55,7 @@ const openWidth = () => {
 
 /* THE DRAG — the width follows the pointer between closed and open; release
  * snaps to the nearer state, a click toggles. NavRail's, verbatim. */
-function useRailDrag(railRef, grabRef, onSnap, enabled = true) {
+function useRailDrag(railRef, grabRef, onSnap, snapRef, enabled = true) {
   useEffect(() => {
     const strip = grabRef.current, rail = railRef.current, root = document.documentElement
     /* A DRAWER IS NOT A DRAGGABLE RAIL (NavRail 0.31.0, ShellRailNoDrawerOnMobile).
@@ -72,6 +72,8 @@ function useRailDrag(railRef, grabRef, onSnap, enabled = true) {
       gsap.to(root, { [RAIL_W]: `${w}px`, ...GRAB.snap, overwrite: 'auto' })
       onSnap(w !== CLOSED)
     }
+    /* the keyboard / tap opener (NavRail 0.38.0, ShellRailCollapsedWithTapOpen) */
+    if (snapRef) snapRef.current = (open = true) => snapTo(open === false ? CLOSED : openWidth())
     const onDown = (e) => {
       strip.setPointerCapture(e.pointerId)
       gsap.killTweensOf(root)
@@ -102,7 +104,7 @@ function useRailDrag(railRef, grabRef, onSnap, enabled = true) {
       strip.removeEventListener('pointerup', onUp)
       strip.removeEventListener('pointercancel', onUp)
     }
-  }, [railRef, grabRef, onSnap, enabled])
+  }, [railRef, grabRef, onSnap, snapRef, enabled])
 }
 
 /* one row: the rung exactly where the closed rail had it, then the label — the
@@ -159,7 +161,8 @@ export default function RackRail({
   /* the grab strip is not rendered in drawer mode, so the hook's ref stays null
    * and it no-ops on its own — no second argument needed */
   useGrabEdge(grabRef)
-  useRailDrag(railRef, grabRef, setRailOpen, !drawer)
+  const snapOpenRef = useRef(null)
+  useRailDrag(railRef, grabRef, setRailOpen, snapOpenRef, !drawer)
 
   /* publish the slot node and the open state to whoever wants to portal in */
   const setSlot = ctx?.setSlot
@@ -179,7 +182,21 @@ export default function RackRail({
        * the content gets the whole viewport back */
       style={{ width: drawer ? 'var(--kol-shell-drawer-width, 240px)' : `var(${RAIL_W})` }}
     >
-      {!drawer && <div ref={grabRef} className="kol-rail-grab" />}
+      {/* THE GRAB IS A BUTTON (NavRail 0.38.0): fine pointers drag it, Enter / Space
+        * toggle. NavRail also renders a `.kol-rail-grab-tap` chevron disc inside it for
+        * coarse pointers (ShellRailCollapsedWithTapOpen, kol-mirror) — NOT here: the user
+        * did not approve the disc in this app (2026-09-02). A tap on the bare strip still
+        * toggles (a clean tap is the drag hook's toggle case). */}
+      {!drawer && (
+        <button
+          type="button"
+          ref={grabRef}
+          className="kol-rail-grab"
+          aria-label={railOpen ? 'Collapse navigation' : 'Expand navigation'}
+          aria-expanded={railOpen}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); snapOpenRef.current?.(!railOpen) } }}
+        />
+      )}
       {logomark && (
         <div
           onClick={() => onNavigate?.('/')}

@@ -4,9 +4,10 @@
 // .js extension so bare node can load this module too (scripts/check-drawsignal-alpha.mjs)
 import { PEN_DEFAULTS } from '../../hooks/signals.js'
 
-const SCOPE_COLOR = '#2ecc71'
-const WIRE_COLOR = '#ffffff'
-const REF_COLOR = 'rgba(255,255,255,0.06)'
+// inks: canvas — signal defaults drawn on a screen, not chrome on the panel
+const SCOPE_COLOR = '#2ecc71' // inks: canvas
+const WIRE_COLOR = '#ffffff' // inks: canvas
+const REF_COLOR = 'rgba(255,255,255,0.06)' // inks: canvas
 
 // Cache `rgb(r,g,b)` strings on the color object to avoid rebuilding them per
 // draw. Invalidated by detecting component changes via a cheap stable hash.
@@ -201,7 +202,7 @@ export function drawPoints(ctx, signal, x, y, w, h, p) {
     if (signal.edges && signal.edges.length > 0) {
       const color = signal.color
         ? rgbString(signal.color)
-        : penColor(p, 'strokeWidth' in signal ? '#ffffff' : WIRE_COLOR)
+        : penColor(p, WIRE_COLOR)
 
       // Fill — trace closed shapes from edges
       if (signal.fill || p?.fill) {

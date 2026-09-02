@@ -2,7 +2,7 @@
 
 **Staged:** 2026-08-30 → self-ticket (kol-monitor's own queue)
 **State:** 🟠 `addressed` — the work shipped, build green, lint unchanged. **Not 🟢:**
-nothing here is verified in a browser, and two calls left are the user's.
+the two calls are ruled (below); what is left is four surfaces that still want the user's eye.
 **Origin:** `outbox/FullConsumptionContract.md` 📌 — Part 2's remainder, "run the six greps"
 **Spec:** kol-ds-ui `docs/documentation/00-overview/04-full-consumption.md`
 
@@ -86,18 +86,23 @@ this is a namespace fix, not a restyle.
   panel hardware, not the DS's app atoms.** They share a *name* with a DS component,
   not a job. The grep cannot tell those apart.
 
-## Open — the user's call, both of them
+## Ruled — both calls, 2026-08-30 · do not re-open
 
-1. **Rename the two rack widgets** (`PanelSlider` / `PanelDropdown`, 5 import sites)
-   so check 4 reads empty and no future agent re-litigates it — or record them here
-   permanently as a deviation. Doing nothing means the checklist never comes back clean.
-2. **The three `LibraryPage` "Details" / "Open in Rack" buttons** override
-   `.kol-btn-grey`'s ground with `surface-primary` inline, which also kills the DS's
-   hover/press ladder (oq-12 → 04 → 32) on every state. Either that override is
-   deliberate and stays, or it should be dropped so a DS button behaves like one.
-   Dropping it is a visible change.
+1. **The two rack widgets keep their names.** `parametric/Slider.jsx` +
+   `Dropdown.jsx` stay as they are — **a permanent, stated deviation**, not an
+   open item. The user declined the rename the day it was proposed: churn across
+   5 import sites for a checker's benefit. Check 4 will never read empty here and
+   that is the answer, not a gap. **Do not re-raise it unasked.**
+2. **The `LibraryPage` button overrides were dropped** — user ruled the DS button
+   should behave as designed. `LibraryPage.jsx:96,128,131` are plain
+   `<Button variant="grey" size="md">` today, no inline ground, hover/press ladder
+   intact. Executed, verified in source 2026-09-01.
 
-## Needs the user's eye — nothing here was opened in a browser
+## Needs the user's eye — the one thing still holding this at 🟠
+
+The 2026-09-01 browser pass covered the rack at 1440 (`_tmp/2026-09-01-mobile-qa/
+qa-rack-1440.png` — cables, Monitor wireframe, sidebar) and the stage at both
+widths. **Still unseen**, all touched by the CSS rename:
 
 - **Stage** (`/stage`): the clock's LED well, key deck, gang and switch lever.
 - **Rack**: the sidebar nav glyphs and the 24×1px underline; the Workbench search

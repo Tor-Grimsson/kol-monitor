@@ -52,7 +52,7 @@ function SlitEchoPanel({ canvasRef, trail, echo, space, fade, slit, bands, axis,
           ref={canvasRef}
           width={320}
           height={180}
-          style={{ flex: 1, width: '100%', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ flex: 1, width: '100%', borderRadius: 2, border: '1px solid var(--kol-fg-08)' }}
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <Knob value={trail} onChange={onTrail} label="trail" />

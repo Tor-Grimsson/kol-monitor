@@ -5,17 +5,12 @@
 // out rather than unmounting it — unmounting would stop the patch and resize
 // every canvas inside.
 
-import { useRef } from 'react'
 import { Icon } from '@kolkrabbi/kol-icons'
 import { ModuleInitContext } from '../hooks/useModuleEnabled'
 import { MODULE_DEFS } from '../modules/registry'
-import { TOTAL_HP, hpToPx } from '../modules/utility/eurorack'
-import PatchCableOverlay from '../modules/utility/PatchCableOverlay.jsx'
+import { hpToPx, ROW_HEIGHT } from '../modules/utility/eurorack'
 
 export default function StageDock({ rows, open, onGrab }) {
-  // The cable overlay measures jack centres against this node.
-  const containerRef = useRef(null)
-
   return (
     <div
       className={`relative transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
@@ -32,20 +27,20 @@ export default function StageDock({ rows, open, onGrab }) {
         <Icon name="drag-handle" size={12} />
       </div>
 
-      <div ref={containerRef} className="relative flex gap-0.5 w-max">
-        <PatchCableOverlay containerRef={containerRef} />
+      <div className="relative flex gap-0.5 w-max">
         {rows.flatMap(row =>
           [...row.modules].sort((a, b) => a.offset - b.offset).map(mod => {
             const def = MODULE_DEFS[mod.type]
             if (!def) return null
             const Comp = def.component
-            const aspectDiv = (def.u || 3) === 1 ? 12 : 4
             return (
               <div
                 key={mod.id}
                 data-module-id={mod.id}
                 className="relative shrink-0 overflow-hidden"
-                style={{ width: hpToPx(mod.hp), aspectRatio: `${mod.hp * aspectDiv} / ${TOTAL_HP}` }}
+                /* definite px, not aspect-ratio — WebKit sizes a `height: 100%` child of an
+                   aspect-ratio box to its content (2026-09-02, same as RackView) */
+                style={{ width: hpToPx(mod.hp), height: ROW_HEIGHT[(def.u || 3) === 1 ? '1u' : '3u'] }}
               >
                 <ModuleInitContext.Provider value={mod.state}>
                   <Comp id={mod.id} init={mod.state} />

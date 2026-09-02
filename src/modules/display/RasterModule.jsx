@@ -14,7 +14,7 @@ import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
 import Knob from '../parametric/Knob'
-import Selector from '../parametric/Selector'
+import Stepper from '@kolkrabbi/kol-component/molecules/Stepper'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
@@ -45,10 +45,10 @@ function RasterPanel({ canvasRef, mode, amt, res, fade, enabled, onToggle, onMod
           ref={canvasRef}
           width={240}
           height={140}
-          style={{ flex: 1, width: '100%', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ flex: 1, width: '100%', borderRadius: 2, border: '1px solid var(--kol-fg-08)' }}
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          <Selector value={mode} options={MODES} onChange={onModeChange} />
+          <Stepper size="xs" layout="inline" className="uppercase" options={MODES} value={mode} onChange={(e) => onModeChange(e.target.value)} />
           <CvKnob port="amt" moduleId={id} active={amtConn} signalRef={amtInRef} value={amt} onChange={onAmtChange} label="amt" />
           <Knob value={res} onChange={onResChange} label="res" />
           <Knob value={fade} onChange={onFadeChange} label="fade" />

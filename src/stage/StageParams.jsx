@@ -84,7 +84,7 @@ export default function StageParams({ marks, onMarks, rows }) {
      rather than one-of-N — but it wears the Dropdown trigger's chrome so the bar
      reads as one control set. */
   return (
-    <MenuItem label="Modules" align="end" panelClassName="w-80" buttonClassName="kol-btn kol-btn-grey kol-btn-sm kol-dd-trigger">
+    <MenuItem label="Modules" align="end" panelClassName="w-80" buttonClassName="kol-btn kol-btn-grey kol-btn-md kol-dd-trigger">
       {marks.map(m => (
         <div key={markKey(m)} className="px-3 py-1">
           <Slider

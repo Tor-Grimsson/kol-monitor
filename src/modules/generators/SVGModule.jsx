@@ -9,7 +9,7 @@ import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
-import Dropdown from '../parametric/Dropdown'
+import Dropdown from '@kolkrabbi/kol-component/molecules/Dropdown'
 
 // Parse SVG text into { vertices: [[x,y]], edges: [[i,j]] }
 function parseSVG(svgText) {
@@ -350,9 +350,7 @@ function SVGPanel({ enabled, onToggle, current, names, onSelect, scale, onScaleC
   const btnStyle = {
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 3, borderRadius: 3,
-    border: '1px solid rgba(255,255,255,0.08)',
     backgroundColor: 'transparent', cursor: 'pointer',
-    color: 'rgba(255,255,255,0.3)',
   }
 
   return (
@@ -362,9 +360,9 @@ function SVGPanel({ enabled, onToggle, current, names, onSelect, scale, onScaleC
         {/* Left: scl knob + dropdown + buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1, minWidth: 0, height: '100%' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Dropdown value={current || 'library'} options={names} onChange={onSelect} />
-            <button className="kol-helper-8" style={{ ...btnStyle }} onClick={onLoad}>Load</button>
-            <button className="kol-helper-8" style={{ ...btnStyle }} onClick={() => onSelect(null)}>Clr</button>
+            <Dropdown size="xs" variant="grey" value={current || 'library'} options={names.map((o) => ({ value: o, label: o }))} onChange={onSelect} />
+            <button className="kol-helper-8 text-fg-32 border border-fg-08" style={{ ...btnStyle }} onClick={onLoad}>Load</button>
+            <button className="kol-helper-8 text-fg-32 border border-fg-08" style={{ ...btnStyle }} onClick={() => onSelect(null)}>Clr</button>
           </div>
           <CvKnob port="scl" moduleId={id} signalRef={sclRef} value={scale} onChange={onScaleChange} label="scale" variant="row-right" direction="horizontal" />
         </div>

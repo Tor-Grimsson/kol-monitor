@@ -31,6 +31,11 @@ export function PatchRoutingProvider({ initialConnections, children }) {
   const jackRefs = useRef({})
   const pendingRef = useRef(null)
   const dragActive = useRef(false)
+  // Touch HOLDS the cable between taps instead of dragging it: a tap on an output
+  // fires pointerup at once, and the 24px drop radius then landed on whatever
+  // input sat under the finger at phone zoom (user, 2026-09-02: "press output to
+  // catch the cable, press destination to release"). Mouse is unchanged.
+  const stickyRef = useRef(false)
 
   // Keep refs in sync with state
   useEffect(() => { pendingRef.current = pendingOutput }, [pendingOutput])
@@ -111,9 +116,10 @@ export function PatchRoutingProvider({ initialConnections, children }) {
     }
   }, [])
 
-  const selectOutput = useCallback((moduleId, port) => {
+  const selectOutput = useCallback((moduleId, port, sticky = false) => {
     setPendingOutput({ moduleId, port })
-    dragActive.current = true
+    stickyRef.current = sticky
+    dragActive.current = !sticky
   }, [])
 
   // Grab an existing cable by its input end. Detaches the cable, then starts a
@@ -121,17 +127,54 @@ export function PatchRoutingProvider({ initialConnections, children }) {
   // can drop on a new input (re-route) or release in empty space (disconnect).
   // Tracks the origin input so a release on the same jack counts as disconnect.
   const grabbedInputRef = useRef(null)
-  const grabInput = useCallback((toModuleId, toPort) => {
+  const grabInput = useCallback((toModuleId, toPort, sticky = false) => {
     setConnections(conns => {
       const idx = conns.findIndex(c => c.toModuleId === toModuleId && c.toPort === toPort)
       if (idx < 0) return conns
       const c = conns[idx]
       grabbedInputRef.current = { toModuleId, toPort }
       setPendingOutput({ moduleId: c.fromModuleId, port: c.fromPort })
-      dragActive.current = true
+      stickyRef.current = sticky
+      dragActive.current = !sticky
       return [...conns.slice(0, idx), ...conns.slice(idx + 1)]
     })
   }, [])
+
+  // Add by name — the patch table's path (PatchTableOverlay, 2026-09-01). Same
+  // rule the jack drop applies: an input holds one cable, so a new one replaces it.
+  const addConnection = useCallback((fromModuleId, fromPort, toModuleId, toPort) => {
+    setConnections(prev => [
+      ...prev.filter(c => !(c.toModuleId === toModuleId && c.toPort === toPort)),
+      { fromModuleId, fromPort, toModuleId, toPort },
+    ])
+  }, [])
+
+  // A held cable lands on the tapped input. Returns false when nothing is held so
+  // the jack can fall through to its own gesture.
+  const completeInput = useCallback((toModuleId, toPort) => {
+    const pending = pendingRef.current
+    if (!pending) return false
+    addConnection(pending.moduleId, pending.port, toModuleId, toPort)
+    grabbedInputRef.current = null
+    stickyRef.current = false
+    setPendingOutput(null)
+    return true
+  }, [addConnection])
+
+  const cancelPending = useCallback(() => {
+    stickyRef.current = false
+    dragActive.current = false
+    grabbedInputRef.current = null
+    setPendingOutput(null)
+  }, [])
+
+  // A held cable lets go on a touch anywhere that is not a jack (the jack seam
+  // flags its own pointerdown so a switch of output is not read as a release).
+  useEffect(() => {
+    const down = (e) => { if (stickyRef.current && !e._kolJack) cancelPending() }
+    window.addEventListener('pointerdown', down)
+    return () => window.removeEventListener('pointerdown', down)
+  }, [cancelPending])
 
   const removeConnection = useCallback((toModuleId, toPort) => {
     setConnections(prev => prev.filter(
@@ -156,9 +199,12 @@ export function PatchRoutingProvider({ initialConnections, children }) {
     registerJack,
     selectOutput,
     grabInput,
+    completeInput,
+    cancelPending,
+    addConnection,
     removeConnection,
     loadPatch,
-  }), [registerJack, selectOutput, grabInput, removeConnection, loadPatch])
+  }), [registerJack, selectOutput, grabInput, completeInput, cancelPending, addConnection, removeConnection, loadPatch])
 
   // Pre-compute per-module connected-input map once per connection change.
   // Replaces N × O(connections) per-module scans with a single O(connections) pass.

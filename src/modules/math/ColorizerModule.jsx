@@ -10,7 +10,7 @@ import { color, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
-import Dropdown from '../parametric/Dropdown'
+import Dropdown from '@kolkrabbi/kol-component/molecules/Dropdown'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // Piecewise-linear gradient stops, t 0→1
@@ -40,7 +40,7 @@ function ColorizerPanel({ palette, spread, ofs, enabled, onToggle, onPalette, on
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'space-between', height: '100%', padding: '4px 0', gap: 4,
       }}>
-        <Dropdown value={palette} options={PALETTE_NAMES} onChange={onPalette} />
+        <Dropdown size="xs" variant="grey" value={palette} options={PALETTE_NAMES.map((o) => ({ value: o, label: o }))} onChange={onPalette} />
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
           <Knob value={spread} onChange={onSpread} label="sprd" />
           <Knob value={ofs} onChange={onOfs} label="ofs" />

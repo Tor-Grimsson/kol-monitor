@@ -107,8 +107,12 @@ export function findFreeOffset(modules, hp) {
   return pos + hp <= TOTAL_HP ? pos : null
 }
 
-export function useRackState() {
-  const [rows, setRows] = useState(DEFAULT_ROWS)
+// `initialRows`: the stage's own provider starts EMPTY. Booting on DEFAULT_ROWS
+// flashed the whole default rack through the dock for a frame — its duplicate
+// `patch1` key left an orphaned Patch slot behind and the cable overlay measured
+// the jacks against that rack (2026-09-02).
+export function useRackState(initialRows = DEFAULT_ROWS) {
+  const [rows, setRows] = useState(initialRows)
   const [workbench, setWorkbench] = useState([])
   const [editMode, setEditMode] = useState(false)
 

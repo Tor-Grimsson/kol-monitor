@@ -1,46 +1,10 @@
-// ModuleHeader — enable dot + module name, left-aligned
-// Respects case power: when case is off, dot shows off
-
+// Seam over @kolkrabbi/kol-controls (KolControlsPackage, adopted 2026-09-01) —
+// the local implementation is retired to _tmp/2026-09-01-controls-adoption/.
+// The case's power context became the package's `powered` prop.
+import { ModuleHeader as CtlModuleHeader } from '@kolkrabbi/kol-controls'
 import { useCasePower } from '../../hooks/useCasePower.jsx'
-import Toggle from './Toggle'
 
-export default function ModuleHeader({ label, enabled, onToggle, editMode, onRemove, bypass, onBypass }) {
+export default function ModuleHeader(props) {
   const { power } = useCasePower()
-  const isOn = power && enabled
-
-  return (
-    <div onClick={() => onToggle?.()} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '0 2px', flexShrink: 0, cursor: 'pointer', userSelect: 'none' }}>
-      <Toggle value={isOn} size="sm" onChange={() => {}} padding={0} />
-      <span className="kol-helper-10" style={{
-        color: 'rgba(255,255,255,0.5)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px',
-        flex: 1,
-      }}>
-        {label}
-      </span>
-      {editMode && onRemove ? (
-        <div
-          onClick={(e) => { e.stopPropagation(); onRemove() }}
-          title="Send module to workbench"
-          style={{
-            width: 8, height: 8, borderRadius: '50%',
-            backgroundColor: '#facc15',
-            cursor: 'pointer', flexShrink: 0,
-          }}
-        />
-      ) : onBypass ? (
-        <div
-          onClick={(e) => { e.stopPropagation(); onBypass() }}
-          title={bypass ? 'Bypassed — click to re-engage' : 'Bypass'}
-          style={{
-            width: 8, height: 8, borderRadius: '50%',
-            backgroundColor: 'var(--kol-cv-attenuate)',
-            opacity: bypass ? 0.25 : 1,
-            cursor: 'pointer', flexShrink: 0,
-          }}
-        />
-      ) : null}
-    </div>
-  )
+  return <CtlModuleHeader powered={power} {...props} />
 }

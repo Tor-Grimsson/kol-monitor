@@ -17,7 +17,7 @@ export default function PerfModule({ id = 'perf1' }) {
       const t = timingRef.current
       const ms = t.evalMs ?? 0
       const pct = Math.round((ms / 16.67) * 100)
-      const color = pct < 120 ? '#4ade80' : pct < 180 ? '#facc15' : '#ef4444'
+      const color = pct < 120 ? 'var(--kol-ctl-led-green)' : pct < 180 ? 'var(--kol-ctl-led-yellow)' : 'var(--kol-ctl-led-red)'
 
       if (msRef.current) {
         msRef.current.textContent = `${ms.toFixed(1)}ms`
@@ -42,25 +42,25 @@ export default function PerfModule({ id = 'perf1' }) {
         {/* Budget bar */}
         <div style={{
           width: 6, height: 48, borderRadius: 2,
-          backgroundColor: '#1a1a1a', border: '1px solid #333',
+          backgroundColor: 'var(--kol-ctl-hw-well)', border: '1px solid var(--kol-ctl-hw-cap-edge)',
           position: 'relative', overflow: 'hidden',
         }}>
           <div ref={barRef} style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
             height: '0%',
-            backgroundColor: '#4ade80',
+            backgroundColor: 'var(--kol-ctl-led-green)',
           }} />
         </div>
 
         {/* Stats readout */}
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 48 }}>
-          <span ref={msRef} className="kol-helper-8" style={{ color: '#4ade80', lineHeight: 1.2 }}>
+          <span ref={msRef} className="kol-helper-8" style={{ color: 'var(--kol-ctl-led-green)', lineHeight: 1.2 }}>
             0.0ms
           </span>
-          <span ref={fpsRef} className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1.2 }}>
+          <span ref={fpsRef} className="kol-helper-8 text-fg-48" style={{ lineHeight: 1.2 }}>
             60fps
           </span>
-          <span ref={modRef} className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1.2 }}>
+          <span ref={modRef} className="kol-helper-8 text-fg-48" style={{ lineHeight: 1.2 }}>
             0mod
           </span>
         </div>

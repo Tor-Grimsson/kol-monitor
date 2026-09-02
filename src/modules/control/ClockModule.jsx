@@ -34,7 +34,7 @@ function ClockPanel({ bpm, running, clockPulse, enabled, onToggle, onBpmChange, 
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
           <Knob value={bpm} onChange={onBpmChange} min={20} max={300} label="BPM" />
-          <span className="kol-helper-xxxxs" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>{bpm}</span>
+          <span className="kol-helper-xxxxs text-fg-48" style={{ lineHeight: 1 }}>{bpm}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
           {DIVS.map(d => (

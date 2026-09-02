@@ -20,10 +20,21 @@
    * bound explicitly so the rack previews do not depend on that default. */
   --kol-media-focus: top left;
 
-  /* Jack roles — rack-specific, not DS scope. JackSocket.jsx reads these via
-   * getComputedStyle(documentElement), so they must resolve on :root. */
-  --kol-signal-input: #4ade80;
-  --kol-cv-attenuate: #497DA2;
+  /* Jack roles, hardware and LED colours moved to kol-theme 0.124.0's
+   * kol-components-controls.css (`--kol-ctl-*`) with @kolkrabbi/kol-controls
+   * (KolControlsPackage, 2026-09-01). Values unchanged; nothing bound here. */
+}
+
+/* Create is an infinite canvas: the case runs under the page chrome, never cut by
+ * the viewport's box (user, 2026-09-02). The filter row is ContentFilters' own
+ * markup, so its lift over the canvas is a rule, not a class on it. */
+/* ContentFilters renders [header row, divider, content] in that order at every
+ * rung — the desktop row carries `.kol-filters-row`, the mobile rung only
+ * utilities — so the lift is by position: everything in its root except the
+ * content (the last child, which holds the case). */
+.create-canvas > * > :not(:last-child) {
+  position: relative;
+  z-index: var(--kol-z-sticky);
 }
 
 /* .bg-accent-primary — monitor JSX uses it; not a DS utility class. */

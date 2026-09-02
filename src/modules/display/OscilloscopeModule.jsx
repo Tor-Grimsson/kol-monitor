@@ -10,7 +10,7 @@ import { scalar, readScalar } from '../../hooks/signals'
 import { compile } from '../../hooks/useExpressionValue'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
-import TextInput from '../parametric/TextInput'
+import Input from '@kolkrabbi/kol-component/atoms/Input'
 import Divider from '../../components/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
@@ -104,19 +104,19 @@ const REFERENCE_GROUPS = [
     [null, 'Edit the text input directly for custom math'],
   ]},
 ]
-const TRACE_COLOR = '#2dd4bf'
+const TRACE_COLOR = '#2dd4bf' // inks: canvas — the trace on the screen well
 // ponytail: per-frame sample buffer reused across draws (was new Array(w) per frame)
 const _samplesScratch = { w: 0, arr: null }
-const REF_COLOR = 'rgba(231,76,60,0.3)'
-const REF_LABEL = 'rgba(231,76,60,0.4)'
-const GRID_COLOR = 'rgba(255,255,255,0.06)'
-const GRID_LABEL = 'rgba(255,255,255,0.2)'
-const PREVIEW_COLOR = 'rgba(255,255,255,0.15)'
+const REF_COLOR = 'rgba(231,76,60,0.3)' // inks: canvas
+const REF_LABEL = 'rgba(231,76,60,0.4)' // inks: canvas
+const GRID_COLOR = 'rgba(255,255,255,0.06)' // inks: canvas — white on the invariant dark well
+const GRID_LABEL = 'rgba(255,255,255,0.2)' // inks: canvas
+const PREVIEW_COLOR = 'rgba(255,255,255,0.15)' // inks: canvas
 
 function NumField({ label, value, onChange }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-      {label ? <span className="kol-helper-8" style={{ color: 'rgba(255,255,255,0.48)', textTransform: 'uppercase', lineHeight: 1 }}>{label}</span> : null}
+      {label ? <span className="kol-helper-8 text-fg-48" style={{ textTransform: 'uppercase', lineHeight: 1 }}>{label}</span> : null}
       <input
         type="text"
         inputMode="numeric"
@@ -138,7 +138,6 @@ function NumField({ label, value, onChange }) {
         className="kol-helper-8 bg-surface-primary"
         style={{
           width: 36, height: 20, textAlign: 'right',
-          color: '#fff',
           border: 'none', borderRadius: 2,
           padding: '0 6px', outline: 'none', fontFamily: 'var(--kol-font-family-mono)',
         }}
@@ -174,7 +173,6 @@ function RefDropdown({ label, groups, onSelect }) {
         className="kol-helper-8 bg-surface-primary"
         onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); toggle() }}
         style={{
-          color: 'rgba(255,255,255,0.6)',
           border: 'none', borderRadius: 2,
           padding: '0 8px', height: 24, cursor: 'pointer',
           textTransform: 'uppercase', letterSpacing: '0.5px',
@@ -186,36 +184,35 @@ function RefDropdown({ label, groups, onSelect }) {
           <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onPointerDown={() => setOpen(false)} />
           <div
             onPointerDown={(e) => e.stopPropagation()}
+            className="bg-surface-primary border border-fg-08"
             style={{
               position: 'fixed', top: pos.top, left: pos.left,
               minWidth: 220, maxHeight: 320, overflowY: 'auto',
-              background: 'rgba(20,20,20,0.97)',
-              border: '1px solid rgba(255,255,255,0.1)', borderRadius: 3,
+              borderRadius: 3,
               zIndex: 9999, padding: '4px 0',
               boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
             }}
           >
             {groups.map(({ group, items }) => (
               <div key={group}>
-                <div className="kol-helper-8" style={{
-                  color: 'rgba(255,255,255,0.4)', padding: '4px 8px 2px',
+                <div className="kol-helper-8 text-fg-40" style={{
+                  padding: '4px 8px 2px',
                   textTransform: 'uppercase', letterSpacing: '0.5px',
                 }}>{group}</div>
                 {items.map(([expr, desc], i) => (
                   <div
                     key={`${group}-${i}`}
                     onPointerDown={() => { if (expr != null) { onSelect(expr); setOpen(false) } }}
-                    className="kol-helper-8"
+                    className="kol-helper-8 text-fg-88"
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
                       padding: '3px 8px',
-                      color: 'rgba(255,255,255,0.85)',
                       cursor: expr != null ? 'pointer' : 'default',
                       fontFamily: 'var(--kol-font-family-mono)',
                     }}
                   >
-                    <span style={{ color: expr != null ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)' }}>{expr ?? '—'}</span>
-                    <span style={{ color: 'rgba(255,255,255,0.4)', textTransform: 'none' }}>{desc}</span>
+                    <span className={expr != null ? 'text-fg-88' : 'text-fg-40'}>{expr ?? '—'}</span>
+                    <span className="text-fg-40" style={{ textTransform: 'none' }}>{desc}</span>
                   </div>
                 ))}
               </div>
@@ -232,8 +229,8 @@ function IconAction({ label, onClick }) {
   return (
     <span
       onClick={onClick}
-      className="kol-helper-8"
-      style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.48)', textTransform: 'uppercase', userSelect: 'none', lineHeight: 1 }}
+      className="kol-helper-8 text-fg-48"
+      style={{ cursor: 'pointer', textTransform: 'uppercase', userSelect: 'none', lineHeight: 1 }}
     >{label}</span>
   )
 }
@@ -251,13 +248,13 @@ function OscPanel({
 
         {/* 1. Text input + reference dropdowns */}
         <div style={{ paddingBottom: 8, flexShrink: 0, display: 'flex', gap: 4, alignItems: 'center' }}>
-          <TextInput value={expr} onCommit={onExprChange} placeholder="empty = passthrough input A" style={{ flex: 1, height: 24 }} />
+          <Input size="xs" variant="outline" className="flex-1" value={expr} onCommit={onExprChange} placeholder="empty = passthrough input A" />
           <RefDropdown label="Ex" groups={[{ group: 'Examples', items: EXAMPLES }]} onSelect={onExprChange} />
           <RefDropdown label="Ref" groups={REFERENCE_GROUPS} onSelect={onExprChange} />
         </div>
 
         {/* 2. Canvas — flex-1 */}
-        <div style={{ flex: 1, minHeight: 80, background: 'rgba(8,8,8,0.95)', borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)', position: 'relative', overflow: 'hidden' }}>
+        <div className="border border-fg-08" style={{ flex: 1, minHeight: 80, background: 'var(--kol-ctl-hw-well)', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
           <canvas ref={canvasRef} width={400} height={160} style={{ width: '100%', height: '100%' }} />
         </div>
 
