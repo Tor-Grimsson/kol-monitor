@@ -1,4 +1,5 @@
-// EnvelopeModule — ADSR envelope generator
+// EnvelopeModule — ADSR envelope generator. The front is monitor's; the envelope math is the KOL's
+// `createEnvelope()` (kol-hardware/signal), the same engine its EnvelopeGenerator and scopes draw.
 // 6HP
 
 import { useState, useRef } from 'react'
@@ -10,8 +11,7 @@ import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
 import Toggle from '../parametric/Toggle'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
-
-const STAGES = { IDLE: 0, ATTACK: 1, DECAY: 2, SUSTAIN: 3, RELEASE: 4 }
+import { createEnvelope } from '@kolkrabbi/kol-hardware/signal'
 
 function EnvelopePanel({ attack, decay, sustain, release, cycle, enabled, onToggle, onAttackChange, onDecayChange, onSustainChange, onReleaseChange, onCycleChange, id, clkConnected, clkInRef, gateConnected, gateInRef, outRef }) {
   return (
@@ -55,12 +55,8 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
   const rRef = useRef(50)
   const enabledRef = useRef(true)
   const cycleRef = useRef(false)
-  const stageRef = useRef(STAGES.IDLE)
-  const levelRef = useRef(0)
-  const prevGateRef = useRef(false)
-  const prevClkRef = useRef(false)
-  const releaseStartLevelRef = useRef(0)
-  const oneShotRef = useRef(false)
+  const envRef = useRef(null)
+  if (!envRef.current) envRef.current = createEnvelope()
   const outRef = useRef(null)
   const gateInRef = useRef(null)
   const clkInRef = useRef(null)
@@ -91,81 +87,11 @@ export default function EnvelopeModule({ id = 'env1', init, preview }) {
       gateInRef.current = inputs.gate
       clkInRef.current = inputs.trig
 
-      const gateOn = readScalar(inputs.gate) > 0
-      const wasOn = prevGateRef.current
-      prevGateRef.current = gateOn
+      /* the KOL's envelope engine — monitor's stage machine, ported to kol-hardware/signal 2026-09-27 and
+         consumed back (plan 14 8.5): one curve for the rack, the generator and every scope */
+      const level = envRef.current.step(dt, { gate: readScalar(inputs.gate) > 0, trig: readScalar(inputs.trig) > 0 },
+        { attack: aRef.current, decay: dRef.current, sustain: sRef.current, release: rRef.current, cycle: cycleRef.current })
 
-      // Trigger: one-shot, kick into ATTACK on rising edge and auto-run A→D→R
-      const trigHigh = readScalar(inputs.trig) > 0
-      if (trigHigh && !prevClkRef.current) {
-        stageRef.current = STAGES.ATTACK
-        oneShotRef.current = true
-      }
-      prevClkRef.current = trigHigh
-
-      // Cycle: start if idle
-      if (cycleRef.current && stageRef.current === STAGES.IDLE) stageRef.current = STAGES.ATTACK
-
-      // Gate transitions — gate takes over (clears one-shot flag so sustain can hold)
-      if (gateOn && !wasOn) { stageRef.current = STAGES.ATTACK; oneShotRef.current = false }
-      if (!gateOn && wasOn && stageRef.current !== STAGES.IDLE) {
-        releaseStartLevelRef.current = levelRef.current
-        stageRef.current = STAGES.RELEASE
-      }
-
-      // Time mapping: knob 0-100 → 0.005-2s
-      const aTime = 0.005 + (aRef.current / 100) * 1.995
-      const dTime = 0.005 + (dRef.current / 100) * 1.995
-      const sLevel = sRef.current
-      const rTime = 0.005 + (rRef.current / 100) * 1.995
-
-      const stage = stageRef.current
-      let level = levelRef.current
-
-      if (stage === STAGES.ATTACK) {
-        level += (dt / aTime) * 100
-        if (level >= 100) { level = 100; stageRef.current = STAGES.DECAY }
-      } else if (stage === STAGES.DECAY) {
-        // In one-shot mode with sustain=0, D and R combine into a single long decay.
-        // This is what makes "release hold the decay for a long time" visible when
-        // there's no sustain to release from.
-        const oneShot = oneShotRef.current || (cycleRef.current && !gateOn)
-        const decayTime = (oneShot && sLevel <= 0) ? (dTime + rTime) : dTime
-        level -= (dt / decayTime) * (100 - sLevel)
-        if (level <= sLevel) {
-          level = sLevel
-          if (oneShot) {
-            // sustain=0 case already fell through via combined time → go idle.
-            // sustain>0 case: R decays from sustain to 0 over rTime.
-            if (sLevel > 0) {
-              releaseStartLevelRef.current = level
-              stageRef.current = STAGES.RELEASE
-            } else {
-              stageRef.current = cycleRef.current ? STAGES.ATTACK : STAGES.IDLE
-              oneShotRef.current = false
-            }
-          } else {
-            stageRef.current = STAGES.SUSTAIN
-          }
-        }
-      } else if (stage === STAGES.SUSTAIN) {
-        level = sLevel
-        if (cycleRef.current && !gateOn) {
-          releaseStartLevelRef.current = level
-          stageRef.current = STAGES.RELEASE
-        }
-      } else if (stage === STAGES.RELEASE) {
-        // Linear — rTime = seconds to zero from whatever level release started at
-        const start = releaseStartLevelRef.current || 1
-        level -= (dt / rTime) * start
-        if (level <= 0) {
-          level = 0
-          stageRef.current = cycleRef.current ? STAGES.ATTACK : STAGES.IDLE
-          oneShotRef.current = false
-        }
-      }
-
-      levelRef.current = level
       const out = scalar(level)
       outRef.current = out
       return { out }

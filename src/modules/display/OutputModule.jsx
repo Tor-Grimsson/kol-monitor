@@ -8,7 +8,7 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
@@ -41,7 +41,7 @@ function OutputPanel({ canvasRef, bg, trails, enabled, onToggle, onBgChange, onT
           <LabeledJack type="in" port="bg" moduleId={id} active={bgConnected} signalRef={bgInRef} label="cv" size="sm" />
           <Knob value={bg} onChange={onBgChange} label="bg" />
           <Knob value={trails} onChange={onTrailsChange} label="trails" />
-          <Divider variant="vertical" className="py-1.5" />
+          <Divider variant="vertical" height="fill" className="py-1.5" />
           {CHANNELS.map(ch => (
             <LabeledJack
               key={ch}
@@ -53,7 +53,7 @@ function OutputPanel({ canvasRef, bg, trails, enabled, onToggle, onBgChange, onT
               label={ch}
             />
           ))}
-          <Divider variant="vertical" className="py-1.5" />
+          <Divider variant="vertical" height="fill" className="py-1.5" />
           <LabeledJack type="in" port="pen" moduleId={id} active={penConnected} signalRef={penRef} label="pen" size="sm" />
         </div>
       </div>

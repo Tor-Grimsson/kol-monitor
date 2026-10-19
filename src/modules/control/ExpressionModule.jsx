@@ -11,7 +11,7 @@ import { newClockSyncState, measureClockRate } from '../../hooks/clockSync'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import Input from '@kolkrabbi/kol-component/atoms/Input'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const BUS_KEYS = ['a', 'b']

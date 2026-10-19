@@ -1,25 +1,26 @@
 import { useState } from 'react'
-import Slider from './atoms/Slider'
+import Input from '@kolkrabbi/kol-component/atoms/Input'
+import Button from './atoms/Button'
 
+/* the case width — the rack's own (`rack.caseHp`, plan 14 3.1): typed as a number, committed on blur / Enter,
+   never narrower than the modules already mounted (the rack clamps). Was a 40–200 slider wired to nothing. */
 export default function CaseHpDialog({ caseHp, onSetHp }) {
   const [showSlider, setShowSlider] = useState(false)
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24, width: '100%' }}>
-      <span onClick={() => setShowSlider(v => !v)} className="kol-helper-16 text-fg-80 hover:text-fg-96 cursor-pointer select-none">[Width]</span>
+      <Button size="md" onClick={() => setShowSlider(v => !v)}>[Width]</Button>
       {showSlider && (
-        <div style={{ width: 400 }}>
-          <Slider
-            min={40}
-            max={200}
-            step={2}
-            value={caseHp}
-            onChange={onSetHp}
-            variant="minimal"
-            formatValue={() => null}
-            className="w-full"
-          />
-        </div>
+        <Input
+          size="md"
+          chars={3}
+          suffix="HP"
+          inputMode="numeric"
+          inputClassName="text-right"
+          value={String(caseHp)}
+          onCommit={(v) => onSetHp(v)}
+          aria-label="Case width"
+        />
       )}
       <span className="kol-helper-16 text-fg-80">[{caseHp}HP]</span>
     </div>

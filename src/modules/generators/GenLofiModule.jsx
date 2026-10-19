@@ -12,9 +12,9 @@ import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
 import IconButton from '../parametric/IconButton'
-import { PanelLabel } from '@kolkrabbi/kol-controls'
+import { PanelLabel } from '@kolkrabbi/kol-hardware'
 import Toggle from '../parametric/Toggle'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Algorithms ---
@@ -22,14 +22,14 @@ import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 const MODE_ITEMS = [
   { value: 'gradient', icon: 'gen-gradient', text: 'grad' },
   { value: 'pattern', icon: 'gen-pattern', text: 'ptrn' },
-  { value: 'wave', icon: 'gen-wave', text: 'wave' },
+  { value: 'wave', icon: 'wave-sin', text: 'wave' },
 ]
 
 const SUB_ITEMS = {
   gradient: [
-    { value: 'linear', icon: 'grad-lin', text: 'lin' },
+    { value: 'linear', icon: 'line', text: 'lin' },
     { value: 'radial', icon: 'grad-rad', text: 'rad' },
-    { value: 'conic', icon: 'grad-con', text: 'con' },
+    { value: 'conic', icon: 'star', text: 'con' },
   ],
   pattern: [
     { value: 'stripes', icon: 'ptrn-stripe', text: 'str' },

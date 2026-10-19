@@ -23,7 +23,7 @@ function RampPanel({ rate, shape, enabled, onToggle, onRateChange, onShapeChange
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
         <IconSelect value={shape} onChange={onShapeChange} columns={3} items={[
-          { value: 'up', icon: 'ramp-up' }, { value: 'down', icon: 'ramp-down' }, { value: 'tri', icon: 'ramp-tri' },
+          { value: 'up', icon: 'line' }, { value: 'down', icon: 'ramp-down' }, { value: 'tri', icon: 'chevron-up' },
         ]} />
         <ModuleRow>
           <JackSocket type="in" port="rateCV" moduleId={id} active={rateCvConn} signalRef={rateCvRef} size="sm" />

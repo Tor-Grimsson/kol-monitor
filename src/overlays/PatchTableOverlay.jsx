@@ -68,7 +68,7 @@ export default function PatchTableOverlay({ open, rows, onClose }) {
               <span className="text-fg-80 truncate">{labelOf(c.fromModuleId)} · {c.fromPort}</span>
               <span className="text-fg-32">→</span>
               <span className="text-fg-80 truncate flex-1">{labelOf(c.toModuleId)} · {c.toPort}</span>
-              <Button variant="grey" size="sm" aria-label="Remove cable" onClick={() => removeConnection(c.toModuleId, c.toPort)}>×</Button>
+              <Button tone="grey" size="sm" aria-label="Remove cable" onClick={() => removeConnection(c.toModuleId, c.toPort)}>×</Button>
             </div>
           ))}
         </div>
@@ -84,7 +84,7 @@ export default function PatchTableOverlay({ open, rows, onClose }) {
             <Dropdown variant="grey" className="flex-1" options={placeholder('To module').concat(modules)} value={pick.to} onChange={pickTo} />
             <Dropdown variant="grey" className="flex-1" options={ins.length ? ins : placeholder('in')} value={pick.toPort} onChange={toPort => setPick(p => ({ ...p, toPort }))} />
           </div>
-          <Button variant="grey" size="md" disabled={!canAdd} onClick={() => addConnection(pick.from, pick.fromPort, pick.to, pick.toPort)}>Add cable</Button>
+          <Button tone="grey" size="md" disabled={!canAdd} onClick={() => addConnection(pick.from, pick.fromPort, pick.to, pick.toPort)}>Add cable</Button>
         </div>
       </div>
     </ShellDrawer>

@@ -2,15 +2,15 @@
 // remainder, 2026-09-01). After ControlsXsRung three of them ARE the DS at `xs`; the
 // A column names what the rack used (kol-controls 0.2.0, retired in 0.3.0), the B
 // column is the live control. IconButton keeps both sides — it stayed in kol-controls.
-// Dev page: outside AppLayout, no rail. Shot by scripts in _tmp/ for the A/B artifact.
+// Dev page: outside the Studio, no rail. Shot by scripts in _tmp/ for the A/B artifact.
 
 import { useState } from 'react'
-import { IconButton } from '@kolkrabbi/kol-controls'
+import { IconButton } from '@kolkrabbi/kol-hardware'
 import Input from '@kolkrabbi/kol-component/atoms/Input'
 import Dropdown from '@kolkrabbi/kol-component/molecules/Dropdown'
 import Stepper from '@kolkrabbi/kol-component/molecules/Stepper'
 import Button from '../../components/atoms/Button'
-import Icon from '../../icons/Icon'
+import { Icon } from '@kolkrabbi/kol-icons'
 
 const WAVES = ['sine', 'tri', 'saw', 'pulse']
 
@@ -55,7 +55,7 @@ export default function ControlsAbPage() {
         />
         <Row id="iconbutton" title="Icon button" note="kept in kol-controls — lit state, momentary"
           a={<div style={{ display: 'flex', gap: 6 }}><IconButton icon="tr-inf" active={active} onClick={() => setActive((v) => !v)} title="toggle" /><IconButton icon="tr-skip" momentary onClick={() => {}} title="momentary" /></div>}
-          b={<div style={{ display: 'flex', gap: 6 }}><Button variant="grey" size="xs" iconOnly="tr-inf" aria-label="toggle" aria-pressed={active} onClick={() => setActive((v) => !v)} /><Button variant="grey" size="xs" iconOnly="tr-skip" aria-label="momentary" /></div>}
+          b={<div style={{ display: 'flex', gap: 6 }}><Button tone="grey" size="xs" iconOnly="tr-inf" aria-label="toggle" aria-pressed={active} onClick={() => setActive((v) => !v)} /><Button tone="grey" size="xs" iconOnly="tr-skip" aria-label="momentary" /></div>}
         />
         <Row id="selector" title="Selector" note="Stepper xs with options — the list variant"
           a={<Retired name="Selector" />}

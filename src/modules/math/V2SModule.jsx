@@ -7,7 +7,7 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import LabeledJack from '../parametric/LabeledJack'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 

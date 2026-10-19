@@ -1,15 +1,16 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { patches } from '../data/patches'
 import Button from '../components/atoms/Button'
 import { Illustration } from '../walkthrough'
-import { CatalogPage } from '@kolkrabbi/kol-shell'
+import { useLibrary } from '../hooks/useLibraryStore'
 
 /**
- * HomePage — the front door, at `/`, on kol-shell's `CatalogPage`
- * (ShellHomeSystem, kol-shell 0.8.0 — this page was one of its three sources;
- * adopted 2026-08-27 on kol-fxr's wiring). Semantics stay the consumer's:
- * RECENT is the one empty case, SAVED is every preset, a click opens the rack.
+ * HomePage — `/`, as the DATA the Studio's `HubHome` renders (kol-shell
+ * `AppStudio`, 2026-10-15 — mirror's shape). The masthead (the app's name and
+ * subtitle), RECENT · SAVED, the Walkthrough button and its Close label are the
+ * Hub's; what is left here is monitor's: RECENT is the empty case and your newest
+ * files, SAVED is your files, a click opens the rack. `App.jsx` hands `useHomeProps()` to the
+ * Studio's `home=` / `walkthrough=`.
  */
 
 const WALKTHROUGH_STEPS = [
@@ -50,20 +51,22 @@ const WALKTHROUGH_STEPS = [
 
 const PRESET_NAMES = Object.keys(patches).filter(k => k !== 'ref' && k !== 'empty')
 
-const allPresets = PRESET_NAMES.map(name => {
-  const p = patches[name]
+/* a saved patch (the library — plan 13 W7) as a card: a seeded starter keeps its preset's picture,
+   anything else shows the empty case's */
+const savedCard = (item) => {
+  const p = item.data
   const moduleCount = p.rows?.reduce((sum, r) => sum + (r.modules?.length || 0), 0) || 0
-  const connCount = p.connections?.length || 0
   return {
-    name,
-    title: name.replace(/([A-Z])/g, ' $1').replace(/[-_]/g, ' ').trim(),
-    detail: `${moduleCount} modules, ${connCount} connections`,
-    // ponytail: no preset carries a type yet — all read 'patches' until `type: 'envelope' | 'effects'` is set on one in patches.js
-    type: p.type ?? 'patches',
-    tags: p.tags || [],
-    tag: p.tags?.[0],
+    name: item.id,
+    title: item.name,
+    detail: `${moduleCount} modules, ${p.connections?.length || 0} connections`,
+    type: 'patches',
+    tags: [],
+    preview: item.seedOf || 'empty',
+    to: `/rack/patch/${item.id}`,
   }
-})
+}
+const RECENT_FILES = 12
 
 const TAGS = [...new Set(PRESET_NAMES.flatMap(n => patches[n].tags || []))]
 /* TYPE stacks as a narrow column (`stack`), TAGS wraps beside it — the DS's own group shapes */
@@ -72,28 +75,25 @@ const FILTER_GROUPS = [
   { label: 'Tags', key: 'tags', values: TAGS },
 ]
 
-const VIEWS = [
-  { value: 'recent', label: 'RECENT' },
-  { value: 'saved', label: 'SAVED' },
-]
+/* RECENT: the empty case, then your newest files. SAVED: your files. Signed in or not — signed out is a
+   user with a local library (seeded with the starters), sign-in only syncs it (user 2026-10-18). Every
+   preset lives in Library. The Hub's RECENT · SAVED strip picks. */
+const EMPTY_CASE = { name: 'empty', title: 'Empty 7U', detail: '7U — power, perf, patch', type: 'patches', tags: [], preview: 'empty', to: '/rack/patch/empty' }
 
-/* RECENT shows the one empty case; SAVED shows every preset — the hand-written
-   page's semantics, now driven through CatalogPage's controlled view. */
-const EMPTY_CASE = { name: 'empty', title: 'Empty 7U', detail: '7U — power, perf, patch', type: 'patches', tags: [] }
-
-export default function HomePage() {
+export function useHomeProps() {
   const navigate = useNavigate()
-  const [showWalkthrough, setShowWalkthrough] = useState(false)
-  const [view, setView] = useState('recent')
-  const items = view === 'recent' ? [EMPTY_CASE] : allPresets
+  /* newest first — a sign-in merge appends remote saves anywhere, so the stamp orders, not the list */
+  const library = useLibrary()
+  const saves = [...library].sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0)).map(savedCard)
+  const recent = [EMPTY_CASE, ...saves.slice(0, RECENT_FILES)]
 
-  const steps = WALKTHROUGH_STEPS.map(s => s.actions
+  const walkthrough = WALKTHROUGH_STEPS.map(s => s.actions
     ? {
         ...s,
-        actions: (
+        actions: (close) => (
           <>
-            <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(false); navigate('/create') }}>Create Rack</Button>
-            <Button variant="grey" size="md" onClick={() => { setShowWalkthrough(false); navigate('/library') }}>Browse Library</Button>
+            <Button tone="grey" size="md" onClick={() => { close(); navigate('/create') }}>Create Rack</Button>
+            <Button tone="grey" size="md" onClick={() => { close(); navigate('/library') }}>Browse Library</Button>
           </>
         ),
       }
@@ -107,36 +107,31 @@ export default function HomePage() {
         ),
       })
 
-  return (
-    <CatalogPage
-      className="no-card-hover"
-      header={{ title: 'Monitor', subtitle: 'Video synthesis workstation', size: 'sm', voice: 'mono' }}
-      items={items}
-      filtersTitle="All Presets"
-      filterGroups={FILTER_GROUPS}
-      views={VIEWS}
-      view={view}
-      onViewChange={setView}
-      filtersProps={{ mutuallyExclusiveFilters: ['type'], tone: 'sunken' }}
-      toCard={(p) => ({
-        key: p.name,
-        title: p.title,
-        detail: p.detail,
-        fit: 'compact',
-        media: <img src={`/previews/patches/${p.name}.png`} alt={p.title} />,
-        onClick: () => navigate(p.name === 'empty' ? '/rack/patch/empty' : `/rack/preset/${p.name}`),
-      })}
-      walkthrough={{ open: showWalkthrough, steps }}
-      actions={
-        <>
-          <Button variant="grey" size="md" onClick={() => navigate('/create')}>
-            New Rack
-          </Button>
-          <Button variant="grey" size="md" onClick={() => setShowWalkthrough(!showWalkthrough)}>
-            {showWalkthrough ? 'Close' : 'Walkthrough'}
-          </Button>
-        </>
-      }
-    />
-  )
+  const home = {
+    className: 'no-card-hover',
+    items: (view) => (view === 'recent' ? recent : saves),
+    defaultView: 'recent',
+    filtersTitle: 'All Presets',
+    filterGroups: FILTER_GROUPS,
+    filtersProps: { mutuallyExclusiveFilters: ['type'], tone: 'sunken' },
+    /* the list row: the Hub's file row with a 16:9 thumb — a rack preview is wide, a 48px square shows nothing */
+    rowVariant: 'slide',
+    toCard: (p) => ({
+      key: p.name,
+      title: p.title,
+      detail: p.detail,
+      /* the file/slide row has no detail line — the counts ride its meta slot */
+      meta: p.detail,
+      fit: 'compact',
+      media: <img src={`/previews/patches/${p.preview}.png`} alt={p.title} />,
+      onClick: () => navigate(p.to),
+    }),
+    actions: (
+      <Button tone="grey" size="md" onClick={() => navigate('/create')}>
+        New Rack
+      </Button>
+    ),
+  }
+
+  return { home, walkthrough }
 }

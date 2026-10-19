@@ -3,12 +3,17 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { useNarrow } from '../hooks/useNarrow.js'
 import { MODULE_DEFS, CATEGORIES } from '../modules/registry'
 import Button from '../components/atoms/Button'
-import Divider from '../components/atoms/Divider'
-import Icon from '../icons/Icon'
-import { PageShell, PageHeader } from '@kolkrabbi/kol-shell'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
+import { PageShell } from '@kolkrabbi/kol-shell'
+import { PageHeader, PAGE_HEADER_ROLES } from '@kolkrabbi/kol-component'
 import { ContentFilters, ContentCard, ContentRow } from '@kolkrabbi/kol-component'
+import Input from '@kolkrabbi/kol-component/atoms/Input'
+import IconToggle from '@kolkrabbi/kol-component/atoms/IconToggle'
+import { Tooltip } from '@kolkrabbi/kol-component/utilities/Popover'
+import { Icon } from '@kolkrabbi/kol-icons'
 import CaseRowDialog from '../components/CaseRowDialog'
 import RackViewport from '../rack/RackViewport.jsx'
+import ModuleSearch from '../rack/ModuleSearch.jsx'
 import CaseHpDialog from '../components/CaseHpDialog'
 import usePersistedState from '../hooks/usePersistedState'
 import { useRack } from '../hooks/useRackContext.jsx'
@@ -73,7 +78,6 @@ export default function CreatePage() {
     }
   }, [location.key]) // eslint-disable-line react-hooks/exhaustive-deps
   const rows = rack.rows
-  const [caseHp, setCaseHp] = usePersistedState('caseHp', 104)
 
   /* `/create?insert=<type>` — the module page's INSERT (2026-09-02): add it once,
      then clean the URL so a reload does not add it again */
@@ -85,6 +89,15 @@ export default function CreatePage() {
     addModule(type)
     navigate('/create?from=create', { replace: true })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ⌘K — the rack's module search, adding into the case being designed (plan 14 2.2: Create never bound it,
+     so the browser kept ⌘K for its own web search) */
+  const [searchOpen, setSearchOpen] = useState(false)
+  useEffect(() => {
+    const onKey = (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen((v) => !v) } }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const addModule = (type) => {
     const def = MODULE_DEFS[type]
@@ -98,13 +111,13 @@ export default function CreatePage() {
   /* INSERT — the one explicit way to add from the list (touch has no drag). Its own
      tap; the card / row itself opens the module's page (user, 2026-09-02). */
   const InsertAction = ({ type }) => (
-    <span
+    <Button
+      size="sm"
       onClick={(e) => { e.stopPropagation(); if (justDraggedRef.current) return; addModule(type) }}
-      className="cursor-pointer flex items-center gap-2 kol-helper-10 text-fg-80"
     >
       INSERT
-      <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--kol-palette-red)', flexShrink: 0 }} />
-    </span>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--kol-palette-red)', flexShrink: 0, marginLeft: 8 }} />
+    </Button>
   )
 
   const handleModuleDragStart = (type, e) => {
@@ -154,7 +167,7 @@ export default function CreatePage() {
   const openInRack = () => navigate('/rack')
 
   return (
-    /* Create sits on the app tier's fg-02 (AppLayout); only the rack steps up to fg-04 */
+    /* Create sits on the app tier's fg-02 (the Studio's wash); only the rack steps up to fg-04 — its own PageShell, `create.shell: false` */
     <PageShell mode={view === 'case' ? 'fixed' : 'scroll'} /* the case is a fixed canvas; the modules list is a page that scrolls (2026-09-02) */ style={{ '--kol-shell-page-wash': 'var(--kol-fg-02)', position: 'relative', isolation: 'isolate' }}>
       {/* the dot grid on the WHOLE page — over the wash, under the chrome, the
         * padding ignored (inset 0 spans the padding box). RackViewport drives it
@@ -167,8 +180,7 @@ export default function CreatePage() {
       {/* chrome floats ABOVE the canvas: the case runs under the masthead and the filter row (user, 2026-09-02) */}
       <div style={{ position: 'relative', zIndex: 'var(--kol-z-sticky)' }}>
       <PageHeader
-        size="sm"
-        voice="mono"
+        level="app"
         title={
           <input
             ref={titleRef}
@@ -176,7 +188,7 @@ export default function CreatePage() {
             value={caseName}
             onChange={e => setCaseName(e.target.value)}
             readOnly={!editingName}
-            className="block p-0 h-[35.2px] leading-[35.2px] bg-transparent outline-none text-fg-96 kol-mono-heading-03"
+            className={`block p-0 h-[46px] md:h-[60px] leading-none bg-transparent outline-none text-fg-96 ${PAGE_HEADER_ROLES.app.title}`}
             style={{ width: `${caseName.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', boxShadow: editingName ? 'inset 0 -1px 0 rgba(255,255,255,0.12)' : 'none', caretColor: editingName ? 'auto' : 'transparent', pointerEvents: editingName ? 'auto' : 'none' }}
           />
         }
@@ -188,7 +200,7 @@ export default function CreatePage() {
             onBlur={() => setEditingName(false)}
             onKeyDown={e => { if (e.key === 'Enter') setEditingName(false) }}
             readOnly={!editingName}
-            className="block p-0 h-[18px] leading-[18px] bg-transparent outline-none text-fg-48 kol-mono-14"
+            className={`block p-0 h-[26px] leading-[26px] bg-transparent outline-none ${PAGE_HEADER_ROLES.app.lede}`}
             style={{ width: `${caseDescription.length + 1}ch`, cursor: editingName ? 'text' : 'default', border: 'none', boxShadow: editingName ? 'inset 0 -1px 0 rgba(255,255,255,0.12)' : 'none', caretColor: editingName ? 'auto' : 'transparent', pointerEvents: editingName ? 'auto' : 'none' }}
           />
         }
@@ -205,25 +217,26 @@ export default function CreatePage() {
           mutuallyExclusiveFilters={['category', 'u_label']}
           showCountOnlyWhenFiltering
           headerActions={
-            <Button
-              variant="nav"
-              size="md"
-              iconOnly="edit"
-              aria-label="Rename case"
-              title="Rename case"
-              onPointerDown={(e) => {
-                e.preventDefault()
-                setEditingName(prev => {
-                  if (prev) {
-                    titleRef.current?.blur()
-                    window.getSelection()?.removeAllRanges()
-                    return false
-                  }
-                  requestAnimationFrame(() => { titleRef.current?.focus(); titleRef.current?.select() })
-                  return true
-                })
-              }}
-            />
+            <Tooltip label="Rename case" triggerClassName="inline-flex shrink-0">
+              <Button
+                variant="nav"
+                size="md"
+                iconOnly="edit"
+                aria-label="Rename case"
+                onPointerDown={(e) => {
+                  e.preventDefault()
+                  setEditingName(prev => {
+                    if (prev) {
+                      titleRef.current?.blur()
+                      window.getSelection()?.removeAllRanges()
+                      return false
+                    }
+                    requestAnimationFrame(() => { titleRef.current?.focus(); titleRef.current?.select() })
+                    return true
+                  })
+                }}
+              />
+            </Tooltip>
           }
           viewModeOptions={[
             { value: 'case', label: 'CASE' },
@@ -249,7 +262,7 @@ export default function CreatePage() {
                     />
                   )}
                   {showHpPicker && (
-                    <CaseHpDialog caseHp={caseHp} onSetHp={setCaseHp} />
+                    <CaseHpDialog caseHp={rack.caseHp} onSetHp={rack.setCaseHp} />
                   )}
                   {(addingRow || showHpPicker) && <Divider className="mb-4" />}
                   {showCase && <RackViewport gridRef={dotGridRef} style={{ flex: 1, margin: '0 calc(var(--kol-shell-page-pad) * -1)', overflow: 'visible' /* the canvas is the whole page: the case is never cut by the viewport's box; the chrome above it is lifted (below), not the case sunk — a sunk case sits under its own wrappers and stops receiving touches (2026-09-02) */ }} editMode={false} onZoomChange={setCaseZoom} zoomSetterRef={zoomSetterRef} />}
@@ -297,13 +310,18 @@ export default function CreatePage() {
           }}
         />
 
-        {/* `--monitor-rail` (AppLayout): the rail's width or 0 when hidden — a fixed layer must follow it itself */}
+        {/* `--monitor-rail` (App.jsx RailFrame): the rail's width or 0 when hidden — a fixed layer must follow it itself */}
         {view === 'case' && <div className="fixed flex items-center justify-between" style={{ bottom: 24, left: 'calc(var(--monitor-rail, var(--kol-shell-rail-width)) + 24px)', right: 24 }}>
-        <div className="flex items-center gap-2">
-          <span onClick={() => applyZoom(z => Math.max(0.1, z - 0.1))} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">−</span>
-          <input
-            type="text"
+        {/* ONE tone for the bar (plan 14 7.1): unset, its Input fell back to `filled` while the toolbar search
+            drew the dark well — every control here inherits the wrapper's ground instead */}
+        <div className="kol-tone-sunken flex items-center gap-2">
+          <Button size="sm" onClick={() => applyZoom(z => Math.max(0.1, z - 0.1))}>−</Button>
+          <Input
+            size="sm"
+            chars={3}
+            suffix="%"
             inputMode="numeric"
+            inputClassName="text-right"
             value={zoomInput}
             onFocus={(e) => { zoomInputEditing.current = true; e.target.select() }}
             onChange={(e) => setZoomInput(e.target.value)}
@@ -314,38 +332,16 @@ export default function CreatePage() {
               else setZoomInput(String(Math.round(caseZoom * 100)))
             }}
             onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }}
-            className="kol-helper-12 text-fg-64 bg-transparent text-right border-none outline-none"
-            style={{ width: 32 }}
           />
-          <span className="kol-helper-12 text-fg-32">%</span>
-          <span onClick={() => applyZoom(z => Math.min(2, z + 0.1))} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">+</span>
-          <span onClick={() => navigate('/rack')} className="kol-helper-12 text-fg-48 module-detail-code-link cursor-pointer select-none" style={{ marginLeft: 16 }}>[Open in Rack]</span>
+          <Button size="sm" onClick={() => applyZoom(z => Math.min(2, z + 0.1))}>+</Button>
+          <Button size="sm" style={{ marginLeft: 16 }} onClick={() => navigate('/rack')}>[Open in Rack]</Button>
         </div>
         <div className="flex items-center gap-1">
-        <button
-          onClick={() => setAddingRow(v => !v)}
-          className="text-fg-80 hover:text-fg-96 transition-colors cursor-pointer"
-          style={{ background: 'none', border: 'none', padding: 8, lineHeight: 0 }}
-          title="Rows"
-        >
-          <Icon name="row" size={20} />
-        </button>
-        <button
-          onClick={() => setShowHpPicker(v => !v)}
-          className="text-fg-80 hover:text-fg-96 transition-colors cursor-pointer"
-          style={{ background: 'none', border: 'none', padding: 8, lineHeight: 0 }}
-          title="HP"
-        >
-          <Icon name="panel-left" size={20} />
-        </button>
-        <button
-          onClick={() => setShowCase(v => !v)}
-          className="text-fg-80 hover:text-fg-96 transition-colors cursor-pointer"
-          style={{ background: 'none', border: 'none', padding: 8, lineHeight: 0 }}
-          title="Case preview"
-        >
-          <Icon name="grid-03" size={20} />
-        </button>
+        {/* three panel toggles — DS `IconToggle` (the state is the ink, the name the tooltip); `Button pressed`
+            paints the inverted fill, which the DS rules too loud for studio chrome */}
+        <IconToggle size="md" icon="row" label="Rows" pressed={addingRow} onChange={setAddingRow} iconComponent={Icon} />
+        <IconToggle size="md" icon="panel-left" label="HP" pressed={showHpPicker} onChange={setShowHpPicker} iconComponent={Icon} />
+        <IconToggle size="md" icon="grid-3x3" label="Case preview" pressed={showCase} onChange={setShowCase} iconComponent={Icon} />
         </div>
         </div>}
       </div>
@@ -360,6 +356,7 @@ export default function CreatePage() {
           </span>
         </div>
       )}
+      <ModuleSearch open={searchOpen} onClose={() => setSearchOpen(false)} rows={rows} capacity={rack.caseHp} onAdd={(type, rowId) => { rack.addModule(type, rowId); setView('case') }} />
     </PageShell>
   )
 }

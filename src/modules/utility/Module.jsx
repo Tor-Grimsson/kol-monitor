@@ -1,37 +1,13 @@
-// Module wrapper — front panel with header pinned at top
-// Header (label + power dot) is managed here, children render below
-
+// Module wrapper — monitor's own ModuleFrame (back from kol-hardware 2026-10-17, plan 14 8.4) fed the
+// rack's own state: the edit context and the case's power arrive as props.
 import { createContext, useContext } from 'react'
-import { MODULE_PADDING } from './eurorack'
-import ModuleHeader from '../parametric/ModuleHeader'
+import ModuleFrame from './ModuleFrame.jsx'
+import { useCasePower } from '../../hooks/useCasePower.jsx'
 
 export const ModuleEditContext = createContext(null)
 
-export default function Module({ children, className = 'bg-surface-secondary', label, enabled, onToggle, u = 3, bypass, onBypass }) {
+export default function Module(props) {
   const editCtx = useContext(ModuleEditContext)
-  const editMode = editCtx?.editMode
-  const onRemove = editCtx?.onRemove
-  const hp = editCtx?.hp
-  return (
-    <div
-      className={className}
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: `${MODULE_PADDING}px 0 ${u === 1 ? 8 : MODULE_PADDING}px`,
-        userSelect: 'none',
-      }}
-    >
-      {label && (
-        <div style={{ flexShrink: 0, padding: `0 4px ${u === 1 ? 8 : 16}px` }}>
-          <ModuleHeader label={label} enabled={enabled} onToggle={onToggle} editMode={editMode} onRemove={onRemove} hp={hp} bypass={bypass} onBypass={onBypass} />
-        </div>
-      )}
-      <div style={{ flex: 1, overflow: 'hidden', padding: '0 4px', minHeight: 0 }}>
-        {children}
-      </div>
-    </div>
-  )
+  const { power } = useCasePower()
+  return <ModuleFrame powered={power} editMode={editCtx?.editMode} onRemove={editCtx?.onRemove} {...props} />
 }

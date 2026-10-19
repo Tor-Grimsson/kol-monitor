@@ -1,6 +1,6 @@
 // Rack state — manages rows, modules with HP offsets, parked modules, edit mode
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef, useLayoutEffect } from 'react'
 import { MODULE_DEFS } from '../modules/registry'
 import { TOTAL_HP } from '../modules/utility/eurorack'
 import { patches } from '../data/patches'
@@ -96,15 +96,17 @@ const DEFAULT_ROWS = [
 
 let rowCounter = 5
 
-// Find first gap in a row that fits the given HP width
-export function findFreeOffset(modules, hp) {
+const MIN_CASE_HP = 40
+
+// Find first gap in a row that fits the given HP width, inside a case `capacity` HP wide
+export function findFreeOffset(modules, hp, capacity = TOTAL_HP) {
   const sorted = [...modules].sort((a, b) => a.offset - b.offset)
   let pos = 0
   for (const m of sorted) {
     if (pos + hp <= m.offset) return pos
     pos = m.offset + m.hp
   }
-  return pos + hp <= TOTAL_HP ? pos : null
+  return pos + hp <= capacity ? pos : null
 }
 
 // `initialRows`: the stage's own provider starts EMPTY. Booting on DEFAULT_ROWS
@@ -115,6 +117,22 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
   const [rows, setRows] = useState(initialRows)
   const [workbench, setWorkbench] = useState([])
   const [editMode, setEditMode] = useState(false)
+  /* THE CASE WIDTH (plan 14 3.1, user 2026-10-17: "104 is default case, rows fill the case — and modules
+     shouldnt overflow the rows … can be changed"). One width for the whole case; every fit reads it. The ref
+     lets the stable callbacks below read the current width. */
+  const [caseHp, setCaseHpState] = useState(TOTAL_HP)
+  const caseHpRef = useRef(TOTAL_HP)
+  const rowsRef = useRef(initialRows)
+  useLayoutEffect(() => { rowsRef.current = rows }, [rows])
+  const workbenchRef = useRef([])
+  useLayoutEffect(() => { workbenchRef.current = workbench }, [workbench])
+  /* never narrower than what is already mounted: the widest row's right edge */
+  const setCaseHp = useCallback((hp) => {
+    const used = Math.max(0, ...rowsRef.current.flatMap(r => r.modules.map(m => m.offset + m.hp)))
+    const v = Math.max(MIN_CASE_HP, used, Math.round(Number(hp) || TOTAL_HP))
+    caseHpRef.current = v
+    setCaseHpState(v)
+  }, [])
 
   const addModule = useCallback((type, rowId) => {
     const def = MODULE_DEFS[type]
@@ -123,7 +141,7 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
     setRows(prev => prev.map(row => {
       if (row.id !== rowId) return row
       if (row.height !== targetHeight) return row
-      const offset = findFreeOffset(row.modules, def.hp)
+      const offset = findFreeOffset(row.modules, def.hp, caseHpRef.current)
       if (offset === null) return row
       const mod = { type, id: uid(type), hp: def.hp, offset }
       return { ...row, modules: [...row.modules, mod] }
@@ -131,37 +149,33 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
   }, [])
 
   // Send a module from rack to workbench
+  /* the module is read from the CURRENT rows, never out of the `setRows` updater: React runs an updater
+     eagerly only when its queue is empty, so a second park before a render found nothing and the module
+     left the rack without reaching the shelf — lost (2026-10-17, two parks in one tick) */
   const sendToWorkbench = useCallback((moduleId) => {
-    let found = null
-    setRows(prev => prev.map(row => {
-      const mod = row.modules.find(m => m.id === moduleId)
-      if (mod) found = mod
-      return { ...row, modules: row.modules.filter(m => m.id !== moduleId) }
-    }))
-    if (found) setWorkbench(prev => [...prev, found])
+    const found = rowsRef.current.flatMap(r => r.modules).find(m => m.id === moduleId)
+    if (!found) return
+    setRows(prev => prev.map(row => ({ ...row, modules: row.modules.filter(m => m.id !== moduleId) })))
+    setWorkbench(prev => (prev.some(m => m.id === moduleId) ? prev : [...prev, found]))
   }, [])
 
   // Return a module from workbench to first available rack slot
+  /* back from the shelf into the first row with room. Read from the current state, not inside an updater
+     (that nested a `setRows` in `setWorkbench` and mutated a row); with no room the module STAYS parked —
+     it used to leave the shelf anyway and was lost (2026-10-17). */
   const returnFromWorkbench = useCallback((moduleId) => {
-    setWorkbench(prev => {
-      const mod = prev.find(m => m.id === moduleId)
-      if (!mod) return prev
-      const def = MODULE_DEFS[mod.type]
-      const targetHeight = (def?.u || 3) === 1 ? '1u' : '3u'
-      setRows(r => {
-        const updated = [...r]
-        for (const row of updated) {
-          if (row.height !== targetHeight) continue
-          const offset = findFreeOffset(row.modules, mod.hp)
-          if (offset !== null) {
-            row.modules = [...row.modules, { ...mod, offset }]
-            return [...updated]
-          }
-        }
-        return updated
-      })
-      return prev.filter(m => m.id !== moduleId)
-    })
+    const mod = workbenchRef.current.find(m => m.id === moduleId)
+    if (!mod) return
+    const targetHeight = (MODULE_DEFS[mod.type]?.u || 3) === 1 ? '1u' : '3u'
+    let target = null, offset = null
+    for (const row of rowsRef.current) {
+      if (row.height !== targetHeight) continue
+      offset = findFreeOffset(row.modules, mod.hp, caseHpRef.current)
+      if (offset !== null) { target = row.id; break }
+    }
+    if (!target) return
+    setRows(prev => prev.map(row => (row.id === target ? { ...row, modules: [...row.modules, { ...mod, offset }] } : row)))
+    setWorkbench(prev => prev.filter(m => m.id !== moduleId))
   }, [])
 
   const addRow = useCallback((height = '3u') => {
@@ -226,7 +240,7 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
       const def = MODULE_DEFS[mod.type]
       const targetHeight = (def?.u || 3) === 1 ? '1u' : '3u'
       if (target.height !== targetHeight) return prev
-      const offset = findFreeOffset(target.modules, mod.hp)
+      const offset = findFreeOffset(target.modules, mod.hp, caseHpRef.current)
       if (offset === null) return prev
       withoutMod[targetIdx] = { ...target, modules: [...target.modules, { ...mod, offset }] }
       return withoutMod
@@ -240,7 +254,7 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
       const mod = row.modules.find(m => m.id === modId)
       if (!mod) return row
       const others = row.modules.filter(m => m.id !== modId)
-      const clamped = Math.max(0, Math.min(TOTAL_HP - mod.hp, snapped))
+      const clamped = Math.max(0, Math.min(caseHpRef.current - mod.hp, snapped))
       const end = clamped + mod.hp
       const overlaps = others.some(m => clamped < m.offset + m.hp && end > m.offset)
       if (overlaps) return row
@@ -265,6 +279,11 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
     })
     setRows(newRows)
     setWorkbench([])
+    /* a patch carries its case width; older patches are the 104 default. Never narrower than its rows. */
+    const used = Math.max(0, ...newRows.flatMap(r => r.modules.map(m => m.offset + m.hp)))
+    const v = Math.max(MIN_CASE_HP, used, preset.caseHp || TOTAL_HP)
+    caseHpRef.current = v
+    setCaseHpState(v)
   }, [])
 
   const resetRack = useCallback(() => {
@@ -277,6 +296,8 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
 
   return useMemo(() => ({
     rows,
+    caseHp,
+    setCaseHp,
     workbench,
     editMode,
     setEditMode,
@@ -291,5 +312,5 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
     addRow,
     removeRow,
     setRowHeight,
-  }), [rows, workbench, editMode, setEditMode, loadPreset, resetRack, addModule, moveModule, swapInRow, moveToRow, sendToWorkbench, returnFromWorkbench, addRow, removeRow, setRowHeight])
+  }), [rows, caseHp, setCaseHp, workbench, editMode, setEditMode, loadPreset, resetRack, addModule, moveModule, swapInRow, moveToRow, sendToWorkbench, returnFromWorkbench, addRow, removeRow, setRowHeight])
 }

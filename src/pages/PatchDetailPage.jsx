@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { patches } from '../data/patches'
 import { MODULE_DEFS } from '../modules/registry'
-import Divider from '../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import Button from '../components/atoms/Button'
-import { PageShell, PageHeader } from '@kolkrabbi/kol-shell'
+import { PageShell } from '@kolkrabbi/kol-shell'
+import { PageHeader } from '@kolkrabbi/kol-component'
 
 export default function PatchDetailPage() {
   const { patchName } = useParams()
@@ -16,7 +17,7 @@ export default function PatchDetailPage() {
     return (
       <PageShell>
         {/* subtitle keeps the masthead on the 65.2 rung every other page sits on */}
-        <PageHeader size="sm" voice="mono" title="Patch not found" subtitle={patchName} />
+        <PageHeader level="app" title="Patch not found" subtitle={patchName} />
       </PageShell>
     )
   }
@@ -29,7 +30,7 @@ export default function PatchDetailPage() {
 
   return (
     <PageShell mode="fixed">
-      <PageHeader size="sm" voice="mono" title={title} subtitle={`${moduleCount} modules, ${connCount} connections`} />
+      <PageHeader level="app" title={title} subtitle={`${moduleCount} modules, ${connCount} connections`} />
 
       <Divider className="mb-6" />
 
@@ -83,10 +84,10 @@ export default function PatchDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Divider />
             <div style={{ display: 'flex', gap: 12 }}>
-              <Button variant="grey" size="md" onClick={() => navigate('/library', { state: { expandedPatch: patchName } })}>
+              <Button tone="grey" size="md" onClick={() => navigate('/library', { state: { expandedPatch: patchName } })}>
                 Back
               </Button>
-              <Button variant="grey" size="md" onClick={() => navigate(rackUrl)}>
+              <Button tone="grey" size="md" onClick={() => navigate(rackUrl)}>
                 Open in Rack
               </Button>
             </div>

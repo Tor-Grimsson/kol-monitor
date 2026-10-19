@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CATEGORIES, getModulesByCategory, MODULE_DEFS } from '../modules/registry'
-import { TOTAL_HP } from '../modules/utility/eurorack'
+import Button from '../components/atoms/Button'
 
 /**
  * RackRailPanel — the module catalog, back where the sidebar's MODULES section
@@ -14,10 +14,12 @@ import { TOTAL_HP } from '../modules/utility/eurorack'
  * Restored as it was, with the retired `kol-helper-xs` t-shirt class swapped for
  * `kol-helper-12`.
  *
- * THIS IS THE ARGUMENT FOR THE TICKET. Every row here is an ACTION — a module
- * row inserts into the first row with space, a workbench row returns a held
- * module to the rack — and the DS rail's second level only navigates. See
- * `RackRail.jsx`.
+ * Every row here is an ACTION — a module row inserts into the first row with
+ * space, a workbench row returns a held module to the rack — and the DS rail's
+ * second level only navigates. So the rail carries a consumer SLOT instead
+ * (kol-shell 0.64.0, `NavRailConsumerSlot`, filed from here): `VideoModulo`
+ * portals this panel in through `useRailSlot`. The `RackRail` fork that carried
+ * the slot before is in `_tmp/2026-10-15-rail-slot-retired/`.
  */
 const CATEGORY_LABELS = {
   control: 'Control',
@@ -43,7 +45,7 @@ export default function RackRailPanel({ rack }) {
     for (const row of rack.rows) {
       if (row.height !== targetHeight) continue
       const used = row.modules.reduce((sum, m) => sum + m.hp, 0)
-      if (used + hp <= TOTAL_HP) return row.id
+      if (used + hp <= rack.caseHp) return row.id
     }
     return null
   }
@@ -56,27 +58,28 @@ export default function RackRailPanel({ rack }) {
         const isOpen = openCats.has(cat)
         return (
           <div key={cat} className="mb-2">
-            <div
-              onClick={() => toggleCat(cat)}
-              className="kol-helper-12 text-fg-48 hover:text-fg-64 cursor-pointer select-none mb-1 px-3"
-            >
+            <Button variant="nav" size="sm" className="mb-1" aria-expanded={isOpen} onClick={() => toggleCat(cat)}>
               {isOpen ? '▾' : '▸'} {CATEGORY_LABELS[cat]}
-            </div>
+            </Button>
             {isOpen && (
               <div className="flex flex-col gap-0.5">
-                {modules.map(mod => (
-                  <button
-                    key={mod.type}
-                    onClick={() => {
-                      const rowId = findRowWithSpace(mod.hp, mod.u)
-                      if (rowId) rack.addModule(mod.type, rowId)
-                    }}
-                    className="text-left px-3 h-6 rounded kol-helper-12 text-fg-64 hover:text-fg-96 hover:bg-fg-04 transition-colors flex items-center justify-between"
-                  >
-                    <span>{mod.label}</span>
-                    <span className="text-fg-32">{mod.u === 1 ? '1U' : '3U'} {mod.hp}hp</span>
-                  </button>
-                ))}
+                {modules.map(mod => {
+                  /* no row with room → the DS disabled state, not a row that takes the click and does nothing */
+                  const rowId = findRowWithSpace(mod.hp, mod.u)
+                  return (
+                    <Button
+                      key={mod.type}
+                      variant="nav"
+                      size="sm"
+                      className="w-full justify-between"
+                      disabled={!rowId}
+                      onClick={() => rack.addModule(mod.type, rowId)}
+                    >
+                      <span>{mod.label}</span>
+                      <span className="text-fg-32">{mod.u === 1 ? '1U' : '3U'} {mod.hp}hp</span>
+                    </Button>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -89,14 +92,16 @@ export default function RackRailPanel({ rack }) {
           <div className="kol-helper-12 text-fg-48 mb-2 uppercase px-3">Workbench</div>
           <div className="flex flex-col gap-0.5">
             {rack.workbench.map(mod => (
-              <button
+              <Button
                 key={mod.id}
+                variant="nav"
+                size="sm"
+                className="w-full justify-between"
                 onClick={() => rack.returnFromWorkbench(mod.id)}
-                className="text-left px-3 h-6 rounded kol-helper-12 text-fg-48 hover:text-fg-64 hover:bg-fg-04 transition-colors flex items-center justify-between"
               >
                 <span>{MODULE_DEFS[mod.type]?.label || mod.type}</span>
                 <span className="text-fg-32">{mod.hp}hp</span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>

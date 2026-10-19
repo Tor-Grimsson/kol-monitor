@@ -10,8 +10,8 @@ import FlipToggle from '../../modules/parametric/FlipToggle'
 import Toggle from '../../modules/parametric/Toggle'
 import IconButton from '../../modules/parametric/IconButton'
 import LED from '../../modules/parametric/LED'
-import Divider from '../../components/atoms/Divider'
-import Icon from '../../icons/Icon'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
+import { Icon } from '@kolkrabbi/kol-icons'
 import { HP_PX, TOTAL_HP, ASPECT } from '../../modules/utility/eurorack'
 import { PatchRoutingProvider } from '../../hooks/usePatchRouting.jsx'
 import { ModuleRegistryProvider } from '../../hooks/useModuleRegistry.jsx'
@@ -58,7 +58,7 @@ function NoiseToolsDesign() {
           </div>
         </div>
 
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
 
         {/* S&H — bottom-aligned pair */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
@@ -77,7 +77,7 @@ function NoiseToolsDesign() {
           </div>
         </div>
 
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
 
         {/* Slew in + out stacked */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
@@ -230,14 +230,14 @@ function QuadrattDesign() {
       <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
 
         {channel('a')}
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
         {channel('b')}
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
         {channel('c')}
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
         {channel('d')}
 
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
 
         {/* I/O grid */}
         <div style={{ display: 'inline-grid', gridTemplateColumns: 'repeat(4, auto)', columnGap: 20, rowGap: 16 }}>

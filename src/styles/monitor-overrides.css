@@ -21,7 +21,7 @@
   --kol-media-focus: top left;
 
   /* Jack roles, hardware and LED colours moved to kol-theme 0.124.0's
-   * kol-components-controls.css (`--kol-ctl-*`) with @kolkrabbi/kol-controls
+   * kol-components-controls.css (`--kol-ctl-*`) with @kolkrabbi/kol-hardware
    * (KolControlsPackage, 2026-09-01). Values unchanged; nothing bound here. */
 }
 

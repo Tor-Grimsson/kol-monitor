@@ -14,14 +14,15 @@ export function useRack() {
   return useContext(RackContext)
 }
 
-export function RackProvider({ initialRows }) {
+/* `children` when the Studio routes off `currentPath`; `<Outlet/>` when a router nests it */
+export function RackProvider({ initialRows, children }) {
   const rack = useRackState(initialRows)
   return (
     <RackContext.Provider value={rack}>
       <ModuleRegistryProvider>
         <PatchRoutingProvider initialConnections={patches.ref.connections}>
           <CasePowerProvider>
-            <Outlet />
+            {children ?? <Outlet />}
           </CasePowerProvider>
         </PatchRoutingProvider>
       </ModuleRegistryProvider>

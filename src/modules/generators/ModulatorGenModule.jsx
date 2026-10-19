@@ -13,7 +13,7 @@ import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
 import CvSlider from '../parametric/CvSlider'
 import Toggle from '../parametric/Toggle'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Math ported from kol-modulator/DialRotation.jsx ---

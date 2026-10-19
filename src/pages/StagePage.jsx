@@ -35,7 +35,7 @@ import PatchCableOverlay from '../modules/utility/PatchCableOverlay.jsx'
 import LabeledJack from '../modules/parametric/LabeledJack'
 import { usePanZoom } from '../stage/usePanZoom'
 import { useNarrow } from '../hooks/useNarrow.js'
-import Icon from '../icons/Icon'
+import { Icon } from '@kolkrabbi/kol-icons'
 import { useFloating } from '../stage/useFloating'
 import { useDotGrid, DOT_GRID_SIZE, DOT_GRID_IMAGE } from '../hooks/useDotGrid.js'
 
@@ -214,7 +214,7 @@ function StageView({ stageKey }) {
      full-bleed performance view that throws away the picture, which is the case
      kol-shell 0.26.0's `useSettingsToggle` seam was cut for — fxr's `/editor`
      hit it first. CAPTURE phase + `stopImmediatePropagation` so the shell's
-     window listener never sees it; the same preemption AppLayout uses for the
+     window listener never sees it; the same preemption App.jsx's ⌥ prefix uses for the
      ⌥-digit prefix. Matched on `e.code` too: ⌥+`,` is `≤` on macOS. */
   useEffect(() => {
     const onKey = (e) => {
@@ -246,13 +246,13 @@ function StageView({ stageKey }) {
             intrinsic width as its glyph (22px, not the 32px rule) and squeezed the
             row; pointer-transparent so the empty run still pans (2026-09-02). */}
         <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-end gap-2 pointer-events-none *:pointer-events-auto">
-          {narrow && <Button variant="grey" size="md" onClick={toggleAll}>{allEnabled ? 'Stop' : 'Play'}</Button>}
-          <Button variant="grey" size="md" iconOnly={bgVideo ? 'video' : 'video-off'} iconComponent={Icon} aria-label="Background video" aria-pressed={bgVideo} onClick={() => setBgVideo(v => !v)} />
+          {narrow && <Button tone="grey" size="md" onClick={toggleAll}>{allEnabled ? 'Stop' : 'Play'}</Button>}
+          <Button tone="grey" size="md" iconOnly={bgVideo ? 'video' : 'video-off'} iconComponent={Icon} aria-label="Background video" aria-pressed={bgVideo} onClick={() => setBgVideo(v => !v)} />
           {/* the rack's patch table (P) — cables by name, the sure path on a phone */}
-          <Button variant="grey" size="md" iconOnly="list-02" iconComponent={Icon} aria-label="Patch table" aria-pressed={showPatchTable} onClick={() => setShowPatchTable(v => !v)} />
+          <Button tone="grey" size="md" iconOnly="view-list" iconComponent={Icon} aria-label="Patch table" aria-pressed={showPatchTable} onClick={() => setShowPatchTable(v => !v)} />
           {/* MenuItem's root is w-full — boxed so it takes the trigger's width, not the row's */}
           <div className="shrink-0"><StageParams marks={marks} onMarks={setMarks} rows={rack.rows} /></div>
-          <Button variant="grey" size="md" iconOnly="settings-01" aria-label="Stage settings" onClick={() => setSettingsOpen(true)} />
+          <Button tone="grey" size="md" iconOnly="settings-01" aria-label="Stage settings" onClick={() => setSettingsOpen(true)} />
         </div>
 
         {/* `ShellDrawer` directly, not `SettingsPanel`, for ONE reason: the

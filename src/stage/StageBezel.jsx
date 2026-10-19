@@ -12,6 +12,7 @@
 
 import { useState } from 'react'
 import RotaryDial from '@kolkrabbi/kol-component/atoms/RotaryDial'
+import { Tooltip } from '@kolkrabbi/kol-component/utilities/Popover'
 
 const PANEL = {
   metal: '#191919',
@@ -54,12 +55,13 @@ function Screw({ top, right, bottom, left, rot }) {
 /* A lozenge key. No legend — at this size silkscreen reads as dirt. */
 function PanelKey({ on, onClick, title, w = 26 }) {
   return (
-    <span
-      onClick={onClick}
-      title={title}
-      className={onClick ? 'cursor-pointer select-none' : 'select-none'}
-      style={{ width: w, height: 10, borderRadius: 1, background: on ? '#f2eee0' : '#cdc9bc', transform: on ? 'translateY(1px)' : 'none' }}
-    />
+    <Tooltip label={title} asChild>
+      <span
+        onClick={onClick}
+        className={onClick ? 'cursor-pointer select-none' : 'select-none'}
+        style={{ width: w, height: 10, borderRadius: 1, background: on ? '#f2eee0' : '#cdc9bc', transform: on ? 'translateY(1px)' : 'none' }}
+      />
+    </Tooltip>
   )
 }
 
@@ -156,17 +158,18 @@ function ControlStrip({ picture, setPicture, marker, setMarker, blue, setBlue, m
             above is the tally. */}
         <div className="flex flex-col items-center justify-center shrink-0" style={{ gap: 4 }}>
           <span aria-hidden className="rounded-full" style={{ width: 5, height: 5, background: tally ? '#7ec81e' : '#2b3a1a', boxShadow: tally ? '0 0 5px #7ec81e' : 'none' }} />
-          <span
-            onClick={onPower}
-            title={tally ? 'Power off' : 'Power on'}
-            className="cursor-pointer select-none"
-            style={{
-              width: 24, height: 26, borderRadius: 2,
-              background: tally ? '#f2eee0' : '#cdc9bc',
-              transform: tally ? 'translateY(1px)' : 'none',
-              boxShadow: tally ? 'inset 0 1px 2px rgb(0 0 0 / 0.35)' : 'none',
-            }}
-          />
+          <Tooltip label={tally ? 'Power off' : 'Power on'} asChild>
+            <span
+              onClick={onPower}
+              className="cursor-pointer select-none"
+              style={{
+                width: 24, height: 26, borderRadius: 2,
+                background: tally ? '#f2eee0' : '#cdc9bc',
+                transform: tally ? 'translateY(1px)' : 'none',
+                boxShadow: tally ? 'inset 0 1px 2px rgb(0 0 0 / 0.35)' : 'none',
+              }}
+            />
+          </Tooltip>
         </div>
       </div>
       <Grille />

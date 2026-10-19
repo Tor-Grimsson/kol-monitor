@@ -12,7 +12,7 @@ import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
 import Toggle from '../parametric/Toggle'
 import IconSelect from '../parametric/IconSelect'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Math ported from kol-radial/wavyCircleMath.js ---
@@ -135,11 +135,11 @@ function RadialGenPanel({
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'flex-start' }}>
           <IconSelect value={shape} onChange={onShapeChange} columns={2} items={[
             { value: 'default', icon: 'radial-default' },
-            { value: 'circle', icon: 'radial-circle' },
-            { value: 'triangle', icon: 'radial-triangle' },
-            { value: 'rect', icon: 'radial-rect' },
-            { value: 'star', icon: 'radial-star' },
-            { value: 'hex', icon: 'radial-hex' },
+            { value: 'circle', icon: 'circle' },
+            { value: 'triangle', icon: 'triangle' },
+            { value: 'rect', icon: 'rectangle' },
+            { value: 'star', icon: 'star' },
+            { value: 'hex', icon: 'polygon' },
             { value: 'random', icon: 'radial-random' },
           ]} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

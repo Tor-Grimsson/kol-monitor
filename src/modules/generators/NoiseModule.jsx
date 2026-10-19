@@ -6,7 +6,7 @@ import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
 import FlipToggle from '../parametric/FlipToggle'
@@ -45,7 +45,7 @@ function NoisePanel({
           </div>
         </div>
 
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
 
         {/* S&H — bottom-aligned pair */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
@@ -64,7 +64,7 @@ function NoisePanel({
           </div>
         </div>
 
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
 
         {/* Slew in + out stacked */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>

@@ -2,9 +2,10 @@ import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useNarrow } from '../hooks/useNarrow.js'
 import { MODULE_DEFS } from '../modules/registry'
-import Divider from '../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import Button from '../components/atoms/Button'
-import { PageShell, PageHeader } from '@kolkrabbi/kol-shell'
+import { PageShell } from '@kolkrabbi/kol-shell'
+import { PageHeader } from '@kolkrabbi/kol-component'
 
 const MODULE_SOURCES = import.meta.glob('../modules/**/*.jsx', { query: '?raw', import: 'default' })
 
@@ -43,7 +44,7 @@ export default function ModuleDetailPage() {
      direct load with no history falls back to the library (user, 2026-09-02) */
   const goBack = () => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate('/library', { state: { expandedModule: moduleType } }))
   const backLink = (
-    <span onClick={goBack} className="kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none">‹ Back</span>
+    <Button variant="nav" size="sm" onClick={goBack}>‹ Back</Button>
   )
   const mod = MODULE_DEFS[moduleType]
   const [fullView, setFullView] = useState(false)
@@ -80,14 +81,14 @@ export default function ModuleDetailPage() {
         {/* the subtitle is not decoration: without one the masthead is 35.2 tall
             against every other page's 65.2, and the requested id is the one fact
             the reader is missing */}
-        <PageHeader size="sm" voice="mono" title="Module not found" subtitle={moduleType} />
+        <PageHeader level="app" title="Module not found" subtitle={moduleType} />
       </PageShell>
     )
   }
 
   return (
     <PageShell mode={narrow ? 'scroll' : 'fixed'}>
-      <PageHeader size="sm" voice="mono" eyebrow={backLink} title={mod.label} subtitle={`${mod.hp}HP — ${mod.u}U — ${mod.category.charAt(0).toUpperCase() + mod.category.slice(1)}`} />
+      <PageHeader level="app" eyebrow={backLink} title={mod.label} subtitle={`${mod.hp}HP — ${mod.u}U — ${mod.category.charAt(0).toUpperCase() + mod.category.slice(1)}`} />
 
       <Divider className="mb-6" />
 
@@ -143,14 +144,14 @@ export default function ModuleDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Divider />
             <div style={{ display: 'flex', gap: 12 }}>
-              <Button variant="grey" size="md" onClick={goBack}>
+              <Button tone="grey" size="md" onClick={goBack}>
                 Back
               </Button>
-              <Button variant="grey" size="md" onClick={() => navigate(`/create?insert=${moduleType}`)}>
+              <Button tone="grey" size="md" onClick={() => navigate(`/create?insert=${moduleType}`)}>
                 Insert
               </Button>
               {sourceKey && (
-                <Button variant="grey" size="md" onClick={loadSource}>
+                <Button tone="grey" size="md" onClick={loadSource}>
                   Code
                 </Button>
               )}

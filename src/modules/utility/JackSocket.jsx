@@ -1,11 +1,11 @@
-// JackSocket — the WIRING seam over @kolkrabbi/kol-controls' presentational jack
+// JackSocket — the WIRING seam over @kolkrabbi/kol-hardware' presentational jack
 // (KolControlsPackage, adopted 2026-09-01). Drag-to-patch, the registry, the
 // pending cable and cable visibility are this repo's; they become the package's
 // `active · pending · dimPending · cablesHidden · color · onPointerDown` props.
 // The local implementation is retired to _tmp/2026-09-01-controls-adoption/.
 
 import { useCallback } from 'react'
-import { JackSocket as CtlJackSocket } from '@kolkrabbi/kol-controls'
+import { JackSocket as CtlJackSocket } from '@kolkrabbi/kol-hardware'
 import { usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 import { useModuleRegistry } from '../../hooks/useModuleRegistry.jsx'
 

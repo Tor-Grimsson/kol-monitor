@@ -2,7 +2,7 @@
 // Combines a CV input jack with a slider in a flex row
 
 import LabeledJack from './LabeledJack'
-import { Fader } from '@kolkrabbi/kol-controls'
+import Fader from './Fader'
 
 export default function CvSlider({ port, moduleId, active, signalRef, value, onChange, label, min = 0, max = 100, step = 1, jackSize = 'sm' }) {
   return (

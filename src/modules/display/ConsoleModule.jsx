@@ -9,9 +9,9 @@ import { readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
-import { Fader } from '@kolkrabbi/kol-controls'
+import Fader from '../parametric/Fader'
 import Toggle from '../parametric/Toggle'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 import { drawSignal } from './drawSignal'
 
@@ -54,11 +54,11 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
               </div>
               <Toggle value={!mutes[i]} onChange={() => setMutes[i](!mutes[i])} label="on" size="sm" />
             </div>
-            {i < 3 && <Divider variant="vertical" />}
+            {i < 3 && <Divider variant="vertical" height="fill" />}
           </div>
         ))}
 
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
 
         {/* Send/Return section */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: '100%', gap: 4 }}>
@@ -77,7 +77,7 @@ function ConsolePanel({ canvasRef, lvlA, lvlB, lvlC, lvlD, s1A, s1B, s1C, s1D, s
           </div>
         </div>
 
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
 
         {/* Master strip */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', gap: 3 }}>

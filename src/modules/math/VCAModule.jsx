@@ -8,7 +8,7 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function VCAPanel({ enabled, onToggle, bypass, onBypass, id,
@@ -23,14 +23,14 @@ function VCAPanel({ enabled, onToggle, bypass, onBypass, id,
           <div style={rowStyle}>
             <LabeledJack type="in" port="in1" moduleId={id} active={in1Conn} signalRef={in1Ref} label="in" />
             <LabeledJack type="in" port="cv1" moduleId={id} active={cv1Conn} signalRef={cv1Ref} label="cv" />
-            <Divider variant="vertical" className="py-1.5" />
+            <Divider variant="vertical" height="fill" className="py-1.5" />
             <LabeledJack type="out" port="out1" moduleId={id} signalRef={out1Ref} label="out" />
           </div>
           <Divider />
           <div style={rowStyle}>
             <LabeledJack type="in" port="in2" moduleId={id} active={in2Conn} signalRef={in2Ref} label="in" />
             <LabeledJack type="in" port="cv2" moduleId={id} active={cv2Conn} signalRef={cv2Ref} label="cv" />
-            <Divider variant="vertical" className="py-1.5" />
+            <Divider variant="vertical" height="fill" className="py-1.5" />
             <LabeledJack type="out" port="out2" moduleId={id} signalRef={out2Ref} label="out" />
           </div>
         </div>

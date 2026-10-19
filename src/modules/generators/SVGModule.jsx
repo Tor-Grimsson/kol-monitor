@@ -10,6 +10,8 @@ import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
 import Dropdown from '@kolkrabbi/kol-component/molecules/Dropdown'
+import Button from '../../components/atoms/Button'
+import { useMediaPick } from '../../hooks/mediaPick'
 
 // Parse SVG text into { vertices: [[x,y]], edges: [[i,j]] }
 function parseSVG(svgText) {
@@ -347,12 +349,6 @@ async function loadBuiltinLibrary() {
 }
 
 function SVGPanel({ enabled, onToggle, current, names, onSelect, scale, onScaleChange, id, outputRef, clrRef, penRef, sclRef, onLoad }) {
-  const btnStyle = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: 3, borderRadius: 3,
-    backgroundColor: 'transparent', cursor: 'pointer',
-  }
-
   return (
     <Module label="SVG" enabled={enabled} onToggle={onToggle} u={1}>
       <div style={{ display: 'flex', height: '100%', padding: '4px 4px', gap: 6 }}>
@@ -360,9 +356,13 @@ function SVGPanel({ enabled, onToggle, current, names, onSelect, scale, onScaleC
         {/* Left: scl knob + dropdown + buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1, minWidth: 0, height: '100%' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Dropdown size="xs" variant="grey" value={current || 'library'} options={names.map((o) => ({ value: o, label: o }))} onChange={onSelect} />
-            <button className="kol-helper-8 text-fg-32 border border-fg-08" style={{ ...btnStyle }} onClick={onLoad}>Load</button>
-            <button className="kol-helper-8 text-fg-32 border border-fg-08" style={{ ...btnStyle }} onClick={() => onSelect(null)}>Clr</button>
+            {/* the Patch module's shape (2026-10-02 ruling): DS `Button size="xs"`, the panel rung, beside
+              * an outline dropdown — line-height 0 so the dropdown's inline-block root is its trigger's 22px */}
+            <div style={{ display: 'flex', lineHeight: 0 }}>
+              <Dropdown size="xs" tone="outline" value={current || 'library'} options={names.map((o) => ({ value: o, label: o }))} onChange={onSelect} />
+            </div>
+            <Button tone="outline" size="xs" onClick={onLoad}>Load</Button>
+            <Button tone="outline" size="xs" onClick={() => onSelect(null)}>Clr</Button>
           </div>
           <CvKnob port="scl" moduleId={id} signalRef={sclRef} value={scale} onChange={onScaleChange} label="scale" variant="row-right" direction="horizontal" />
         </div>
@@ -422,29 +422,37 @@ export default function SVGModule({ id = 'svg1', init, preview }) {
     fileRef.current?.click()
   }, [])
 
+  /* one way an SVG enters the module — its own file input, or a file picked in the rail's Media */
+  const ingest = useCallback((name, text) => {
+    const parsed = parseSVG(text)
+    setSvgLib(prev => {
+      const exists = prev.findIndex(s => s.name === name)
+      if (exists >= 0) {
+        const updated = [...prev]
+        updated[exists] = { name, data: parsed }
+        return updated
+      }
+      return [...prev, { name, data: parsed }]
+    })
+    setCurrentName(name)
+    parsedRef.current = parsed
+  }, [])
+
   const handleFile = useCallback((e) => {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
-      const text = ev.target.result
-      const parsed = parseSVG(text)
-      const name = file.name.replace(/\.svg$/i, '')
-      setSvgLib(prev => {
-        const exists = prev.findIndex(s => s.name === name)
-        if (exists >= 0) {
-          const updated = [...prev]
-          updated[exists] = { name, data: parsed }
-          return updated
-        }
-        return [...prev, { name, data: parsed }]
-      })
-      setCurrentName(name)
-      parsedRef.current = parsed
-    }
+    reader.onload = (ev) => ingest(file.name.replace(/\.svg$/i, ''), ev.target.result)
     reader.readAsText(file)
     e.target.value = ''
-  }, [])
+  }, [ingest])
+
+  /* the rail's Media picker (plan 13 W7, `mediaPick`) — an .svg lands here; anything else is not ours */
+  useMediaPick((item) => {
+    if (!/\.svg$/i.test(item.name)) return false
+    fetch(item.url).then(r => r.text()).then(text => ingest(item.name.replace(/\.svg$/i, ''), text)).catch(() => {})
+    return true
+  })
 
   const saveStateRef = useRef({})
   saveStateRef.current = { scale, currentName }

@@ -31,16 +31,16 @@ Not documentation — a work queue, deliberately outside `docs/`.
 verified by running it, cited by file. **The agent closes on that evidence.**
 Parking, declaring stale, reopening and any design decision stay the **user's call**.
 
-## Queue — 1 entry
+## Queue — 0 entries
 
 | | Entry | About | Staged | State |
 |---|---|---|---|---|
-| 🟠 | [RackTierFullConsumption](inbox/RackTierFullConsumption.md) | The six full-consumption greps, run **and worked** 2026-08-30 against theme 0.96.0 · component 0.131.0. Check 2 **56 → 9** (every survivor a stated deviation), check 6 **2 → 0**, shadowed selectors **31 → 0**, local CSS **1160 → 841** lines, 7 dead atoms retired | 2026-08-30 | `addressed` — build green, lint count unchanged at 2335. **Not closed:** four surfaces still want your eye (stage clock detail · Workbench pill · Oscilloscope input+trigger · CaseHpDialog slider). **Both calls are RULED** — the two rack widgets keep their names as a permanent stated deviation (rename declined 2026-08-30), and `LibraryPage`'s button overrides were dropped; written back into the ticket 2026-09-01, do not re-raise |
 
 ## Closed
 
 | | Entry | About | Staged | Closed | State |
 |---|---|---|---|---|---|
+| 🟢 | [RackTierFullConsumption](done/RackTierFullConsumption.md) | The six full-consumption greps, 2026-08-30 | 2026-08-30 | `closed` 2026-10-17 — **superseded by plan 13** (the four surfaces it waited on are KOL components now); the user: old, irrelevant |
 | 🟢 | [SettingsMastheadCluster](done/SettingsMastheadCluster.md) | The settings masthead's control row is `SettingsScaffold`'s now (kol-shell 0.27.0) — picker · theme toggle · gear, order and gap and tone the DS's. Monitor and kol-mirror had passed **nothing** into the old raw `header.actions` slot, which is the whole of why three settings pages did not match | 2026-09-01 | 2026-09-01 | `addressed` — adopted on the full set (**shell 0.31.0 · theme 0.116.0 · component 0.149.0 · framework 0.36.0**, each tarball-diffed). `themeToggle` only: no `picker` (nothing to pick), no `onOpenSettings` (no drawer — a gear that opens nothing is worse than none). The toggle **moved** out of the body's Display row rather than being added beside it, matching kol-fxr's reference render. Build green, lint unchanged at 2335. **Closed 2026-09-01 — browser-verified** at 1440 and 390 (`_tmp/2026-09-01-mobile-qa/qa-settings-1440.png` · `qa-settings-390.png`): the cluster renders, the toggle sits alone in the masthead and appears exactly once on the page |
 | 🟢 | [ShellSettingsPairRetired](done/ShellSettingsPairRetired.md) | kol-shell 0.21.0 retired its own `SettingsSection` + `LabelRow` — second implementations of kol-component's `LabeledControlSection` + `SettingsRow`, under the user's *"dont ship duplicate components"* ruling. No alias, no deprecation window | 2026-08-30 | 2026-09-01 | `closed` — **already done when it landed**. The swap shipped 2026-08-30 (session 69), forced by the bump: 0.24.0 broke the build on `SettingsPage.jsx` and the migration was the only way past it. `src/pages/SettingsPage.jsx:1-2` is the ticket's diff verbatim; both prop renames and both stated render deltas are in the body. Green on shell 0.31.0. Nothing was owed |
 | 🟢 | [ShellHomeSystemAdoption](done/ShellHomeSystemAdoption.md) | The shared app tier (kol-shell 0.8.0 · component 0.105.0 · theme 0.71.0 · framework 0.28.0 · icons 0.20.0 · brand 0.1.3) adopted on kol-fxr's wiring: Home on `CatalogPage`, Settings on `SettingsShortcuts` / `SettingsLinks` / `SettingsColophon`, `AppShell railToggleKey` + `touch="overlay"`, `nav-*` + logomark from the DS, the theme boot script, `voice="mono"`, no `GridCard` left, the t-shirt type stops retired | 2026-08-27 | 2026-08-27 | `closed` — build green, `dist/index.html` carries the boot script; Library + Create stay on `ContentFilters` + the cards directly (seams filed as `ShellHomeSystemMonitorGaps`). Visual check the user's |
@@ -53,10 +53,34 @@ _(none yet — ownership, deferral and context notes land in `archive/`)_
 
 Tickets this ledger does **not** govern — each row names the destination ledger
 that does. The **Remainder** is this repo's to do; the state is theirs to report.
-All four went to **kol-ds-ui** — `~/dev/projects/kol-ds-ui/lobby/INDEX.md`.
+All went to **kol-ds-ui** — `~/dev/projects/kol-ds-ui/lobby/INDEX.md`.
 
 | | Receipt | Last known | Remainder here |
 |---|---|---|---|
+| 🟢 | [ShortcutsOverlayCategories](outbox/ShortcutsOverlayCategories.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.272.0 · kol-shell 0.69.0** | none — adopted 2026-10-18 |
+| 🟢 | [SignalIconsFromMonitor](outbox/SignalIconsFromMonitor.md) | 🟢 `closed` 2026-10-18 — **kol-icons 0.40.0** | 📌 video-off missing in kol-icons; then retire src/icons/ |
+| 🟢 | [IconVideoOff](outbox/IconVideoOff.md) | 🟢 `closed` 2026-10-18 — **kol-icons 0.41.0** | none — adopted 2026-10-18 |
+| 🟢 | [DividerHeightFill](outbox/DividerHeightFill.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.276.0** | none — adopted 2026-10-18 |
+| 🟢 | [PageHeaderAppLevel](outbox/PageHeaderAppLevel.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.277.0 · kol-shell 0.72.0** | none — adopted 2026-10-18 |
+| 🟢 | [PageHeaderAppLevelDisplay](outbox/PageHeaderAppLevelDisplay.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.279.0 · kol-theme 0.177.0** | none — adopted 2026-10-18 |
+| 🟢 | [SettingsRowTextKeepsLabel](outbox/SettingsRowTextKeepsLabel.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.271.0** | none — adopted 2026-10-18 |
+| 🟢 | [SettingsRowMonoBaseline](outbox/SettingsRowMonoBaseline.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.269.0** | none — adopted 2026-10-18: `SettingsRow text` |
+| 🟢 | [ShortcutsOverlayList](outbox/ShortcutsOverlayList.md) | 🟢 `closed` 2026-10-18 — **kol-shell 0.68.0 · kol-component 0.268.0** | keep or retire `ShortcutsRail` (⇧S) — the user's call |
+| 🟢 | [HubDevChrome](outbox/HubDevChrome.md) | 🟢 `closed` 2026-10-18 — **kol-shell 0.67.0** | none — adopted 2026-10-18 |
+| 🟢 | [TabsStackedLayout](outbox/TabsStackedLayout.md) | 🟢 `closed` 2026-10-17 — **kol-component 0.266.0** | none — adopted 2026-10-18: the Dev tab's stacked row is `TabsRow look="stacked"`, no override |
+| 🟢 | [RailOverlay](outbox/RailOverlay.md) | 🟢 `closed` 2026-10-17 — **kol-component 0.266.0** | none — adopted 2026-10-18: the edit rail is `Rail side="bottom" resizable`, over the rack |
+| 🟢 | [AppLoader](outbox/AppLoader.md) | 🟢 `closed` 2026-10-17 — **kol-framework 0.50.0** | none — adopted 2026-10-18: `loaderApp` + `devFavicon` + `hideLoaderApp()` |
+| 🔵 | [CommandOverlayModes](outbox/CommandOverlayModes.md) | 🔵 `filed` 2026-10-17 — ⌘K moded, two-layer, route-aware | adopt for ⌘K add-module (rack + create) and `S`; tag `SHORTCUT_SECTIONS` with routes |
+| 🔵 | [CompareGridDevTab](outbox/CompareGridDevTab.md) | 🔵 `filed` 2026-10-17 — `CompareGrid` + the Hub dev-page recipe | rebuild the Dev tab's Icons + Divider on `CompareGrid` |
+| 🟢 | [ColorPickerPopover](outbox/ColorPickerPopover.md) | 🟢 `closed` 2026-10-17 — **kol-component 0.264.0** | none — adopted 2026-10-17: the Dev tab's Color picker is the KOL's; the atom retired to `_tmp/2026-10-17-colorpicker-atom/` |
+| 🟢 | [identity-monitor](outbox/identity-monitor.md) | 🟢 `closed` 2026-10-17 — **kol-icons 0.39.0** | none — the mark is live here |
+| 🟢 | [MediaPickerHeaderCentred](outbox/MediaPickerHeaderCentred.md) | 🟢 `closed` 2026-10-16 — **kol-component 0.263.0** | none — adopted 2026-10-16: the header row centres on the wordmark (measured 139.6 vs 140.5), override dropped
+| 🟢 | [MediaPickerCloseOnControlRow](outbox/MediaPickerCloseOnControlRow.md) | 🟢 `closed` 2026-10-16 — **kol-component 0.262.0** | none — superseded by `MediaPickerHeaderCentred` — its `self-end` ask was wrong
+| 🟢 | [ShellSearchDisabledRow](outbox/ShellSearchDisabledRow.md) | 🟢 `closed` 2026-10-16 — **kol-component 0.262.0** | none — adopted 2026-10-16: ⌘K no-room modules are `disabled` rows with `disabledHint: 'no room'`
+| 🟢 | [HardwareNativeTitle](outbox/HardwareNativeTitle.md) | 🟢 `closed` 2026-10-16 — **kol-hardware 0.5.0** | none — adopted 2026-10-16: 0 native `title` in the rack (was 318 jacks + mode keys), no call-site change
+| 🟢 | [MenuItemXsTriggerType](outbox/MenuItemXsTriggerType.md) | 🟢 `closed` 2026-10-16 — **kol-component 0.262.0** | none — adopted 2026-10-16 on 0.263.0: the utilities carry dropped from Scope+'s `RefDropdown`
+| 🟢 | [StudioLibraryChildren](outbox/StudioLibraryChildren.md) | 🟢 `closed` 2026-10-15 — **kol-shell 0.64.0** | none — adopted 2026-10-15: `library.children` + `create.shell: false` on kol-shell's `AppStudio`; the Studio fork retired to `_tmp/2026-10-15-rail-slot-retired/`
+| 🟢 | [NavRailConsumerSlot](outbox/NavRailConsumerSlot.md) | 🟢 `closed` 2026-10-15 — **kol-shell 0.64.0** | none — adopted 2026-10-15: `RailSlotProvider` / `useRailSlot` from kol-shell, `railComponent` dropped; `RackRail.jsx` + `useRailSlot.jsx` retired to `_tmp/2026-10-15-rail-slot-retired/`
 | 🟢 | [ShellDrawerCloseOnSamePath](outbox/ShellDrawerCloseOnSamePath.md) | 🟢 `closed` 2026-09-02 — **kol-shell 0.40.0**: the drawer folds on a same-path rung | none — adopted 2026-09-02, shim removed, WebKit-checked |
 | 🟢 | [ContentCardActionsInsetShorthand](outbox/ContentCardActionsInsetShorthand.md) | 🟢 `closed` 2026-09-02 — **kol-component 0.162.0**: the catalog card's `actions` inset takes single values | none — bumped 2026-09-02; monitor's INSERT is its own strip under the card by the user's ruling, the slot is unused here |
 | 🟢 | [RailGrabTapIsALine](outbox/RailGrabTapIsALine.md) | 🟢 `closed` 2026-09-02 — **kol-shell 0.39.0 · kol-theme 0.128.0**: the opener is the strip, thicker under a coarse pointer; the disc and its glyph are gone from NavRail | none — adopted 2026-09-02; the fork matches NavRail's button exactly |
@@ -136,3 +160,28 @@ All four went to **kol-ds-ui** — `~/dev/projects/kol-ds-ui/lobby/INDEX.md`.
 | 2026-09-02 | **`ShellDrawerCloseOnSamePath` returned and adopted** — kol-shell 0.40.0; the local Escape shim is gone |
 | 2026-09-02 | **`IconButtonNoFlexShrink` filed** — the stage's bottom row: DS icon-only buttons rendered 22×32 in WebKit beside 32px neighbours; the row is a shrink-to-fit flex cluster and WebKit sizes it from the glyph, not the rule. Ask: `flex: none` on `.kol-btn-icon`. Row fixed here by giving it a definite width |
 | 2026-09-02 | **`IconButtonNoFlexShrink` returned and adopted** — kol-theme 0.129.0, dev restarted `--force`; the stage row re-measured 32×32 at 390 and 1440. The row keeps its definite width (`left-4 right-4 justify-end`) |
+| 2026-10-15 | **`StudioLibraryChildren` + `NavRailConsumerSlot` filed into kol-ds-ui** — first session on the MBP; the AppStudio adoption (kol-mirror's 2026-10-14 move, DS's 10-02 bump rehearsal) needs the Library slot to carry the detail pages and the rail to carry the rack's catalog without a fork |
+| 2026-10-15 | **`StudioLibraryChildren` + `NavRailConsumerSlot` returned and adopted the same sitting** — kol-shell 0.64.0 ships `library.children`, `create.shell: false` and `RailSlotProvider` / `useRailSlot`. Monitor is on the bare `AppStudio` with no fork: the Studio copy, `RackRail.jsx` and `useRailSlot.jsx` are in `_tmp/2026-10-15-rail-slot-retired/`. Verified on a preview: rail 48 → 264 with the catalog in the DS slot, `/library/lfo` under the Library rung, `/create` bare on one fixed PageShell, 0 console errors |
+| 2026-10-15 | **`MenuItemXsTriggerType` filed into kol-ds-ui** — plan 13 W3.3: Scope+'s EX / REF on `MenuItem size="xs"` came out at 12px type in a 22px box; carried with utilities |
+| 2026-10-15 | **`HardwareNativeTitle` filed into kol-ds-ui** — plan 13 W5.1: monitor's own native titles cleared (stage, bezel, dock, Magneto, Create); the rest are rendered by kol-hardware |
+| 2026-10-15 | **`ShellSearchDisabledRow` filed into kol-ds-ui** — plan 13 W5.3: ⌘K's no-room modules carried as a `group` heading |
+| 2026-10-16 | **`MediaPickerCloseOnControlRow` filed into kol-ds-ui** — the user's screenshot of the Media picker's floating ×; root cause the header's baseline row, carried with one rule |
+| 2026-10-16 | **`MediaPickerHeaderCentred` filed into kol-ds-ui** — my MediaPickerCloseOnControlRow ask (`self-end`) was wrong; the user's lines showed the whole row below the wordmark |
+| 2026-10-16 | **Five receipts closed on kol-component 0.263.0 + kol-hardware 0.5.0** — MenuItemXsTriggerType · HardwareNativeTitle · ShellSearchDisabledRow · MediaPickerHeaderCentred adopted and every local carry dropped; MediaPickerCloseOnControlRow superseded. Verified on a preview: 0 native titles in the rack, ⌘K disabled rows, the picker header centred with no override |
+| 2026-10-17 | **App icon landed and `identity-monitor` filed into kol-ds-ui** — `mon-fxr-m1.25-gap1.5` as touch icon, favicon, manifest icons and OG (`pnpm icons`); the identity glyph to kol-icons |
+| 2026-10-17 | **`ColorPickerPopover` filed into kol-ds-ui** — the KOL has no colour picker; monitor's atom is the reference, reviewed on the new Dev tab. `identity-monitor` receipt row synced to 🟢 (returned in kol-icons 0.39.0) |
+| 2026-10-17 | **`ColorPickerPopover` adopted** — kol-component 0.264.0 (and kol-icons 0.39.0, monitor's identity glyph); the local atom retired to `_tmp/2026-10-17-colorpicker-atom/`, the Dev tab's Color picker is the KOL's. Build green |
+| 2026-10-17 | **`CompareGridDevTab` and `CommandOverlayModes` filed into kol-ds-ui** — plan 14 W1.1 + W2/W3.2 |
+| 2026-10-17 | **`RackTierFullConsumption` closed** — superseded by plan 13; moved to `done/` |
+| 2026-10-17 | **`RailOverlay` and `AppLoader` filed into kol-ds-ui** — plan 14 W5 + W6 |
+| 2026-10-17 | **`TabsStackedLayout` filed into kol-ds-ui** — from the Dev page's Tabs review |
+| 2026-10-18 | **`AppLoader`, `RailOverlay`, `TabsStackedLayout` adopted** — kol-component 0.266.0 · kol-shell 0.66.0 · kol-framework 0.50.0. The local dev-favicon plugin is gone, the edit rail pushes the rack up instead of floating over it, the Dev tab's stacked tabs carry no override. Build green; not browser-verified |
+| 2026-10-18 | **`HubDevChrome` filed into kol-ds-ui** — Dev row back under Stage, chip tabs, no description line. Loader wordmark sized to 64px tall (`size: 166`). Bumped component 0.267.0 · framework 0.51.0 · theme 0.175.0 (PageHeader `level="section"`) |
+| 2026-10-18 | **`HubDevChrome` adopted** — kol-shell 0.67.0: Dev row under Stage, chip tabs, no description line; `devTabs.jsx` drops `description` |
+| 2026-10-18 | **`ShortcutsOverlayList` filed into kol-ds-ui** — no search, this page only, no Run, `S` toggles. Side-rail version on ⇧S (`src/overlays/ShortcutsRail.jsx`) for comparison |
+| 2026-10-18 | **`SettingsRowMonoBaseline` filed into kol-ds-ui** — SettingsRow on mono, baseline, no strut |
+| 2026-10-18 | **`SignalIconsFromMonitor` filed into kol-ds-ui** — 20 shapes kol-icons lacks into the signal set; grad-rad · grid · clr-mono · dith-melt · dith-xhatch toward monitor's drawing |
+| 2026-10-18 | **`IconVideoOff` filed into kol-ds-ui** — `video-off`, the last local icon |
+| 2026-10-18 | **`DividerHeightFill` filed into kol-ds-ui** — vertical Divider that stretches to its row |
+| 2026-10-18 | **`PageHeaderAppLevel` filed into kol-ds-ui** — header level between page and section |
+| 2026-10-18 | **`PageHeaderAppLevelDisplay` filed into kol-ds-ui** — corrects the mono app level to display-02 |

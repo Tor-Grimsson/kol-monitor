@@ -1,0 +1,7 @@
+# Monitor is a front door — indexable. The dev pages are not.
+User-agent: *
+Allow: /
+Disallow: /design
+Disallow: /dev/
+
+Sitemap: https://monitor.kolkrabbi.io/sitemap.xml

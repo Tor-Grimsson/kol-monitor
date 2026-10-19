@@ -4,18 +4,35 @@
     <meta charset="UTF-8" />
     <!-- kol-theme-boot: THEME_BOOT_SCRIPT from kol-framework, injected by vite.config.js -->
     <link rel="icon" type="image/svg+xml" href="/svg/favicon.svg" />
+    <!-- ADD TO HOME SCREEN (fxr's and mirror's shape, 2026-10-17): the icon is the favicon's mark on #121215 — dark,
+         because iOS's dark home-screen appearance greys a light web clip. `pnpm icons` regenerates the PNGs. -->
+    <link rel="apple-touch-icon" href="/touch-icons/apple-touch-icon-dark.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Monitor" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAFAFA" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121215" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Monitor — Modular Video Synthesizer</title>
-    <meta name="description" content="A browser-based modular video synthesizer built on the language of eurorack. 51 modules. Pure geometry. 60fps." />
-    <meta property="og:title" content="Monitor — Modular Video Synthesizer" />
-    <meta property="og:description" content="Where eurorack uses voltage, Monitor uses math. Patch cables, not pixel buffers." />
+    <title>Monitor</title>
+    <!-- SHARE METADATA (front-door, 2026-10-17 — the user's line, brand register; the family's bare name, so the unfurl
+         reads "Monitor · Kolkrabbi"). Static on purpose: link-preview crawlers never run the app's JavaScript.
+         Indexable — Monitor is a front door (Home, the walkthrough), like Mirror; FXR is the tool that isn't. -->
+    <meta name="description" content="A modular video synthesizer, eurorack for visuals." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://monitor.kolkrabbi.io" />
-    <meta property="og:image" content="https://monitor.kolkrabbi.io/previews/patches/init.png" />
+    <meta property="og:site_name" content="Kolkrabbi" />
+    <meta property="og:title" content="Monitor" />
+    <meta property="og:description" content="A modular video synthesizer, eurorack for visuals." />
+    <meta property="og:url" content="https://monitor.kolkrabbi.io/" />
+    <meta property="og:image" content="https://monitor.kolkrabbi.io/og/monitor-wordmark.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Monitor" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Monitor — Modular Video Synthesizer" />
-    <meta name="twitter:description" content="Where eurorack uses voltage, Monitor uses math. Patch cables, not pixel buffers." />
-    <meta name="twitter:image" content="https://monitor.kolkrabbi.io/previews/patches/init.png" />
+    <meta name="twitter:title" content="Monitor" />
+    <meta name="twitter:description" content="A modular video synthesizer, eurorack for visuals." />
+    <meta name="twitter:image" content="https://monitor.kolkrabbi.io/og/monitor-wordmark.png" />
+    <link rel="canonical" href="https://monitor.kolkrabbi.io/" />
     <script defer src="https://kol-umami.vercel.app/script.js" data-website-id="fcd04534-5dcd-44a3-b7b1-256cbdf49ab9"></script>
   </head>
   <body>

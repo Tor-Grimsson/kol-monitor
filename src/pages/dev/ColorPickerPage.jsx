@@ -1,8 +1,8 @@
-// ColorPickerPage — review surface for the ColorPicker atom before porting to kol-ds-ui.
-// Access at /dev/color-picker
+// ColorPickerPage — the Dev tab's Color picker: the KOL's ColorPickerPopover (kol-component 0.264.0, filed from
+// monitor's own atom as ColorPickerPopover 2026-10-17) on both themes.
 
 import { useState } from 'react'
-import ColorPicker from '../../components/atoms/ColorPicker'
+import ColorPicker from '@kolkrabbi/kol-component/organisms/ColorPickerPopover'
 
 function Row({ label, note, value, onChange, defaultValue }) {
   return (

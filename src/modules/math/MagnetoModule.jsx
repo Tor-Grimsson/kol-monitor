@@ -14,9 +14,10 @@ import Knob from '../parametric/Knob'
 import Toggle from '../parametric/Toggle'
 import IconButton from '../parametric/IconButton'
 import FlipToggle from '../parametric/FlipToggle'
-import { PanelLabel } from '@kolkrabbi/kol-controls'
-import Divider from '../../components/atoms/Divider'
+import { PanelLabel } from '@kolkrabbi/kol-hardware'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
+import { Tooltip } from '@kolkrabbi/kol-component/utilities/Popover'
 
 const BUF_SIZE = 120 // ring-buffer slot count
 const MAX_DELAY_SECONDS = 2.0 // total time window the buffer represents (FPS-independent)
@@ -187,19 +188,21 @@ function MagnetoPanel({
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 16 }} title="Palette: 70s / neon / mono">
-                    <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>palette</span>
-                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <Toggle value={true} onChange={() => onPaletteChange((palette + 1) % 3)} size="md" />
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        {['70s', 'neon', 'mono'].map((p, i) => (
-                          <span key={p} className={`kol-helper-xxxxs ${palette === i ? 'text-fg-72' : 'text-fg-16'}`} style={{
-                            textTransform: 'uppercase', lineHeight: 1,
-                          }}>{p}</span>
-                        ))}
+                  <Tooltip label="Palette: 70s / neon / mono" asChild>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 16 }}>
+                      <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>palette</span>
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <Toggle value={true} onChange={() => onPaletteChange((palette + 1) % 3)} size="md" />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          {['70s', 'neon', 'mono'].map((p, i) => (
+                            <span key={p} className={`kol-helper-xxxxs ${palette === i ? 'text-fg-72' : 'text-fg-16'}`} style={{
+                              textTransform: 'uppercase', lineHeight: 1,
+                            }}>{p}</span>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Tooltip>
                   <Knob value={speedPitch} onChange={onSpeedPitchChange} label="spd/pitch" size="xl" />
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 16 }}>
                     <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>tap</span>
@@ -237,17 +240,19 @@ function MagnetoPanel({
                     </div>
                   </div>
                   {/* Layer — head z-order within wet trails */}
-                  <div style={{ paddingTop: 8, alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }} title="Head z-order: 1234 / 4321 / alternating">
-                    <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>layer</span>
-                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <FlipToggle value={layer} onChange={onLayerChange} positions={3} />
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
-                        <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>1234</span>
-                        <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>4321</span>
-                        <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>alt</span>
+                  <Tooltip label="Head z-order: 1234 / 4321 / alternating" asChild>
+                    <div style={{ paddingTop: 8, alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                      <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>layer</span>
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <FlipToggle value={layer} onChange={onLayerChange} positions={3} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
+                          <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>1234</span>
+                          <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>4321</span>
+                          <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>alt</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Tooltip>
                 </div>
 
                 {/* 4 heads */}
@@ -304,17 +309,19 @@ function MagnetoPanel({
                     </div>
                   </div>
                   {/* Order — controls z-layering of dry vs wet trails */}
-                  <div style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }} title="Layer order: wet on top / mix (tbd) / dry on top (disco)">
-                    <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>order</span>
-                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <FlipToggle value={order} onChange={onOrderChange} positions={3} />
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
-                        <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>wet</span>
-                        <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>mix</span>
-                        <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>dry</span>
+                  <Tooltip label="Layer order: wet on top / mix (tbd) / dry on top (disco)" asChild>
+                    <div style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                      <span className="kol-helper-8 text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>order</span>
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <FlipToggle value={order} onChange={onOrderChange} positions={3} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
+                          <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>wet</span>
+                          <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>mix</span>
+                          <span className="kol-helper-xxxxs text-fg-32" style={{ textTransform: 'uppercase', lineHeight: 1 }}>dry</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Tooltip>
                 </div>
               </div>
 

@@ -9,7 +9,7 @@ import { scalar, readScalar, readCv } from '../../hooks/signals'
 import Module from '../utility/Module'
 import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../parametric/LabeledJack'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import Knob from '../parametric/Knob'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
@@ -28,7 +28,7 @@ function RingModPanel({ depth, enabled, onToggle, bypass, onBypass, onDepthChang
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 8 }}>
           <LabeledJack type="in" port="a" moduleId={id} active={aConnected} signalRef={aRef} label="a" />
           <LabeledJack type="in" port="b" moduleId={id} active={bConnected} signalRef={bRef} label="b" />
-          <Divider variant="vertical" className="py-1.5" />
+          <Divider variant="vertical" height="fill" className="py-1.5" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={outRef} label="out" />
         </div>
       </div>

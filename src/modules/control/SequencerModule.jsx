@@ -11,7 +11,7 @@ import CvKnob from '../parametric/CvKnob'
 import IconSelect from '../parametric/IconSelect'
 import FlipToggle from '../parametric/FlipToggle'
 import LED from '../parametric/LED'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const STEPS_PER_PAGE = 8

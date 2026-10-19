@@ -16,7 +16,8 @@ import Knob from '../parametric/Knob'
 import Input from '@kolkrabbi/kol-component/atoms/Input'
 import Stepper from '@kolkrabbi/kol-component/molecules/Stepper'
 import FlipToggle from '../parametric/FlipToggle'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
+import Button from '../../components/atoms/Button'
 
 const BUF_LEN = 128
 const CHANNELS = ['a', 'b', 'c', 'd']
@@ -93,42 +94,19 @@ function RecorderPanel({
               labelB="rndr"
               variant="horizontal"
             />
-            <button
-              onClick={onRecord}
-              disabled={isActive}
-              className="kol-helper-8"
-              style={{
-                background: isActive ? 'var(--kol-ctl-led-red)' : 'color-mix(in srgb, var(--kol-ctl-led-red) 40%, transparent)',
-                color: 'var(--kol-color-ab-white)', border: 'none', borderRadius: 2,
-                padding: '2px 8px', cursor: isActive ? 'default' : 'pointer', minWidth: 36,
-              }}
-            >
+            {/* DS `Button` at the panel rung (plan 13 W3.2, 2026-10-15). The ruling named kol-hardware's
+              * `IconButton`, but that key is icon-only and these are text keys — REC · RENDER · STOP · CLR ·
+              * SAVE stay verbatim, so the DS Button carries them: REC on `danger`, SAVE a download link. */}
+            <Button variant="danger" size="xs" onClick={onRecord} disabled={isActive}>
               {status === 'rendering' ? 'RENDER' : 'REC'}
-            </button>
-            <button
-              onClick={isActive ? onStop : onClear}
-              className={`kol-helper-8 bg-fg-08 ${(isActive || status === 'done') ? 'text-fg-96' : 'text-fg-32'}`}
-              style={{
-                border: 'none', borderRadius: 2,
-                padding: '2px 8px',
-                cursor: (isActive || status === 'done') ? 'pointer' : 'default', minWidth: 36,
-              }}
-            >
+            </Button>
+            <Button tone="grey" size="xs" onClick={isActive ? onStop : onClear} disabled={!(isActive || status === 'done')}>
               {isActive ? 'STOP' : status === 'done' ? 'CLR' : 'STOP'}
-            </button>
+            </Button>
             {blobUrl && (
-              <a
-                href={blobUrl}
-                download={`${fileName || 'kol'}-${mode === 'offline' ? 'render' : 'realtime'}.webm`}
-                className="kol-helper-8"
-                style={{
-                  background: 'color-mix(in srgb, var(--kol-ctl-led-green) 40%, transparent)', color: 'var(--kol-color-ab-white)',
-                  borderRadius: 2, padding: '2px 8px', textDecoration: 'none',
-                  minWidth: 36, textAlign: 'center',
-                }}
-              >
+              <Button tone="outline" size="xs" href={blobUrl} download={`${fileName || 'kol'}-${mode === 'offline' ? 'render' : 'realtime'}.webm`}>
                 SAVE
-              </a>
+              </Button>
             )}
             {status === 'done' && fileSize != null && (
               <span className="kol-helper-8 text-fg-40">

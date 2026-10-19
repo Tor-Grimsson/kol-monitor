@@ -13,9 +13,9 @@ import LabeledJack from '../parametric/LabeledJack'
 import CvKnob from '../parametric/CvKnob'
 import IconButton from '../parametric/IconButton'
 import IconSelect from '../parametric/IconSelect'
-import { PanelLabel } from '@kolkrabbi/kol-controls'
+import { PanelLabel } from '@kolkrabbi/kol-hardware'
 import Toggle from '../parametric/Toggle'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 // --- Mode definitions ---
@@ -28,7 +28,7 @@ const ENGINE_MODES = [
 
 const FILTER_MODES = [
   { value: 'halftone', icon: 'dith-htone', text: 'htn' },
-  { value: 'flow', icon: 'dith-flow', text: 'flw' },
+  { value: 'flow', icon: 'dith-drift', text: 'flw' },
   { value: 'crosshatch', icon: 'dith-xhatch', text: 'xht' },
   { value: 'crt', icon: 'dith-crt', text: 'crt' },
   { value: 'glitch', icon: 'dith-glitch', text: 'gli' },
@@ -40,15 +40,15 @@ const FILTER_MODES = [
 const SHAPE_LIST = ['circle', 'rect', 'tri', 'oct', 'star', 'cross', 'hex', 'diamond', 'gear', 'flower']
 
 const SHAPE_ITEMS = [
-  { value: 'circle', icon: 'radial-circle' },
-  { value: 'rect', icon: 'radial-rect' },
-  { value: 'tri', icon: 'radial-triangle' },
+  { value: 'circle', icon: 'circle' },
+  { value: 'rect', icon: 'rectangle' },
+  { value: 'tri', icon: 'triangle' },
   { value: 'oct', icon: 'shape-octa' },
-  { value: 'star', icon: 'radial-star' },
+  { value: 'star', icon: 'star' },
   { value: 'cross', icon: 'dith-cross' },
-  { value: 'hex', icon: 'radial-hex' },
+  { value: 'hex', icon: 'polygon' },
   { value: 'diamond', icon: 'dith-diamond' },
-  { value: 'gear', icon: 'dith-gear' },
+  { value: 'gear', icon: 'settings-01' },
   { value: 'flower', icon: 'dith-flower' },
 ]
 
@@ -56,15 +56,15 @@ const SHAPE_ITEMS = [
 
 const ASCII_ITEMS = [
   { value: 'dot', icon: 'ascii-dot' },
-  { value: 'dash', icon: 'ascii-dash' },
+  { value: 'dash', icon: 'minus' },
   { value: 'pipe', icon: 'ascii-pipe' },
-  { value: 'slash', icon: 'ascii-slash' },
+  { value: 'slash', icon: 'line' },
   { value: 'back', icon: 'ascii-back' },
-  { value: 'equal', icon: 'ascii-equal' },
-  { value: 'plus', icon: 'ascii-plus' },
-  { value: 'x', icon: 'ascii-x' },
-  { value: 'hash', icon: 'ascii-hash' },
-  { value: 'block', icon: 'ascii-block' },
+  { value: 'equal', icon: 'sum' },
+  { value: 'plus', icon: 'plus' },
+  { value: 'x', icon: 'x' },
+  { value: 'hash', icon: 'hash-01' },
+  { value: 'block', icon: 'stop' },
 ]
 
 const ASCII_DENSITY_ORDER = ASCII_ITEMS.map(i => i.value)

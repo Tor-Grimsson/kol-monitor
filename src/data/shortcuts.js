@@ -4,17 +4,21 @@
 // because SettingsShortcuts lays sections out six columns × two, column-first.
 //
 // The section names are new copy (the flat list had none) — rename freely.
+//
+// `routes` (kol-shell 0.65.0, CommandOverlayModes): the `S` sheet shows the current page's sections first
+// and the rest muted under ELSEWHERE. App has none — it works everywhere. The keys themselves are already
+// page-local: `useKeybindings` is mounted by the rack alone.
 export const SHORTCUT_SECTIONS = [
   {
     section: 'App',
     items: [
-      { label: 'Jump to rail item (Home first)', combo: '⌥ then 1–5' },
-      { label: 'Settings (toggles back)', combo: ',' },
-      { label: 'Settings on the stage (its own drawer)', combo: ',' },
+      { label: 'Go to page', combo: '⌥ then 1–5' },
+      { label: 'Settings', combo: ',' },
     ],
   },
   {
     section: 'Rack',
+    routes: ['/rack'],
     items: [
       { label: 'Shortcuts', combo: 'S' },
       { label: 'Sidebar', combo: 'H' },
@@ -25,12 +29,14 @@ export const SHORTCUT_SECTIONS = [
   },
   {
     section: 'Stage',
+    routes: ['/stage'],
     items: [
-      { label: 'Show / hide modules', combo: 'H' },
+      { label: 'Modules', combo: 'H' },
     ],
   },
   {
     section: 'Cables',
+    routes: ['/rack'],
     items: [
       { label: 'Cable lock', combo: 'C' },
       { label: 'Cable visibility', combo: 'O' },
@@ -40,6 +46,7 @@ export const SHORTCUT_SECTIONS = [
   },
   {
     section: 'View',
+    routes: ['/rack'],
     items: [
       { label: 'Lock view', combo: 'L' },
       { label: 'Zoom in / out', combo: '+ / −' },
@@ -49,8 +56,9 @@ export const SHORTCUT_SECTIONS = [
   },
   {
     section: 'Pointer',
+    routes: ['/rack'],
     items: [
-      { label: 'Pan (drag)', combo: 'Space' },
+      { label: 'Pan', combo: 'Space' },
       { label: 'Zoom', combo: 'Alt+Scroll' },
       { label: 'Pan', combo: 'Scroll' },
       { label: 'Joystick axis lock', combo: 'Shift' },

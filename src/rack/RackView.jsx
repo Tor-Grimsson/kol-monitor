@@ -7,36 +7,17 @@ import { hpToPx, ROW_HEIGHT } from '../modules/utility/eurorack'
 import { findFreeOffset } from '../hooks/useRackState'
 import Case, { RackRow } from '../modules/utility/Case.jsx'
 import { ModuleEditContext } from '../modules/utility/Module.jsx'
-import Icon from '../icons/Icon.jsx'
+import Button from '../components/atoms/Button'
+import { Tooltip } from '@kolkrabbi/kol-component/utilities/Popover'
 
+/* the edit-mode reposition key — a DS icon button at the panel rung (plan 13 W4.2): the hover ladder is
+   the DS's, which is what the hand-rolled hover state was standing in for (a momentary pulse does not
+   survive the remount when the module moves); the name is a DS tooltip */
 function ChevronButton({ icon, onClick, title }) {
-  // Hover-driven active state — a simple momentary pulse doesn't survive the
-  // remount that happens when the module moves to a new offset. Inactive alpha
-  // is deliberately brighter than the shared IconButton default so chevrons
-  // read clearly against the panel without needing a hover.
-  const [hover, setHover] = useState(false)
   return (
-    <button
-      title={title}
-      onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 3,
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: hover ? '#e74c3c' : 'rgba(255,255,255,0.24)',
-        backgroundColor: hover ? 'rgba(231,76,60,0.15)' : 'transparent',
-        color: hover ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.64)',
-        cursor: 'pointer',
-        transition: 'border-color 100ms, background-color 100ms, color 100ms',
-      }}
-    >
-      <Icon name={icon} size={10} />
-    </button>
+    <Tooltip label={title} triggerClassName="inline-flex shrink-0">
+      <Button tone="outline" size="xs" iconOnly={icon} iconSize={10} aria-label={title} onClick={onClick} />
+    </Tooltip>
   )
 }
 
@@ -75,7 +56,7 @@ function ArrowOverlay({ onLeft, onRight, onUp, onDown }) {
 // (no arrows visible yet) shows instantly — only the cross-module jump waits.
 const SWITCH_DWELL_MS = 400
 
-const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, editMode, siblingIdx, siblingCount, activeArrowsId, requestActivate, cancelActivate, onSendToWorkbench, onSwapInRow, onMoveToRow }) {
+const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, caseHp, editMode, siblingIdx, siblingCount, activeArrowsId, requestActivate, cancelActivate, onSendToWorkbench, onSwapInRow, onMoveToRow }) {
   const def = MODULE_DEFS[mod.type]
   if (!def) return null
   const Comp = def.component
@@ -88,8 +69,8 @@ const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, editMode, 
     const targetHeight = u === 1 ? '1u' : '3u'
     const above = rows[rowIdx - 1]
     const below = rows[rowIdx + 1]
-    const aboveRow = above && above.height === targetHeight && findFreeOffset(above.modules, mod.hp) !== null ? above : null
-    const belowRow = below && below.height === targetHeight && findFreeOffset(below.modules, mod.hp) !== null ? below : null
+    const aboveRow = above && above.height === targetHeight && findFreeOffset(above.modules, mod.hp, caseHp) !== null ? above : null
+    const belowRow = below && below.height === targetHeight && findFreeOffset(below.modules, mod.hp, caseHp) !== null ? below : null
     arrows = {
       onLeft: siblingIdx > 0 ? () => onSwapInRow(row.id, mod.id, 'left') : null,
       onRight: siblingIdx >= 0 && siblingIdx < siblingCount - 1 ? () => onSwapInRow(row.id, mod.id, 'right') : null,
@@ -126,7 +107,7 @@ const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, editMode, 
   )
 })
 
-const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, editMode, activeArrowsId, requestActivate, cancelActivate, onSendToWorkbench, onSwapInRow, onMoveToRow, rowRefs }) {
+const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, caseHp, editMode, activeArrowsId, requestActivate, cancelActivate, onSendToWorkbench, onSwapInRow, onMoveToRow, rowRefs }) {
   const sorted = useMemo(() =>
     [...row.modules].sort((a, b) => a.offset - b.offset),
     [row.modules]
@@ -144,6 +125,7 @@ const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, editMod
             row={row}
             rowIdx={rowIdx}
             rows={rows}
+            caseHp={caseHp}
             editMode={editMode}
             siblingIdx={idx}
             siblingCount={sorted.length}
@@ -160,7 +142,7 @@ const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, editMod
   )
 })
 
-export default memo(function RackView({ rows, editMode, onSendToWorkbench, onSwapInRow, onMoveToRow, rowRefs }) {
+export default memo(function RackView({ rows, caseHp, editMode, onSendToWorkbench, onSwapInRow, onMoveToRow, rowRefs }) {
   // Shared across all ModuleSlots — only one module shows arrows at a time.
   // Once arrows are up on module A, they stay until another module dwells for
   // SWITCH_DWELL_MS. A glancing pass over B cancels its pending switch and
@@ -226,13 +208,14 @@ export default memo(function RackView({ rows, editMode, onSendToWorkbench, onSwa
       // another module takes over or edit mode is turned off.
       onMouseLeave={clearPending}
     >
-    <Case>
+    <Case hp={caseHp}>
       {rows.map((row, rowIdx) => (
         <RackRowContent
           key={row.id}
           row={row}
           rowIdx={rowIdx}
           rows={rows}
+          caseHp={caseHp}
           editMode={editMode}
           activeArrowsId={activeArrowsId}
           requestActivate={requestActivate}

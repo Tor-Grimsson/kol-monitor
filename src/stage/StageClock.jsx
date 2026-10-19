@@ -15,7 +15,8 @@
 
 import { useState } from 'react'
 import RotaryDial from '@kolkrabbi/kol-component/atoms/RotaryDial'
-import Icon from '../icons/Icon.jsx'
+import { Icon } from '@kolkrabbi/kol-icons'
+import { Tooltip } from '@kolkrabbi/kol-component/utilities/Popover'
 
 const MODES = [['reverse', 'REV', 'Reverse'], ['forward', 'FWD', 'Forward'], ['pingpong', 'P·P', 'Ping-pong']]
 
@@ -49,21 +50,22 @@ export function Clock({ t = 0 }) {
    `down` is the LATCH — PLAY/PAUSE and the mode keys hold; STOP is momentary. */
 function Key({ down, onClick, title, height = 30, children }) {
   return (
-    <div
-      className={`flex flex-1 items-center justify-center cursor-pointer select-none ${down ? 'text-accent-primary bg-oq-12' : 'text-fg-64 hover:text-fg-96'}`}
-      style={{
-        height,
-        /* ponytail: `surface-tertiary` stays inline — `.bg-surface-*` is an
-           ink+ground PAIR, and this key drives its own ink above. */
-        background: down ? undefined : 'var(--kol-surface-tertiary)',
-        boxShadow: down
-          ? 'inset 0 1px 2px rgb(0 0 0 / 0.45)'
-          : 'inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 0 rgb(0 0 0 / 0.4)',
-        transform: down ? 'translateY(1px)' : 'none',
-      }}
-      onClick={onClick}
-      title={title}
-    >{children}</div>
+    <Tooltip label={title} asChild>
+      <div
+        className={`flex flex-1 items-center justify-center cursor-pointer select-none ${down ? 'text-accent-primary bg-oq-12' : 'text-fg-64 hover:text-fg-96'}`}
+        style={{
+          height,
+          /* ponytail: `surface-tertiary` stays inline — `.bg-surface-*` is an
+             ink+ground PAIR, and this key drives its own ink above. */
+          background: down ? undefined : 'var(--kol-surface-tertiary)',
+          boxShadow: down
+            ? 'inset 0 1px 2px rgb(0 0 0 / 0.45)'
+            : 'inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 0 rgb(0 0 0 / 0.4)',
+          transform: down ? 'translateY(1px)' : 'none',
+        }}
+        onClick={onClick}
+      >{children}</div>
+    </Tooltip>
   )
 }
 
@@ -84,23 +86,24 @@ function Switch({ on, onClick, label, title }) {
   return (
     <div className="flex flex-col items-center" style={{ gap: 3 }}>
       <span className="kol-helper-10 text-fg-32">{label}</span>
-      <div
-        onClick={onClick}
-        title={title}
-        className="cursor-pointer select-none bg-oq-24"
-        style={{ width: 36, height: 18, padding: 2, borderRadius: 3, boxShadow: 'inset 0 1px 2px rgb(0 0 0 / 0.5)' }}
-      >
-        {/* The lever carries no text, so `.bg-*`'s paired ink is inert here. */}
+      <Tooltip label={title} asChild>
         <div
-          className={on ? 'bg-accent-primary' : 'bg-surface-tertiary'}
-          style={{
-            width: 16, height: 14, borderRadius: 2,
-            boxShadow: 'inset 0 1px 0 rgb(255 255 255 / 0.10), 0 1px 0 rgb(0 0 0 / 0.4)',
-            transform: on ? 'translateX(16px)' : 'none',
-            transition: 'transform 120ms ease, background 120ms ease',
-          }}
-        />
-      </div>
+          onClick={onClick}
+          className="cursor-pointer select-none bg-oq-24"
+          style={{ width: 36, height: 18, padding: 2, borderRadius: 3, boxShadow: 'inset 0 1px 2px rgb(0 0 0 / 0.5)' }}
+        >
+          {/* The lever carries no text, so `.bg-*`'s paired ink is inert here. */}
+          <div
+            className={on ? 'bg-accent-primary' : 'bg-surface-tertiary'}
+            style={{
+              width: 16, height: 14, borderRadius: 2,
+              boxShadow: 'inset 0 1px 0 rgb(255 255 255 / 0.10), 0 1px 0 rgb(0 0 0 / 0.4)',
+              transform: on ? 'translateX(16px)' : 'none',
+              transition: 'transform 120ms ease, background 120ms ease',
+            }}
+          />
+        </div>
+      </Tooltip>
     </div>
   )
 }
@@ -121,13 +124,14 @@ export default function StageClock({ running, onToggle, onReset, t = 0 }) {
 
       <div className="flex flex-col items-center gap-3 p-4 bg-surface-secondary border border-fg-08" style={{ borderRadius: 4, width: 300 }}>
         {/* the big ON lamp — lit exactly when the clock runs; click to start and stop */}
-        <div
-          className="w-6 h-6 rounded-full border-2 border-fg-48 flex items-center justify-center cursor-pointer select-none self-start"
-          onClick={onToggle}
-          title={running ? 'Stop the clock' : 'Run the clock'}
-        >
-          <div className={`w-3 h-3 rounded-full transition-all ${running ? 'bg-[#e74c3c]' : 'bg-fg-24'}`} />
-        </div>
+        <Tooltip label={running ? 'Stop the clock' : 'Run the clock'} asChild>
+          <div
+            className="w-6 h-6 rounded-full border-2 border-fg-48 flex items-center justify-center cursor-pointer select-none self-start"
+            onClick={onToggle}
+          >
+            <div className={`w-3 h-3 rounded-full transition-all ${running ? 'bg-[#e74c3c]' : 'bg-fg-24'}`} />
+          </div>
+        </Tooltip>
 
         {/* dense: the default variant pins its tick ring at 64px whatever `size`
             says, so four of them overflow the panel */}
@@ -146,13 +150,13 @@ export default function StageClock({ running, onToggle, onReset, t = 0 }) {
           </div>
           <Gang width={232}>
             <Key down={false} onClick={onReset} title="Stop — back to 0">
-              <Icon name="control-stop" size={16} />
+              <Icon name="stop" size={16} />
             </Key>
             <Key down={!running} onClick={() => running && onToggle()} title="Pause">
-              <Icon name="control-pause" size={16} />
+              <Icon name="pause" size={16} />
             </Key>
             <Key down={running} onClick={() => !running && onToggle()} title="Play">
-              <Icon name="control-play" size={16} />
+              <Icon name="play" size={16} />
             </Key>
           </Gang>
           {/* no silkscreen over this gang — the caps carry their own legend */}

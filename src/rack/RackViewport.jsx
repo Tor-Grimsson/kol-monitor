@@ -9,22 +9,22 @@ import { useCasePower } from '../hooks/useCasePower.jsx'
 import { useRenderLoop } from '../hooks/useRenderLoop'
 import { RenderControlProvider } from '../hooks/useRenderControl'
 import { useRack } from '../hooks/useRackContext.jsx'
-import { MODULE_DEFS } from '../modules/registry'
-import { ROW_WIDTH } from '../modules/utility/eurorack'
+import { HP_PX } from '../modules/utility/eurorack'
 import PatchCableOverlay from '../modules/utility/PatchCableOverlay.jsx'
 import RackView from './RackView.jsx'
 import { useDotGrid, DOT_GRID_SIZE, DOT_GRID_IMAGE } from '../hooks/useDotGrid.js'
 import Workbench from './Workbench.jsx'
 import { useTouchGestures } from '../hooks/useTouchGestures.js'
 
-const BASE_WIDTH = ROW_WIDTH + 52
+/* the case's drawn width: its HP, plus the side cheeks (52px) — plan 14 3.1 */
+const caseWidth = (hp) => hp * HP_PX + 52
 // Floor was 0.5 until touch (2026-09-01), then 0.25 — still 429px for a 1716px rack,
 // wider than a 390 phone at any zoom, so the case was always cut on the right
 // (user, 2026-09-02: "it's clipping"). 0.1 — the stage's floor — lets it fit.
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 2
 
-export default function RackViewport({ style, onEditCase, editMode: editModeOverride, viewLockedRef: viewLockedRefProp, snapPadding = 48, gridRef, onZoomChange, zoomSetterRef }) {
+export default function RackViewport({ style, editMode: editModeOverride, viewLockedRef: viewLockedRefProp, snapPadding = 48, gridRef, onZoomChange, zoomSetterRef }) {
   // The grid is the rack's SURFACE, not page chrome — it rides the same zoom and
   // pan the rack does. `zoom` scales the inner element and its `translate`, so the
   // visual pan is panOffset * zoom; the background matches by scaling its cell and
@@ -82,6 +82,7 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
   }, [])
 
   // Wheel/trackpad pans the canvas
+  const onTouchZoomRef = useRef(() => {})
   useEffect(() => {
     const el = rackOuterRef.current
     if (!el) return
@@ -89,7 +90,12 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
       if (e.target.closest('[data-workbench]')) return
       e.preventDefault()
       if (viewLockedRef.current) return
-      if (e.altKey) {
+      if (e.ctrlKey) {
+        // A TRACKPAD PINCH (user 2026-10-02: "two finger pinch to zoom in out"). The browser
+        // delivers it as a wheel with ctrlKey set; it takes the touch pinch's own path, so
+        // the point under the cursor stays under the cursor.
+        onTouchZoomRef.current(Math.exp(-e.deltaY * 0.01), { x: e.clientX, y: e.clientY })
+      } else if (e.altKey) {
         setZoom(z => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z - e.deltaY * 0.002)))
       } else {
         setPanOffset(prev => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }))
@@ -132,6 +138,8 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
     setPanOffset(p => ({ x: p.x + (mx - o1.x) / z1 - (mx - o0.x) / z0, y: p.y + (my - o1.y) / z1 - (my - o0.y) / z0 }))
     setZoom(z1)
   }, [])
+  /* the wheel listener (pinch) reads the touch path through a ref, set after render — `onTouchZoom` is stable */
+  useLayoutEffect(() => { onTouchZoomRef.current = onTouchZoom }, [onTouchZoom])
   useTouchGestures(rackOuterRef, { onPan: onTouchPan, onZoom: onTouchZoom, ignore: '[data-workbench]' })
 
   // A consumer's zoom control (Create's − % + bar) drives THIS zoom, and reads
@@ -271,10 +279,11 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
           ...style,
         }}
       >
-        <div ref={rackRef} className="relative" style={{ zoom, width: BASE_WIDTH, transform: `translate(${panOffset.x}px, ${panOffset.y}px)`, touchAction: 'none' }}>
+        <div ref={rackRef} className="relative" style={{ zoom, width: caseWidth(rack.caseHp), transform: `translate(${panOffset.x}px, ${panOffset.y}px)`, touchAction: 'none' }}>
           <PatchCableOverlay containerRef={rackRef} cableVisibility={cableVisibility} cableLocked={cableLocked} onCableUnlock={() => setCableLocked(false)} />
           <RackView
             rows={rack.rows}
+            caseHp={rack.caseHp}
             editMode={editModeOverride !== undefined ? editModeOverride : rack.editMode}
             onSendToWorkbench={rack.sendToWorkbench}
             onSwapInRow={rack.swapInRow}
@@ -283,30 +292,22 @@ export default function RackViewport({ style, onEditCase, editMode: editModeOver
           />
         </div>
 
-        {(editModeOverride !== undefined ? editModeOverride : rack.editMode) && (
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50 }}>
-            <Workbench
-              modules={rack.workbench}
-              rows={rack.rows}
-              onReturn={rack.returnFromWorkbench}
-              onAddRow={rack.addRow}
-              onRemoveRow={rack.removeRow}
-              onSetRowHeight={rack.setRowHeight}
-              onEditCase={onEditCase}
-              onAddModule={(type, rowId) => {
-                if (rowId) {
-                  rack.addModule(type, rowId)
-                } else {
-                  const def = MODULE_DEFS[type]
-                  if (!def) return
-                  const targetHeight = (def.u || 3) === 1 ? '1u' : '3u'
-                  const row = rack.rows.find(r => r.height === targetHeight)
-                  if (row) rack.addModule(type, row.id)
-                }
-              }}
-            />
-          </div>
-        )}
+        {/* the edit-mode rail — a DS bottom Rail over the rack, mounted always so it slides; × / Esc leave edit mode */}
+        <Workbench
+          open={!!(editModeOverride !== undefined ? editModeOverride : rack.editMode)}
+          onClose={editModeOverride !== undefined ? undefined : () => rack.setEditMode(false)}
+          modules={rack.workbench}
+          rows={rack.rows}
+          caseHp={rack.caseHp}
+          onSetCaseHp={rack.setCaseHp}
+          onAddModule={rack.addModule}
+          onReturn={rack.returnFromWorkbench}
+          onAddRow={rack.addRow}
+          onRemoveRow={rack.removeRow}
+          onSetRowHeight={rack.setRowHeight}
+          /* the sidebar is open when the rack is offset by it — the rail starts where the rack does */
+          besideSidebar={!!style?.marginLeft}
+        />
       </div>
     </RenderControlProvider>
   )

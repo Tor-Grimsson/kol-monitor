@@ -9,6 +9,7 @@ import { Icon } from '@kolkrabbi/kol-icons'
 import { ModuleInitContext } from '../hooks/useModuleEnabled'
 import { MODULE_DEFS } from '../modules/registry'
 import { hpToPx, ROW_HEIGHT } from '../modules/utility/eurorack'
+import { Tooltip } from '@kolkrabbi/kol-component/utilities/Popover'
 
 export default function StageDock({ rows, open, onGrab }) {
   return (
@@ -18,14 +19,15 @@ export default function StageDock({ rows, open, onGrab }) {
       {/* THE GRIP, top centre. The dock cannot drag from its body: a module is
           jacks and knobs edge to edge, and a free-moving panel means no
           patching (user, 2026-08-28). One explicit handle, the DS glyph. */}
-      <div
-        onPointerDown={onGrab}
-        title="Drag to move"
-        className="absolute z-10 flex items-center justify-center cursor-grab rounded bg-oq-16 text-fg-48 hover:text-fg-96"
-        style={{ top: 14, left: 'calc(52% + 120px)', transform: 'translateX(-50%)', width: 34, height: 14 }}
-      >
-        <Icon name="drag-handle" size={12} />
-      </div>
+      <Tooltip label="Drag to move" asChild>
+        <div
+          onPointerDown={onGrab}
+          className="absolute z-10 flex items-center justify-center cursor-grab rounded bg-oq-16 text-oq-48 hover:text-oq-96"
+          style={{ top: 14, left: 'calc(52% + 120px)', transform: 'translateX(-50%)', width: 34, height: 14 }}
+        >
+          <Icon name="drag-handle" size={12} />
+        </div>
+      </Tooltip>
 
       <div className="relative flex gap-0.5 w-max">
         {rows.flatMap(row =>

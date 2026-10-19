@@ -1,8 +1,7 @@
 // OscilloscopeModule — expression generator with reference-style visualizer
 // 3U. Layout ported from kol-mirrors ExpressionReference.jsx (Oscilloscope component).
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { createPortal } from 'react-dom'
+import { useState, useRef, useEffect } from 'react'
 import { useCanvasLoop } from '../../hooks/useCanvasLoop'
 import { useModuleEnabled } from '../../hooks/useModuleEnabled.js'
 import { useModule } from '../../hooks/useModuleRegistry.jsx'
@@ -11,7 +10,9 @@ import { compile } from '../../hooks/useExpressionValue'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import Input from '@kolkrabbi/kol-component/atoms/Input'
-import Divider from '../../components/atoms/Divider'
+import { MenuItem, MenuDropdownItem } from '@kolkrabbi/kol-component/molecules/MenuItem'
+import Button from '../../components/atoms/Button'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const BUS_KEYS = ['a', 'b']
@@ -113,13 +114,16 @@ const GRID_COLOR = 'rgba(255,255,255,0.06)' // inks: canvas — white on the inv
 const GRID_LABEL = 'rgba(255,255,255,0.2)' // inks: canvas
 const PREVIEW_COLOR = 'rgba(255,255,255,0.15)' // inks: canvas
 
+/* DS `Input` at the panel rung (plan 13 W3.3); the numeric filter and the ↑↓ / ⇧ nudge are the module's */
 function NumField({ label, value, onChange }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
       {label ? <span className="kol-helper-8 text-fg-48" style={{ textTransform: 'uppercase', lineHeight: 1 }}>{label}</span> : null}
-      <input
-        type="text"
+      <Input
+        size="xs"
+        chars={4}
         inputMode="numeric"
+        inputClassName="text-right"
         value={value}
         onChange={(e) => {
           const v = e.target.value
@@ -135,104 +139,32 @@ function NumField({ label, value, onChange }) {
             onChange((Number(value) || 0) + step * dir)
           }
         }}
-        className="kol-helper-8 bg-surface-primary"
-        style={{
-          width: 36, height: 20, textAlign: 'right',
-          border: 'none', borderRadius: 2,
-          padding: '0 6px', outline: 'none', fontFamily: 'var(--kol-font-family-mono)',
-        }}
       />
     </span>
   )
 }
 
+/* the reference menu is kol-component's `MenuItem` at the xs rung (plan 13 W3.3): portal, flip,
+   Escape and click-outside are the DS's; the groups and the expressions are the module's */
 function RefDropdown({ label, groups, onSelect }) {
-  const [open, setOpen] = useState(false)
-  const triggerRef = useRef(null)
-  const [pos, setPos] = useState({ top: 0, left: 0 })
-
-  const toggle = useCallback(() => {
-    if (open) { setOpen(false); return }
-    const rect = triggerRef.current?.getBoundingClientRect()
-    if (!rect) return
-    setPos({ top: rect.bottom + 2, left: rect.left })
-    setOpen(true)
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const handleKey = (e) => { if (e.key === 'Escape') setOpen(false) }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [open])
-
   return (
-    <>
-      <button
-        ref={triggerRef}
-        className="kol-helper-8 bg-surface-primary"
-        onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); toggle() }}
-        style={{
-          border: 'none', borderRadius: 2,
-          padding: '0 8px', height: 24, cursor: 'pointer',
-          textTransform: 'uppercase', letterSpacing: '0.5px',
-          fontFamily: 'var(--kol-font-family-mono)',
-        }}
-      >{label}</button>
-      {open && createPortal(
-        <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onPointerDown={() => setOpen(false)} />
-          <div
-            onPointerDown={(e) => e.stopPropagation()}
-            className="bg-surface-primary border border-fg-08"
-            style={{
-              position: 'fixed', top: pos.top, left: pos.left,
-              minWidth: 220, maxHeight: 320, overflowY: 'auto',
-              borderRadius: 3,
-              zIndex: 9999, padding: '4px 0',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-            }}
-          >
-            {groups.map(({ group, items }) => (
-              <div key={group}>
-                <div className="kol-helper-8 text-fg-40" style={{
-                  padding: '4px 8px 2px',
-                  textTransform: 'uppercase', letterSpacing: '0.5px',
-                }}>{group}</div>
-                {items.map(([expr, desc], i) => (
-                  <div
-                    key={`${group}-${i}`}
-                    onPointerDown={() => { if (expr != null) { onSelect(expr); setOpen(false) } }}
-                    className="kol-helper-8 text-fg-88"
-                    style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
-                      padding: '3px 8px',
-                      cursor: expr != null ? 'pointer' : 'default',
-                      fontFamily: 'var(--kol-font-family-mono)',
-                    }}
-                  >
-                    <span className={expr != null ? 'text-fg-88' : 'text-fg-40'}>{expr ?? '—'}</span>
-                    <span className="text-fg-40" style={{ textTransform: 'none' }}>{desc}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </>,
-        document.body
-      )}
-    </>
+    <MenuItem label={label} size="xs" caret={false} buttonClassName="uppercase" panelStyle={{ maxHeight: 320, overflowY: 'auto' }}>
+      {groups.map(({ group, items }) => (
+        <div key={group}>
+          <div className="kol-helper-8 text-fg-40" style={{ padding: '4px 8px 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{group}</div>
+          {items.map(([expr, desc], i) => (
+            <MenuDropdownItem key={`${group}-${i}`} size="xs" disabled={expr == null} onClick={() => onSelect(expr)} shortcut={<span className="text-fg-40">{desc}</span>}>
+              {expr ?? '—'}
+            </MenuDropdownItem>
+          ))}
+        </div>
+      ))}
+    </MenuItem>
   )
 }
 
 function IconAction({ label, onClick }) {
-  return (
-    <span
-      onClick={onClick}
-      className="kol-helper-8 text-fg-48"
-      style={{ cursor: 'pointer', textTransform: 'uppercase', userSelect: 'none', lineHeight: 1 }}
-    >{label}</span>
-  )
+  return <Button variant="nav" size="xs" className="uppercase" onClick={onClick}>{label}</Button>
 }
 
 function OscPanel({

@@ -1,30 +1,30 @@
 // usePatchFile — save/load rack state as JSON files
 
-export function savePatchFile(rack, connections, modulesRef, name = 'Untitled', description) {
+/* THE PATCH, AS DATA — rows in left-to-right order with each module's offset and non-default state, the
+   cables, the modules that are on. One shape for the file Export writes and the library Save keeps
+   (plan 13 W7; the Patch module's clipboard copy built the same thing by hand). */
+export function snapshotPatch(rack, connections, modulesRef, name = 'Untitled', description) {
   const modules = modulesRef.current
-
   const rows = rack.rows.map(row => ({
     height: row.height,
-    modules: row.modules.map(m => {
-      const entry = { type: m.type, id: m.id }
-      // Only include non-default state
-      const reg = modules.get(m.id)
-      if (reg?.stateRef?.current) {
-        const state = reg.stateRef.current
-        if (Object.keys(state).length > 0) entry.state = state
-      }
-      return entry
-    }),
+    modules: [...row.modules]
+      .sort((a, b) => a.offset - b.offset)
+      .map(m => {
+        const entry = { type: m.type, id: m.id, offset: m.offset }
+        const state = modules.get(m.id)?.stateRef?.current
+        if (state && Object.keys(state).length > 0) entry.state = { ...state }
+        return entry
+      }),
   }))
-
-  // Enabled modules
   const on = []
-  for (const [id, mod] of modules) {
-    if (mod.enabledRef?.current) on.push(id)
-  }
-
-  const patch = { name, rows, connections, on }
+  for (const [id, mod] of modules) if (mod.enabledRef?.current) on.push(id)
+  const patch = { name, caseHp: rack.caseHp, rows, connections: connections.map(c => ({ ...c })), on }
   if (description) patch.description = description
+  return patch
+}
+
+export function savePatchFile(rack, connections, modulesRef, name = 'Untitled', description) {
+  const patch = snapshotPatch(rack, connections, modulesRef, name, description)
 
   const json = JSON.stringify(patch, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
@@ -38,8 +38,10 @@ export function savePatchFile(rack, connections, modulesRef, name = 'Untitled', 
   URL.revokeObjectURL(url)
 }
 
+/* resolves the patch, or null when no file was picked; REJECTS when the file is not a patch (bad JSON, or
+   neither rows nor connections) — so a caller can say so instead of silently doing nothing */
 export function loadPatchFile() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.json'
@@ -48,11 +50,14 @@ export function loadPatchFile() {
       if (!file) return resolve(null)
       const reader = new FileReader()
       reader.onload = () => {
+        let patch
         try {
-          resolve(JSON.parse(reader.result))
+          patch = JSON.parse(reader.result)
         } catch {
-          resolve(null)
+          return reject(new Error('not-a-patch'))
         }
+        if (!patch || (!patch.rows && !patch.connections)) return reject(new Error('not-a-patch'))
+        resolve(patch)
       }
       reader.readAsText(file)
     }

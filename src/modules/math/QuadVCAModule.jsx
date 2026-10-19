@@ -18,8 +18,8 @@ import Knob from '../parametric/Knob'
 import FlipToggle from '../parametric/FlipToggle'
 import IconButton from '../parametric/IconButton'
 import LED from '../parametric/LED'
-import Divider from '../../components/atoms/Divider'
-import Icon from '../../icons/Icon'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
+import { Icon } from '@kolkrabbi/kol-icons'
 import { useConnectedPorts, usePatchRouting } from '../../hooks/usePatchRouting.jsx'
 
 const NULL_REF = { current: null }

@@ -7,7 +7,7 @@ import { useModule } from '../../hooks/useModuleRegistry.jsx'
 import { scalar, readScalar } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import IconSelect from '../parametric/IconSelect'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
@@ -38,7 +38,7 @@ function LogicPanel({ mode, enabled, onToggle, onModeChange, id, aConnected, aIn
           <div style={{ display: 'flex', alignItems: 'stretch', gap: 8 }}>
             <LabeledJack type="in" port="a" moduleId={id} active={aConnected} signalRef={aInRef} label="a" />
             <LabeledJack type="in" port="b" moduleId={id} active={bConnected} signalRef={bInRef} label="b" />
-            <Divider variant="vertical" className="py-1.5" />
+            <Divider variant="vertical" height="fill" className="py-1.5" />
             <LabeledJack type="out" port="out" moduleId={id} signalRef={outputRef} label="out" />
           </div>
         </div>

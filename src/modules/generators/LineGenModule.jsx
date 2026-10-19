@@ -117,7 +117,7 @@ function LineGenPanel({ shape, freq, density, speed, enabled, onToggle, onShapeC
         justifyContent: 'space-between', height: '100%', padding: '4px 0',
       }}>
         <IconSelect value={shape} onChange={onShapeChange} columns={3} items={[
-          { value: 'line', icon: 'line-line' }, { value: 'grid', icon: 'line-grid' }, { value: 'circle', icon: 'line-circle' },
+          { value: 'line', icon: 'line' }, { value: 'grid', icon: 'line-grid' }, { value: 'circle', icon: 'line-circle' },
           { value: 'spiral', icon: 'line-spiral' }, { value: 'lissa', icon: 'line-lissa', label: 'lissajous' },
         ]} />
         <div style={rowStyle}>

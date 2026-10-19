@@ -8,7 +8,7 @@ import { scalar, readScalar, color } from '../../hooks/signals'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function clamp01(n) { return n < 0 ? 0 : n > 100 ? 100 : n }
@@ -52,7 +52,7 @@ function SMX3Panel({ k11, k12, k13, k21, k22, k23, k31, k32, k33, enabled, onTog
           <LabeledJack type="out" port="r" moduleId={id} signalRef={rOutRef} label="r" />
           <LabeledJack type="out" port="g" moduleId={id} signalRef={gOutRef} label="g" />
           <LabeledJack type="out" port="b" moduleId={id} signalRef={bOutRef} label="b" />
-          <Divider variant="vertical" className="py-1.5" />
+          <Divider variant="vertical" height="fill" className="py-1.5" />
           <LabeledJack type="out" port="out" moduleId={id} signalRef={colorOutRef} label="clr" />
         </div>
       </div>

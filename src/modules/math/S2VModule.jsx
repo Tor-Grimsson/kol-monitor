@@ -10,14 +10,14 @@ import { sinLut, cosLut } from '../../hooks/trigLut'
 import Module from '../utility/Module'
 import LabeledJack from '../parametric/LabeledJack'
 import IconSelect from '../parametric/IconSelect'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 const MODES = [
   { value: 'bar', icon: 'gen-gradient', label: 'Bar' },
-  { value: 'gauge', icon: 'radial-circle', label: 'Gauge' },
+  { value: 'gauge', icon: 'circle', label: 'Gauge' },
   { value: 'plot', icon: 'wave-sin', label: 'Plot' },
-  { value: 'meter', icon: 'ascii-dash', label: 'Meter' },
+  { value: 'meter', icon: 'minus', label: 'Meter' },
   { value: 'scatter', icon: 'ptrn-dot', label: 'Scatter' },
 ]
 

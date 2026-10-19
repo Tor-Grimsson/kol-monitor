@@ -93,7 +93,7 @@ export default function LibraryPage() {
             <div className="text-fg-48 kol-helper-12" style={{ textTransform: 'capitalize' }}>Category: {m.category}</div>
             <div className="text-fg-48 kol-helper-12">Width: {m.hp}HP</div>
             <div className="text-fg-48 kol-helper-12">Height: {m.u}U</div>
-            <Button variant="grey" size="md" style={{ alignSelf: 'flex-start', marginTop: 16 }}
+            <Button tone="grey" size="md" style={{ alignSelf: 'flex-start', marginTop: 16 }}
               onClick={(e) => { e.stopPropagation(); navigate(`/library/${m.type}`) }}
             >Details</Button>
           </div>
@@ -125,10 +125,10 @@ export default function LibraryPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
             {p.tags.length > 0 && <div className="text-fg-48 kol-helper-12">Tags: {p.tags.join(', ')}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-              <Button variant="grey" size="md"
+              <Button tone="grey" size="md"
                 onClick={(e) => { e.stopPropagation(); navigate(`/library/patch/${p.name}`) }}
               >Details</Button>
-              <Button variant="grey" size="md"
+              <Button tone="grey" size="md"
                 onClick={(e) => { e.stopPropagation(); navigate(`/rack/patch/${p.name}`) }}
               >Open in Rack</Button>
             </div>
@@ -153,7 +153,7 @@ export default function LibraryPage() {
       filtersProps={{ mutuallyExclusiveFilters: view.exclusive, tone: 'sunken' }}
       toCard={tab === 'patches' ? patchCard : moduleCard}
       actions={
-        <Button variant="grey" size="md" onClick={() => navigate('/create')}>
+        <Button tone="grey" size="md" onClick={() => navigate('/create')}>
           New Rack
         </Button>
       }

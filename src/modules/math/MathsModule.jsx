@@ -10,7 +10,7 @@ import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
 import Toggle from '../parametric/Toggle'
-import Divider from '../../components/atoms/Divider'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
 import LED from '../parametric/LED'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 

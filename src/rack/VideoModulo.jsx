@@ -1,29 +1,33 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useNavHidden } from '../components/AppLayout'
+import { useParams } from 'react-router-dom'
+import { useNavHidden } from '@kolkrabbi/kol-shell'
 import usePersistedState from '../hooks/usePersistedState'
 import { usePatchRouting } from '../hooks/usePatchRouting.jsx'
 import { useCasePower } from '../hooks/useCasePower.jsx'
 import { useRack } from '../hooks/useRackContext.jsx'
-import { useRailSlot } from '../hooks/useRailSlot.jsx'
+import { useRailSlot } from '@kolkrabbi/kol-shell'
 import { useKeybindings } from '../hooks/useKeybindings'
 import { patches } from '../data/patches'
+import { isSavedId, findSaved } from '../hooks/useLibraryStore'
 import { ROW_WIDTH } from '../modules/utility/eurorack'
 import RackViewport from './RackViewport.jsx'
 import ModuloSidebar from './ModuloSidebar.jsx'
 import RackRailPanel from './RackRailPanel.jsx'
-import { ShortcutsOverlay } from '@kolkrabbi/kol-shell'
-import { SHORTCUT_SECTIONS } from '../data/shortcuts.js'
-import LibrarySearchOverlay from '../overlays/LibrarySearchOverlay.jsx'
+import ModuleSearch from './ModuleSearch.jsx'
 import PatchTableOverlay from '../overlays/PatchTableOverlay.jsx'
-import Icon from '../icons/Icon.jsx'
+import { Icon } from '@kolkrabbi/kol-icons'
+import Button from '../components/atoms/Button'
+import IconToggle from '@kolkrabbi/kol-component/atoms/IconToggle'
+import { Tooltip } from '@kolkrabbi/kol-component/utilities/Popover'
 
 const BASE_WIDTH = ROW_WIDTH + 52
 
+/* ADD MODULE IS THE SEARCH MODAL (user 2026-10-02: *"didnt we just make a search modal?"*) —
+ * `ModuleSearch`, shared with Create, categories first (plan 14 W2). */
+
 function VideoModuloInner() {
   const { presetName } = useParams()
-  const navigate = useNavigate()
   const routing = usePatchRouting()
   const { toggleAll } = useCasePower()
   const rack = useRack()
@@ -44,7 +48,6 @@ function VideoModuloInner() {
   const viewLockedRef = useRef(false)
   const [cableLocked, setCableLocked] = usePersistedState('rack-cableLocked', false)
   const [cableVisibility, setCableVisibility] = usePersistedState('rack-cableVis', 'trans')
-  const [showShortcuts, setShowShortcuts] = useState(false)
   const [showLibrarySearch, setShowLibrarySearch] = useState(false)
   const [showPatchTable, setShowPatchTable] = useState(false)
   const [displayHidden, setDisplayHidden] = usePersistedState('rack-displayHidden', true)
@@ -53,7 +56,7 @@ function VideoModuloInner() {
   rackRef2.current = rack
   const rackOuterRef = useRef(null)
 
-  useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setShowShortcuts, setDisplayHidden, setShowLibrarySearch, setShowPatchTable })
+  useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef: rackRef2, toggleAll, setCableLocked, setCableVisibility, setDisplayHidden, setShowLibrarySearch, setShowPatchTable })
 
   // Reset nav visibility when leaving rack
   const navRef = useRef(nav)
@@ -78,6 +81,8 @@ function VideoModuloInner() {
     let p
     if (presetName === 'custom') {
       try { p = JSON.parse(sessionStorage.getItem('customPatch')) } catch {}
+    } else if (isSavedId(presetName)) {
+      p = findSaved(presetName)?.data // a saved patch from the library (plan 13 W7)
     } else if (presetName) {
       const key = presetName.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
       p = patches[key] || patches[presetName]
@@ -124,24 +129,19 @@ function VideoModuloInner() {
       )}
 
       {!sidebarOpen && !displayHidden && (
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="fixed z-50 kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none"
-          style={{ left: 60, top: 16, background: 'none', border: 'none', padding: 0 }}
-        >
+        <Button variant="nav" size="sm" className="fixed z-50" style={{ left: 60, top: 16 }} onClick={() => setSidebarOpen(true)}>
           [Show]
-        </button>
+        </Button>
       )}
 
       {!sidebarOpen && !displayHidden && <div className="fixed z-50 select-none" style={{ bottom: 16, left: 60, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, transition: 'left 0.15s' }}>
         <div className="kol-helper-12 text-fg-48" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           [Cables
-          <span onClick={() => setCableLocked(v => !v)} className="hover:text-fg-96 cursor-pointer" style={{ color: cableLocked ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
-            <Icon name={cableLocked ? 'cable-lock' : 'cable-unlock'} size={14} />
-          </span>
-          <span onClick={() => setCableVisibility(v => v === 'on' ? 'off' : v === 'off' ? 'trans' : 'on')} className="hover:text-fg-96 cursor-pointer" style={{ color: cableVisibility === 'off' ? 'rgba(231,76,60,0.9)' : undefined, lineHeight: 0, height: '1em', display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
-            <Icon name={cableVisibility === 'on' ? 'cable-on' : cableVisibility === 'off' ? 'cable-off' : 'cable-trans'} size={14} />
-          </span>]
+          {/* the sidebar's pair (ModuloSidebar): lock is a toggle, visibility cycles three states */}
+          <IconToggle size="sm" tone="danger" pressed={cableLocked} onChange={(v) => setCableLocked(v)} icon="unlock" iconOn="lock" label="Cable lock" iconComponent={Icon} />
+          <Tooltip label="Cable visibility" triggerClassName="inline-flex shrink-0">
+            <Button variant="nav" size="sm" iconOnly={cableVisibility === 'on' ? 'cable-on' : cableVisibility === 'off' ? 'cable-off' : 'cable-trans'} iconSize={14} aria-label="Cable visibility" onClick={() => setCableVisibility(v => v === 'on' ? 'off' : v === 'off' ? 'trans' : 'on')} />
+          </Tooltip>]
         </div>
       </div>}
 
@@ -151,27 +151,21 @@ function VideoModuloInner() {
         * back in through the portal. */}
       {rail?.slot && createPortal(<RackRailPanel rack={rack} />, rail.slot)}
 
-      {showShortcuts && <ShortcutsOverlay shortcuts={SHORTCUT_SECTIONS} onClose={() => setShowShortcuts(false)} />}
 
       <PatchTableOverlay open={showPatchTable} rows={rack.rows} onClose={() => setShowPatchTable(false)} />
 
-      {showLibrarySearch && (
-        <LibrarySearchOverlay
-          rows={rack.rows}
-          onAddModule={(type, rowId) => rack.addModule(type, rowId)}
-          onClose={() => setShowLibrarySearch(false)}
-        />
-      )}
+      <ModuleSearch open={showLibrarySearch} onClose={() => setShowLibrarySearch(false)} rows={rack.rows} capacity={rack.caseHp} onAdd={rack.addModule} />
 
-      {!displayHidden && <button
+      {!displayHidden && <Button
+        size="sm"
+        className="fixed z-50"
+        style={{ bottom: 16, right: 16 }}
         onClick={() => setViewLocked(v => { viewLockedRef.current = !v; return !v })}
-        className="fixed z-50 kol-helper-12 text-fg-48 hover:text-fg-96 cursor-pointer select-none"
-        style={{ bottom: 16, right: 16, background: 'none', border: 'none', padding: 0, color: viewLocked ? 'rgba(231,76,60,0.9)' : undefined }}
       >
         [{viewLocked ? 'Locked' : 'Lock'}]
-      </button>}
+      </Button>}
 
-      <RackViewport style={{ minHeight: '100vh', marginLeft: sidebarOpen ? 'var(--sidebar-width)' : 0 }} onEditCase={() => navigate('/create?from=rack')} viewLockedRef={viewLockedRef} />
+      <RackViewport style={{ minHeight: '100vh', marginLeft: sidebarOpen ? 'var(--sidebar-width)' : 0 }} viewLockedRef={viewLockedRef} />
     </div>
   )
 }

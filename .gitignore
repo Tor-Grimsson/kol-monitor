@@ -36,3 +36,7 @@ public/videos
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# the D1 Worker (api/) — local secrets and wrangler's local state
+api/.dev.vars
+.wrangler/

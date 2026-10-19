@@ -10,8 +10,8 @@ import JackSocket from '../utility/JackSocket'
 import LabeledJack from '../parametric/LabeledJack'
 import Knob from '../parametric/Knob'
 import FlipToggle from '../parametric/FlipToggle'
-import Divider from '../../components/atoms/Divider'
-import Icon from '../../icons/Icon'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
+import { Icon } from '@kolkrabbi/kol-icons'
 import { useConnectedPorts } from '../../hooks/usePatchRouting.jsx'
 
 function AttenPanel({ levels, modes, enabled, onToggle, onLevelChange, onModeChange, id, inConns, inRefs, outRefs }) {
@@ -27,11 +27,11 @@ function AttenPanel({ levels, modes, enabled, onToggle, onLevelChange, onModeCha
               </div>
               <Knob value={levels[i]} onChange={(v) => onLevelChange(i, v)} label={ch} />
             </div>
-            {i < 3 && <Divider variant="vertical" />}
+            {i < 3 && <Divider variant="vertical" height="fill" />}
           </div>
         ))}
 
-        <Divider variant="vertical" />
+        <Divider variant="vertical" height="fill" />
 
         <div style={{ display: 'inline-grid', gridTemplateColumns: 'repeat(4, auto)', columnGap: 20, rowGap: 16 }}>
           {['a', 'b', 'c', 'd'].map(ch => (
