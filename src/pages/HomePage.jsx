@@ -2,7 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { patches } from '../data/patches'
 import Button from '../components/atoms/Button'
 import { Illustration } from '../walkthrough'
-import { useLibrary } from '../hooks/useLibraryStore'
+import { useLibrary, addToLibrary, renameInLibrary, removeFromLibrary } from '../hooks/useLibraryStore'
+import { downloadPatch } from '../hooks/usePatchFile'
 
 /**
  * HomePage — `/`, as the DATA the Studio's `HubHome` renders (kol-shell
@@ -64,6 +65,7 @@ const savedCard = (item) => {
     tags: [],
     preview: item.seedOf || 'empty',
     to: `/rack/patch/${item.id}`,
+    item,
   }
 }
 const RECENT_FILES = 12
@@ -114,16 +116,32 @@ export function useHomeProps() {
     filtersTitle: 'All Presets',
     filterGroups: FILTER_GROUPS,
     filtersProps: { mutuallyExclusiveFilters: ['type'], tone: 'sunken' },
-    /* the list row: the Hub's file row with a 16:9 thumb — a rack preview is wide, a 48px square shows nothing */
-    rowVariant: 'slide',
-    toCard: (p) => ({
+    /* the `app` card and row, as Library — HubHome forces `rowVariant="file"`, so the row is named too */
+    preset: 'app',
+    rowVariant: 'app',
+    /* HubHome forces `listLayout="stack"` — Library's list is the preset's grid */
+    listLayout: 'grid',
+    /* the family's one `app` fill (fxr plan 39, mirror, monitor 2026-10-23): a saved file is
+       date · size · verbs · download; the blank start is title · meta · media only */
+    toCard: (p, { layout }) => ({
       key: p.name,
       title: p.title,
       detail: p.detail,
-      /* the file/slide row has no detail line — the counts ride its meta slot */
+      /* the app card has no detail line — the counts ride its meta slot */
       meta: p.detail,
-      fit: 'compact',
-      media: <img src={`/previews/patches/${p.preview}.png`} alt={p.title} />,
+      ...(layout !== 'list' && { fit: 'compact' }),
+      ...(p.item && {
+        date: p.item.updatedAt ?? p.item.savedAt,
+        size: new Blob([JSON.stringify(p.item.data)]).size,
+        download: () => downloadPatch(p.item.data, p.item.name),
+        verbs: {
+          rename: (name) => renameInLibrary(p.item.id, name),
+          duplicate: () => addToLibrary({ ...p.item.data, name: `${p.item.name} copy` }),
+          remove: () => removeFromLibrary(p.item.id),
+        },
+      }),
+      /* the app row takes the preview as a src */
+      media: layout === 'list' ? `/previews/patches/${p.preview}.png` : <img src={`/previews/patches/${p.preview}.png`} alt={p.title} />,
       onClick: () => navigate(p.to),
     }),
     actions: (
