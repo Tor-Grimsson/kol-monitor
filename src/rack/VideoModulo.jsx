@@ -93,6 +93,8 @@ function VideoModuloInner() {
       p = patches.init
     }
     if (!p) return
+    /* the loaded patch names the case, so Save keeps its name instead of "Untitled" */
+    if (presetName && presetName !== 'custom') sessionStorage.setItem('caseName', JSON.stringify(p.name || presetName))
     requestAnimationFrame(() => {
       rack.loadPreset(p)
       if (p.connections) routing.loadPatch(p.connections)

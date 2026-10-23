@@ -391,8 +391,11 @@ export default function SVGModule({ id = 'svg1', init, preview }) {
   useEffect(() => {
     loadBuiltinLibrary().then(entries => {
       if (entries.length) setSvgLib(entries)
+      /* a saved patch names its SVG; only a built-in one can come back */
+      const saved = init?.currentName && entries.find(e => e.name === init.currentName)
+      if (saved) { setCurrentName(saved.name); parsedRef.current = saved.data }
     })
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- the saved name is read once, at mount
 
   const enabledRef = useRef(true)
   const scaleRef = useRef(50)

@@ -5,6 +5,7 @@ import { patches } from '../data/patches'
 import Button from '../components/atoms/Button'
 import usePersistedState from '../hooks/usePersistedState'
 import { CatalogPage } from '@kolkrabbi/kol-shell'
+import { downloadPatch } from '../hooks/usePatchFile'
 
 /**
  * LibraryPage — `/library`: MODULES · PATCHES on kol-shell's `CatalogPage`
@@ -13,6 +14,8 @@ import { CatalogPage } from '@kolkrabbi/kol-shell'
  * GridCard's fits). `key={tab}`: the organism's active-filter set is keyed by
  * group, and the two views have different groups — a stale Category chip would
  * filter every patch out. Remount per view, one instance in code.
+ * `preset="app"` (kol-shell 0.75.0, MonitorLibraryOnAppPreset): the `app` card and row. Modules and
+ * presets are read-only, so no `verbs` — a preset carries `download` (the Export file) and its size.
  */
 
 const PRESET_NAMES = Object.keys(patches).filter(k => k !== 'ref' && k !== 'empty')
@@ -70,14 +73,17 @@ export default function LibraryPage() {
   const view = VIEWS[tab] ?? VIEWS.modules
 
   const moduleCard = (m, { layout }) => {
-    if (layout === 'list') return { key: m.type, title: m.label, detail: m.categoryLabel, onClick: () => navigate(`/library/${m.type}`) }
+    const media = <img className="absolute top-0 left-0" src={`/previews/modules/${m.type}.png`} alt={m.label} />
+    if (layout === 'list') return { key: m.type, title: m.label, detail: m.categoryLabel, meta: m.categoryLabel, media: `/previews/modules/${m.type}.png`, onClick: () => navigate(`/library/${m.type}`) }
     const isExpanded = expandedModule === m.type
     return {
       key: m.type,
       title: m.label,
       detail: `${m.hp}HP ${m.u}U — ${m.categoryLabel}`,
+      /* the app card has no detail line — it rides `meta`, as on Home */
+      meta: `${m.hp}HP ${m.u}U — ${m.categoryLabel}`,
       fit: 'natural',
-      media: <img className="absolute top-0 left-0" src={`/previews/modules/${m.type}.png`} alt={m.label} />,
+      media,
       expanded: isExpanded,
       onClick: () => setExpandedModule(isExpanded ? null : m.type),
       expandedContent: (
@@ -103,14 +109,18 @@ export default function LibraryPage() {
   }
 
   const patchCard = (p, { layout }) => {
-    if (layout === 'list') return { key: p.name, title: p.title, detail: p.detail, onClick: () => navigate(`/rack/patch/${p.name}`) }
+    const media = <img className="absolute top-0 left-0" src={`/previews/patches/${p.name}.png`} alt={p.title} />
+    const file = { size: JSON.stringify(patches[p.name]).length, download: () => downloadPatch({ name: p.name, ...patches[p.name] }) }
+    if (layout === 'list') return { key: p.name, title: p.title, detail: p.detail, meta: p.detail, media: `/previews/patches/${p.name}.png`, ...file, onClick: () => navigate(`/rack/patch/${p.name}`) }
     const isExpanded = expandedPatch === p.name
     return {
       key: p.name,
       title: p.title,
       detail: p.detail,
+      meta: p.detail,
       fit: 'compact',
-      media: <img className="absolute top-0 left-0" src={`/previews/patches/${p.name}.png`} alt={p.title} />,
+      media,
+      ...file,
       expanded: isExpanded,
       onClick: () => setExpandedPatch(isExpanded ? null : p.name),
       expandedContent: (
@@ -140,6 +150,7 @@ export default function LibraryPage() {
 
   return (
     <CatalogPage
+      preset="app"
       className="no-card-hover"
       key={tab}
       header={{ title: 'Library', subtitle: 'Modules and patches', size: 'sm', voice: 'mono' }}

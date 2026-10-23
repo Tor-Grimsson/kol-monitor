@@ -24,8 +24,11 @@ export function snapshotPatch(rack, connections, modulesRef, name = 'Untitled', 
 }
 
 export function savePatchFile(rack, connections, modulesRef, name = 'Untitled', description) {
-  const patch = snapshotPatch(rack, connections, modulesRef, name, description)
+  downloadPatch(snapshotPatch(rack, connections, modulesRef, name, description))
+}
 
+/* a patch object → the Export file; the Library's download control writes the same file */
+export function downloadPatch(patch, name = patch.name || 'Untitled') {
   const json = JSON.stringify(patch, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)

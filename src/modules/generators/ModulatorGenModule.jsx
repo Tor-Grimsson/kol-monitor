@@ -143,7 +143,7 @@ export default function ModulatorGenModule({ id = 'modgen1', init, preview }) {
   const [speed, setSpeed] = useState(init?.speed ?? 50)
   const [quantize, setQuantize] = useState(init?.quantize ?? false)
   const [absolute, setAbsolute] = useState(init?.absolute ?? false)
-  const [freeze, setFreeze] = useState(false)
+  const [freeze, setFreeze] = useState(init?.freeze ?? false)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 

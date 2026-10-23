@@ -264,7 +264,7 @@ export default function LifeModule({ id = 'life1', init, preview }) {
   const [density, setDensity] = useState(init?.density ?? 30)
   const [size, setSize] = useState(init?.size ?? 50)
   const [speed, setSpeed] = useState(init?.speed ?? 50)
-  const [ruleVal, setRuleVal] = useState(init?.rule ?? 44) // ~center = classic Life
+  const [ruleVal, setRuleVal] = useState(init?.ruleVal ?? 44) // ~center = classic Life
   const [zoom, setZoom] = useState(init?.zoom ?? 50)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)

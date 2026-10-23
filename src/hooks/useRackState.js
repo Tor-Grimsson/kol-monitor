@@ -273,7 +273,9 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
         const hp = def?.hp || 4
         const offset = typeof m.offset === 'number' ? m.offset : nextOffset
         nextOffset = offset + hp
-        return { type: m.type, id: m.id, hp, u: def?.u || 3, offset, state: m.state }
+        /* the patch's `on` list powers its modules — what Save records, what presets declare */
+        const state = preset.on ? { ...m.state, enabled: preset.on.includes(m.id) } : m.state
+        return { type: m.type, id: m.id, hp, u: def?.u || 3, offset, state }
       })
       return { id: `row-${i}`, height: r.height, modules }
     })

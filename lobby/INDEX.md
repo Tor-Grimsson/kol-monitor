@@ -31,15 +31,18 @@ Not documentation — a work queue, deliberately outside `docs/`.
 verified by running it, cited by file. **The agent closes on that evidence.**
 Parking, declaring stale, reopening and any design decision stay the **user's call**.
 
-## Queue — 0 entries
+## Queue — 1 entry
 
 | | Entry | About | Staged | State |
 |---|---|---|---|---|
+| 🟢 | [app-loader-minimum-time](done/app-loader-minimum-time.md) | the boot loader flashes — decide a minimum time on screen; the option would be kol-framework's | 2026-10-20 | `closed` 2026-10-22 — 600 ms via kol-framework 0.53.0 `hideLoaderApp()` |
 
 ## Closed
 
 | | Entry | About | Staged | Closed | State |
 |---|---|---|---|---|---|
+| 🟢 | [MonitorLibraryOnAppPreset](done/MonitorLibraryOnAppPreset.md) | Library onto the DS `app` card, with a Dev tab to review it | 2026-10-23 | 2026-10-23 | `closed` — component 0.291.0 · shell 0.75.0; App card Dev tab on your library (all four verbs walked); Library on `preset="app"`, presets download. Counts wait on `AppCardMeta` |
+| 🟢 | [save-patch-does-not-work](done/save-patch-does-not-work.md) | saving a patch does not work — reproduce and fix in monitor | 2026-10-20 | 2026-10-22 | `closed` — saves came back unpowered, four modules dropped state, every save was "Untitled"; fixed in `loadPreset`, the four modules and `VideoModulo`; save → reload → save is identical in Playwright |
 | 🟢 | [RackTierFullConsumption](done/RackTierFullConsumption.md) | The six full-consumption greps, 2026-08-30 | 2026-08-30 | `closed` 2026-10-17 — **superseded by plan 13** (the four surfaces it waited on are KOL components now); the user: old, irrelevant |
 | 🟢 | [SettingsMastheadCluster](done/SettingsMastheadCluster.md) | The settings masthead's control row is `SettingsScaffold`'s now (kol-shell 0.27.0) — picker · theme toggle · gear, order and gap and tone the DS's. Monitor and kol-mirror had passed **nothing** into the old raw `header.actions` slot, which is the whole of why three settings pages did not match | 2026-09-01 | 2026-09-01 | `addressed` — adopted on the full set (**shell 0.31.0 · theme 0.116.0 · component 0.149.0 · framework 0.36.0**, each tarball-diffed). `themeToggle` only: no `picker` (nothing to pick), no `onOpenSettings` (no drawer — a gear that opens nothing is worse than none). The toggle **moved** out of the body's Display row rather than being added beside it, matching kol-fxr's reference render. Build green, lint unchanged at 2335. **Closed 2026-09-01 — browser-verified** at 1440 and 390 (`_tmp/2026-09-01-mobile-qa/qa-settings-1440.png` · `qa-settings-390.png`): the cluster renders, the toggle sits alone in the masthead and appears exactly once on the page |
 | 🟢 | [ShellSettingsPairRetired](done/ShellSettingsPairRetired.md) | kol-shell 0.21.0 retired its own `SettingsSection` + `LabelRow` — second implementations of kol-component's `LabeledControlSection` + `SettingsRow`, under the user's *"dont ship duplicate components"* ruling. No alias, no deprecation window | 2026-08-30 | 2026-09-01 | `closed` — **already done when it landed**. The swap shipped 2026-08-30 (session 69), forced by the bump: 0.24.0 broke the build on `SettingsPage.jsx` and the migration was the only way past it. `src/pages/SettingsPage.jsx:1-2` is the ticket's diff verbatim; both prop renames and both stated render deltas are in the body. Green on shell 0.31.0. Nothing was owed |
@@ -57,12 +60,15 @@ All went to **kol-ds-ui** — `~/dev/projects/kol-ds-ui/lobby/INDEX.md`.
 
 | | Receipt | Last known | Remainder here |
 |---|---|---|---|
+| 🔵 | [AppCardMeta](outbox/AppCardMeta.md) | 🔵 `filed` 2026-10-23 | none until it returns — then bump and check `meta` draws |
 | 🟢 | [ShortcutsOverlayCategories](outbox/ShortcutsOverlayCategories.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.272.0 · kol-shell 0.69.0** | none — adopted 2026-10-18 |
 | 🟢 | [SignalIconsFromMonitor](outbox/SignalIconsFromMonitor.md) | 🟢 `closed` 2026-10-18 — **kol-icons 0.40.0** | 📌 video-off missing in kol-icons; then retire src/icons/ |
 | 🟢 | [IconVideoOff](outbox/IconVideoOff.md) | 🟢 `closed` 2026-10-18 — **kol-icons 0.41.0** | none — adopted 2026-10-18 |
 | 🟢 | [DividerHeightFill](outbox/DividerHeightFill.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.276.0** | none — adopted 2026-10-18 |
 | 🟢 | [PageHeaderAppLevel](outbox/PageHeaderAppLevel.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.277.0 · kol-shell 0.72.0** | none — adopted 2026-10-18 |
 | 🟢 | [PageHeaderAppLevelDisplay](outbox/PageHeaderAppLevelDisplay.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.279.0 · kol-theme 0.177.0** | none — adopted 2026-10-18 |
+| 🟢 | [LoaderAppMinimumTime](outbox/LoaderAppMinimumTime.md) | 🟢 `closed` 2026-10-22 · kol-framework@0.53.0 | adopted |
+| 🟢 | [OverscrollNone](outbox/OverscrollNone.md) | 🟢 `closed` 2026-10-22 · kol-theme@0.180.0 | adopted: bumped; rule in the built CSS; iPhone check is his |
 | 🟢 | [SettingsRowTextKeepsLabel](outbox/SettingsRowTextKeepsLabel.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.271.0** | none — adopted 2026-10-18 |
 | 🟢 | [SettingsRowMonoBaseline](outbox/SettingsRowMonoBaseline.md) | 🟢 `closed` 2026-10-18 — **kol-component 0.269.0** | none — adopted 2026-10-18: `SettingsRow text` |
 | 🟢 | [ShortcutsOverlayList](outbox/ShortcutsOverlayList.md) | 🟢 `closed` 2026-10-18 — **kol-shell 0.68.0 · kol-component 0.268.0** | keep or retire `ShortcutsRail` (⇧S) — the user's call |
@@ -115,6 +121,8 @@ All went to **kol-ds-ui** — `~/dev/projects/kol-ds-ui/lobby/INDEX.md`.
 
 | Date | Event |
 |---|---|
+| 2026-10-23 | **`MonitorLibraryOnAppPreset` closed** — Library on `preset="app"`, App card Dev tab; `AppCardMeta` filed into kol-ds-ui |
+| 2026-10-23 | **`MonitorLibraryOnAppPreset` filed from kol-ds-ui** — bump kol-component 0.291.0 · kol-shell 0.75.0; a hub Dev tab previewing the `app` card on monitor’s patches; then `LibraryPage.jsx` on `preset="app"` |
 | 2026-08-12 | `KolComponentDeepExports` + `ComponentTailwindSourceTrap` filed into kol-ds-ui; both closed and adopted the same week |
 | 2026-08-14 | `AppShellSet` filed into kol-ds-ui — the shared app shell graduated to the DS as a bundled set |
 | 2026-08-15 | `ComponentSideEffectsField` filed into kol-ds-ui — the barrel was unshakeable without the manifest flag |
@@ -185,3 +193,10 @@ All went to **kol-ds-ui** — `~/dev/projects/kol-ds-ui/lobby/INDEX.md`.
 | 2026-10-18 | **`DividerHeightFill` filed into kol-ds-ui** — vertical Divider that stretches to its row |
 | 2026-10-18 | **`PageHeaderAppLevel` filed into kol-ds-ui** — header level between page and section |
 | 2026-10-18 | **`PageHeaderAppLevelDisplay` filed into kol-ds-ui** — corrects the mono app level to display-02 |
+| 2026-10-20 | **`save-patch-does-not-work` filed from kol-ds-ui** — patch save broken, review in monitor |
+| 2026-10-20 | **`app-loader-minimum-time` filed from kol-ds-ui** — loader too brief; minimum ms? |
+| 2026-10-22 | **`LoaderAppMinimumTime` filed into kol-ds-ui** — `hideLoaderApp({ minMs = 600 })`, answers `app-loader-minimum-time` |
+| 2026-10-22 | **`app-loader-minimum-time` closed** — kol-framework 0.53.0, 600 ms default |
+| 2026-10-22 | **`save-patch-does-not-work` closed** — plan 15 W1, verified round-trip in Playwright |
+| 2026-10-22 | **`OverscrollNone` filed into kol-ds-ui** — pages bounce; one rule in kol-theme |
+| 2026-10-22 | **`OverscrollNone` returned · adopted** — kol-theme 0.180.0; `html { overscroll-behavior: none; }` in the built CSS |

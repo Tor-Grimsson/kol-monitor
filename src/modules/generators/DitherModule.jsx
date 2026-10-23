@@ -628,7 +628,7 @@ function DitherPanel({
   onInvertChange, onAnimateChange, onFillChange, onRayChange,
   spdConn, spdCvRef, clkConn, clkCvRef, clkInConn, clkInRef,
   sizeCvRef, gapCvRef, sclCvRef, ctrCvRef, angCvRef, intCvRef,
-  sizeConn, gapConn, sclConn, ctrConn, angConn, intConn,
+  sizeConn, gapConn, sclConn, ctrConn, angConn, intConn, blurConn, blurCvRef,
   inConn, inSigRef, clrConn, clrSigRef,
   outRef, dnsRef, colorOutRef,
 }) {
@@ -713,7 +713,7 @@ function DitherPanel({
           {(isEngine || mode === 'flow') && <CvKnob port="ang" moduleId={id} active={angConn} signalRef={angCvRef} value={angle} onChange={onAngleChange} label="ang" direction="vertical" />}
           {!isEngine && !isAscii && mode !== 'halftone' && mode !== 'crosshatch' && <CvKnob port="int" moduleId={id} active={intConn} signalRef={intCvRef} value={intensity} onChange={onIntensityChange} label="mix" direction="vertical" />}
           {animate && (isEngine || mode === 'halftone' || mode === 'crt' || mode === 'melt') && <CvKnob port="spd" moduleId={id} active={spdConn} signalRef={spdCvRef} value={speed} onChange={onSpeedChange} label="rate" direction="vertical" />}
-          <CvKnob port="blur" moduleId={id} value={blur} onChange={onBlurChange} label="blr" direction="vertical" />
+          <CvKnob port="blur" moduleId={id} active={blurConn} signalRef={blurCvRef} value={blur} onChange={onBlurChange} label="blr" direction="vertical" />
         </div>
 
         {/* Toggles + rate */}
@@ -753,7 +753,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     spdConn={false} spdCvRef={{ current: null }} clkConn={false} clkCvRef={{ current: null }} clkInConn={false} clkInRef={{ current: null }}
     sizeCvRef={{ current: null }} gapCvRef={{ current: null }} sclCvRef={{ current: null }}
     ctrCvRef={{ current: null }} angCvRef={{ current: null }} intCvRef={{ current: null }}
-    sizeConn={false} gapConn={false} sclConn={false} ctrConn={false} angConn={false} intConn={false}
+    sizeConn={false} gapConn={false} sclConn={false} ctrConn={false} angConn={false} intConn={false} blurConn={false} blurCvRef={{ current: null }}
     inConn={false} inSigRef={{ current: null }} clrConn={false} clrSigRef={{ current: null }}
     outRef={{ current: null }} dnsRef={{ current: null }} colorOutRef={{ current: null }}
   />
@@ -796,6 +796,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
   const fillRef = useRef(true)
   const speedRef = useRef(50)
   const spdCvRef = useRef(null)
+  const blurCvRef = useRef(null)
   const clkCvRef = useRef(null)  // rst jack
   const clkInRef = useRef(null)  // clk jack
   const prevClkRef = useRef(false)
@@ -841,6 +842,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
 
   // Connection detection
   const sizeConn = cp.has('size')
+  const blurConn = cp.has('blur')
   const gapConn = cp.has('gap')
   const sclConn = cp.has('scl')
   const ctrConn = cp.has('ctr')
@@ -866,7 +868,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     inputs: {
       in: { type: 'scalar' }, clr: { type: 'color' }, rst: { type: 'scalar' }, clk: { type: 'scalar' }, spd: { type: 'scalar', cv: 'offset' },
       size: { type: 'scalar', cv: 'offset' }, gap: { type: 'scalar', cv: 'offset' }, scl: { type: 'scalar', cv: 'offset' },
-      ctr: { type: 'scalar', cv: 'offset' }, ang: { type: 'scalar', cv: 'offset' }, int: { type: 'scalar', cv: 'attenuate' },
+      ctr: { type: 'scalar', cv: 'offset' }, ang: { type: 'scalar', cv: 'offset' }, int: { type: 'scalar', cv: 'attenuate' }, blur: { type: 'scalar', cv: 'offset' },
     },
     outputs: { out: { type: 'points' }, dns: { type: 'scalar' }, color: { type: 'color' } },
     process: (inputs, dt, t) => {
@@ -901,13 +903,14 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
 
       // Knob as multiplier; baseRate = 1 cycle/sec free, or 1/period when clk locks.
       const vSpeed = readCv(inputs.spd, speedRef.current)
+      blurCvRef.current = inputs.blur
       const baseRate = measureClockRate(syncRef.current, inputs.clk, t, 1)
       if (animateRef.current) animTimeRef.current += dt * baseRate * (vSpeed / 50)
 
       const geom = generateDither(
         isEngineRef.current, modeRef.current, isAsciiRef.current, asciiSetRef.current,
         shapeRef.current, vSize, vGap, vScale, vContrast, vAngle, vIntensity,
-        invertRef.current, animateRef.current, fillRef.current, animTimeRef.current, inputs.in || null, rayRef.current, blurRef.current,
+        invertRef.current, animateRef.current, fillRef.current, animTimeRef.current, inputs.in || null, rayRef.current, readCv(inputs.blur, blurRef.current),
       )
 
       const pOut = points(geom.pts, geom.edges)
@@ -942,7 +945,7 @@ export default function DitherModule({ id = 'dither_1', init, preview }) {
     spdConn={spdConn} spdCvRef={spdCvRef} clkConn={clkConn} clkCvRef={clkCvRef} clkInConn={clkInConn} clkInRef={clkInRef}
     sizeCvRef={sizeCvRef} gapCvRef={gapCvRef} sclCvRef={sclCvRef}
     ctrCvRef={ctrCvRef} angCvRef={angCvRef} intCvRef={intCvRef}
-    sizeConn={sizeConn} gapConn={gapConn} sclConn={sclConn} ctrConn={ctrConn} angConn={angConn} intConn={intConn}
+    sizeConn={sizeConn} gapConn={gapConn} sclConn={sclConn} ctrConn={ctrConn} angConn={angConn} intConn={intConn} blurConn={blurConn} blurCvRef={blurCvRef}
     inConn={inConn} inSigRef={inSigRef} clrConn={clrConn} clrSigRef={clrSigRef}
     outRef={outRef} dnsRef={dnsRef} colorOutRef={colorOutRef}
   />

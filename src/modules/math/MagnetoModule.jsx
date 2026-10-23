@@ -594,7 +594,7 @@ export default function MagnetoModule({ id = 'mag1', init, preview }) {
       rev: { type: 'scalar' },
       fwd: { type: 'scalar' },
       tap: { type: 'scalar' },
-      // Bottom strip extras (declared so JackSocket can render; behaviour TODO)
+      // Bottom strip extras — recGate arms recording, shift toggles SHIFT heads
       recGate: { type: 'scalar' },
       shift: { type: 'scalar' },
       sprng: { type: 'scalar', cv: 'offset' },

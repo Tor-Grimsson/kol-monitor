@@ -109,7 +109,7 @@ export const MODULE_DEFS = {
     { type: 'knob', name: 'Value', range: '0–100', description: 'Fixed output value' },
     { type: 'output', name: 'value', signal: 'scalar', description: 'Constant scalar output' },
   ] },
-  logic:     { component: LogicModule,        hp: 8,  u: 1, category: 'control',    label: 'Logic',       description: 'Boolean logic processor for two inputs. 6 selectable modes: AND, OR, XOR, NOT, NAND, and NOR. Threshold is fixed at 50 to determine high or low state. Output is strictly 0 or 100. Useful for combining gates and building conditional signal paths.', controls: [
+  logic:     { component: LogicModule,        hp: 8,  u: 1, category: 'control',    label: 'Logic',       description: 'Boolean logic processor for two inputs. 6 selectable modes: AND, OR, XOR, NOT, NAND, and NOR. Threshold is fixed at 0 to determine high or low state. Output is strictly 0 or 100. Useful for combining gates and building conditional signal paths.', controls: [
     { type: 'selector', name: 'Mode', options: 'AND, OR, XOR, NOT, NAND, NOR', description: 'Boolean operation' },
     { type: 'input', name: 'a', signal: 'scalar', description: 'Input A (>50 = high)' },
     { type: 'input', name: 'b', signal: 'scalar', description: 'Input B (>50 = high)' },
@@ -138,13 +138,13 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'clr', signal: 'color', description: 'Stroke color override' },
     { type: 'output', name: 'out', signal: 'pen', description: 'Pen style object for display modules' },
   ] },
-  joystick:  { component: JoystickModule,    hp: 12, u: 1, category: 'control',    label: 'Joystick',    description: 'Interactive XY touchpad (96x96) with a vertical slider for three-axis manual control. Snap-to-center returns to midpoint on release. Outputs 3 independent bipolar scalars (A, B, C) centered at 0 in range -100..+100. A = horizontal pad, B = vertical pad (up = positive), C = vertical slider (up = positive). Axis assignment is preference-dependent.', controls: [
+  joystick:  { component: JoystickModule,    hp: 12, u: 1, category: 'control',    label: 'Joystick',    description: 'Interactive XY touchpad (96x96) with a vertical slider for three-axis manual control. Snap-to-center returns to midpoint on release. Outputs 3 independent bipolar scalars (A, B, C) centered at 0 in range -100..+100. A = vertical pad (up = positive), B = horizontal pad, C = vertical slider (up = positive). Axis assignment is preference-dependent.', controls: [
     { type: 'toggle', name: 'Snap', description: 'Return to center on release' },
     { type: 'output', name: 'a', signal: 'scalar', description: 'Vertical pad, bipolar −100..+100 (up = positive)' },
     { type: 'output', name: 'b', signal: 'scalar', description: 'Horizontal pad, bipolar −100..+100 (left/right)' },
     { type: 'output', name: 'c', signal: 'scalar', description: 'Vertical slider, bipolar −100..+100 (up = positive)' },
   ] },
-  expression:{ component: ExpressionModule,   hp: 20, u: 1, category: 'control',    label: 'Expr',        description: 'Dual expression generator. Each row takes a math expression evaluated per frame as a signal source. Helpers: wave(x), saw(x), tri(x), pulse(x,w), bell(x), step(x,n), rand(), ease(x,c), exp(x), log(x). Variables: t (seconds), f (frame), PI, PHI. CV inputs a and b are available by name inside the expression for cross-modulation. Clock input resets the time reference on rising edge.', controls: [
+  expression:{ component: ExpressionModule,   hp: 20, u: 1, category: 'control',    label: 'Expr',        description: 'Dual expression generator. Each row takes a math expression evaluated per frame as a signal source. Helpers: wave(x), saw(x), tri(x), pulse(x,w), bell(x), step(x,n), rand(), ease(x,c), exp(x), log(x). Variables: t (seconds), f (frame), PI, PHI. CV inputs a and b are available by name inside the expression for cross-modulation. Reset input zeroes the time reference on a rising edge; clock input sets the time rate to the clock tempo.', controls: [
     { type: 'input', name: 'a', signal: 'scalar', description: 'CV input referenced as `a` in expressions' },
     { type: 'input', name: 'b', signal: 'scalar', description: 'CV input referenced as `b` in expressions' },
     { type: 'input', name: 'clk', signal: 'scalar', description: 'Clock reset — t and f return to 0 on rising edge' },
@@ -281,7 +281,7 @@ export const MODULE_DEFS = {
     { type: 'input', name: 'resCV', signal: 'scalar', description: 'CV for resonance' },
     { type: 'output', name: 'out', signal: 'any', description: 'Filtered output' },
   ] },
-  transform: { component: TransformModule,   hp: 6,  u: 3, category: 'math',       label: 'Xform',       description: '3D transform processor for points geometry. Position X/Y, scale (0.5x to 2x), and rotation on X/Y/Z axes (0-360 degrees). Perspective projection flattens 3D to 2D output. 6 CV inputs for animating every parameter. Preserves signal metadata through the transform chain.', controls: [
+  transform: { component: TransformModule,   hp: 6,  u: 3, category: 'math',       label: 'Xform',       description: '3D transform processor for points geometry. Position X/Y, scale (0x to 2x), and rotation on X/Y/Z axes (0-360 degrees). Perspective projection flattens 3D to 2D output. 6 CV inputs for animating every parameter. Preserves signal metadata through the transform chain.', controls: [
     { type: 'knob', name: 'X', range: '0–100', description: 'Horizontal position' },
     { type: 'knob', name: 'Y', range: '0–100', description: 'Vertical position' },
     { type: 'knob', name: 'Scale', range: '0–2×', description: 'Size multiplier' },
@@ -321,7 +321,7 @@ export const MODULE_DEFS = {
     { type: 'output', name: 'h1–h4', signal: 'points', description: 'Per-head wet output (geometry + colour)' },
     { type: 'output', name: 'clk1–4', signal: 'scalar', description: 'Per-head clock pulses (free-running at head delay rate)' },
   ] },
-  kaleidoscope: { component: KaleidoscopeModule, hp: 10, u: 3, category: 'math', label: 'Kaleido', description: 'Kaleidoscope mirror for points geometry. Replicates input shapes radially with alternating reflections. Segments knob sets 2-32 copies around center. Rotation, zoom, and radial offset shape the pattern. Animate toggle spins continuously with clock-resettable phase. Fold adjusts wedge angle. 3 CV inputs for dynamic modulation.', controls: [
+  kaleidoscope: { component: KaleidoscopeModule, hp: 10, u: 3, category: 'math', label: 'Kaleido', description: 'Kaleidoscope mirror for points geometry. Replicates input shapes radially with alternating reflections. Segments knob sets 2-16 copies around center. Rotation, zoom, and radial offset shape the pattern. Animate toggle spins continuously with clock-resettable phase. Fold adjusts wedge angle. 3 CV inputs for dynamic modulation.', controls: [
     { type: 'knob', name: 'Seg', range: '2–16', description: 'Number of radial copies' },
     { type: 'knob', name: 'Rot', range: '0–360°', description: 'Base rotation angle' },
     { type: 'knob', name: 'Zm', range: '0.1–3×', description: 'Source zoom before mirroring' },
@@ -458,7 +458,7 @@ export const MODULE_DEFS = {
     { type: 'output', name: 'out', signal: 'points', description: 'Geometry output' },
     { type: 'output', name: 'clr', signal: 'color', description: 'Color output from HSL' },
   ] },
-  dither:    { component: DitherModule,      hp: 14, u: 3, category: 'generators', label: 'Dither',      description: 'Dithering engine with 3 layouts (grid/hex/radial) and 6 filters (halftone/flow/crosshatch/CRT/glitch/melt). 10 geometric shapes or 10 ASCII characters as dither elements. Raycast toggle enables accurate fill rendering. Blur knob smooths density transitions. Color input, size from 8 to 256 cells.', controls: [
+  dither:    { component: DitherModule,      hp: 14, u: 3, category: 'generators', label: 'Dither',      description: 'Dithering engine with 3 layouts (grid/hex/radial) and 6 filters (halftone/flow/crosshatch/CRT/glitch/melt). 10 geometric shapes or 10 ASCII characters as dither elements. Raycast toggle enables accurate fill rendering. Blur knob smooths density transitions. Color input, size from 4 to 48 cells.', controls: [
     { type: 'selector', name: 'Engine/Filter', options: 'grid, hex, radial | halftone, flow, crosshatch, CRT, glitch, melt', description: 'Layout or algorithm mode' },
     { type: 'selector', name: 'Shape/ASCII', description: '10 geometric shapes or 10 ASCII characters' },
     { type: 'knob', name: 'Size', range: '4–48 cells', description: 'Cell count with CV' },
@@ -481,7 +481,7 @@ export const MODULE_DEFS = {
   life:      { component: LifeModule,        hp: 12, u: 3, category: 'generators', label: 'Life',        description: 'Cellular automaton simulator with 9 rulesets: Seeds, Diamoeba, Day and Night, Maze, Life, HighLife, Morley, Anneal, and Replicator. Resolution from 8 to 256 with zoom, density, and speed controls. Wrap toggle enables toroidal grid edges. Auto-reseed triggers when the population goes extinct. Clock and reset inputs with canvas preview.', controls: [
     { type: 'knob', name: 'Rule', range: '9 presets', description: 'Seeds, Diamoeba, Day&Night, Maze, Life, HighLife, Morley, Anneal, Replicator' },
     { type: 'knob', name: 'Resolution', range: '8–256', description: 'Grid size with CV' },
-    { type: 'knob', name: 'Speed', range: '0.5–15.5 gen/s', description: 'Simulation rate with CV' },
+    { type: 'knob', name: 'Speed', range: '0.5–30.5 gen/s', description: 'Simulation rate with CV' },
     { type: 'knob', name: 'Density', range: '0–100%', description: 'Seed fill percentage with CV' },
     { type: 'knob', name: 'Zoom', range: '1–4×', description: 'Preview canvas zoom' },
     { type: 'toggle', name: 'Wrap', description: 'Toroidal grid edges' },
@@ -584,7 +584,7 @@ export const MODULE_DEFS = {
   ] },
 
   // Utility
-  patch:     { component: PatchModule,        hp: 6,  u: 1, category: 'utility',    label: 'Patch',       description: 'Preset manager with dropdown selector for organizing patches. Load, save, and clear buttons for patch management. Save exports the full patch as JSON to the clipboard including connections, enabled modules, and console state. Cable count display shows the current number of active patch connections.', controls: [
+  patch:     { component: PatchModule,        hp: 6,  u: 1, category: 'utility',    label: 'Patch',       description: 'Preset manager with dropdown selector for organizing patches. Load, save, and clear buttons for patch management. Save adds the full patch to the library, including connections, enabled modules, and console state, and syncs it when signed in. Export and Import move a patch as a file. Cable count display shows the current number of active patch connections.', controls: [
     { type: 'selector', name: 'Preset', description: 'Patch preset selector' },
     { type: 'button', name: 'Load', description: 'Load selected patch' },
     { type: 'button', name: 'Save', description: 'Save current state to clipboard' },

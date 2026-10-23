@@ -37,6 +37,12 @@ export function addToLibrary(patch) {
   return item
 }
 
+export function renameInLibrary(id, name) {
+  const next = items.map((i) => (i.id === id ? { ...i, name, data: { ...i.data, name } } : i))
+  write(next)
+  pushSave(next.find((i) => i.id === id))
+}
+
 export function removeFromLibrary(id) {
   write(items.filter((i) => i.id !== id))
   pushRemove(id)

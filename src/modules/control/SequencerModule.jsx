@@ -142,16 +142,16 @@ function SequencerPanel({ steps, gates, page, currentStep, length, enabled, onTo
   )
 }
 
-export default function SequencerModule({ id = 'seq1', preview }) {
+export default function SequencerModule({ id = 'seq1', init, preview }) {
   if (preview) {
     return <SequencerPanel steps={new Array(TOTAL_STEPS).fill(5)} gates={new Array(TOTAL_STEPS).fill(0)} page={0} currentStep={0} length={8} enabled={false} onToggle={() => {}} onStepsChange={() => {}} onGateChange={() => {}} onPageChange={() => {}} onLengthChange={() => {}} id={id} clockConnected={false} clockInRef={{ current: null }} resetConnected={false} resetInRef={{ current: null }} lenCvConnected={false} lenCvRef={{ current: null }} gateOutRef={{ current: null }} outRef={{ current: null }} />
   }
 
-  const [steps, setSteps] = useState(initSteps)
-  const [gates, setGates] = useState(() => new Array(TOTAL_STEPS).fill(0)) // 0=on, 1=skip, 2=off
+  const [steps, setSteps] = useState(() => init?.steps ?? initSteps())
+  const [gates, setGates] = useState(() => init?.gates ?? new Array(TOTAL_STEPS).fill(0)) // 0=on, 1=skip, 2=off
   const [currentStep, setCurrentStep] = useState(0)
-  const [page, setPage] = useState(0)
-  const [length, setLength] = useState(8)
+  const [page, setPage] = useState(init?.page ?? 0)
+  const [length, setLength] = useState(init?.length ?? 8)
   const [enabled, setEnabled] = useModuleEnabled()
   const cp = useConnectedPorts(id)
 
