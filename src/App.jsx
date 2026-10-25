@@ -1,10 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
-import { AppStudio, RailSlotProvider, useNavHidden } from '@kolkrabbi/kol-shell'
-import logomarkUrl from '@kolkrabbi/kol-brand/svg/favicon-01.svg?url'
-import { ThemeToggle } from '@kolkrabbi/kol-framework'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { AppStudio, useNavHidden } from '@kolkrabbi/kol-shell'
 import { ModalProvider, useModal } from '@kolkrabbi/kol-component/molecules/Modal'
-import MediaLibrary from '@kolkrabbi/kol-component/organisms/MediaLibrary'
 import { setLibraryApi, getLibraryApi, useLibrarySession, signInLibrary, signOutLibrary, UnauthorizedError } from './hooks/librarySync.js'
 import { client as mediaClient } from './hooks/useMediaLibrary.js'
 import { publishMediaPick } from './hooks/mediaPick.js'
@@ -14,7 +11,8 @@ import { useHomeProps } from './pages/HomePage.jsx'
 import LibraryPage from './pages/LibraryPage.jsx'
 import ModuleDetailPage from './pages/ModuleDetailPage.jsx'
 import PatchDetailPage from './pages/PatchDetailPage.jsx'
-import { SettingsContent, AboutContent } from './pages/SettingsPage.jsx'
+import { useSettings, ABOUT, LINKS } from './pages/SettingsPage.jsx'
+import { useHoverFlip } from './hooks/useHoverFlip'
 import CreatePage from './pages/CreatePage.jsx'
 import StagePage from './pages/StagePage.jsx'
 import { SHORTCUT_SECTIONS } from './data/shortcuts.js'
@@ -28,17 +26,13 @@ setLibraryApi(import.meta.env.VITE_MONITOR_API)
 const DevCapturePage = import.meta.env.DEV ? lazy(() => import('./pages/dev/DevCapturePage.jsx')) : null
 
 /* THE APP, as the Hub reads it: Home's masthead, the mark's title, About and the repo links on
-   Settings. The logomark ships from kol-brand. */
+   Settings. The logomark is the repo's own favicon, the MON mark, not kol-brand's (plan 16 W9, user 2026-10-24). */
 const APP = {
   name: 'Monitor',
   subtitle: 'Video synthesis workstation',
-  logomark: logomarkUrl,
-  about: <AboutContent />,
-  links: [
-    { label: 'GitHub', url: 'https://github.com/Tor-Grimsson/kol-monitor' },
-    { label: 'Kolkrabbi', url: 'https://monitor.kolkrabbi.io' },
-    { label: 'Vercel', url: 'https://kol-monitor-six.vercel.app/' },
-  ],
+  logomark: '/svg/favicon.svg',
+  about: ABOUT,
+  links: LINKS,
 }
 
 /* Rail order, mark first — the sequence the ⌥ prefix walks (Settings is not in it) */
@@ -114,23 +108,14 @@ function RailFrame({ children }) {
   )
 }
 
-/* The rail's two sign-in rows are sentinels: they act, they do not route (kol-mirror's, plan 13 W7). */
-const SIGN_IN_PATH = '#sign-in'
-const MEDIA_PATH = '#media'
-
-/* Sign in · sign out through the KOL modal (kol-mirror's and kol-fxr's) */
+/* The Sign in row's press — the Hub asks the password or the sign-out confirm in the DS dialog itself,
+   then hands over the password, or null for sign out. The outcome goes through the KOL modal. */
 function useSignIn() {
   const modal = useModal()
-  const session = useLibrarySession()
-  return async () => {
-    if (session) {
-      if (await modal.confirm('Sign out of the sync? Saves stay on this device only.', { okLabel: 'Sign out' })) signOutLibrary()
-      return
-    }
-    const pw = await modal.prompt('Password for the monitor sync:', '')
-    if (!pw) return
+  return async (password) => {
+    if (password == null) { signOutLibrary(); return }
     try {
-      const n = await signInLibrary(pw)
+      const n = await signInLibrary(password)
       await modal.alert(`Signed in. ${n} ${n === 1 ? 'save' : 'saves'} in the library; saves now sync, and Media is in the rail.`)
     } catch (e) {
       await modal.alert(e instanceof UnauthorizedError ? 'Wrong password. Still local only.' : `Sign in failed: ${e?.message || e}`)
@@ -146,8 +131,8 @@ function useSignIn() {
  * ONE RackProvider above the Studio: Library, Create and the Rack share it, so a case being built
  * on /create survives a trip to a module's page and Back (2026-09-02). The Stage gets its OWN —
  * sharing the rack's would mean loading a stage silently replaces whatever is in the rack.
- * `RailSlotProvider` (kol-shell 0.64.0, `NavRailConsumerSlot`) sits above both, so the rail's opened
- * width carries a slot the rack portals its module catalog into (`RackRailPanel`, via `useRailSlot`).
+ * The nav rail navigates and carries nothing else (RailRolesOnMonitor 2026-10-25 — the module catalog that was
+ * portalled into its slot is in `_tmp/2026-10-25-rack-rail-panel/`).
  */
 /* the DS prompt / confirm / alert, app-wide (plan 13 W6) — Patch Clear, a bad import, sign-in */
 function Shell() {
@@ -160,33 +145,33 @@ function ShellBody() {
   const modal = useModal()
   const { home, walkthrough } = useHomeProps()
   const session = useLibrarySession()
-  const signIn = useSignIn()
-  const [mediaOpen, setMediaOpen] = useState(false)
+  const onPress = useSignIn()
+  const settings = useSettings()
+  /* THE CARDS' BACK (AppCardWholeFlip, kol-component 0.301.0 — user 2026-10-24: "make the cards flip on a shortcut and
+     disable the hover" · "hover flips card? default off"): `F` turns every card on Home and Library; Settings →
+     Display → Hover flips card opts the hover in. F is the rack's and the stage's framerate, which mount no cards. */
+  const hoverFlip = useHoverFlip()
+  const [flipped, setFlipped] = useState(false)
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'f' && e.key !== 'F') return
+      if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.('input, textarea, select, [contenteditable]')) return
+      if (!/^\/(library)?$/.test(window.location.pathname)) return
+      setFlipped((v) => !v)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
   useAltPrefixNav(navigate)
 
-  /* the pinned foot: Media (signed in) and Sign in (when there is an API) above Settings. A
-     `shell.bottomItems` replaces the Hub's own list, so Settings is named here too. */
-  const bottomItems = [
-    ...(session ? [{ icon: 'image', path: MEDIA_PATH, label: 'Media' }] : []),
-    ...(getLibraryApi() ? [{ icon: session ? 'cloud' : 'user', path: SIGN_IN_PATH, label: session ? 'Synced · sign out' : 'Sign in' }] : []),
-    { icon: 'nav-settings', path: '/settings', label: 'Settings' },
-  ]
-  const onNavigate = (path) => {
-    if (path === SIGN_IN_PATH) return signIn()
-    if (path === MEDIA_PATH) return setMediaOpen(true)
-    navigate(path)
-  }
   /* a pick goes out through the one seam (`mediaPick`); today the SVG module takes an .svg */
   const onMediaPick = (url) => {
-    setMediaOpen(false)
     const name = decodeURIComponent(url.split('/').pop())
     if (!/\.svg$/i.test(name)) return modal.alert('The SVG module takes .svg files.')
     if (!publishMediaPick({ url: mediaClient.proxied(url), name })) modal.alert('Add an SVG module to the rack to use this file.')
   }
 
   return (
-    <>
-    <RailSlotProvider>
       <RackProvider>
         {/* keyed on the session: signing in or out remounts the shell, so Home re-picks its tab (SAVED out,
             RECENT in). Rack state lives above it, in RackProvider, and survives. */}
@@ -194,34 +179,37 @@ function ShellBody() {
           key={session ? 'signed-in' : 'signed-out'}
           app={APP}
           currentPath={location.pathname}
-          onNavigate={onNavigate}
+          onNavigate={navigate}
           shortcuts={SHORTCUT_SECTIONS}
           walkthrough={walkthrough}
-          /* the Settings masthead toggle — a NODE, because kol-framework is not a peer of kol-shell */
-          themeToggle={<ThemeToggle fill="none" tone="sunken" label={false} size="sm" />}
-          home={home}
+          home={{ ...home, backReveal: 'flip-card', flipped, backHover: hoverFlip }}
           library={{
             children: (
               <Routes>
-                <Route path="/library" element={<LibraryPage />} />
-                <Route path="/library/:moduleType" element={<ModuleDetailPage />} />
+                <Route path="/library" element={<LibraryPage flipped={flipped} backHover={hoverFlip} />} />
                 <Route path="/library/patch/:patchName" element={<PatchDetailPage />} />
+                <Route path="/library/module/:moduleType" element={<ModuleDetailPage />} />
+                {/* the old module slug keeps working */}
+                <Route path="/library/:id" element={<LegacyModuleSlug />} />
               </Routes>
             ),
           }}
-          create={{ shell: false, children: <RailFrame><CreatePage /></RailFrame> }}
+          create={{ shell: false, bar: false, children: <RailFrame><CreatePage /></RailFrame> }}
           use={{
             path: '/rack', label: 'Rack', icon: 'nav-rack',
             children: (
-              <Routes>
-                <Route path="/rack" element={<VideoModulo />} />
-                <Route path="/rack/preset/:presetName" element={<VideoModulo />} />
-                <Route path="/rack/patch/:presetName" element={<VideoModulo />} />
-              </Routes>
+              <RailFrame>
+                <Routes>
+                  <Route path="/rack" element={<VideoModulo />} />
+                  <Route path="/rack/preset/:presetName" element={<VideoModulo />} />
+                  <Route path="/rack/patch/:presetName" element={<VideoModulo />} />
+                </Routes>
+              </RailFrame>
             ),
           }}
           pages={[{
-            path: '/stage', icon: 'video', label: 'Stage',
+            /* the Stage owns the phone's bottom edge */
+            path: '/stage', icon: 'video', label: 'Stage', bar: false,
             children: (
               <RackProvider initialRows={[]}>
                 <Routes>
@@ -233,22 +221,23 @@ function ShellBody() {
           },
           ]}
           dev={DEV_TABS ? { tabs: DEV_TABS } : undefined}
-          settings={{ content: <SettingsContent /> }}
+          settings={settings}
+          /* the rail's foot is the Hub's: Media (signed in) and Sign in (when there is an API) above Settings */
+          media={session ? { client: mediaClient, accept: ['image'], onSelect: onMediaPick } : undefined}
+          signIn={getLibraryApi() ? { signedIn: !!session, onPress } : undefined}
           shell={{
-            /* THE DRAWER ON EVERY ROUTE below 768, Home included (user, 2026-09-02) — not the Hub's
-               phone bar: monitor's Home is a catalog, and the rail is a tap away */
-            touch: 'drawer',
-            drawerBelow: 768,
             /* the ⌥ chord AND prefix are `useAltPrefixNav`'s — both listen on window */
             navKeys: false,
-            bottomItems,
           }}
         />
       </RackProvider>
-    </RailSlotProvider>
-    <MediaLibrary variant="picker" open={mediaOpen} client={mediaClient} accept={['image']} onClose={() => setMediaOpen(false)} onSelect={onMediaPick} />
-    </>
   )
+}
+
+/* `/library/<type>` → `/library/module/<type>` */
+function LegacyModuleSlug() {
+  const { id } = useParams()
+  return <Navigate to={`/library/module/${id}`} replace />
 }
 
 function App() {

@@ -19,12 +19,17 @@ import { useTouchGestures } from '../hooks/useTouchGestures.js'
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 2.5
 
-export function usePanZoom(surfaceRef, initialPan = { x: 0, y: 0 }, initialZoom = 1) {
+/* `onSpaceTap`: a clean Space tap (no drag, <250ms) — the stage's transport, as on the rack (plan 16 W6.2) */
+export function usePanZoom(surfaceRef, initialPan = { x: 0, y: 0 }, initialZoom = 1, onSpaceTap) {
   const [zoom, setZoom] = useState(initialZoom)
   const [pan, setPan] = useState(initialPan)
   const panRef = useRef(pan)
   panRef.current = pan
   const spaceDown = useRef(false)
+  const spaceAt = useRef(0)
+  const spaceDragged = useRef(false)
+  const onSpaceTapRef = useRef(onSpaceTap)
+  onSpaceTapRef.current = onSpaceTap
 
   // Two fingers pan + pinch (touch only) — the rack's gesture, same ÷zoom
   const zoomRef = useRef(zoom)
@@ -50,6 +55,7 @@ export function usePanZoom(surfaceRef, initialPan = { x: 0, y: 0 }, initialZoom 
   const onPointerDown = useCallback((e) => {
     if (!spaceDown.current || e.button !== 0) return
     e.preventDefault()
+    spaceDragged.current = true
     const start = { x: e.clientX, y: e.clientY, ...panRef.current }
     const move = (ev) => setPan({ x: start.x + (ev.clientX - start.x), y: start.y + (ev.clientY - start.y) })
     const up = () => {
@@ -78,6 +84,8 @@ export function usePanZoom(surfaceRef, initialPan = { x: 0, y: 0 }, initialZoom 
       if (e.code === 'Space' && !e.repeat && noInput(e)) {
         e.preventDefault()
         spaceDown.current = true
+        spaceAt.current = performance.now()
+        spaceDragged.current = false
         if (surfaceRef.current) surfaceRef.current.style.cursor = 'grab'
       }
       if (!noInput(e) || e.metaKey || e.ctrlKey || e.altKey) return
@@ -87,6 +95,7 @@ export function usePanZoom(surfaceRef, initialPan = { x: 0, y: 0 }, initialZoom 
     }
     const up = (e) => {
       if (e.code !== 'Space') return
+      if (spaceDown.current && !spaceDragged.current && performance.now() - spaceAt.current < 250) onSpaceTapRef.current?.()
       spaceDown.current = false
       if (surfaceRef.current) surfaceRef.current.style.cursor = ''
     }

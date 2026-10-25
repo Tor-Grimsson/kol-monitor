@@ -11,8 +11,8 @@
 // prop, not UI chrome — sampled off mirror's reference plates.
 
 import { useState } from 'react'
-import RotaryDial from '@kolkrabbi/kol-component/atoms/RotaryDial'
-import { Tooltip } from '@kolkrabbi/kol-component/utilities/Popover'
+import Knob from '../modules/parametric/Knob.jsx'
+import Toggle from '../modules/parametric/Toggle.jsx'
 
 const PANEL = {
   metal: '#191919',
@@ -49,19 +49,6 @@ function Screw({ top, right, bottom, left, rot }) {
     >
       <span className="absolute" style={{ left: 1, right: 1, top: 3, height: 1, background: PANEL.slot }} />
     </span>
-  )
-}
-
-/* A lozenge key. No legend — at this size silkscreen reads as dirt. */
-function PanelKey({ on, onClick, title, w = 26 }) {
-  return (
-    <Tooltip label={title} asChild>
-      <span
-        onClick={onClick}
-        className={onClick ? 'cursor-pointer select-none' : 'select-none'}
-        style={{ width: w, height: 10, borderRadius: 1, background: on ? '#f2eee0' : '#cdc9bc', transform: on ? 'translateY(1px)' : 'none' }}
-      />
-    </Tooltip>
   )
 }
 
@@ -104,73 +91,36 @@ export function Clock({ t = 0 }) {
 
 /* The picture knobs, in the reference's order — CSS filter units. */
 const KNOBS = [
-  ['blur', 0, 20, 0],
-  ['brightness', 0, 300, 100],
-  ['saturate', 0, 300, 100],
-  ['contrast', 0, 300, 100],
+  ['blur', 0, 20, 0, 'blur'],
+  ['brightness', 0, 300, 100, 'brt'],
+  ['saturate', 0, 300, 100, 'sat'],
+  ['contrast', 0, 300, 100, 'con'],
 ]
 
+/* THE CONTROLS ARE THE MODULES' CONTROLS (plan 16 W6.5, user 2026-10-24: "we need to label the controls, button ON/off +
+   the 4 knobs + all the buttons … follow what we already have done with the moduls"). The panel's Knob and Toggle, each
+   with its panel label; the blank keys that did nothing are gone. */
 function ControlStrip({ picture, setPicture, marker, setMarker, blue, setBlue, mono, setMono, tally, onPower, jack }) {
-  const LOWER = [
-    { on: marker, onClick: () => setMarker(v => !v), title: 'Safe-area guides' },
-    { on: blue, onClick: () => setBlue(v => !v), title: 'Blue channel only' },
-    { on: mono, onClick: () => setMono(v => !v), title: 'Monochrome' },
-    {}, {}, {}, {}, {}, {}, {},
-  ]
   return (
     <div className="absolute flex items-stretch justify-center" style={{ left: BEZEL_S, right: BEZEL_S, bottom: 12, gap: 10 }}>
       <Grille />
       <div
-        className="flex items-center shrink"
-        style={{ flex: '1 1 auto', maxWidth: 780, minWidth: 0, gap: 12, padding: '8px 14px', borderRadius: 3, background: '#0c0c0c', border: '1px solid #2b2b2b' }}
+        /* the modules' plate, so the labels read in both themes (the dark strip hid them in light) */
+        className="kol-hw-panel bg-surface-secondary flex items-center justify-center shrink"
+        style={{ flex: '1 1 auto', maxWidth: 780, minWidth: 0, gap: 16, padding: '6px 14px', borderRadius: 3 }}
       >
-        <div className="flex flex-col flex-1 min-w-0" style={{ gap: 6 }}>
-          <div className="flex items-center justify-center" style={{ gap: 8 }}>
-            <PanelKey />
-            <PanelKey />
-            {KNOBS.map(([key, min, max, def]) => (
-              <RotaryDial
-                key={key}
-                /* dense: the default variant pins its tick ring at 64px whatever
-                   `size` says, which overflows the chin */
-                variant="dense"
-                panel
-                size={26}
-                compact
-                min={min}
-                max={max}
-                defaultValue={def}
-                value={picture[key]}
-                onChange={v => setPicture(p => ({ ...p, [key]: v }))}
-              />
-            ))}
-          </div>
-          <div className="flex items-center justify-center" style={{ gap: 6 }}>
-            {LOWER.map((k, i) => <PanelKey key={i} {...k} w={24} />)}
-          </div>
-        </div>
+        <Toggle value={marker} onChange={setMarker} label="guides" />
+        <Toggle value={blue} onChange={setBlue} label="blue" />
+        <Toggle value={mono} onChange={setMono} label="mono" />
+        {KNOBS.map(([key, min, max, def, label]) => (
+          <Knob key={key} min={min} max={max} defaultValue={def} value={picture[key]} label={label} onChange={v => setPicture(p => ({ ...p, [key]: v }))} />
+        ))}
         {/* THE INPUT — the monitor's own jack, on the monitor (user, 2026-09-02:
             "why not just use the actual monitor?"). Whatever is patched here is
             what the tube shows. */}
         {jack && <div className="flex flex-col items-center justify-center shrink-0">{jack}</div>}
-        {/* POWER — the tall cream cap, and it works: it runs the stage. The cap
-            latches down while on, the way a deck's power key does, and the lamp
-            above is the tally. */}
-        <div className="flex flex-col items-center justify-center shrink-0" style={{ gap: 4 }}>
-          <span aria-hidden className="rounded-full" style={{ width: 5, height: 5, background: tally ? '#7ec81e' : '#2b3a1a', boxShadow: tally ? '0 0 5px #7ec81e' : 'none' }} />
-          <Tooltip label={tally ? 'Power off' : 'Power on'} asChild>
-            <span
-              onClick={onPower}
-              className="cursor-pointer select-none"
-              style={{
-                width: 24, height: 26, borderRadius: 2,
-                background: tally ? '#f2eee0' : '#cdc9bc',
-                transform: tally ? 'translateY(1px)' : 'none',
-                boxShadow: tally ? 'inset 0 1px 2px rgb(0 0 0 / 0.35)' : 'none',
-              }}
-            />
-          </Tooltip>
-        </div>
+        {/* POWER — lights the tube and nothing else; the green LED is the tally */}
+        <Toggle value={tally} onChange={() => onPower()} label="power" color="var(--kol-ctl-led-green)" />
       </div>
       <Grille />
     </div>
@@ -210,7 +160,7 @@ export default function StageBezel({ tally, onPower, aspect = '16 / 9', style, j
       {/* the mask band — the black surround between the moulding and the glass */}
       <div className="w-full" style={{ background: PANEL.mask, borderRadius: 6, padding: 3, aspectRatio: aspect }}>
         <div className="relative w-full h-full overflow-hidden" style={{ borderRadius: 4 }}>
-          <div className="absolute inset-0" style={{ filter: tube }}>{children}</div>
+          <div className="absolute inset-0" data-stage-screen style={{ filter: tube }}>{children}</div>
           {marker && (
             <div aria-hidden className="absolute inset-0 pointer-events-none">
               <div className="absolute" style={{ inset: '5%', border: '1px solid rgb(255 255 255 / 0.35)' }} />

@@ -24,6 +24,7 @@ function MonitorPanel({ canvasRef, overlay, onOverlayChange, enabled, onToggle, 
       }}>
 
         <canvas
+          data-monitor-canvas
           ref={canvasRef}
           width={160}
           height={100}

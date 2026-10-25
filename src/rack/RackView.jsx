@@ -9,6 +9,7 @@ import Case, { RackRow } from '../modules/utility/Case.jsx'
 import { ModuleEditContext } from '../modules/utility/Module.jsx'
 import Button from '../components/atoms/Button'
 import { Tooltip } from '@kolkrabbi/kol-component/utilities/Popover'
+import { useModuleMenu } from './ModuleMenu.jsx'
 
 /* the edit-mode reposition key — a DS icon button at the panel rung (plan 13 W4.2): the hover ladder is
    the DS's, which is what the hand-rolled hover state was standing in for (a momentary pulse does not
@@ -56,7 +57,7 @@ function ArrowOverlay({ onLeft, onRight, onUp, onDown }) {
 // (no arrows visible yet) shows instantly — only the cross-module jump waits.
 const SWITCH_DWELL_MS = 400
 
-const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, caseHp, editMode, siblingIdx, siblingCount, activeArrowsId, requestActivate, cancelActivate, onSendToWorkbench, onSwapInRow, onMoveToRow }) {
+const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, caseHp, editMode, siblingIdx, siblingCount, activeArrowsId, requestActivate, cancelActivate, onSendToWorkbench, onSwapInRow, onMoveToRow, onOpenMenu }) {
   const def = MODULE_DEFS[mod.type]
   if (!def) return null
   const Comp = def.component
@@ -82,6 +83,8 @@ const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, caseHp, ed
   return (
     <div
       data-module-id={mod.id}
+      /* right-click: the module menu (plan 16 W2) — in and out of edit mode */
+      onContextMenu={(e) => onOpenMenu(e, { mod })}
       onMouseEnter={() => { if (editMode) requestActivate(mod.id) }}
       onMouseLeave={() => { if (editMode) cancelActivate(mod.id) }}
       style={{
@@ -107,7 +110,7 @@ const ModuleSlot = memo(function ModuleSlot({ mod, row, rowIdx, rows, caseHp, ed
   )
 })
 
-const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, caseHp, editMode, activeArrowsId, requestActivate, cancelActivate, onSendToWorkbench, onSwapInRow, onMoveToRow, rowRefs }) {
+const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, caseHp, editMode, activeArrowsId, requestActivate, cancelActivate, onSendToWorkbench, onSwapInRow, onMoveToRow, onOpenMenu, rowRefs }) {
   const sorted = useMemo(() =>
     [...row.modules].sort((a, b) => a.offset - b.offset),
     [row.modules]
@@ -135,6 +138,7 @@ const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, caseHp,
             onSendToWorkbench={onSendToWorkbench}
             onSwapInRow={onSwapInRow}
             onMoveToRow={onMoveToRow}
+            onOpenMenu={onOpenMenu}
           />
         ))}
       </div>
@@ -142,7 +146,8 @@ const RackRowContent = memo(function RackRowContent({ row, rowIdx, rows, caseHp,
   )
 })
 
-export default memo(function RackView({ rows, caseHp, editMode, onSendToWorkbench, onSwapInRow, onMoveToRow, rowRefs }) {
+export default memo(function RackView({ rows, caseHp, editMode, onSendToWorkbench, onSwapInRow, onMoveToRow, onDelete, rowRefs }) {
+  const menu = useModuleMenu({ onPark: onSendToWorkbench, onDelete })
   // Shared across all ModuleSlots — only one module shows arrows at a time.
   // Once arrows are up on module A, they stay until another module dwells for
   // SWITCH_DWELL_MS. A glancing pass over B cancels its pending switch and
@@ -223,10 +228,12 @@ export default memo(function RackView({ rows, caseHp, editMode, onSendToWorkbenc
           onSendToWorkbench={onSendToWorkbench}
           onSwapInRow={onSwapInRow}
           onMoveToRow={onMoveToRow}
+          onOpenMenu={menu.openAt}
           rowRefs={rowRefs}
         />
       ))}
     </Case>
+    {menu.element}
     </div>
   )
 })

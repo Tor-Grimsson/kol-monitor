@@ -1,144 +1,45 @@
-import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { StudioDetail } from '@kolkrabbi/kol-shell'
 import { patches } from '../data/patches'
 import { MODULE_DEFS } from '../modules/registry'
-import Divider from '@kolkrabbi/kol-component/atoms/Divider'
-import Button from '../components/atoms/Button'
-import { PageShell } from '@kolkrabbi/kol-shell'
-import { PageHeader } from '@kolkrabbi/kol-component'
+
+/**
+ * PatchDetailPage — `/library/patch/:patchName`, one patch's page on kol-shell's `StudioDetail` (plan
+ * home-library-detail-one-card 3.1 · 3.2, 2026-10-24). A patch card opens THIS page, never the rack (user: *"it goes
+ * to the same PATCH detail slug, from where you can load if you want"*); Load into the rack is the first action.
+ */
+const titleOf = (name) => name.replace(/([A-Z])/g, ' $1').replace(/[-_]/g, ' ').trim().replace(/\b\w/g, (c) => c.toUpperCase())
 
 export default function PatchDetailPage() {
   const { patchName } = useParams()
   const navigate = useNavigate()
   const patch = patches[patchName]
-  const [fullView, setFullView] = useState(false)
-
-  if (!patch) {
-    return (
-      <PageShell>
-        {/* subtitle keeps the masthead on the 65.2 rung every other page sits on */}
-        <PageHeader level="app" title="Patch not found" subtitle={patchName} />
-      </PageShell>
-    )
-  }
+  if (!patch) return <StudioDetail notFound={{ title: 'Patch not found', subtitle: patchName }} />
 
   const moduleCount = patch.rows?.reduce((sum, r) => sum + (r.modules?.length || 0), 0) || 0
   const connCount = patch.connections?.length || 0
-  const title = patchName.replace(/([A-Z])/g, ' $1').replace(/[-_]/g, ' ').trim()
-    .replace(/\b\w/g, c => c.toUpperCase())
   const rackUrl = `/rack/patch/${patchName.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`
+  const goBack = () => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate('/library'))
 
   return (
-    <PageShell mode="fixed">
-      <PageHeader level="app" title={title} subtitle={`${moduleCount} modules, ${connCount} connections`} />
-
-      <Divider className="mb-6" />
-
-      <div style={{ display: 'flex', gap: 48, flex: 1, minHeight: 0 }}>
-        {/* Info column */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'auto', paddingTop: 4, paddingBottom: 4 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-            <div>
-              <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Description</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {(patch.description || '').split('. ').filter(Boolean).map((s, i) => (
-                  <div key={i} className="text-fg-48 kol-helper-10">
-                    {s.endsWith('.') ? s : s + '.'}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Specifications</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div className="text-fg-48 kol-helper-10">Modules: {moduleCount}</div>
-                <div className="text-fg-48 kol-helper-10">Connections: {connCount}</div>
-                {patch.tags && <div className="text-fg-48 kol-helper-10">Tags: {patch.tags.join(', ')}</div>}
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-fg-80 kol-helper-14" style={{ marginBottom: 16 }}>Modules</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {patch.rows?.map((row, ri) => (
-                  <div key={ri}>
-                    <div className="text-fg-32 kol-helper-10" style={{ marginBottom: 8 }}>Row {ri + 1} — {row.height.toUpperCase()}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 12 }}>
-                      {row.modules?.map((m, mi) => {
-                        const def = MODULE_DEFS[m.type]
-                        if (!def) return null
-                        return (
-                          <div key={mi} style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-                            <span className="text-fg-64 kol-helper-10" style={{ width: 72, flexShrink: 0 }}>{def.label}</span>
-                            <span className="text-fg-32 kol-helper-10">{def.hp}HP — {def.category}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Divider />
-            <div style={{ display: 'flex', gap: 12 }}>
-              <Button tone="grey" size="md" onClick={() => navigate('/library', { state: { expandedPatch: patchName } })}>
-                Back
-              </Button>
-              <Button tone="grey" size="md" onClick={() => navigate(rackUrl)}>
-                Open in Rack
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Image container */}
-        <div
-          onClick={() => setFullView(true)}
-          className="bg-surface-tertiary"
-          style={{ flex: '0 0 50%', overflow: 'hidden', position: 'relative', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4 }}
-        >
-          <img
-            src={`/previews/patches/${patchName}.png`}
-            alt={title}
-            style={{ maxWidth: 'none', height: '100%', width: 'auto' }}
-          />
-          <div className="patch-preview-overlay" style={{
-            position: 'absolute', inset: 0,
-            background: 'rgba(0,0,0,0.6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            opacity: 0, transition: 'opacity 0.2s',
-          }}>
-            <span className="kol-helper-12 text-fg-64">Click to expand</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Fullscreen image overlay */}
-      {fullView && (
-        <div
-          onClick={() => setFullView(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 100,
-            background: 'rgba(0,0,0,0.9)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-        >
-          <span
-            onClick={(e) => { e.stopPropagation(); setFullView(false) }}
-            className="text-fg-48 module-detail-code-link kol-helper-12"
-            style={{ position: 'absolute', top: 24, right: 24, cursor: 'pointer' }}
-          >Close</span>
-          <img
-            src={`/previews/patches/${patchName}.png`}
-            alt={title}
-            style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
-          />
-        </div>
-      )}
-    </PageShell>
+    <StudioDetail
+      back={{ onClick: goBack }}
+      title={titleOf(patchName)}
+      subtitle={`${moduleCount} modules, ${connCount} connections`}
+      description={patch.description || ''}
+      sections={[
+        { label: 'Specifications', rows: [{ label: `Modules: ${moduleCount}` }, { label: `Connections: ${connCount}` }, ...(patch.tags ? [{ label: `Tags: ${patch.tags.join(', ')}` }] : [])] },
+        /* the rack, row by row — a module per row with its width and category */
+        { label: 'Modules', rows: (patch.rows ?? []).flatMap((row, ri) => [
+          { label: `Row ${ri + 1} — ${row.height.toUpperCase()}` },
+          ...(row.modules ?? []).map((m) => MODULE_DEFS[m.type]).filter(Boolean).map((def) => ({ kind: '', label: def.label, value: `${def.hp}HP — ${def.category}` })),
+        ]) },
+      ]}
+      /* the patch's OUTPUT, never the rack (1.6) — /previews/patches holds the output capture once the generator is re-run */
+      preview={{ src: `/previews/patches/${patchName}.png`, alt: titleOf(patchName) }}
+      actions={[
+        { label: 'Load', onClick: () => navigate(rackUrl) },
+      ]}
+    />
   )
 }

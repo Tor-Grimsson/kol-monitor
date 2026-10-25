@@ -8,12 +8,16 @@
 // enforces no type rule on a jack (any output patches into any input), so the
 // dropdowns show each port's type instead of filtering by it.
 //
-// `backdrop={false}`: the rack stays live behind the panel, so a cable can be
+// On `SettingsPanel backdrop={false}` (plan 16 W6.1 — the settings Rail's template, no scrim; ticket SettingsPanelBackdrop): the rack stays live behind it, so a cable can be
 // added while the picture is watched.
 
 import { useMemo, useState } from 'react'
-import ShellDrawer from '@kolkrabbi/kol-component/molecules/ShellDrawer'
 import Dropdown from '@kolkrabbi/kol-component/molecules/Dropdown'
+import Rail from '@kolkrabbi/kol-component/molecules/Rail'
+import Divider from '@kolkrabbi/kol-component/atoms/Divider'
+import ActionButton from '@kolkrabbi/kol-component/molecules/ActionButton'
+import { LabeledControlSection as RailSection, SettingsRow as RailRow } from '@kolkrabbi/kol-component/organisms/SettingsPanel'
+import { RailHeader, RailHint, RailActions } from '@kolkrabbi/kol-component/organisms/RailKit'
 import Button from '../components/atoms/Button'
 import { useModuleRegistry } from '../hooks/useModuleRegistry.jsx'
 import { usePatchRouting } from '../hooks/usePatchRouting.jsx'
@@ -58,35 +62,44 @@ export default function PatchTableOverlay({ open, rows, onClose }) {
 
   const placeholder = (label) => [{ value: '', label }]
 
+  /* ON THE RAIL KIT (plan 17 W3.1, ticket RailKit — kol-ds-ui's `apps/rails` list rail): the app tier's width and
+     padding, `RailHeader`, rows with a per-row ActionButton, a Divider, the add controls as `RailSection` / `RailRow`
+     and `RailActions`. Over the live rack, no scrim. */
   return (
-    <ShellDrawer open={open} onClose={onClose} side="right" width="min(440px, 100vw)" backdrop={false} header={<span className="kol-helper-12 text-fg-64">Patch table</span>}>
-      <div className="flex flex-col gap-4 p-4 kol-helper-12">
+    <Rail role="patch" open={open} onClose={onClose}
+      header={<RailHeader title="Patch table" />}
+    >
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
-          {connections.length === 0 && <div className="text-fg-32">No cables</div>}
+          {connections.length === 0 && <RailHint>No cables</RailHint>}
           {connections.map(c => (
-            <div key={`${c.toModuleId}:${c.toPort}`} className="flex items-center gap-2 h-8">
-              <span className="text-fg-80 truncate">{labelOf(c.fromModuleId)} · {c.fromPort}</span>
+            <div key={`${c.toModuleId}:${c.toPort}`} className="flex h-8 items-center gap-2 kol-mono-12">
+              <span className="truncate text-fg-80">{labelOf(c.fromModuleId)} · {c.fromPort}</span>
               <span className="text-fg-32">→</span>
-              <span className="text-fg-80 truncate flex-1">{labelOf(c.toModuleId)} · {c.toPort}</span>
-              <Button tone="grey" size="sm" aria-label="Remove cable" onClick={() => removeConnection(c.toModuleId, c.toPort)}>×</Button>
+              <span className="flex-1 truncate text-fg-80">{labelOf(c.toModuleId)} · {c.toPort}</span>
+              <ActionButton chrome="inline" size="sm" icon="x" confirmIcon="x" label="Remove cable" onAction={() => removeConnection(c.toModuleId, c.toPort)} />
             </div>
           ))}
         </div>
-
-        <div className="border-t border-fg-08" />
-
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
-            <Dropdown variant="grey" className="flex-1" options={placeholder('From module').concat(modules)} value={pick.from} onChange={pickFrom} />
-            <Dropdown variant="grey" className="flex-1" options={outs.length ? outs : placeholder('out')} value={pick.fromPort} onChange={fromPort => setPick(p => ({ ...p, fromPort }))} />
-          </div>
-          <div className="flex gap-2">
-            <Dropdown variant="grey" className="flex-1" options={placeholder('To module').concat(modules)} value={pick.to} onChange={pickTo} />
-            <Dropdown variant="grey" className="flex-1" options={ins.length ? ins : placeholder('in')} value={pick.toPort} onChange={toPort => setPick(p => ({ ...p, toPort }))} />
-          </div>
-          <Button tone="grey" size="md" disabled={!canAdd} onClick={() => addConnection(pick.from, pick.fromPort, pick.to, pick.toPort)}>Add cable</Button>
-        </div>
+        <Divider />
+        <RailSection>
+          <RailRow label="From" align="fill" labelWidth={48}>
+            <div className="flex w-full gap-2">
+              <Dropdown size="sm" className="flex-1" options={placeholder('From module').concat(modules)} value={pick.from} onChange={pickFrom} ariaLabel="From module" />
+              <Dropdown size="sm" className="w-24" options={outs.length ? outs : placeholder('out')} value={pick.fromPort} onChange={fromPort => setPick(p => ({ ...p, fromPort }))} ariaLabel="From port" />
+            </div>
+          </RailRow>
+          <RailRow label="To" align="fill" labelWidth={48}>
+            <div className="flex w-full gap-2">
+              <Dropdown size="sm" className="flex-1" options={placeholder('To module').concat(modules)} value={pick.to} onChange={pickTo} ariaLabel="To module" />
+              <Dropdown size="sm" className="w-24" options={ins.length ? ins : placeholder('in')} value={pick.toPort} onChange={toPort => setPick(p => ({ ...p, toPort }))} ariaLabel="To port" />
+            </div>
+          </RailRow>
+          <RailActions>
+            <Button size="sm" disabled={!canAdd} onClick={() => addConnection(pick.from, pick.fromPort, pick.to, pick.toPort)}>Add cable</Button>
+          </RailActions>
+        </RailSection>
       </div>
-    </ShellDrawer>
+    </Rail>
   )
 }

@@ -40,3 +40,4 @@ public/videos
 # the D1 Worker (api/) — local secrets and wrangler's local state
 api/.dev.vars
 .wrangler/
+.playwright-mcp/

@@ -43,21 +43,9 @@
   color: var(--kol-accent-on-primary);
 }
 
-/* Cards hold still on Home + Library (user ruling 2026-08-27). The DS catalog
- * card steps its fill and frame, zooms the media 1.06 and dims the title on
- * hover; each is pinned back to its rest value here. Keyed on the two
- * CatalogPage roots (`className="no-card-hover"`) — Create's picker keeps the
- * DS hover. The cursor stays: the card still opens on click. */
-.no-card-hover .kol-card.kol-content-hover:hover {
-  background-color: var(--kol-card-bg);
-}
-.no-card-hover .kol-card.kol-content-hover-frame:hover {
-  border-color: var(--kol-card-border);
-}
-.no-card-hover .kol-card:hover .kol-media-zoom > img,
-.no-card-hover .kol-card:hover .kol-media-zoom > video {
-  transform: none;
-}
-.no-card-hover .kol-card:hover .kol-content-title-dim {
-  opacity: 1;
+/* Every cover is a canvas capture with a 1px edge baked in (user, 2026-10-24: "scale them by couple of pixels on
+ * the cards so we dont see the border"). The card's img is the DS's own markup, so a rule; `scale`, not
+ * `transform`, so the hover zoom still composes on top. */
+.kol-card img.object-cover {
+  scale: 1.02;
 }

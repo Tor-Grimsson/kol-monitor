@@ -1,6 +1,6 @@
 # kol-monitor-api — the one D1 binding this app has (plan 13 W7, 2026-10-15 — kol-mirror's of 2026-10-14).
 # The app deploys on Vercel and cannot hold a D1 binding; this Worker is the API beside it.
-# Deploy: `pnpm api:deploy`. Local: `pnpm api:dev` on 8787.
+# Deploy: `pnpm api:deploy`. Local: `pnpm dev` (app + Worker) or `pnpm api:dev`, on 8789.
 #
 # FIRST DEPLOY — done 2026-10-15 by the agent (steps kept for a rebuild; the password is mirror's, 3341):
 #   1. pnpm exec wrangler d1 create kol-monitor        → paste its database_id below

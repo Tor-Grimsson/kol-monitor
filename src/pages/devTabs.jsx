@@ -14,4 +14,5 @@ export const DEV_TABS = import.meta.env.DEV ? [
   tab('controls', 'Controls A/B', () => import('./dev/ControlsAbPage.jsx')),
   tab('modules', 'Module design', () => import('./dev/ModuleDesignPage.jsx')),
   tab('app-card', 'App card', () => import('./dev/AppCardPage.jsx')),
+  tab('card-flip', 'Card flip', () => import('./dev/CardFlipPage.jsx')),
 ] : null

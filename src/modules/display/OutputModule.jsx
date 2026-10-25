@@ -26,6 +26,7 @@ function OutputPanel({ canvasRef, bg, trails, enabled, onToggle, onBgChange, onT
       }}>
 
         <canvas
+          data-output-canvas
           ref={canvasRef}
           width={240}
           height={140}

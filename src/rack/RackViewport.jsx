@@ -1,7 +1,7 @@
 // RackViewport — the core rack canvas with pan, zoom, snap, cables, workbench
 // Used by both VideoModulo (full page) and CreatePage (embedded)
 
-import { useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import usePersistedState from '../hooks/usePersistedState'
 import { useModuleRegistry } from '../hooks/useModuleRegistry.jsx'
 import { usePatchRouting } from '../hooks/usePatchRouting.jsx'
@@ -14,6 +14,8 @@ import PatchCableOverlay from '../modules/utility/PatchCableOverlay.jsx'
 import RackView from './RackView.jsx'
 import { useDotGrid, DOT_GRID_SIZE, DOT_GRID_IMAGE } from '../hooks/useDotGrid.js'
 import Workbench from './Workbench.jsx'
+import FpsChip from '../components/FpsChip.jsx'
+import { toggleTransport as toggleTransportOf } from '../hooks/transport.js'
 import { useTouchGestures } from '../hooks/useTouchGestures.js'
 
 /* the case's drawn width: its HP, plus the side cheeks (52px) — plan 14 3.1 */
@@ -48,11 +50,15 @@ export default function RackViewport({ style, editMode: editModeOverride, viewLo
 
   const { controlRef } = useRenderLoop(modulesRef, connectionsRef, power, timingRef)
 
+  // Delete (plan 16 W1): the module from the rack or the shelf, and every cable on it — park keeps its cables
+  const deleteModule = useCallback((id) => { routing.removeModuleConnections(id); rack.deleteModule(id) }, [routing.removeModuleConnections, rack.deleteModule])
+
   // Spacebar + drag to pan; a clean tap (no drag, <250ms) toggles the transport
   const spaceDown = useRef(false)
   const spacePressAt = useRef(0)
   const spaceDragged = useRef(false)
   const [panOffset, setPanOffset] = usePersistedState('rack-pan', { x: 0, y: 0 })
+  const [showFps, setShowFps] = useState(false)
   const panStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
   const panOffsetRef = useRef(panOffset)
   panOffsetRef.current = panOffset
@@ -147,7 +153,7 @@ export default function RackViewport({ style, editMode: editModeOverride, viewLo
   useEffect(() => { onZoomChange?.(zoom) }, [zoom, onZoomChange])
   useEffect(() => { if (zoomSetterRef) zoomSetterRef.current = setZoom }, [zoomSetterRef, setZoom])
 
-  // Keybindings: space pan, 1-9 snap, +/-/0 zoom
+  // Keybindings: space pan, 1-9 snap, +/-/0 zoom, F fps, Z fit height
   useEffect(() => {
     const noInput = (e) => !e.target.closest('input, textarea')
     const onKeyDown = (e) => {
@@ -162,6 +168,23 @@ export default function RackViewport({ style, editMode: editModeOverride, viewLo
         if (e.key === '=' || e.key === '+') { e.preventDefault(); setZoom(z => Math.min(MAX_ZOOM, z + 0.1)) }
         if (e.key === '-') { e.preventDefault(); setZoom(z => Math.max(MIN_ZOOM, z - 0.1)) }
         if (e.key === '0') { e.preventDefault(); setZoom(1) }
+        // F: the fps readout (plan 16 W6.2, fxr's key)
+        if (e.key === 'f' || e.key === 'F') { e.preventDefault(); setShowFps(v => !v) }
+        // Z: fit height — the whole rack's height in the view (snapPadding top and bottom), then snap 7 once it has laid out
+        if (e.key === 'z' || e.key === 'Z') {
+          e.preventDefault()
+          const el = rackRef.current
+          const outer = rackOuterRef.current
+          if (!el || !outer) return
+          const h = el.getBoundingClientRect().height / zoom
+          setZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, (outer.getBoundingClientRect().height - 2 * snapPadding) / h)))
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            const rect = el.getBoundingClientRect()
+            const cr = outer.getBoundingClientRect()
+            const z = zoomRef.current
+            setPanOffset(prev => ({ x: prev.x + (cr.left + snapPadding - rect.left) / z, y: prev.y + (cr.top + snapPadding - rect.top) / z }))
+          }))
+        }
       }
       // Snap view: 7 8 9 = top, 4 5 6 = middle, 1 2 3 = bottom
       if (noInput(e) && !e.metaKey && !e.ctrlKey && '123456789'.includes(e.key)) {
@@ -191,31 +214,8 @@ export default function RackViewport({ style, editMode: editModeOverride, viewLo
         setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }))
       }
     }
-    // Transport: a clean space tap toggles the patch's timing roots. Anything
-    // driving a clk/trig/gate input is a clock regardless of module type, so
-    // walk upstream from those drivers through every inbound cable to the
-    // sources with no inputs patched — those are the masters; followers stop
-    // by proxy. ponytail: rootless cycles are skipped; multiple roots all flip.
-    const TEMPO_PORTS = new Set(['clk', 'trig', 'gate'])
-    const toggleTransport = () => {
-      const conns = connectionsRef.current
-      const inbound = new Map()
-      conns.forEach(c => {
-        if (!inbound.has(c.toModuleId)) inbound.set(c.toModuleId, [])
-        inbound.get(c.toModuleId).push(c.fromModuleId)
-      })
-      const roots = new Set()
-      const seen = new Set()
-      const visit = (id) => {
-        if (seen.has(id)) return
-        seen.add(id)
-        const ins = inbound.get(id)
-        if (!ins || ins.length === 0) { roots.add(id); return }
-        ins.forEach(visit)
-      }
-      conns.forEach(c => { if (TEMPO_PORTS.has(c.toPort)) visit(c.fromModuleId) })
-      roots.forEach(id => modulesRef.current.get(id)?.setEnabled?.(v => !v))
-    }
+    // Transport: a clean space tap toggles the patch's timing roots (hooks/transport.js, shared with the stage)
+    const toggleTransport = () => toggleTransportOf(connectionsRef.current, modulesRef)
     const onKeyUp = (e) => {
       if (e.code === 'Space') {
         if (spaceDown.current && !spaceDragged.current && performance.now() - spacePressAt.current < 250) {
@@ -288,9 +288,12 @@ export default function RackViewport({ style, editMode: editModeOverride, viewLo
             onSendToWorkbench={rack.sendToWorkbench}
             onSwapInRow={rack.swapInRow}
             onMoveToRow={rack.moveToRow}
+            onDelete={deleteModule}
             rowRefs={rowRefs}
           />
         </div>
+
+        <FpsChip show={showFps} />
 
         {/* the edit-mode rail — a DS bottom Rail over the rack, mounted always so it slides; × / Esc leave edit mode */}
         <Workbench
@@ -302,11 +305,11 @@ export default function RackViewport({ style, editMode: editModeOverride, viewLo
           onSetCaseHp={rack.setCaseHp}
           onAddModule={rack.addModule}
           onReturn={rack.returnFromWorkbench}
+          onPark={rack.sendToWorkbench}
+          onDelete={deleteModule}
           onAddRow={rack.addRow}
           onRemoveRow={rack.removeRow}
           onSetRowHeight={rack.setRowHeight}
-          /* the sidebar is open when the rack is offset by it — the rail starts where the rack does */
-          besideSidebar={!!style?.marginLeft}
         />
       </div>
     </RenderControlProvider>

@@ -2,10 +2,17 @@
 // Separated from VideoModulo for maintainability
 
 import { useEffect } from 'react'
+import { useRailKey } from '@kolkrabbi/kol-component/molecules/Rail'
 
 // VideoModulo-specific keybindings (sidebar, edit, mute, cables, shortcuts, display, library search)
 // Viewport keybindings (space, zoom, snap) are handled by RackViewport
 export function useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, rackStateRef, toggleAll, setCableLocked, setCableVisibility, setDisplayHidden, setShowLibrarySearch, setShowPatchTable }) {
+  /* the rails' keys are their roles' (RailRolesOnMonitor 2026-10-25): H the Rack rail, P the patch table, E the bottom
+     rail — which is edit mode, so E toggles it */
+  useRailKey('page', () => setSidebarOpen(s => !s))
+  useRailKey('patch', () => setShowPatchTable(v => !v))
+  useRailKey('bottom', () => { const r = rackStateRef.current; r.setEditMode(!r.editMode) })
+
   useEffect(() => {
     const noInput = (e) => !e.target.closest('input, textarea')
 
@@ -14,12 +21,6 @@ export function useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, r
 
       // Library search overlay (Cmd/Ctrl+K) — works regardless of input focus
       if (mod && e.key === 'k') { e.preventDefault(); setShowLibrarySearch(v => !v); return }
-
-      // Sidebar
-      if ((mod || noInput(e)) && e.key === 'h') { e.preventDefault(); setSidebarOpen(s => !s) }
-
-      // Edit mode
-      if ((mod || noInput(e)) && e.key === 'e') { e.preventDefault(); const r = rackStateRef.current; r.setEditMode(!r.editMode) }
 
       // Mute all
       if ((mod || noInput(e)) && e.key === 'm') { e.preventDefault(); toggleAll() }
@@ -35,9 +36,6 @@ export function useKeybindings({ setSidebarOpen, setViewLocked, viewLockedRef, r
 
       // Shortcuts overlay
       /* `S` is the Hub's shortcuts sheet (AppHub), on every route — no rack-local copy */
-
-      // Patch table (P)
-      if (noInput(e) && !mod && e.key === 'p') { e.preventDefault(); setShowPatchTable(v => !v) }
 
       // Clear display — hide all UI controls
       if (noInput(e) && !mod && e.key === 'd') { e.preventDefault(); setDisplayHidden(v => !v) }

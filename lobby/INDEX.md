@@ -41,6 +41,7 @@ Parking, declaring stale, reopening and any design decision stay the **user's ca
 
 | | Entry | About | Staged | Closed | State |
 |---|---|---|---|---|---|
+| 🟢 | [RailRolesOnMonitor](done/RailRolesOnMonitor.md) | **kol-ds-ui** — the MODULES list out of the nav rail; the patch table, Stage/Rack settings and the Workbench on `Rail role` + `useRailKey` | 2026-10-25 | 2026-10-25 | `closed` — component 0.302.0 · theme 0.190.0; `RackRailPanel` retired, four rails on their roles, bottom rail over the nav rail with `RailNav`; walked in Playwright on /rack and /stage |
 | 🟢 | [MonitorLibraryOnAppPreset](done/MonitorLibraryOnAppPreset.md) | Library onto the DS `app` card, with a Dev tab to review it | 2026-10-23 | 2026-10-23 | `closed` — component 0.291.0 · shell 0.75.0; App card Dev tab on your library (all four verbs walked); Library on `preset="app"`, presets download. Counts wait on `AppCardMeta` |
 | 🟢 | [save-patch-does-not-work](done/save-patch-does-not-work.md) | saving a patch does not work — reproduce and fix in monitor | 2026-10-20 | 2026-10-22 | `closed` — saves came back unpowered, four modules dropped state, every save was "Untitled"; fixed in `loadPreset`, the four modules and `VideoModulo`; save → reload → save is identical in Playwright |
 | 🟢 | [RackTierFullConsumption](done/RackTierFullConsumption.md) | The six full-consumption greps, 2026-08-30 | 2026-08-30 | `closed` 2026-10-17 — **superseded by plan 13** (the four surfaces it waited on are KOL components now); the user: old, irrelevant |
@@ -121,6 +122,8 @@ All went to **kol-ds-ui** — `~/dev/projects/kol-ds-ui/lobby/INDEX.md`.
 
 | Date | Event |
 |---|---|
+| 2026-10-25 | **`RailRolesOnMonitor` closed** — modules out of the nav rail, the rails on `Rail role`, H · P · E on `useRailKey` |
+| 2026-10-25 | **`RailRolesOnMonitor` filed from kol-ds-ui** — the modules out of the nav rail; the rails onto `Rail role` on the bump |
 | 2026-10-23 | **`MonitorLibraryOnAppPreset` closed** — Library on `preset="app"`, App card Dev tab; `AppCardMeta` filed into kol-ds-ui |
 | 2026-10-23 | **`MonitorLibraryOnAppPreset` filed from kol-ds-ui** — bump kol-component 0.291.0 · kol-shell 0.75.0; a hub Dev tab previewing the `app` card on monitor’s patches; then `LibraryPage.jsx` on `preset="app"` |
 | 2026-08-12 | `KolComponentDeepExports` + `ComponentTailwindSourceTrap` filed into kol-ds-ui; both closed and adopted the same week |

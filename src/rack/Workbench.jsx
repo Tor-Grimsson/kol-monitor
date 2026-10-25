@@ -1,35 +1,38 @@
-// Workbench — the edit-mode bottom sheet (plan 14 W4, user 2026-10-17). Three tabs, `TabChips` left-aligned:
-//   EDIT     Case (the rows) and Parked (modules taken out of the rack) side by side, a draggable divider
-//            between them. A parked module is drawn at the shelf's height, so nothing scrolls vertically.
-//   RACK     the modules in this rack, row by row
-//   LIBRARY  every module; Add drops it into the first row with room
-// kol-component's bottom `Rail` (ticket RailOverlay, 0.266.0), over the rack. Drag the top edge to resize. No control in it leaves the rack: the case width is set in the Case pane. The two-tab version this replaced is in `_tmp/2026-10-17-plan14/Workbench.before.jsx`.
+// Workbench — the edit-mode bottom Rail (plan 14 W4; plan 16 W3, user 2026-10-24: "edit rack library would be a rail
+// like siderail inside the bottomrail? then Case and Parked could use height better"). `Rail role="bottom"` runs the
+// full width over the nav rail with `RailNav` inside it — Edit · Rack · Library as the collapsed nav rail's glyphs,
+// under the nav rail's rows (RailRolesOnMonitor 2026-10-25) — and the view to its right fills the bottom Rail's height:
+//   EDIT     Case (the rows) and Parked (modules taken out of the rack) side by side, a draggable divider between
+//            them. A parked module is drawn WHOLE at the shelf's height — click returns it, × deletes it.
+//   RACK     the modules in this rack, row by row, each with an × that deletes it; search at the top
+//   LIBRARY  every module; Add drops it into the first row with room; search at the top
+// Right-click on a module anywhere here opens the module menu (W2). The role carries the shell: over the rack, no
+// scrim, 30dvh, drag the top edge to resize (80–600). No control in it leaves the rack: the case width is set in the
+// Case pane. The tabbed version this replaced is in `_tmp/2026-10-24-plan16/Workbench.tabs.jsx`.
 import { useState, useRef, useCallback, useLayoutEffect } from 'react'
 import Rail from '@kolkrabbi/kol-component/molecules/Rail'
-import TabChips from '@kolkrabbi/kol-component/molecules/TabChips'
+import { RailHeader, RailNav } from '@kolkrabbi/kol-component/organisms/RailKit'
 import Input from '@kolkrabbi/kol-component/atoms/Input'
+import { Icon } from '@kolkrabbi/kol-icons'
 import { MODULE_DEFS, CATEGORIES } from '../modules/registry'
 import Button from '../components/atoms/Button'
 import { TOTAL_HP, hpToPx } from '../modules/utility/eurorack'
+import { useModuleMenu } from './ModuleMenu.jsx'
 
-const DEFAULT_HEIGHT = Math.round(window.innerHeight * 0.3)
-const MIN_HEIGHT = 80
-const MAX_HEIGHT = 600
-
-const TABS = [
-  { id: 'edit', label: 'Edit' },
-  { id: 'rack', label: 'Rack' },
-  { id: 'library', label: 'Library' },
+/* the RailNav's glyphs — the views */
+const VIEWS = [
+  { id: 'edit', label: 'Edit', icon: 'edit' },
+  { id: 'rack', label: 'Rack', icon: 'nav-rack' },
+  { id: 'library', label: 'Library', icon: 'nav-library' },
 ]
-
 /* a module's drawn size at 1×: its HP wide, its U tall (the rack's own aspect) */
 const nativeSize = (hp, u) => {
   const w = hpToPx(hp)
   return { w, h: (w * TOTAL_HP) / (hp * (u === 1 ? 12 : 4)) }
 }
 
-/* the height the parked shelf has — measured, so modules fit it however tall the sheet is dragged */
-/* a callback ref: the sheet renders its body only once open, so the shelf node arrives after mount */
+/* the height the parked shelf has — measured, so modules fit it however tall the Rail is dragged */
+/* a callback ref: the Rail renders its body only once open, so the shelf node arrives after mount */
 function useHeight() {
   const [el, setEl] = useState(null)
   const [h, setH] = useState(0)
@@ -56,11 +59,12 @@ function useDrag(onMove) {
 
 const used = (row) => row.modules.reduce((s, m) => s + m.hp, 0)
 
-export default function Workbench({ open, onClose, besideSidebar, modules, rows, caseHp = TOTAL_HP, onSetCaseHp, onReturn, onAddRow, onRemoveRow, onSetRowHeight, onAddModule }) {
-  const [tab, setTab] = useState('edit')
+export default function Workbench({ open, onClose, modules, rows, caseHp = TOTAL_HP, onSetCaseHp, onReturn, onPark, onDelete, onAddRow, onRemoveRow, onSetRowHeight, onAddModule }) {
+  const [view, setView] = useState('edit')
   const [searchText, setSearchText] = useState('')
   const [caseW, setCaseW] = useState(360)
   const [shelfRef, shelfH] = useHeight()
+  const menu = useModuleMenu({ onPark, onReturn, onDelete })
 
   const w0 = useRef(caseW)
   const startSplit = useDrag(useCallback((dx) => setCaseW(Math.max(240, Math.min(720, w0.current + dx))), []))
@@ -69,35 +73,24 @@ export default function Workbench({ open, onClose, besideSidebar, modules, rows,
   const matches = (type) => !q || MODULE_DEFS[type]?.label?.toLowerCase().includes(q) || type.toLowerCase().includes(q)
   const roomFor = (def) => rows?.find((r) => r.height === (def.u === 1 ? '1u' : '3u') && used(r) + def.hp <= caseHp)
 
+  const search = <Input size="sm" iconLeft="search" placeholder="Search…" value={searchText} onChange={(e) => setSearchText(e.target.value)} width="180px" />
+
   return (
     <Rail
+      role="bottom"
       open={open}
       onClose={onClose}
-      side="bottom"
-      resizable
-      height={DEFAULT_HEIGHT}
-      minSize={MIN_HEIGHT}
-      maxSize={MAX_HEIGHT}
-      /* no scrim: the rack stays live above the rail while a case is edited */
-      backdrop={false}
-      /* the old panel sat inside the viewport, right of the sidebar — the portalled rail keeps that edge */
-      className={besideSidebar ? '!left-[var(--sidebar-width)]' : ''}
-      header={
-        <div className="flex items-center gap-4 flex-1 min-w-0">
-          <TabChips tabs={TABS} value={tab} onChange={setTab} ariaLabel="Edit sheet" />
-          {tab !== 'edit' && (
-            <Input size="sm" iconLeft="search" placeholder="Search…" value={searchText} onChange={(e) => setSearchText(e.target.value)} width="180px" />
-          )}
-          <div className="flex-1" />
-        </div>
-      }
+      nav={<RailNav items={VIEWS} value={view} onChange={setView} iconComponent={Icon} />}
+      header={<RailHeader title={VIEWS.find((v) => v.id === view)?.label} />}
     >
-      <div data-workbench className="flex h-full min-h-0 flex-col">
-        {tab === 'edit' && (
+      <div data-workbench className="flex h-full min-h-0">
+        {/* THE VIEW — fills the height to the RailNav's right */}
+        <div className="flex min-w-0 flex-1 flex-col">
+        {view === 'edit' && (
           <div className="flex min-h-0 flex-1">
             {/* CASE — the rows */}
             <div className="flex shrink-0 flex-col gap-1 overflow-y-auto pr-4" style={{ width: caseW }}>
-              {/* the case width, edited here — nothing in the rail sends you to Create (user 2026-10-17: "why would
+              {/* the case width, edited here — nothing in the Rail sends you to Create (user 2026-10-17: "why would
                   you take the user from the bottom rail?"). Never narrower than what is mounted: the rack clamps. */}
               <div className="flex h-7 items-center gap-4">
                 <span className="kol-helper-10 text-fg-48 uppercase w-12">Case</span>
@@ -128,7 +121,7 @@ export default function Workbench({ open, onClose, besideSidebar, modules, rows,
               aria-label="Resize Case and Parked"
             />
 
-            {/* PARKED — drawn at the shelf's height */}
+            {/* PARKED — each module whole, at the shelf's height */}
             <div className="flex min-w-0 flex-1 flex-col gap-1 pl-2">
               <span className="kol-helper-10 text-fg-48 uppercase">Parked</span>
               <div ref={shelfRef} className="flex min-h-0 flex-1 items-start gap-1 overflow-x-auto overflow-y-hidden">
@@ -142,12 +135,19 @@ export default function Workbench({ open, onClose, besideSidebar, modules, rows,
                   return (
                     <div
                       key={mod.id}
+                      data-parked-id={mod.id}
                       onClick={() => onReturn(mod.id)}
-                      /* a parked module is a picture you click to return — opacity steps up on hover */
-                      className="shrink-0 cursor-pointer overflow-hidden opacity-80 transition-opacity hover:opacity-100"
+                      onContextMenu={(e) => menu.openAt(e, { mod, parked: true })}
+                      /* a parked module is a picture you click to return — opacity steps up on hover; × deletes.
+                         `transform`, not `zoom`: the module lays out at its native size and its canvases measure it,
+                         the scale is paint-only — the whole panel, bottom row included, lands in the shelf */
+                      className="group relative shrink-0 cursor-pointer opacity-80 transition-opacity hover:opacity-100"
                       style={{ width: w * k, height: shelfH }}
                     >
-                      <div style={{ width: w, height: h, zoom: k }}><Comp id={mod.id} /></div>
+                      <div style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: 'top left' }}><Comp id={mod.id} /></div>
+                      <div className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Button tone="grey" size="xs" iconOnly="trash" aria-label={`Delete ${def.label}`} onClick={(e) => { e.stopPropagation(); onDelete?.(mod.id) }} />
+                      </div>
                     </div>
                   )
                 })}
@@ -156,15 +156,24 @@ export default function Workbench({ open, onClose, besideSidebar, modules, rows,
           </div>
         )}
 
-        {tab === 'rack' && (
+        {view === 'rack' && (
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+            {search}
             {rows?.map((row, i) => {
               const mods = [...row.modules].sort((a, b) => a.offset - b.offset).filter((m) => matches(m.type))
               return (
                 <div key={row.id} className="flex flex-col gap-1">
                   <span className="kol-helper-10 text-fg-48 uppercase">Row {i + 1} · {row.height.toUpperCase()} · {used(row)}/{caseHp}HP</span>
                   <div className="flex flex-wrap gap-x-6 gap-y-1">
-                    {mods.map((m) => <span key={m.id} className="kol-mono-12">{MODULE_DEFS[m.type]?.label ?? m.type} <span className="text-fg-32">{m.hp}HP</span></span>)}
+                    {mods.map((m) => {
+                      const label = MODULE_DEFS[m.type]?.label ?? m.type
+                      return (
+                        <div key={m.id} data-rack-row-id={m.id} className="flex h-7 items-center gap-2" onContextMenu={(e) => menu.openAt(e, { mod: m })}>
+                          <span className="kol-mono-12">{label} <span className="text-fg-32">{m.hp}HP</span></span>
+                          <Button tone="grey" size="xs" iconOnly="trash" aria-label={`Delete ${label}`} onClick={() => onDelete?.(m.id)} />
+                        </div>
+                      )
+                    })}
                     {mods.length === 0 && <span className="kol-helper-12 text-fg-32">Empty</span>}
                   </div>
                 </div>
@@ -173,8 +182,9 @@ export default function Workbench({ open, onClose, besideSidebar, modules, rows,
           </div>
         )}
 
-        {tab === 'library' && (
+        {view === 'library' && (
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+            {search}
             {CATEGORIES.map((cat) => {
               const list = Object.entries(MODULE_DEFS).filter(([t, d]) => d.category === cat && matches(t))
               if (list.length === 0) return null
@@ -197,6 +207,8 @@ export default function Workbench({ open, onClose, besideSidebar, modules, rows,
             })}
           </div>
         )}
+        </div>
+        {menu.element}
       </div>
     </Rail>
   )

@@ -20,14 +20,6 @@
 /* .gridcard-preview-* retired 2026-08-15 — the DS GridCard uses kol-theme's
    .kol-shell-card-preview-* (file copy in _tmp/2026-08-15-shell-adoption/). */
 
-*:hover > .patch-preview-overlay {
-  opacity: 1 !important;
-}
-
-.module-detail-code-link:hover {
-  color: #facc15;
-}
-
 /* ---------------------------------------------------------------------------
    1c. Toggle Bracket
    --------------------------------------------------------------------------- */

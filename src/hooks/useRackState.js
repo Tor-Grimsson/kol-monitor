@@ -178,6 +178,13 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
     setWorkbench(prev => prev.filter(m => m.id !== moduleId))
   }, [])
 
+  // Delete a module outright — from its row or from the shelf (plan 16 W1; park is the yellow dot, this is
+  // the context menu's and the bottom Rail's ×). Its cables are the routing's: the viewport removes them.
+  const deleteModule = useCallback((moduleId) => {
+    setRows(prev => prev.map(row => (row.modules.some(m => m.id === moduleId) ? { ...row, modules: row.modules.filter(m => m.id !== moduleId) } : row)))
+    setWorkbench(prev => prev.filter(m => m.id !== moduleId))
+  }, [])
+
   const addRow = useCallback((height = '3u') => {
     const id = `row${rowCounter++}`
     setRows(prev => [...prev, { id, height, modules: [] }])
@@ -311,8 +318,9 @@ export function useRackState(initialRows = DEFAULT_ROWS) {
     moveToRow,
     sendToWorkbench,
     returnFromWorkbench,
+    deleteModule,
     addRow,
     removeRow,
     setRowHeight,
-  }), [rows, caseHp, setCaseHp, workbench, editMode, setEditMode, loadPreset, resetRack, addModule, moveModule, swapInRow, moveToRow, sendToWorkbench, returnFromWorkbench, addRow, removeRow, setRowHeight])
+  }), [rows, caseHp, setCaseHp, workbench, editMode, setEditMode, loadPreset, resetRack, addModule, moveModule, swapInRow, moveToRow, sendToWorkbench, returnFromWorkbench, deleteModule, addRow, removeRow, setRowHeight])
 }

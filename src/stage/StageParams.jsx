@@ -1,32 +1,33 @@
-// StageParams — the marked parameters, in a DS menu.
+// StageParams — the marked parameters, as a module on the stage (plan 16 W6.9, user 2026-10-24: "the sliders can route
+// to a UI module type with those sliders? instead of a overlay modal with sliders"). The menu version is in
+// `_tmp/2026-10-24-plan16/StageParams.menu.jsx`.
 //
-// Two jobs in one place. It registers a HEADLESS MODULE (`STAGE_CV_ID`) whose
-// outputs are `p0…pN`, one per mark, and the page patches those into the real
-// CV inputs — so "show only these parameters" needs no injection path in the
-// render loop: a fader is an ordinary signal source, and `readCv` merges it
-// with the module's own knob exactly as a cable would.
+// Two jobs. It registers a HEADLESS MODULE (`STAGE_CV_ID`) whose outputs are `p0…pN`, one per mark, and the page
+// patches those into the real CV inputs — so "show only these parameters" needs no injection path in the render
+// loop: a fader is an ordinary signal source, and `readCv` merges it with the module's own knob exactly as a cable
+// would. And it draws that set as a module panel: `ModuleFrame` + one vertical `Fader` per mark under its label,
+// the Console's channel-strip shape.
 //
-// And it renders that set through kol-component: `MenuItem`'s trigger + popover
-// panel, DS `Slider` rows, `MenuDropdownNest` for the mark list. No hand-rolled
-// panel, no inline chrome (user, 2026-08-28).
-//
-// MARKING reads the LIVE REGISTRY: every module descriptor carries its declared
-// `inputs`, and the ones tagged `cv` are exactly the parameters a fader can
-// reach. Nothing is enumerated per module — a new module's CV inputs appear in
-// the list the moment it is in the patch.
+// MARKING lives in the stage settings Rail (`MarkList`, below): it reads the LIVE REGISTRY — every module descriptor
+// carries its declared `inputs`, and the ones tagged `cv` are exactly the parameters a fader can reach. Nothing is
+// enumerated per module — a new module's CV inputs appear in the list the moment it is in the patch.
 
 import { useEffect, useRef, useState } from 'react'
-import { MenuItem, MenuDropdownItem, MenuDropdownDivider, MenuDropdownNest } from '@kolkrabbi/kol-component/molecules/MenuItem'
-import Slider from '@kolkrabbi/kol-component/molecules/Slider'
-import { Icon } from '@kolkrabbi/kol-icons'
+import { LabeledControlSection, SettingsRow, SettingsSwitch } from '@kolkrabbi/kol-component/organisms/SettingsPanel'
 import { useModuleRegistry } from '../hooks/useModuleRegistry.jsx'
 import { scalar } from '../hooks/signals'
 import { MODULE_DEFS } from '../modules/registry'
 import { STAGE_CV_ID } from '../data/stages'
+import { hpToPx, ROW_HEIGHT } from '../modules/utility/eurorack'
+import ModuleFrame from '../modules/utility/ModuleFrame.jsx'
+import Fader from '../modules/parametric/Fader.jsx'
 
 const markKey = (m) => `${m.module}.${m.port}`
 
-export default function StageParams({ marks, onMarks, rows }) {
+/* one fader is 2HP; the panel never narrower than 4HP */
+const FADER_HP = 2
+
+export default function StageParams({ marks }) {
   const registry = useModuleRegistry()
   const [values, setValues] = useState({})
 
@@ -58,62 +59,56 @@ export default function StageParams({ marks, onMarks, rows }) {
     return () => registry.unregister(STAGE_CV_ID)
   }, [registry, marks])
 
-  // Every CV-tagged input in the patch, off the registered descriptors.
-  const available = () => {
-    const out = []
-    for (const row of rows) {
-      for (const mod of row.modules) {
-        const desc = registry.modulesRef.current.get(mod.id)
-        if (!desc) continue
-        const label = MODULE_DEFS[mod.type]?.label || mod.type
-        for (const [port, meta] of Object.entries(desc.inputs || {})) {
-          if (meta?.cv) out.push({ module: mod.id, port, label: `${label} ${port}` })
-        }
-      }
-    }
-    return out
-  }
-
-  const toggleMark = (cand) => {
-    const k = markKey(cand)
-    const marked = marks.some(m => markKey(m) === k)
-    onMarks(marked ? marks.filter(m => markKey(m) !== k) : [...marks, cand])
-  }
-
-  /* MenuItem, not Dropdown, because the panel holds sliders and a nested list
-     rather than one-of-N — but it wears the Dropdown trigger's chrome so the bar
-     reads as one control set. */
+  if (marks.length === 0) return null
   return (
-    <MenuItem label="Modules" align="end" panelClassName="w-80" buttonClassName="kol-btn kol-btn-grey kol-btn-md kol-dd-trigger">
-      {marks.map(m => (
-        <div key={markKey(m)} className="px-3 py-1">
-          <Slider
-            label={m.label}
-            value={values[markKey(m)] ?? m.value ?? 0}
-            onChange={v => setValues(prev => ({ ...prev, [markKey(m)]: v }))}
-            min={m.min ?? 0}
-            max={m.max ?? 100}
-            fontSize="11px"
-          />
+    <div data-stage-cv style={{ width: hpToPx(Math.max(4, marks.length * FADER_HP)), height: ROW_HEIGHT['3u'] }}>
+      <ModuleFrame label="stage cv">
+        <div className="flex h-full justify-around">
+          {marks.map(m => (
+            <div key={markKey(m)} className="flex h-full flex-col items-center" style={{ width: hpToPx(FADER_HP) }}>
+              <div className="flex flex-1 items-stretch py-4">
+                <Fader
+                  value={values[markKey(m)] ?? m.value ?? 0}
+                  onChange={v => setValues(prev => ({ ...prev, [markKey(m)]: v }))}
+                  min={m.min ?? 0}
+                  max={m.max ?? 100}
+                  direction="vertical"
+                  height="100%"
+                />
+              </div>
+              <span className="kol-mono-8 uppercase text-fg-48 text-center leading-tight">{m.label}</span>
+            </div>
+          ))}
         </div>
-      ))}
-
-      {marks.length > 0 && <MenuDropdownDivider />}
-
-      <MenuDropdownNest label="Mark parameters">
-        {available().map(c => {
-          const marked = marks.some(m => markKey(m) === markKey(c))
-          return (
-            <MenuDropdownItem
-              key={markKey(c)}
-              onClick={() => toggleMark(c)}
-              shortcut={marked ? <Icon name="check" size={11} /> : undefined}
-            >
-              {c.label}
-            </MenuDropdownItem>
-          )
-        })}
-      </MenuDropdownNest>
-    </MenuItem>
+      </ModuleFrame>
+    </div>
   )
+}
+
+/* THE MARK LIST — every CV input in the patch, one switch each, grouped by module, for the stage settings Rail */
+export function MarkList({ marks, onMarks, rows }) {
+  const registry = useModuleRegistry()
+  const groups = []
+  for (const row of rows) {
+    for (const mod of row.modules) {
+      const desc = registry.modulesRef.current.get(mod.id)
+      if (!desc) continue
+      const label = MODULE_DEFS[mod.type]?.label || mod.type
+      const ports = Object.entries(desc.inputs || {}).filter(([, meta]) => meta?.cv).map(([port]) => ({ module: mod.id, port, label: `${label} ${port}` }))
+      if (ports.length) groups.push({ id: mod.id, label, ports })
+    }
+  }
+  const toggle = (cand) => {
+    const k = markKey(cand)
+    onMarks(marks.some(m => markKey(m) === k) ? marks.filter(m => markKey(m) !== k) : [...marks, cand])
+  }
+  return groups.map(g => (
+    <LabeledControlSection key={g.id} label={g.label}>
+      {g.ports.map(c => (
+        <SettingsRow key={markKey(c)} label={c.port}>
+          <SettingsSwitch on={marks.some(m => markKey(m) === markKey(c))} onChange={() => toggle(c)} label={c.label} />
+        </SettingsRow>
+      ))}
+    </LabeledControlSection>
+  ))
 }

@@ -182,6 +182,11 @@ export function PatchRoutingProvider({ initialConnections, children }) {
     ))
   }, [])
 
+  // Every cable into or out of a module — a deleted module takes its cables with it (plan 16 W1)
+  const removeModuleConnections = useCallback((moduleId) => {
+    setConnections(prev => prev.filter(c => c.fromModuleId !== moduleId && c.toModuleId !== moduleId))
+  }, [])
+
   const loadPatch = useCallback((connections) => {
     setConnections(connections)
     setPendingOutput(null)
@@ -203,8 +208,9 @@ export function PatchRoutingProvider({ initialConnections, children }) {
     cancelPending,
     addConnection,
     removeConnection,
+    removeModuleConnections,
     loadPatch,
-  }), [registerJack, selectOutput, grabInput, completeInput, cancelPending, addConnection, removeConnection, loadPatch])
+  }), [registerJack, selectOutput, grabInput, completeInput, cancelPending, addConnection, removeConnection, removeModuleConnections, loadPatch])
 
   // Pre-compute per-module connected-input map once per connection change.
   // Replaces N × O(connections) per-module scans with a single O(connections) pass.

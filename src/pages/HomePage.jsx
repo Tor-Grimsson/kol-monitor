@@ -1,16 +1,17 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { patches } from '../data/patches'
-import Button from '../components/atoms/Button'
 import { Illustration } from '../walkthrough'
-import { useLibrary, addToLibrary, renameInLibrary, removeFromLibrary } from '../hooks/useLibraryStore'
+import { useLibrary, addToLibrary, renameInLibrary, removeFromLibrary, editSaved } from '../hooks/useLibraryStore'
+import { MARKS, patchImages } from './shipped'
 import { downloadPatch } from '../hooks/usePatchFile'
 
 /**
  * HomePage — `/`, as the DATA the Studio's `HubHome` renders (kol-shell
  * `AppStudio`, 2026-10-15 — mirror's shape). The masthead (the app's name and
  * subtitle), RECENT · SAVED, the Walkthrough button and its Close label are the
- * Hub's; what is left here is monitor's: RECENT is the empty case and your newest
- * files, SAVED is your files, a click opens the rack. `App.jsx` hands `useHomeProps()` to the
+ * Hub's; what is left here is monitor's: the library's saves as files (the Hub
+ * picks RECENT and SAVED), every verb, a click opens the rack. `App.jsx` hands `useHomeProps()` to the
  * Studio's `home=` / `walkthrough=`.
  */
 
@@ -52,53 +53,57 @@ const WALKTHROUGH_STEPS = [
 
 const PRESET_NAMES = Object.keys(patches).filter(k => k !== 'ref' && k !== 'empty')
 
-/* a saved patch (the library — plan 13 W7) as a card: a seeded starter keeps its preset's picture,
-   anything else shows the empty case's */
-const savedCard = (item) => {
+/* a save (the library — plan 13 W7) as a file. Its pictures (plan 16 W8): what it stores, else a seeded starter's
+   output + rack, else the old single `thumb`; the cover and the back are picks from them, else the first two —
+   and with nothing at all, the empty case's frame. The mark names the kind (W7.2). */
+const saveFile = (item) => {
   const p = item.data
-  const moduleCount = p.rows?.reduce((sum, r) => sum + (r.modules?.length || 0), 0) || 0
+  const images = item.images ?? (item.seedOf ? patchImages(item.seedOf) : item.thumb ? [{ id: 'output', src: item.thumb, label: 'Output' }] : [])
   return {
-    name: item.id,
-    title: item.name,
-    detail: `${moduleCount} modules, ${p.connections?.length || 0} connections`,
+    id: item.id,
+    name: item.name,
+    kind: item.kind ?? 'patch',
+    mark: MARKS[item.kind ?? 'patch'],
     type: 'patches',
-    tags: [],
-    preview: item.seedOf || 'empty',
-    to: `/rack/patch/${item.id}`,
-    item,
+    tags: item.tags ?? [],
+    updatedAt: item.updatedAt ?? item.savedAt,
+    bytes: new Blob([JSON.stringify(p)]).size,
+    images,
+    cover: item.cover ?? item.thumb ?? images[0]?.src ?? '/previews/patches/empty.png',
+    back: item.back !== undefined ? item.back : images[1]?.src,
+    details: [
+      { label: 'Modules', value: p.rows?.reduce((n, r) => n + (r.modules?.length || 0), 0) || 0 },
+      { label: 'Connections', value: p.connections?.length || 0 },
+    ],
   }
 }
-const RECENT_FILES = 12
 
 const TAGS = [...new Set(PRESET_NAMES.flatMap(n => patches[n].tags || []))]
-/* TYPE stacks as a narrow column (`stack`), TAGS wraps beside it — the DS's own group shapes */
-const FILTER_GROUPS = [
-  { label: 'Type', key: 'type', values: ['envelope', 'effects', 'patches'], stack: true },
+/* TYPE stacks as a narrow column (`stack`), TAGS wraps beside it — the DS's own group shapes; Type is exclusive */
+export const FILTER_GROUPS = [
+  { label: 'Type', key: 'type', values: ['envelope', 'effects', 'patches'], stack: true, exclusive: true },
   { label: 'Tags', key: 'tags', values: TAGS },
 ]
 
-/* RECENT: the empty case, then your newest files. SAVED: your files. Signed in or not — signed out is a
-   user with a local library (seeded with the starters), sign-in only syncs it (user 2026-10-18). Every
-   preset lives in Library. The Hub's RECENT · SAVED strip picks. */
-const EMPTY_CASE = { name: 'empty', title: 'Empty 7U', detail: '7U — power, perf, patch', type: 'patches', tags: [], preview: 'empty', to: '/rack/patch/empty' }
-
+/* HOME IS A DATA CONTRACT: the library's saves as files — the Hub draws the cards and picks RECENT (the 12
+   newest) and SAVED (all). Signed in or not — signed out is a user with a local library (seeded with the
+   starters), sign-in only syncs it (user 2026-10-18). The blank start is New Rack, the action button. */
 export function useHomeProps() {
   const navigate = useNavigate()
-  /* newest first — a sign-in merge appends remote saves anywhere, so the stamp orders, not the list */
   const library = useLibrary()
-  const saves = [...library].sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0)).map(savedCard)
-  const recent = [EMPTY_CASE, ...saves.slice(0, RECENT_FILES)]
+  /* ids AND save stamps: a picked cover or an added image (editSaved) re-stamps its save, so the card follows */
+  const key = library.map((e) => `${e.id}:${e.savedAt}`).join()
+  const [files, setFiles] = useState(() => library.map(saveFile))
+  /* re-seed when the library's ids change — during render, React's "adjust state on a prop change", not an effect */
+  // ponytail: a Duplicate or Delete re-seeds from the library, so session-only tags and notes on other files reset then; lifts when the store carries tags
+  const [seeded, setSeeded] = useState(key)
+  if (seeded !== key) { setSeeded(key); setFiles(library.map(saveFile)) }
+  const entry = (id) => library.find((e) => e.id === id)
+  const edit = (id, patch) => setFiles((fs) => fs.map((x) => (x.id === id ? { ...x, ...patch } : x)))
 
   const walkthrough = WALKTHROUGH_STEPS.map(s => s.actions
-    ? {
-        ...s,
-        actions: (close) => (
-          <>
-            <Button tone="grey" size="md" onClick={() => { close(); navigate('/create') }}>Create Rack</Button>
-            <Button tone="grey" size="md" onClick={() => { close(); navigate('/library') }}>Browse Library</Button>
-          </>
-        ),
-      }
+    /* the Get started actions as DATA: the Hub draws the DS Buttons and closes the walkthrough before each handler */
+    ? { ...s, actions: [{ label: 'Create Rack', onClick: () => navigate('/create') }, { label: 'Browse Library', onClick: () => navigate('/library') }] }
     : {
         title: s.title,
         text: Array.isArray(s.text) ? s.text : [s.text],
@@ -110,46 +115,20 @@ export function useHomeProps() {
       })
 
   const home = {
-    className: 'no-card-hover',
-    items: (view) => (view === 'recent' ? recent : saves),
-    defaultView: 'recent',
-    filtersTitle: 'All Presets',
+    files,
+    onOpen: (f) => navigate(f.kind === 'stage' ? `/stage/${f.id}` : `/rack/patch/${f.id}`),
+    onDownload: (f) => { const e = entry(f.id); downloadPatch(e.data, e.name) },
+    onRename: (f, name) => { renameInLibrary(f.id, name); edit(f.id, { name, updatedAt: Date.now() }) },
+    onDuplicate: (f) => { const e = entry(f.id); addToLibrary({ ...e.data, name: `${e.name} copy` }, { kind: e.kind, images: f.images }) },
+    onRemove: (f) => removeFromLibrary(f.id),
+    onTags: (f, tags) => edit(f.id, { tags }),
+    onNote: (f, note) => edit(f.id, { note }),
+    /* the File Rail's pictures (FileRailImages): the whole list on add/remove; Cover and Back are picks, null clears */
+    onImages: (f, images) => editSaved(f.id, { images }),
+    onCover: (f, src) => editSaved(f.id, { cover: src }),
+    onBack: (f, src) => editSaved(f.id, { back: src }),
     filterGroups: FILTER_GROUPS,
-    filtersProps: { mutuallyExclusiveFilters: ['type'], tone: 'sunken' },
-    /* the `app` card and row, as Library — HubHome forces `rowVariant="file"`, so the row is named too */
-    preset: 'app',
-    rowVariant: 'app',
-    /* HubHome forces `listLayout="stack"` — Library's list is the preset's grid */
-    listLayout: 'grid',
-    /* the family's one `app` fill (fxr plan 39, mirror, monitor 2026-10-23): a saved file is
-       date · size · verbs · download; the blank start is title · meta · media only */
-    toCard: (p, { layout }) => ({
-      key: p.name,
-      title: p.title,
-      detail: p.detail,
-      /* the app card has no detail line — the counts ride its meta slot */
-      meta: p.detail,
-      ...(layout !== 'list' && { fit: 'compact' }),
-      ...(p.item && {
-        date: p.item.updatedAt ?? p.item.savedAt,
-        size: new Blob([JSON.stringify(p.item.data)]).size,
-        download: () => downloadPatch(p.item.data, p.item.name),
-        verbs: {
-          rename: (name) => renameInLibrary(p.item.id, name),
-          duplicate: () => addToLibrary({ ...p.item.data, name: `${p.item.name} copy` }),
-          remove: () => removeFromLibrary(p.item.id),
-        },
-      }),
-      /* the app row takes the preview as a src */
-      media: layout === 'list' ? `/previews/patches/${p.preview}.png` : <img src={`/previews/patches/${p.preview}.png`} alt={p.title} />,
-      onClick: () => navigate(p.to),
-    }),
-    actions: (
-      <Button tone="grey" size="md" onClick={() => navigate('/create')}>
-        New Rack
-      </Button>
-    ),
+    action: { label: 'New Rack', onClick: () => navigate('/create') },
   }
-
   return { home, walkthrough }
 }

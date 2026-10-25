@@ -97,7 +97,10 @@ export default function PatchModule({ id = 'patch1', preview }) {
   const handleSave = () => {
     const caseName = sessionStorage.getItem('caseName')?.replace(/^"|"$/g, '') || 'Untitled'
     const desc = sessionStorage.getItem('caseDescription')?.replace(/^"|"$/g, '') || ''
-    const item = addToLibrary(snapshotPatch(rack, routing.connections, modulesRef, caseName, desc || undefined))
+    /* the cover is the patch's OUTPUT at save time — Output's frame, else Monitor's (2026-10-24) */
+    let thumb
+    try { thumb = document.querySelector('[data-output-canvas], [data-monitor-canvas]')?.toDataURL('image/jpeg', 0.82) } catch { /* tainted canvas — no cover */ }
+    const item = addToLibrary(snapshotPatch(rack, routing.connections, modulesRef, caseName, desc || undefined), { thumb })
     setCurrent(item.id)
   }
 

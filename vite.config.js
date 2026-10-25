@@ -22,7 +22,7 @@ export default defineConfig({
     /* the dev tab's tile and the app loader are the KOL's (kol-framework 0.50.0, ticket AppLoader) */
     devFavicon({ label: 'M', ground: '#CE4646' }),
     themeBoot,
-    loaderApp({ graphic: 'public/svg/wordmark.svg', size: 166 }),
+    loaderApp({ graphic: 'public/svg/wordmark.svg', size: 332 }),
   ],
   // One react / react-dom copy — the DS packages peer-depend on React, and a
   // duplicated copy crashes at runtime with a null dispatcher.
